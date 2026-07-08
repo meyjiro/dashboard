@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1a2e">
+<title>Dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#1a1a2e;--bg2:#16213e;--bg3:#0f3460;
+  --text:#e0e0e0;--text2:#a0a0b0;--accent:#e94560;
+  --card:#1e2a4a;--border:#2a3a5a;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:16px;background:var(--bg);color:var(--text);overflow:hidden;-webkit-tap-highlight-color:transparent}
+input,textarea,button,select{font-size:16px;font-family:inherit}
+
+/* Layout */
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+.tab-content{flex:1;overflow-y:auto;padding:12px 12px calc(60px + var(--safe-bottom) + 12px);-webkit-overflow-scrolling:touch}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* Bottom Nav */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--bg2);border-top:1px solid var(--border);padding-bottom:var(--safe-bottom);z-index:100}
+.nav-btn{flex:1;padding:10px 0 8px;text-align:center;color:var(--text2);background:none;border:none;cursor:pointer;transition:color .2s}
+.nav-btn.active{color:var(--accent)}
+.nav-btn svg{display:block;margin:0 auto 2px;width:22px;height:22px;fill:currentColor}
+.nav-btn span{font-size:11px}
+
+/* Auth Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
+.modal{background:var(--bg2);border-radius:12px;padding:24px;width:100%;max-width:360px}
+.modal h2{margin-bottom:16px;font-size:18px}
+.modal input{width:100%;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);margin-bottom:12px}
+.modal .btn{width:100%}
+.hidden{display:none!important}
+
+/* Buttons */
+.btn{padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s}
+.btn:active{opacity:.7}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-danger{background:#c0392b;color:#fff}
+.btn-sm{padding:6px 10px;font-size:13px}
+.btn-ghost{background:transparent;color:var(--text2);padding:4px 8px}
+
+/* Cards */
+.card{background:var(--card);border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid var(--border)}
+.card .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;margin-right:6px;color:#fff}
+.card .date{color:var(--text2);font-size:13px;margin-right:8px}
+.card .title{font-size:15px;line-height:1.4}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.card .delete-btn{background:none;border:none;color:#e74c3c;cursor:pointer;font-size:18px;padding:4px 8px;opacity:.6}
+.card .delete-btn:hover{opacity:1}
+
+/* Calendar */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-header h2{font-size:18px;font-weight:700}
+.cal-nav{background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;padding:8px 12px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-day-label{text-align:center;font-size:12px;color:var(--text2);padding:4px 0}
+.cal-day-label:first-child{color:#e74c3c}
+.cal-day-label:last-child{color:#3498db}
+.cal-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:4px 2px;border-radius:8px;cursor:pointer;transition:background .15s;position:relative;min-height:48px}
+.cal-cell:active{background:var(--bg3)}
+.cal-cell.today{background:var(--bg3);box-shadow:inset 0 0 0 2px var(--accent)}
+.cal-cell.other-month{opacity:.3}
+.cal-cell .day-num{font-size:14px;font-weight:600;margin-bottom:2px}
+.cal-dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;max-width:100%}
+.cal-dots .dot{width:6px;height:6px;border-radius:50%}
+
+/* Day Detail Modal */
+.day-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:flex-end;justify-content:center}
+.day-modal-content{background:var(--bg2);border-radius:16px 16px 0 0;width:100%;max-width:500px;max-height:80vh;display:flex;flex-direction:column;padding-bottom:var(--safe-bottom)}
+.day-modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border)}
+.day-modal-header h3{font-size:17px}
+.day-modal-body{flex:1;overflow-y:auto;padding:12px 16px}
+.day-modal-footer{padding:12px 16px;border-top:1px solid var(--border)}
+.day-add-form{display:flex;gap:8px}
+.day-add-form input{flex:1;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text)}
+.day-add-form select{padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);min-width:70px}
+
+/* Memo */
+.memo-form{margin-bottom:16px}
+.memo-form textarea{width:100%;min-height:100px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);resize:vertical;margin-bottom:8px}
+.memo-form .btn{float:right}
+.memo-card{white-space:pre-wrap;word-break:break-word}
+.memo-card .memo-time{font-size:12px;color:var(--text2)}
+
+/* Task Form */
+.task-add-form{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.task-add-form input{flex:1;min-width:150px;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text)}
+.task-add-form select{padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text)}
+
+/* Loading */
+.spinner{text-align:center;padding:40px;color:var(--text2)}
+.spinner::after{content:'';display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-left:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Toast */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#2ecc71;color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.error{background:#e74c3c}
+.toast.show{opacity:1}
+
+/* Settings link */
+.settings-link{text-align:center;padding:20px;font-size:13px}
+.settings-link a{color:var(--accent);text-decoration:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="tab-content">
+    <!-- Calendar Tab -->
+    <div id="tab-calendar" class="tab-panel active">
+      <div class="cal-header">
+        <button class="cal-nav" id="cal-prev">&lt;</button>
+        <h2 id="cal-title"></h2>
+        <button class="cal-nav" id="cal-next">&gt;</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+
+    <!-- Memo Tab -->
+    <div id="tab-memo" class="tab-panel">
+      <div class="memo-form">
+        <textarea id="memo-input" placeholder="思いついたことを書く..."></textarea>
+        <button class="btn btn-primary" id="memo-send">送信</button>
+        <div style="clear:both"></div>
+      </div>
+      <div id="memo-feed"></div>
+    </div>
+
+    <!-- Tasks Tab -->
+    <div id="tab-tasks" class="tab-panel">
+      <div class="task-add-form" id="task-add-form">
+        <input type="text" id="task-input" placeholder="タスクを追加 (例: 07/15 内容)">
+        <select id="task-tag-select">
+          <option value="">タグなし</option>
+        </select>
+        <button class="btn btn-primary btn-sm" id="task-send">追加</button>
+      </div>
+      <div id="task-list"></div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-tab="calendar">
+      <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
+      <span>カレンダー</span>
+    </button>
+    <button class="nav-btn" data-tab="memo">
+      <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+      <span>メモ</span>
+    </button>
+    <button class="nav-btn" data-tab="tasks">
+      <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+      <span>タスク</span>
+    </button>
+  </nav>
+</div>
+
+<!-- Auth Modal -->
+<div class="modal-overlay" id="auth-modal">
+  <div class="modal">
+    <h2>GitHub PAT を入力</h2>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">repo スコープの Personal Access Token が必要です</p>
+    <input type="password" id="pat-input" placeholder="ghp_xxxxxxxxxxxx">
+    <button class="btn btn-primary" id="pat-save">保存</button>
+  </div>
+</div>
+
+<!-- Day Detail Modal -->
+<div class="day-modal hidden" id="day-modal">
+  <div class="day-modal-content">
+    <div class="day-modal-header">
+      <h3 id="day-modal-title"></h3>
+      <button class="btn-ghost" id="day-modal-close">✕</button>
+    </div>
+    <div class="day-modal-body" id="day-modal-body"></div>
+    <div class="day-modal-footer">
+      <div class="day-add-form">
+        <select id="day-tag-select"></select>
+        <input type="text" id="day-task-input" placeholder="タスクを追加...">
+        <button class="btn btn-primary btn-sm" id="day-task-add">追加</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Tag color map ──
+const TAG_COLORS = {
+  B1:'#ff69b4',B2:'#9b59b6',B3:'#e74c3c',B4:'#2ecc71',B5:'#3498db',
+  B6:'#e67e22',B7:'#f1c40f',B8:'#00bcd4',B9:'#95a5a6',B10:'#8d6e63',
+  B11:'#009688'
+};
+const TAG_NAMES = {
+  B1:'ガチレズ',B2:'メビウス',B3:'裁判法務',B4:'自己管理',B5:'学習',
+  B6:'個人案件',B7:'投資',B8:'出張旅行',B9:'契約管理',B10:'インフラ',B11:'不動産'
+};
+const DEFAULT_COLOR = '#bdc3c7';
+const REPO = 'meyjiro/claude-context';
+
+// ── State ──
+let pat = localStorage.getItem('gh_pat') || '';
+let tasks = [];    // parsed Issue #1 comments
+let memos = [];    // Issue #2 comments
+let calYear, calMonth;
+let selectedDate = null;
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', () => {
+  const now = new Date();
+  calYear = now.getFullYear();
+  calMonth = now.getMonth();
+
+  if (pat) {
+    document.getElementById('auth-modal').classList.add('hidden');
+    loadAll();
+  }
+  setupEvents();
+  populateTagSelects();
+});
+
+function populateTagSelects() {
+  const html = '<option value="">タグなし</option>' +
+    Object.keys(TAG_COLORS).map(t => `<option value="${t}">[${t}] ${TAG_NAMES[t]}</option>`).join('');
+  document.getElementById('task-tag-select').innerHTML = html;
+  document.getElementById('day-tag-select').innerHTML = html;
+}
+
+// ── Events ──
+function setupEvents() {
+  // PAT save
+  document.getElementById('pat-save').addEventListener('click', () => {
+    pat = document.getElementById('pat-input').value.trim();
+    if (!pat) return;
+    localStorage.setItem('gh_pat', pat);
+    document.getElementById('auth-modal').classList.add('hidden');
+    loadAll();
+  });
+
+  // Tab switching
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Calendar nav
+  document.getElementById('cal-prev').addEventListener('click', () => { calMonth--; if(calMonth<0){calMonth=11;calYear--} renderCalendar(); });
+  document.getElementById('cal-next').addEventListener('click', () => { calMonth++; if(calMonth>11){calMonth=0;calYear++} renderCalendar(); });
+
+  // Memo send
+  document.getElementById('memo-send').addEventListener('click', sendMemo);
+  document.getElementById('memo-input').addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') sendMemo();
+  });
+
+  // Task send
+  document.getElementById('task-send').addEventListener('click', sendTask);
+  document.getElementById('task-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') sendTask();
+  });
+
+  // Day modal
+  document.getElementById('day-modal-close').addEventListener('click', closeDayModal);
+  document.getElementById('day-modal').addEventListener('click', e => { if(e.target.id==='day-modal') closeDayModal(); });
+  document.getElementById('day-task-add').addEventListener('click', addDayTask);
+  document.getElementById('day-task-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addDayTask();
+  });
+}
+
+// ── API ──
+async function api(path, method='GET', body=null) {
+  const opts = {
+    method,
+    headers: {
+      'Authorization': 'token ' + pat,
+      'Accept': 'application/vnd.github.v3+json'
+    }
+  };
+  if (body) {
+    opts.headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(body);
+  }
+  const res = await fetch('https://api.github.com' + path, opts);
+  if (res.status === 204) return null;
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`API ${res.status}: ${err}`);
+  }
+  return res.json();
+}
+
+async function fetchAllComments(issueNum) {
+  let page = 1, all = [];
+  while (true) {
+    const data = await api(`/repos/${REPO}/issues/${issueNum}/comments?per_page=100&page=${page}`);
+    all = all.concat(data);
+    if (data.length < 100) break;
+    page++;
+  }
+  return all;
+}
+
+// ── Load ──
+async function loadAll() {
+  try {
+    await Promise.all([loadTasks(), loadMemos()]);
+  } catch (e) {
+    if (e.message.includes('401')) {
+      localStorage.removeItem('gh_pat');
+      pat = '';
+      document.getElementById('auth-modal').classList.remove('hidden');
+      toast('認証エラー。PATを再入力してください', true);
+    } else {
+      toast('読み込みエラー: ' + e.message, true);
+    }
+  }
+}
+
+async function loadTasks() {
+  const el = document.getElementById('task-list');
+  el.innerHTML = '<div class="spinner">読み込み中</div>';
+  const comments = await fetchAllComments(1);
+  tasks = comments.map(c => parseTask(c));
+  renderCalendar();
+  renderTaskList();
+}
+
+async function loadMemos() {
+  const el = document.getElementById('memo-feed');
+  el.innerHTML = '<div class="spinner">読み込み中</div>';
+  const comments = await fetchAllComments(2);
+  memos = comments.map(c => ({ id: c.id, body: c.body, created: c.created_at }));
+  renderMemos();
+}
+
+// ── Parse ──
+function parseTask(comment) {
+  const raw = comment.body.trim();
+  let tag = null, month = null, day = null, time = null, title = raw;
+
+  // Extract [Bxx] tag
+  const tagMatch = raw.match(/^\[([Bb]\d{1,2})\]\s*/);
+  if (tagMatch) {
+    tag = tagMatch[1].toUpperCase();
+    title = title.slice(tagMatch[0].length);
+  }
+
+  // Extract MM/DD date
+  const dateMatch = title.match(/^(\d{1,2})\/(\d{1,2})\s*/);
+  if (dateMatch) {
+    month = parseInt(dateMatch[1], 10);
+    day = parseInt(dateMatch[2], 10);
+    title = title.slice(dateMatch[0].length);
+  }
+
+  // Extract HH:MM time
+  const timeMatch = title.match(/^(\d{1,2}:\d{2})\s*/);
+  if (timeMatch) {
+    time = timeMatch[1];
+    title = title.slice(timeMatch[0].length);
+  }
+
+  title = title.trim();
+
+  return {
+    id: comment.id,
+    raw,
+    tag,
+    month,
+    day,
+    time,
+    title,
+    color: tag ? (TAG_COLORS[tag] || DEFAULT_COLOR) : DEFAULT_COLOR
+  };
+}
+
+// ── Render Calendar ──
+function renderCalendar() {
+  const now = new Date();
+  const todayY = now.getFullYear(), todayM = now.getMonth(), todayD = now.getDate();
+
+  const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  document.getElementById('cal-title').textContent = `${calYear}年 ${monthNames[calMonth]}`;
+
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+
+  // Day labels (Sun-Sat)
+  ['日','月','火','水','木','金','土'].forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-day-label';
+    el.textContent = d;
+    grid.appendChild(el);
+  });
+
+  // First day of month
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const prevDays = new Date(calYear, calMonth, 0).getDate();
+
+  // Task map for this month
+  const taskMap = {};
+  const displayMonth = calMonth + 1; // 1-indexed
+  tasks.forEach(t => {
+    if (t.month === displayMonth && t.day) {
+      if (!taskMap[t.day]) taskMap[t.day] = [];
+      taskMap[t.day].push(t);
+    }
+  });
+
+  // Previous month padding
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const cell = createCalCell(prevDays - i, true);
+    grid.appendChild(cell);
+  }
+
+  // Current month
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = calYear === todayY && calMonth === todayM && d === todayD;
+    const cell = createCalCell(d, false, isToday, taskMap[d] || []);
+    cell.addEventListener('click', () => openDayModal(d));
+    grid.appendChild(cell);
+  }
+
+  // Next month padding
+  const totalCells = firstDay + daysInMonth;
+  const remaining = (7 - totalCells % 7) % 7;
+  for (let i = 1; i <= remaining; i++) {
+    const cell = createCalCell(i, true);
+    grid.appendChild(cell);
+  }
+}
+
+function createCalCell(day, otherMonth, isToday=false, dayTasks=[]) {
+  const cell = document.createElement('div');
+  cell.className = 'cal-cell' + (otherMonth ? ' other-month' : '') + (isToday ? ' today' : '');
+  cell.innerHTML = `<span class="day-num">${day}</span>`;
+  if (dayTasks.length > 0) {
+    const dots = document.createElement('div');
+    dots.className = 'cal-dots';
+    dayTasks.slice(0, 5).forEach(t => {
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      dot.style.background = t.color;
+      dots.appendChild(dot);
+    });
+    cell.appendChild(dots);
+  }
+  return cell;
+}
+
+// ── Day Modal ──
+function openDayModal(day) {
+  selectedDate = day;
+  const displayMonth = calMonth + 1;
+  document.getElementById('day-modal-title').textContent =
+    `${calYear}/${String(displayMonth).padStart(2,'0')}/${String(day).padStart(2,'0')}`;
+
+  const body = document.getElementById('day-modal-body');
+  const dayTasks = tasks.filter(t => t.month === displayMonth && t.day === day);
+
+  if (dayTasks.length === 0) {
+    body.innerHTML = '<p style="color:var(--text2);text-align:center;padding:20px">タスクなし</p>';
+  } else {
+    body.innerHTML = dayTasks.map(t => `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            ${t.tag ? `<span class="tag" style="background:${t.color}">${t.tag}</span>` : ''}
+            ${t.time ? `<span class="date">${t.time}</span>` : ''}
+          </div>
+          <button class="delete-btn" onclick="deleteTask(${t.id})" title="削除">×</button>
+        </div>
+        <div class="title">${escHtml(t.title)}</div>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('day-task-input').value = '';
+  document.getElementById('day-modal').classList.remove('hidden');
+}
+
+function closeDayModal() {
+  document.getElementById('day-modal').classList.add('hidden');
+  selectedDate = null;
+}
+
+async function addDayTask() {
+  const input = document.getElementById('day-task-input');
+  const title = input.value.trim();
+  if (!title || selectedDate === null) return;
+
+  const tag = document.getElementById('day-tag-select').value;
+  const mm = String(calMonth + 1).padStart(2, '0');
+  const dd = String(selectedDate).padStart(2, '0');
+  const body = (tag ? `[${tag}] ` : '') + `${mm}/${dd}  ${title}`;
+
+  input.disabled = true;
+  try {
+    await api(`/repos/${REPO}/issues/1/comments`, 'POST', { body });
+    toast('追加しました');
+    await loadTasks();
+    openDayModal(selectedDate);
+  } catch (e) {
+    toast('エラー: ' + e.message, true);
+  }
+  input.disabled = false;
+  input.value = '';
+}
+
+// ── Render Task List ──
+function renderTaskList() {
+  const el = document.getElementById('task-list');
+  // Sort: dated tasks first (by month/day), then undated
+  const sorted = [...tasks].sort((a, b) => {
+    if (a.month && !b.month) return -1;
+    if (!a.month && b.month) return 1;
+    if (a.month && b.month) {
+      if (a.month !== b.month) return a.month - b.month;
+      return (a.day || 0) - (b.day || 0);
+    }
+    return 0;
+  });
+
+  if (sorted.length === 0) {
+    el.innerHTML = '<p style="color:var(--text2);text-align:center;padding:20px">タスクなし</p>';
+    return;
+  }
+
+  el.innerHTML = sorted.map(t => `
+    <div class="card">
+      <div class="card-header">
+        <div>
+          ${t.tag ? `<span class="tag" style="background:${t.color}">${t.tag}</span>` : ''}
+          ${t.month ? `<span class="date">${t.month}/${t.day}</span>` : ''}
+          ${t.time ? `<span class="date">${t.time}</span>` : ''}
+        </div>
+        <button class="delete-btn" onclick="deleteTask(${t.id})" title="削除">×</button>
+      </div>
+      <div class="title">${escHtml(t.title)}</div>
+    </div>
+  `).join('');
+}
+
+// ── Send Task ──
+async function sendTask() {
+  const input = document.getElementById('task-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const tag = document.getElementById('task-tag-select').value;
+  const body = (tag ? `[${tag}] ` : '') + text;
+
+  input.disabled = true;
+  try {
+    await api(`/repos/${REPO}/issues/1/comments`, 'POST', { body });
+    toast('追加しました');
+    input.value = '';
+    await loadTasks();
+  } catch (e) {
+    toast('エラー: ' + e.message, true);
+  }
+  input.disabled = false;
+}
+
+// ── Delete Task ──
+async function deleteTask(id) {
+  if (!confirm('このタスクを削除しますか？')) return;
+  try {
+    await api(`/repos/${REPO}/issues/comments/${id}`, 'DELETE');
+    toast('削除しました');
+    await loadTasks();
+    if (selectedDate !== null) openDayModal(selectedDate);
+  } catch (e) {
+    toast('エラー: ' + e.message, true);
+  }
+}
+
+// ── Render Memos ──
+function renderMemos() {
+  const el = document.getElementById('memo-feed');
+  if (memos.length === 0) {
+    el.innerHTML = '<p style="color:var(--text2);text-align:center;padding:20px">メモなし</p>';
+    return;
+  }
+  // Newest first
+  const sorted = [...memos].reverse();
+  el.innerHTML = sorted.map(m => `
+    <div class="card memo-card">
+      <div class="card-header">
+        <span class="memo-time">${formatTime(m.created)}</span>
+        <button class="delete-btn" onclick="deleteMemo(${m.id})" title="削除">×</button>
+      </div>
+      <div class="title">${escHtml(m.body)}</div>
+    </div>
+  `).join('');
+}
+
+// ── Send Memo ──
+async function sendMemo() {
+  const input = document.getElementById('memo-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.disabled = true;
+  document.getElementById('memo-send').disabled = true;
+  try {
+    await api(`/repos/${REPO}/issues/2/comments`, 'POST', { body: text });
+    toast('送信しました');
+    input.value = '';
+    await loadMemos();
+  } catch (e) {
+    toast('エラー: ' + e.message, true);
+  }
+  input.disabled = false;
+  document.getElementById('memo-send').disabled = false;
+}
+
+// ── Delete Memo ──
+async function deleteMemo(id) {
+  if (!confirm('このメモを削除しますか？')) return;
+  try {
+    await api(`/repos/${REPO}/issues/comments/${id}`, 'DELETE');
+    toast('削除しました');
+    await loadMemos();
+  } catch (e) {
+    toast('エラー: ' + e.message, true);
+  }
+}
+
+// ── Helpers ──
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function formatTime(iso) {
+  const d = new Date(iso);
+  const mm = d.getMonth()+1, dd = d.getDate(), hh = d.getHours(), mi = String(d.getMinutes()).padStart(2,'0');
+  return `${mm}/${dd} ${hh}:${mi}`;
+}
+
+function toast(msg, isError=false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
