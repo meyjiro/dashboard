@@ -113,6 +113,11 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 .toast.error{background:#ef4444}
 .toast.show{opacity:1}
 
+/* Mebius surgery marker */
+.cal-cell .mebius-bar{width:80%;height:4px;border-radius:2px;background:linear-gradient(90deg,#9b59b6,#e040fb);margin-top:1px}
+.mebius-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,#9b59b6,#e040fb)}
+.mebius-card{border-left:4px solid #9b59b6}
+
 /* Empty state */
 .empty{color:var(--text2);text-align:center;padding:32px 16px;font-size:14px}
 </style>
@@ -229,7 +234,10 @@ let tasks = [];
 let memos = [];
 let calYear, calMonth;
 let selectedDate = null;
+let mebiusEvents = []; // surgery schedule from Mebius DB
 let isLoading = false;
+const MEBIUS_API = 'https://mebiusmagic.com/mebius_admin/api_calendar.php';
+const MEBIUS_TOKEN = 'mbs_cal_4k7r9w2m';
 
 // ── Init ──
 document.addEventListener('DOMContentLoaded', () => {
@@ -337,7 +345,7 @@ async function loadAll() {
   const btn = document.getElementById('refresh-btn');
   btn.classList.add('spinning');
   try {
-    await Promise.all([loadTasks(), loadMemos()]);
+    await Promise.all([loadTasks(), loadMemos(), loadMebius()]);
   } catch (e) {
     if (e.message.includes('401')) {
       localStorage.removeItem('gh_pat');
@@ -367,6 +375,29 @@ async function loadMemos() {
   const comments = await fetchAllComments(2);
   memos = comments.map(c => ({ id: c.id, body: c.body, created: c.created_at }));
   renderMemos();
+}
+
+// ── Load Mebius ──
+async function loadMebius() {
+  try {
+    const res = await fetch(MEBIUS_API + '?token=' + MEBIUS_TOKEN, {
+      headers: { 'X-Api-Token': MEBIUS_TOKEN }
+    });
+    if (!res.ok) throw new Error('Mebius API ' + res.status);
+    const data = await res.json();
+    mebiusEvents = (data.events || []).map(e => ({
+      id: e.id,
+      start: e.start,
+      end: e.end,
+      nights: e.nights,
+      completed: e.completed,
+      phase: e.phase
+    }));
+    renderCalendar();
+  } catch (e) {
+    // Mebius API failure is non-fatal
+    console.warn('Mebius load failed:', e.message);
+  }
 }
 
 // ── Parse ──
@@ -422,11 +453,25 @@ function renderCalendar() {
   const prevDays = new Date(calYear, calMonth, 0).getDate();
 
   const taskMap = {};
+  const mebiusMap = {};
   const displayMonth = calMonth + 1;
   tasks.forEach(t => {
     if (t.month === displayMonth && t.day) {
       if (!taskMap[t.day]) taskMap[t.day] = [];
       taskMap[t.day].push(t);
+    }
+  });
+
+  // Map Mebius surgery dates to calendar days
+  mebiusEvents.forEach(ev => {
+    const start = new Date(ev.start + 'T00:00:00');
+    const end = ev.end ? new Date(ev.end + 'T00:00:00') : start;
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      if (d.getFullYear() === calYear && d.getMonth() === calMonth) {
+        const day = d.getDate();
+        if (!mebiusMap[day]) mebiusMap[day] = [];
+        mebiusMap[day].push(ev);
+      }
     }
   });
 
@@ -436,7 +481,7 @@ function renderCalendar() {
 
   for (let d = 1; d <= daysInMonth; d++) {
     const isToday = calYear === todayY && calMonth === todayM && d === todayD;
-    const cell = createCalCell(d, false, isToday, taskMap[d] || []);
+    const cell = createCalCell(d, false, isToday, taskMap[d] || [], mebiusMap[d] || []);
     cell.addEventListener('click', () => openDayModal(d));
     grid.appendChild(cell);
   }
@@ -448,10 +493,15 @@ function renderCalendar() {
   }
 }
 
-function createCalCell(day, otherMonth, isToday=false, dayTasks=[]) {
+function createCalCell(day, otherMonth, isToday=false, dayTasks=[], dayMebius=[]) {
   const cell = document.createElement('div');
   cell.className = 'cal-cell' + (otherMonth ? ' other-month' : '') + (isToday ? ' today' : '');
   cell.innerHTML = `<span class="day-num">${day}</span>`;
+  if (dayMebius.length > 0) {
+    const bar = document.createElement('div');
+    bar.className = 'mebius-bar';
+    cell.appendChild(bar);
+  }
   if (dayTasks.length > 0) {
     const dots = document.createElement('div');
     dots.className = 'cal-dots';
@@ -476,10 +526,40 @@ function openDayModal(day) {
   const body = document.getElementById('day-modal-body');
   const dayTasks = tasks.filter(t => t.month === displayMonth && t.day === day);
 
-  if (dayTasks.length === 0) {
+  // Find Mebius events for this day
+  const dateStr = `${calYear}-${String(displayMonth).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  const dayMebius = mebiusEvents.filter(ev => {
+    return dateStr >= ev.start && dateStr <= (ev.end || ev.start);
+  });
+
+  let html = '';
+
+  // Mebius events first (prominent)
+  if (dayMebius.length > 0) {
+    html += dayMebius.map(ev => {
+      const isStart = dateStr === ev.start;
+      const isEnd = dateStr === (ev.end || ev.start);
+      let label = '施術中';
+      if (isStart && isEnd) label = '施術日';
+      else if (isStart) label = '施術開始';
+      else if (isEnd) label = ev.completed ? '施術完了' : '施術最終日';
+      return `
+        <div class="card mebius-card">
+          <div class="card-header">
+            <div>
+              <span class="mebius-tag">メビウス</span>
+              <span class="date">${label}${ev.nights ? ' (' + ev.nights + '夜)' : ''}</span>
+            </div>
+          </div>
+          <div class="title">${ev.start} 〜 ${ev.end || ev.start}${ev.completed ? ' (完了済)' : ''}</div>
+        </div>`;
+    }).join('');
+  }
+
+  if (dayTasks.length === 0 && dayMebius.length === 0) {
     body.innerHTML = '<p class="empty">タスクなし</p>';
   } else {
-    body.innerHTML = dayTasks.map(t => `
+    body.innerHTML = html + dayTasks.map(t => `
       <div class="card">
         <div class="card-header">
           <div>
