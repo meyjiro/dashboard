@@ -104,7 +104,8 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 
 /* Task Form */
 .task-add-form{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
-.task-add-form input{flex:1;min-width:140px;padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text)}
+.task-add-form input[type=text]{flex:1;min-width:140px;padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text)}
+.task-add-form input[type=date]{flex:0 0 auto;padding:11px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px}
 .task-add-form select{padding:12px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text)}
 
 /* Loading */
@@ -177,9 +178,9 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 .card.overdue .ov-badge{display:inline-block;background:#ef4444;color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;margin-right:6px}
 
 /* Tag filter chips */
-.tag-filter{display:flex;gap:7px;overflow-x:auto;padding:0 0 12px;-webkit-overflow-scrolling:touch}
+.tag-filter{display:flex;gap:6px;overflow-x:auto;padding:0 0 12px;-webkit-overflow-scrolling:touch}
 .tag-filter::-webkit-scrollbar{display:none}
-.tag-chip{flex-shrink:0;padding:6px 12px;border-radius:16px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.tag-chip{flex-shrink:0;padding:4px 9px;border-radius:13px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
 .tag-chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
 
 /* Memo search */
@@ -230,7 +231,8 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
     <!-- Tasks Tab -->
     <div id="tab-tasks" class="tab-panel">
       <div class="task-add-form" id="task-add-form">
-        <input type="text" id="task-input" placeholder="タスクを追加 (例: 07/15 内容)">
+        <input type="text" id="task-input" placeholder="タスク内容">
+        <input type="date" id="task-date" title="日付（任意）">
         <select id="task-tag-select">
           <option value="">タグなし</option>
         </select>
@@ -989,13 +991,20 @@ async function sendTask() {
   if (!text) return;
 
   const tag = document.getElementById('task-tag-select').value;
-  const body = (tag ? `[${tag}] ` : '') + text;
+  const dateEl = document.getElementById('task-date');
+  let datePrefix = '';
+  if (dateEl.value) {
+    const [, mm, dd] = dateEl.value.split('-'); // YYYY-MM-DD
+    datePrefix = `${mm}/${dd} `;
+  }
+  const body = (tag ? `[${tag}] ` : '') + datePrefix + text;
 
   input.disabled = true;
   try {
     await api(`/repos/${REPO}/issues/1/comments`, 'POST', { body });
     toast('追加しました');
     input.value = '';
+    dateEl.value = '';
     await loadTasks();
   } catch (e) {
     toast('エラー: ' + e.message, true);
