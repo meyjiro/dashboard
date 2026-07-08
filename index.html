@@ -387,6 +387,7 @@ async function loadMebius() {
     const data = await res.json();
     mebiusEvents = (data.events || []).map(e => ({
       id: e.id,
+      name: e.name || '',
       start: e.start,
       end: e.end,
       nights: e.nights,
@@ -533,16 +534,23 @@ function openDayModal(day) {
 
   // Mebius completion dates (prominent)
   if (dayMebius.length > 0) {
-    html += dayMebius.map(ev => `
+    html += dayMebius.map(ev => {
+      const startMM = ev.start ? ev.start.slice(5,7).replace(/^0/,'') : '';
+      const startDD = ev.start ? ev.start.slice(8,10).replace(/^0/,'') : '';
+      const endMM = ev.end ? ev.end.slice(5,7).replace(/^0/,'') : '';
+      const endDD = ev.end ? ev.end.slice(8,10).replace(/^0/,'') : '';
+      const range = ev.start && ev.end ? `${startMM}/${startDD} 〜 ${endMM}/${endDD}` : '';
+      return `
       <div class="card mebius-card">
         <div class="card-header">
           <div>
             <span class="mebius-tag">メビウス</span>
-            <span class="date">施術完了${ev.nights ? ' (' + ev.nights + '夜)' : ''}</span>
+            <span class="date">${ev.completed ? '完了済' : '完了予定'}</span>
           </div>
         </div>
-        <div class="title">${ev.completed ? '完了済' : '完了予定'}</div>
-      </div>`).join('');
+        <div class="title">${escHtml(ev.name || '名前なし')}　${range}（${ev.nights}夜）</div>
+      </div>`;
+    }).join('');
   }
 
   if (dayTasks.length === 0 && dayMebius.length === 0) {
