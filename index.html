@@ -137,6 +137,14 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 .memo-day-header{font-size:12px;font-weight:700;color:var(--text2);margin:16px 4px 8px;letter-spacing:.02em}
 .memo-day-header:first-child{margin-top:2px}
 .memo-form .memo-hint{font-size:11px;color:var(--text2);float:left;padding-top:14px}
+
+/* Links (launcher tiles) */
+.link-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding-top:4px}
+.link-tile{display:flex;flex-direction:column;align-items:flex-start;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;text-decoration:none;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.04);transition:transform .12s}
+.link-tile:active{transform:scale(.96)}
+.link-icon{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px}
+.link-label{font-size:15px;font-weight:700;line-height:1.2}
+.link-sub{font-size:12px;color:var(--text2);margin-top:-5px}
 </style>
 </head>
 <body>
@@ -187,6 +195,11 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
       </div>
       <div id="task-list"></div>
     </div>
+
+    <!-- Links Tab -->
+    <div id="tab-links" class="tab-panel">
+      <div class="link-grid" id="link-grid"></div>
+    </div>
   </div>
 
   <!-- Bottom Nav -->
@@ -202,6 +215,10 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
     <button class="nav-btn" data-tab="tasks">
       <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
       <span>タスク</span>
+    </button>
+    <button class="nav-btn" data-tab="links">
+      <svg viewBox="0 0 24 24"><path d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h6v6h-6v-6z"/></svg>
+      <span>リンク</span>
     </button>
   </nav>
 </div>
@@ -264,6 +281,14 @@ const TAG_NAMES = {
 const DEFAULT_COLOR = '#bdc3c7';
 const REPO = 'meyjiro/claude-context';
 
+// ── リンクランチャー（ここに追記すればタイルが増える）──
+const LINKS = [
+  { icon:'🔮', label:'メビウス管理', sub:'相談・顧客対応', url:'https://mebiusmagic.com/mebius_admin/admin.php', bg:'#f0e6fa' },
+  { icon:'✈️', label:'旅行プラン',   sub:'2026年7月 日本', url:'https://mebiusmagic.com/mebius_admin/trip_202507.html', bg:'#e0f7fa' },
+  { icon:'💰', label:'売上管理',     sub:'revenue',        url:'https://mebiusmagic.com/mebius_admin/revenue.php', bg:'#fdf3d7' },
+  { icon:'👥', label:'顧客一覧',     sub:'clients',        url:'https://mebiusmagic.com/mebius_admin/clients.php', bg:'#e6f2fd' },
+];
+
 // ── State ──
 let pat = localStorage.getItem('gh_pat') || '';
 let tasks = [];
@@ -288,7 +313,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   setupEvents();
   populateTagSelects();
+  renderLinks();
 });
+
+// ── Render Links ──
+function renderLinks() {
+  document.getElementById('link-grid').innerHTML = LINKS.map(l => `
+    <a class="link-tile" href="${l.url}" target="_blank" rel="noopener">
+      <span class="link-icon" style="background:${l.bg}">${l.icon}</span>
+      <span class="link-label">${l.label}</span>
+      <span class="link-sub">${l.sub}</span>
+    </a>`).join('');
+}
 
 function populateTagSelects() {
   const html = '<option value="">タグなし</option>' +
