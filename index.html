@@ -145,6 +145,11 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 .link-icon{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px}
 .link-label{font-size:15px;font-weight:700;line-height:1.2}
 .link-sub{font-size:12px;color:var(--text2);margin-top:-5px}
+.section-title{font-size:13px;font-weight:700;color:var(--text2);margin:24px 4px 10px}
+.mebius-line{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-left:4px solid #9b59b6;border-radius:10px;margin-bottom:8px}
+.mebius-line .ml-date{font-weight:700;font-size:14px;color:#9b59b6;min-width:60px}
+.mebius-line .ml-name{flex:1;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mebius-line .ml-meta{font-size:12px;color:var(--text2);flex-shrink:0}
 </style>
 </head>
 <body>
@@ -199,6 +204,8 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
     <!-- Links Tab -->
     <div id="tab-links" class="tab-panel">
       <div class="link-grid" id="link-grid"></div>
+      <div class="section-title">🔮 メビウス完了予定</div>
+      <div id="mebius-list"></div>
     </div>
   </div>
 
@@ -286,7 +293,6 @@ const LINKS = [
   { icon:'🔮', label:'メビウス管理', sub:'相談・顧客対応', url:'https://mebiusmagic.com/mebius_admin/admin.php', bg:'#f0e6fa' },
   { icon:'✈️', label:'旅行プラン',   sub:'2026年7月 日本', url:'https://mebiusmagic.com/mebius_admin/trip_202507.html', bg:'#e0f7fa' },
   { icon:'💰', label:'売上管理',     sub:'revenue',        url:'https://mebiusmagic.com/mebius_admin/revenue.php', bg:'#fdf3d7' },
-  { icon:'👥', label:'顧客一覧',     sub:'clients',        url:'https://mebiusmagic.com/mebius_admin/clients.php', bg:'#e6f2fd' },
 ];
 
 // ── State ──
@@ -314,6 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEvents();
   populateTagSelects();
   renderLinks();
+  renderMebiusList();
 });
 
 // ── Render Links ──
@@ -324,6 +331,34 @@ function renderLinks() {
       <span class="link-label">${l.label}</span>
       <span class="link-sub">${l.sub}</span>
     </a>`).join('');
+}
+
+// ── Render Mebius 完了予定リスト（一行ずつ）──
+function renderMebiusList() {
+  const el = document.getElementById('mebius-list');
+  if (!el) return;
+  if (!mebiusToken) {
+    el.innerHTML = '<p class="empty">⚙ 設定でメビウストークンを入れると表示されます</p>';
+    return;
+  }
+  // 未完了（＝これからの完了予定）を完了日順に
+  const upcoming = mebiusEvents
+    .filter(ev => !ev.completed)
+    .sort((a, b) => (a.end || a.start).localeCompare(b.end || b.start));
+  if (upcoming.length === 0) {
+    el.innerHTML = '<p class="empty">完了予定はありません</p>';
+    return;
+  }
+  el.innerHTML = upcoming.map(ev => {
+    const d = new Date((ev.end || ev.start) + 'T00:00:00');
+    const wd = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()];
+    const md = `${d.getMonth() + 1}/${d.getDate()}(${wd})`;
+    return `<div class="mebius-line">
+      <span class="ml-date">${md}</span>
+      <span class="ml-name">${escHtml(ev.name || '名前なし')}</span>
+      <span class="ml-meta">${ev.nights}泊</span>
+    </div>`;
+  }).join('');
 }
 
 function populateTagSelects() {
@@ -482,7 +517,7 @@ async function loadMemos() {
 
 // ── Load Mebius ──
 async function loadMebius() {
-  if (!mebiusToken) { mebiusEvents = []; return; } // 未設定なら施術日程はスキップ
+  if (!mebiusToken) { mebiusEvents = []; renderMebiusList(); return; } // 未設定なら施術日程はスキップ
   try {
     const res = await fetch(MEBIUS_API, {
       headers: { 'X-Api-Token': mebiusToken }
@@ -499,6 +534,7 @@ async function loadMebius() {
       phase: e.phase
     }));
     renderCalendar();
+    renderMebiusList();
   } catch (e) {
     // Mebius API failure is non-fatal
     console.warn('Mebius load failed:', e.message);
