@@ -462,16 +462,13 @@ function renderCalendar() {
     }
   });
 
-  // Map Mebius surgery dates to calendar days
+  // Map Mebius completion dates only (surgery_date_last)
   mebiusEvents.forEach(ev => {
-    const start = new Date(ev.start + 'T00:00:00');
-    const end = ev.end ? new Date(ev.end + 'T00:00:00') : start;
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      if (d.getFullYear() === calYear && d.getMonth() === calMonth) {
-        const day = d.getDate();
-        if (!mebiusMap[day]) mebiusMap[day] = [];
-        mebiusMap[day].push(ev);
-      }
+    const endDate = new Date((ev.end || ev.start) + 'T00:00:00');
+    if (endDate.getFullYear() === calYear && endDate.getMonth() === calMonth) {
+      const day = endDate.getDate();
+      if (!mebiusMap[day]) mebiusMap[day] = [];
+      mebiusMap[day].push(ev);
     }
   });
 
@@ -534,26 +531,18 @@ function openDayModal(day) {
 
   let html = '';
 
-  // Mebius events first (prominent)
+  // Mebius completion dates (prominent)
   if (dayMebius.length > 0) {
-    html += dayMebius.map(ev => {
-      const isStart = dateStr === ev.start;
-      const isEnd = dateStr === (ev.end || ev.start);
-      let label = '施術中';
-      if (isStart && isEnd) label = '施術日';
-      else if (isStart) label = '施術開始';
-      else if (isEnd) label = ev.completed ? '施術完了' : '施術最終日';
-      return `
-        <div class="card mebius-card">
-          <div class="card-header">
-            <div>
-              <span class="mebius-tag">メビウス</span>
-              <span class="date">${label}${ev.nights ? ' (' + ev.nights + '夜)' : ''}</span>
-            </div>
+    html += dayMebius.map(ev => `
+      <div class="card mebius-card">
+        <div class="card-header">
+          <div>
+            <span class="mebius-tag">メビウス</span>
+            <span class="date">施術完了${ev.nights ? ' (' + ev.nights + '夜)' : ''}</span>
           </div>
-          <div class="title">${ev.start} 〜 ${ev.end || ev.start}${ev.completed ? ' (完了済)' : ''}</div>
-        </div>`;
-    }).join('');
+        </div>
+        <div class="title">${ev.completed ? '完了済' : '完了予定'}</div>
+      </div>`).join('');
   }
 
   if (dayTasks.length === 0 && dayMebius.length === 0) {
