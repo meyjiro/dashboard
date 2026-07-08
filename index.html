@@ -421,19 +421,12 @@ function renderAgenda() {
   const items = [];
 
   // 日付ありの未完了タスク（年は持たないので次に来る日付へ寄せる）
+  // ※メビウスの完了予定はリンクタブで一覧できるのでここには入れない
   tasks.forEach(t => {
     if (!t.month || !t.day || t.done) return;
     let dt = new Date(today.getFullYear(), t.month - 1, t.day);
     if (dt < today) dt = new Date(today.getFullYear() + 1, t.month - 1, t.day);
     items.push({ date: dt, kind: 'task', t });
-  });
-  // メビウス完了予定（未完了のみ）
-  mebiusEvents.forEach(ev => {
-    if (ev.completed) return;
-    const ds = ev.end || ev.start; if (!ds) return;
-    const dt = new Date(ds + 'T00:00:00');
-    if (dt < today) return;
-    items.push({ date: dt, kind: 'mebius', ev });
   });
 
   const up = items.filter(i => i.date >= today && i.date <= maxDate)
@@ -447,13 +440,6 @@ function renderAgenda() {
     const diff = Math.round((d - today) / 86400000);
     const rel = diff === 0 ? '今日' : diff === 1 ? '明日' : `あと${diff}日`;
     const relCls = diff <= 2 ? ' soon' : '';
-    if (i.kind === 'mebius') {
-      return `<div class="agenda-line" onclick="switchTab('links')">
-        <span class="ag-date">${md}<small>(${wd})</small></span>
-        <span class="ag-rel${relCls}">${rel}</span>
-        <span class="ag-body"><span class="mebius-tag">メビウス</span>${escHtml(i.ev.name || '名前なし')} ${i.ev.nights}泊</span>
-      </div>`;
-    }
     const t = i.t;
     return `<div class="agenda-line" onclick="openAgendaDay(${d.getFullYear()},${d.getMonth()},${d.getDate()})">
       <span class="ag-date">${md}<small>(${wd})</small></span>
