@@ -120,6 +120,20 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 
 /* Empty state */
 .empty{color:var(--text2);text-align:center;padding:32px 16px;font-size:14px}
+
+/* Task completion */
+.check-btn{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);background:none;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;padding:0;line-height:1}
+.check-btn.done{background:var(--accent);border-color:var(--accent)}
+.card.done .title{text-decoration:line-through;color:var(--text2)}
+.cal-dots .dot.done{opacity:.28}
+.done-section-header{font-size:12px;font-weight:700;color:var(--text2);margin:20px 4px 10px;display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+.done-section-header .chevron{transition:transform .15s}
+.done-section-header.collapsed .chevron{transform:rotate(-90deg)}
+
+/* Memo day grouping */
+.memo-day-header{font-size:12px;font-weight:700;color:var(--text2);margin:16px 4px 8px;letter-spacing:.02em}
+.memo-day-header:first-child{margin-top:2px}
+.memo-form .memo-hint{font-size:11px;color:var(--text2);float:left;padding-top:14px}
 </style>
 </head>
 <body>
@@ -146,7 +160,8 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
     <!-- Memo Tab -->
     <div id="tab-memo" class="tab-panel">
       <div class="memo-form">
-        <textarea id="memo-input" placeholder="思いついたことを書く..."></textarea>
+        <textarea id="memo-input" placeholder="ふと思いついたこと・考えごとを書き留める…"></textarea>
+        <span class="memo-hint">⌘/Ctrl + Enter で送信・書きかけは自動保存</span>
         <button class="btn btn-primary" id="memo-send">送信</button>
         <div style="clear:both"></div>
       </div>
@@ -283,9 +298,14 @@ function setupEvents() {
   document.getElementById('cal-next').addEventListener('click', () => { calMonth++; if(calMonth>11){calMonth=0;calYear++} renderCalendar(); });
 
   document.getElementById('memo-send').addEventListener('click', sendMemo);
-  document.getElementById('memo-input').addEventListener('keydown', e => {
+  const memoInput = document.getElementById('memo-input');
+  memoInput.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') sendMemo();
   });
+  // 下書き自動保存（書きかけを取りこぼさない）
+  memoInput.addEventListener('input', () => localStorage.setItem('memo_draft', memoInput.value));
+  const draft = localStorage.getItem('memo_draft');
+  if (draft) memoInput.value = draft;
 
   document.getElementById('task-send').addEventListener('click', sendTask);
   document.getElementById('task-input').addEventListener('keydown', e => {
@@ -404,9 +424,15 @@ async function loadMebius() {
 // ── Parse ──
 function parseTask(comment) {
   const raw = comment.body.trim();
-  let tag = null, month = null, day = null, time = null, title = raw;
+  let tag = null, month = null, day = null, time = null, done = false, title = raw;
 
-  const tagMatch = raw.match(/^\[([Bb]\d{1,2})\]\s*/);
+  const doneMatch = title.match(/^\[x\]\s*/i);
+  if (doneMatch) {
+    done = true;
+    title = title.slice(doneMatch[0].length);
+  }
+
+  const tagMatch = title.match(/^\[([Bb]\d{1,2})\]\s*/);
   if (tagMatch) {
     tag = tagMatch[1].toUpperCase();
     title = title.slice(tagMatch[0].length);
@@ -427,7 +453,7 @@ function parseTask(comment) {
 
   title = title.trim();
 
-  return { id: comment.id, raw, tag, month, day, time, title,
+  return { id: comment.id, raw, tag, month, day, time, title, done,
     color: tag ? (TAG_COLORS[tag] || DEFAULT_COLOR) : DEFAULT_COLOR };
 }
 
@@ -505,7 +531,7 @@ function createCalCell(day, otherMonth, isToday=false, dayTasks=[], dayMebius=[]
     dots.className = 'cal-dots';
     dayTasks.slice(0, 5).forEach(t => {
       const dot = document.createElement('div');
-      dot.className = 'dot';
+      dot.className = 'dot' + (t.done ? ' done' : '');
       dot.style.background = t.color;
       dots.appendChild(dot);
     });
@@ -553,21 +579,15 @@ function openDayModal(day) {
     }).join('');
   }
 
+  const activeDay = dayTasks.filter(t => !t.done);
+  const doneDay = dayTasks.filter(t => t.done);
+
   if (dayTasks.length === 0 && dayMebius.length === 0) {
     body.innerHTML = '<p class="empty">タスクなし</p>';
   } else {
-    body.innerHTML = html + dayTasks.map(t => `
-      <div class="card">
-        <div class="card-header">
-          <div>
-            ${t.tag ? `<span class="tag" style="background:${t.color}">${t.tag}</span>` : ''}
-            ${t.time ? `<span class="date">${t.time}</span>` : ''}
-          </div>
-          <button class="delete-btn" onclick="deleteTask(${t.id})" title="削除">&times;</button>
-        </div>
-        <div class="title">${escHtml(t.title)}</div>
-      </div>
-    `).join('');
+    body.innerHTML = html
+      + activeDay.map(taskCardHtml).join('')
+      + (doneDay.length ? `<div class="done-section-header">完了済み (${doneDay.length})</div>` + doneDay.map(taskCardHtml).join('') : '');
   }
 
   document.getElementById('day-task-input').value = '';
@@ -602,6 +622,25 @@ async function addDayTask() {
   input.value = '';
 }
 
+// ── Task card (shared by list & day modal) ──
+function taskCardHtml(t) {
+  return `
+    <div class="card task-card${t.done ? ' done' : ''}">
+      <div class="card-header">
+        <div style="display:flex;align-items:center;gap:8px;min-width:0">
+          <button class="check-btn${t.done ? ' done' : ''}" onclick="toggleTaskDone(${t.id}, ${t.done ? 'false' : 'true'})" title="${t.done ? '未完了に戻す' : '完了にする'}">${t.done ? '✓' : ''}</button>
+          <div>
+            ${t.tag ? `<span class="tag" style="background:${t.color}">${t.tag}</span>` : ''}
+            ${t.month ? `<span class="date">${t.month}/${t.day}</span>` : ''}
+            ${t.time ? `<span class="date">${t.time}</span>` : ''}
+          </div>
+        </div>
+        <button class="delete-btn" onclick="deleteTask(${t.id})" title="削除">&times;</button>
+      </div>
+      <div class="title">${escHtml(t.title)}</div>
+    </div>`;
+}
+
 // ── Render Task List ──
 function renderTaskList() {
   const el = document.getElementById('task-list');
@@ -615,24 +654,26 @@ function renderTaskList() {
     return 0;
   });
 
+  const active = sorted.filter(t => !t.done);
+  const done = sorted.filter(t => t.done);
+
   if (sorted.length === 0) {
     el.innerHTML = '<p class="empty">タスクなし</p>';
     return;
   }
 
-  el.innerHTML = sorted.map(t => `
-    <div class="card">
-      <div class="card-header">
-        <div>
-          ${t.tag ? `<span class="tag" style="background:${t.color}">${t.tag}</span>` : ''}
-          ${t.month ? `<span class="date">${t.month}/${t.day}</span>` : ''}
-          ${t.time ? `<span class="date">${t.time}</span>` : ''}
-        </div>
-        <button class="delete-btn" onclick="deleteTask(${t.id})" title="削除">&times;</button>
-      </div>
-      <div class="title">${escHtml(t.title)}</div>
-    </div>
-  `).join('');
+  let html = active.length ? active.map(taskCardHtml).join('') : '<p class="empty">未完了タスクなし</p>';
+  if (done.length) {
+    html += `<div class="done-section-header" onclick="toggleDoneSection(this)"><span class="chevron">▾</span> 完了済み (${done.length})</div>`
+          + `<div class="done-list">` + done.map(taskCardHtml).join('') + `</div>`;
+  }
+  el.innerHTML = html;
+}
+
+function toggleDoneSection(header) {
+  header.classList.toggle('collapsed');
+  const list = header.nextElementSibling;
+  if (list) list.style.display = header.classList.contains('collapsed') ? 'none' : 'block';
 }
 
 // ── Send Task ──
@@ -656,9 +697,25 @@ async function sendTask() {
   input.disabled = false;
 }
 
-// ── Delete Task ──
+// ── Complete / Uncomplete Task (保存: 削除せずIssueコメントを編集) ──
+async function toggleTaskDone(id, makeDone) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  const stripped = t.raw.replace(/^\[x\]\s*/i, '');
+  const newBody = makeDone ? '[x] ' + stripped : stripped;
+  try {
+    await api(`/repos/${REPO}/issues/comments/${id}`, 'PATCH', { body: newBody });
+    toast(makeDone ? '完了にしました' : '未完了に戻しました');
+    await loadTasks();
+    if (selectedDate !== null) openDayModal(selectedDate);
+  } catch (e) {
+    toast('エラー: ' + e.message, true);
+  }
+}
+
+// ── Delete Task (完全削除) ──
 async function deleteTask(id) {
-  if (!confirm('このタスクを削除しますか？')) return;
+  if (!confirm('このタスクを完全に削除しますか？（完了にするだけなら○ボタン）')) return;
   try {
     await api(`/repos/${REPO}/issues/comments/${id}`, 'DELETE');
     toast('削除しました');
@@ -669,23 +726,45 @@ async function deleteTask(id) {
   }
 }
 
-// ── Render Memos ──
+// ── Render Memos (日付ごとにグループ化した思考ログ) ──
 function renderMemos() {
   const el = document.getElementById('memo-feed');
   if (memos.length === 0) {
-    el.innerHTML = '<p class="empty">メモなし</p>';
+    el.innerHTML = '<p class="empty">まだメモはありません。<br>ふと思いついたこと・考えごとを書き留めておけます。</p>';
     return;
   }
-  const sorted = [...memos].reverse();
-  el.innerHTML = sorted.map(m => `
-    <div class="card memo-card">
-      <div class="card-header">
-        <span class="memo-time">${formatTime(m.created)}</span>
-        <button class="delete-btn" onclick="deleteMemo(${m.id})" title="削除">&times;</button>
-      </div>
-      <div class="title">${escHtml(m.body)}</div>
-    </div>
-  `).join('');
+  const sorted = [...memos].reverse(); // 新しい順
+  let html = '', lastDay = '';
+  sorted.forEach(m => {
+    const d = new Date(m.created);
+    const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    if (key !== lastDay) {
+      html += `<div class="memo-day-header">${dayLabel(d)}</div>`;
+      lastDay = key;
+    }
+    const hh = d.getHours(), mi = String(d.getMinutes()).padStart(2, '0');
+    html += `
+      <div class="card memo-card">
+        <div class="card-header">
+          <span class="memo-time">${hh}:${mi}</span>
+          <button class="delete-btn" onclick="deleteMemo(${m.id})" title="削除">&times;</button>
+        </div>
+        <div class="title">${escHtml(m.body)}</div>
+      </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function dayLabel(d) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const that = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diff = Math.round((today - that) / 86400000);
+  const wd = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()];
+  const md = `${d.getMonth() + 1}月${d.getDate()}日(${wd})`;
+  if (diff === 0) return `今日 ・ ${md}`;
+  if (diff === 1) return `昨日 ・ ${md}`;
+  return `${d.getFullYear()}年${md}`;
 }
 
 // ── Send Memo ──
@@ -700,6 +779,7 @@ async function sendMemo() {
     await api(`/repos/${REPO}/issues/2/comments`, 'POST', { body: text });
     toast('送信しました');
     input.value = '';
+    localStorage.removeItem('memo_draft');
     await loadMemos();
   } catch (e) {
     toast('エラー: ' + e.message, true);
