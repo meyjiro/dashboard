@@ -161,6 +161,29 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 .ag-body{flex:1;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .ag-body .tag,.ag-body .mebius-tag{margin-right:6px}
 .cal-header h2{cursor:pointer}
+
+/* Countdown banner (旅行などのカウントダウン) */
+.countdown{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#0bb7ae,#0aa69e);color:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(11,183,174,.25)}
+.countdown .cd-emoji{font-size:26px;flex-shrink:0}
+.countdown .cd-body{flex:1;min-width:0}
+.countdown .cd-label{font-size:13px;font-weight:600;opacity:.92}
+.countdown .cd-days{font-size:15px;font-weight:700;margin-top:1px}
+.countdown .cd-days b{font-size:22px;margin:0 2px}
+.countdown.ongoing{background:linear-gradient(135deg,#9b59b6,#e040fb);box-shadow:0 2px 8px rgba(155,89,182,.25)}
+
+/* Overdue tasks (期限切れ警告) */
+.overdue-header{font-size:13px;font-weight:700;color:#ef4444;margin:2px 4px 10px;display:flex;align-items:center;gap:6px}
+.card.overdue{border-color:#f6b4b4;background:#fef4f4}
+.card.overdue .ov-badge{display:inline-block;background:#ef4444;color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;margin-right:6px}
+
+/* Tag filter chips */
+.tag-filter{display:flex;gap:7px;overflow-x:auto;padding:0 0 12px;-webkit-overflow-scrolling:touch}
+.tag-filter::-webkit-scrollbar{display:none}
+.tag-chip{flex-shrink:0;padding:6px 12px;border-radius:16px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.tag-chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* Memo search */
+.memo-search{width:100%;padding:11px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);margin-bottom:14px}
 </style>
 </head>
 <body>
@@ -181,6 +204,7 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
   <div class="tab-content">
     <!-- Calendar Tab -->
     <div id="tab-calendar" class="tab-panel active">
+      <div id="countdown"></div>
       <div class="cal-header">
         <button class="cal-nav" id="cal-prev">&lsaquo;</button>
         <h2 id="cal-title"></h2>
@@ -193,6 +217,7 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 
     <!-- Memo Tab -->
     <div id="tab-memo" class="tab-panel">
+      <input type="search" id="memo-search" class="memo-search" placeholder="🔍 メモを検索…">
       <div class="memo-form">
         <textarea id="memo-input" placeholder="ふと思いついたこと・考えごとを書き留める…"></textarea>
         <span class="memo-hint">⌘/Ctrl + Enter で送信・書きかけは自動保存</span>
@@ -211,6 +236,7 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
         </select>
         <button class="btn btn-primary btn-sm" id="task-send">追加</button>
       </div>
+      <div class="tag-filter" id="tag-filter"></div>
       <div id="task-list"></div>
     </div>
 
@@ -308,6 +334,11 @@ const LINKS = [
   { icon:'💰', label:'売上管理',     sub:'revenue',        url:'https://mebiusmagic.com/mebius_admin/revenue.php', bg:'#fdf3d7' },
 ];
 
+// ── カウントダウン（date=開始日, end=終了日。終了翌日で自動的に消える）──
+const COUNTDOWNS = [
+  { emoji:'✈️', label:'日本旅行（広島・福岡・大阪・四国）', date:'2026-07-12', end:'2026-07-26' },
+];
+
 // ── State ──
 let pat = localStorage.getItem('gh_pat') || '';
 let tasks = [];
@@ -316,6 +347,8 @@ let calYear, calMonth;
 let selectedDate = null;
 let mebiusEvents = []; // surgery schedule from Mebius DB
 let isLoading = false;
+let taskFilter = '';   // タグ絞り込み（''=すべて）
+let memoQuery = '';    // メモ検索キーワード
 const MEBIUS_API = 'https://mebiusmagic.com/mebius_admin/api_calendar.php';
 // トークンはコードに埋め込まず、端末に保存（設定画面から入力）
 let mebiusToken = localStorage.getItem('mebius_token') || '';
@@ -334,7 +367,39 @@ document.addEventListener('DOMContentLoaded', () => {
   populateTagSelects();
   renderLinks();
   renderMebiusList();
+  renderCountdown();
 });
+
+// ── Render Countdown (旅行などの残り日数バナー) ──
+function renderCountdown() {
+  const el = document.getElementById('countdown');
+  if (!el) return;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const html = COUNTDOWNS.map(c => {
+    const start = new Date(c.date + 'T00:00:00');
+    const end = new Date((c.end || c.date) + 'T00:00:00');
+    if (today > end) return ''; // 終了済みは非表示
+    const diff = Math.round((start - today) / 86400000);
+    let ongoing = false, days;
+    if (diff > 0) {
+      days = `あと <b>${diff}</b> 日`;
+    } else {
+      ongoing = true;
+      const total = Math.round((end - start) / 86400000) + 1;
+      const nth = Math.round((today - start) / 86400000) + 1;
+      days = `🎉 旅行中！ <b>${nth}</b>/${total}日目`;
+    }
+    return `<div class="countdown${ongoing ? ' ongoing' : ''}">
+      <span class="cd-emoji">${c.emoji}</span>
+      <span class="cd-body">
+        <div class="cd-label">${escHtml(c.label)}</div>
+        <div class="cd-days">${days}</div>
+      </span>
+    </div>`;
+  }).join('');
+  el.innerHTML = html;
+}
 
 // ── Tab switch ──
 function switchTab(tab) {
@@ -466,6 +531,11 @@ function setupEvents() {
   // タイトルをタップで今日の月へジャンプ
   document.getElementById('cal-title').addEventListener('click', () => {
     const now = new Date(); calYear = now.getFullYear(); calMonth = now.getMonth(); renderCalendar();
+  });
+
+  document.getElementById('memo-search').addEventListener('input', e => {
+    memoQuery = e.target.value;
+    renderMemos();
   });
 
   document.getElementById('memo-send').addEventListener('click', sendMemo);
@@ -715,6 +785,7 @@ function renderCalendar() {
   }
 
   renderAgenda();
+  renderCountdown();
 }
 
 function createCalCell(day, otherMonth, isToday=false, dayTasks=[], dayMebius=[]) {
@@ -823,13 +894,22 @@ async function addDayTask() {
 }
 
 // ── Task card (shared by list & day modal) ──
-function taskCardHtml(t) {
+function taskCardHtml(t, overdue=false) {
+  let ovBadge = '';
+  if (overdue) {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dt = new Date(today.getFullYear(), t.month - 1, t.day);
+    const days = Math.round((today - dt) / 86400000);
+    ovBadge = `<span class="ov-badge">${days}日超過</span>`;
+  }
   return `
-    <div class="card task-card${t.done ? ' done' : ''}">
+    <div class="card task-card${t.done ? ' done' : ''}${overdue ? ' overdue' : ''}">
       <div class="card-header">
         <div style="display:flex;align-items:center;gap:8px;min-width:0">
           <button class="check-btn${t.done ? ' done' : ''}" onclick="toggleTaskDone(${t.id}, ${t.done ? 'false' : 'true'})" title="${t.done ? '未完了に戻す' : '完了にする'}">${t.done ? '✓' : ''}</button>
           <div>
+            ${ovBadge}
             ${t.tag ? `<span class="tag" style="background:${t.color}">${t.tag}</span>` : ''}
             ${t.month ? `<span class="date">${t.month}/${t.day}</span>` : ''}
             ${t.time ? `<span class="date">${t.time}</span>` : ''}
@@ -841,10 +921,43 @@ function taskCardHtml(t) {
     </div>`;
 }
 
+// ── 期限切れ判定（日付ありの未完了で、今年の日付が今日より前）──
+function isOverdue(t) {
+  if (!t.month || !t.day || t.done) return false;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dt = new Date(today.getFullYear(), t.month - 1, t.day);
+  return dt < today;
+}
+
+// ── タグ絞り込みチップを描画 ──
+function renderTagFilter() {
+  const el = document.getElementById('tag-filter');
+  if (!el) return;
+  // タスクに実在するタグのみチップ化
+  const present = [...new Set(tasks.map(t => t.tag).filter(Boolean))]
+    .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+  let html = `<button class="tag-chip${taskFilter === '' ? ' active' : ''}" onclick="setTaskFilter('')">すべて</button>`;
+  html += present.map(tag =>
+    `<button class="tag-chip${taskFilter === tag ? ' active' : ''}" onclick="setTaskFilter('${tag}')"
+       style="${taskFilter === tag ? '' : `border-color:${TAG_COLORS[tag]};color:${TAG_COLORS[tag]}`}">
+       ${tag} ${TAG_NAMES[tag] || ''}</button>`).join('');
+  el.innerHTML = html;
+}
+
+function setTaskFilter(tag) {
+  taskFilter = tag;
+  renderTagFilter();
+  renderTaskList();
+}
+
 // ── Render Task List ──
 function renderTaskList() {
   const el = document.getElementById('task-list');
-  const sorted = [...tasks].sort((a, b) => {
+  renderTagFilter();
+
+  const filtered = taskFilter ? tasks.filter(t => t.tag === taskFilter) : tasks;
+  const sorted = [...filtered].sort((a, b) => {
     if (a.month && !b.month) return -1;
     if (!a.month && b.month) return 1;
     if (a.month && b.month) {
@@ -854,18 +967,25 @@ function renderTaskList() {
     return 0;
   });
 
-  const active = sorted.filter(t => !t.done);
-  const done = sorted.filter(t => t.done);
-
   if (sorted.length === 0) {
-    el.innerHTML = '<p class="empty">タスクなし</p>';
+    el.innerHTML = taskFilter ? '<p class="empty">このタグのタスクはありません</p>' : '<p class="empty">タスクなし</p>';
     return;
   }
 
-  let html = active.length ? active.map(taskCardHtml).join('') : '<p class="empty">未完了タスクなし</p>';
+  const overdue = sorted.filter(isOverdue);
+  const active = sorted.filter(t => !t.done && !isOverdue(t));
+  const done = sorted.filter(t => t.done);
+
+  let html = '';
+  if (overdue.length) {
+    html += `<div class="overdue-header">⚠️ 期限切れ (${overdue.length})</div>`
+          + overdue.map(t => taskCardHtml(t, true)).join('');
+  }
+  html += active.length ? active.map(t => taskCardHtml(t)).join('')
+                        : (overdue.length ? '' : '<p class="empty">未完了タスクなし</p>');
   if (done.length) {
     html += `<div class="done-section-header" onclick="toggleDoneSection(this)"><span class="chevron">▾</span> 完了済み (${done.length})</div>`
-          + `<div class="done-list">` + done.map(taskCardHtml).join('') + `</div>`;
+          + `<div class="done-list">` + done.map(t => taskCardHtml(t)).join('') + `</div>`;
   }
   el.innerHTML = html;
 }
@@ -933,7 +1053,13 @@ function renderMemos() {
     el.innerHTML = '<p class="empty">まだメモはありません。<br>ふと思いついたこと・考えごとを書き留めておけます。</p>';
     return;
   }
-  const sorted = [...memos].reverse(); // 新しい順
+  const q = memoQuery.trim().toLowerCase();
+  const matched = q ? memos.filter(m => m.body.toLowerCase().includes(q)) : memos;
+  if (matched.length === 0) {
+    el.innerHTML = `<p class="empty">「${escHtml(memoQuery)}」に一致するメモはありません</p>`;
+    return;
+  }
+  const sorted = [...matched].reverse(); // 新しい順
   let html = '', lastDay = '';
   sorted.forEach(m => {
     const d = new Date(m.created);
