@@ -150,6 +150,17 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 .mebius-line .ml-date{font-weight:700;font-size:14px;color:#9b59b6;min-width:60px}
 .mebius-line .ml-name{flex:1;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mebius-line .ml-meta{font-size:12px;color:var(--text2);flex-shrink:0}
+
+/* Agenda (近日の予定) */
+.agenda-line{display:flex;align-items:center;gap:11px;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer}
+.agenda-line:active{background:var(--bg3)}
+.ag-date{font-weight:700;font-size:14px;min-width:56px;flex-shrink:0}
+.ag-date small{font-weight:500;color:var(--text2);font-size:11px;margin-left:1px}
+.ag-rel{font-size:11px;font-weight:700;min-width:42px;flex-shrink:0;color:var(--accent)}
+.ag-rel.soon{color:#ef4444}
+.ag-body{flex:1;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ag-body .tag,.ag-body .mebius-tag{margin-right:6px}
+.cal-header h2{cursor:pointer}
 </style>
 </head>
 <body>
@@ -176,6 +187,8 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
         <button class="cal-nav" id="cal-next">&rsaquo;</button>
       </div>
       <div class="cal-grid" id="cal-grid"></div>
+      <div class="section-title">📅 近日の予定</div>
+      <div id="agenda"></div>
     </div>
 
     <!-- Memo Tab -->
@@ -323,6 +336,72 @@ document.addEventListener('DOMContentLoaded', () => {
   renderMebiusList();
 });
 
+// ── Tab switch ──
+function switchTab(tab) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById('tab-' + tab);
+  if (panel) panel.classList.add('active');
+  document.querySelector('.tab-content').scrollTop = 0;
+}
+
+// ── Render Agenda (今日からの近日の予定) ──
+function renderAgenda() {
+  const el = document.getElementById('agenda');
+  if (!el) return;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const WINDOW = 60; // 直近60日
+  const maxDate = new Date(today); maxDate.setDate(maxDate.getDate() + WINDOW);
+  const items = [];
+
+  // 日付ありの未完了タスク（年は持たないので次に来る日付へ寄せる）
+  tasks.forEach(t => {
+    if (!t.month || !t.day || t.done) return;
+    let dt = new Date(today.getFullYear(), t.month - 1, t.day);
+    if (dt < today) dt = new Date(today.getFullYear() + 1, t.month - 1, t.day);
+    items.push({ date: dt, kind: 'task', t });
+  });
+  // メビウス完了予定（未完了のみ）
+  mebiusEvents.forEach(ev => {
+    if (ev.completed) return;
+    const ds = ev.end || ev.start; if (!ds) return;
+    const dt = new Date(ds + 'T00:00:00');
+    if (dt < today) return;
+    items.push({ date: dt, kind: 'mebius', ev });
+  });
+
+  const up = items.filter(i => i.date >= today && i.date <= maxDate)
+                  .sort((a, b) => a.date - b.date).slice(0, 8);
+  if (up.length === 0) { el.innerHTML = '<p class="empty">近日の予定はありません</p>'; return; }
+
+  el.innerHTML = up.map(i => {
+    const d = i.date;
+    const wd = ['日','月','火','水','木','金','土'][d.getDay()];
+    const md = `${d.getMonth() + 1}/${d.getDate()}`;
+    const diff = Math.round((d - today) / 86400000);
+    const rel = diff === 0 ? '今日' : diff === 1 ? '明日' : `あと${diff}日`;
+    const relCls = diff <= 2 ? ' soon' : '';
+    if (i.kind === 'mebius') {
+      return `<div class="agenda-line" onclick="switchTab('links')">
+        <span class="ag-date">${md}<small>(${wd})</small></span>
+        <span class="ag-rel${relCls}">${rel}</span>
+        <span class="ag-body"><span class="mebius-tag">メビウス</span>${escHtml(i.ev.name || '名前なし')} ${i.ev.nights}泊</span>
+      </div>`;
+    }
+    const t = i.t;
+    return `<div class="agenda-line" onclick="openAgendaDay(${d.getFullYear()},${d.getMonth()},${d.getDate()})">
+      <span class="ag-date">${md}<small>(${wd})</small></span>
+      <span class="ag-rel${relCls}">${rel}</span>
+      <span class="ag-body">${t.tag ? `<span class="tag" style="background:${t.color}">${t.tag}</span>` : ''}${escHtml(t.title)}</span>
+    </div>`;
+  }).join('');
+}
+
+function openAgendaDay(y, mi, d) {
+  calYear = y; calMonth = mi; renderCalendar(); openDayModal(d);
+}
+
 // ── Render Links ──
 function renderLinks() {
   document.getElementById('link-grid').innerHTML = LINKS.map(l => `
@@ -379,16 +458,15 @@ function setupEvents() {
   });
 
   document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-    });
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
 
   document.getElementById('cal-prev').addEventListener('click', () => { calMonth--; if(calMonth<0){calMonth=11;calYear--} renderCalendar(); });
   document.getElementById('cal-next').addEventListener('click', () => { calMonth++; if(calMonth>11){calMonth=0;calYear++} renderCalendar(); });
+  // タイトルをタップで今日の月へジャンプ
+  document.getElementById('cal-title').addEventListener('click', () => {
+    const now = new Date(); calYear = now.getFullYear(); calMonth = now.getMonth(); renderCalendar();
+  });
 
   document.getElementById('memo-send').addEventListener('click', sendMemo);
   const memoInput = document.getElementById('memo-input');
@@ -635,6 +713,8 @@ function renderCalendar() {
   for (let i = 1; i <= remaining; i++) {
     grid.appendChild(createCalCell(i, true));
   }
+
+  renderAgenda();
 }
 
 function createCalCell(day, otherMonth, isToday=false, dayTasks=[], dayMebius=[]) {
