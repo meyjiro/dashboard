@@ -524,10 +524,10 @@ function openDayModal(day) {
   const body = document.getElementById('day-modal-body');
   const dayTasks = tasks.filter(t => t.month === displayMonth && t.day === day);
 
-  // Find Mebius events for this day
+  // Find Mebius events where this day is the completion date (end date only)
   const dateStr = `${calYear}-${String(displayMonth).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
   const dayMebius = mebiusEvents.filter(ev => {
-    return dateStr >= ev.start && dateStr <= (ev.end || ev.start);
+    return dateStr === (ev.end || ev.start);
   });
 
   let html = '';
