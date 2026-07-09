@@ -583,6 +583,7 @@ function setupEvents() {
 async function api(path, method='GET', body=null) {
   const opts = {
     method,
+    cache: 'no-store',   // GitHubの max-age=60 キャッシュで更新直後に古い一覧が返るのを防ぐ
     headers: {
       'Authorization': 'token ' + pat,
       'Accept': 'application/vnd.github.v3+json'
@@ -1018,12 +1019,22 @@ async function toggleTaskDone(id, makeDone) {
   if (!t) return;
   const stripped = t.raw.replace(/^\[x\]\s*/i, '');
   const newBody = makeDone ? '[x] ' + stripped : stripped;
+  // 楽観的更新：先に画面へ反映してタップに即反応させ、フル再読込は行わない
+  const prevRaw = t.raw, prevDone = t.done;
+  t.raw = newBody;
+  t.done = makeDone;
+  renderCalendar();
+  renderTaskList();
+  if (selectedDate !== null) openDayModal(selectedDate);
   try {
     await api(`/repos/${REPO}/issues/comments/${id}`, 'PATCH', { body: newBody });
     toast(makeDone ? '完了にしました' : '未完了に戻しました');
-    await loadTasks();
-    if (selectedDate !== null) openDayModal(selectedDate);
   } catch (e) {
+    // 失敗したら元の状態へ戻す
+    t.raw = prevRaw; t.done = prevDone;
+    renderCalendar();
+    renderTaskList();
+    if (selectedDate !== null) openDayModal(selectedDate);
     toast('エラー: ' + e.message, true);
   }
 }
