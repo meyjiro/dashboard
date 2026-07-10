@@ -426,8 +426,13 @@ function renderAgenda() {
   // ※メビウスの完了予定はリンクタブで一覧できるのでここには入れない
   tasks.forEach(t => {
     if (!t.month || !t.day || t.done) return;
-    let dt = new Date(today.getFullYear(), t.month - 1, t.day);
-    if (dt < today) dt = new Date(today.getFullYear() + 1, t.month - 1, t.day);
+    let dt;
+    if (t.year) {
+      dt = new Date(t.year, t.month - 1, t.day); // 年指定はその年のみ
+    } else {
+      dt = new Date(today.getFullYear(), t.month - 1, t.day);
+      if (dt < today) dt = new Date(today.getFullYear() + 1, t.month - 1, t.day);
+    }
     items.push({ date: dt, kind: 'task', t });
   });
 
@@ -681,7 +686,7 @@ async function loadMebius() {
 // ── Parse ──
 function parseTask(comment) {
   const raw = comment.body.trim();
-  let tag = null, month = null, day = null, time = null, done = false, title = raw;
+  let tag = null, year = null, month = null, day = null, time = null, done = false, title = raw;
 
   const doneMatch = title.match(/^\[x\]\s*/i);
   if (doneMatch) {
@@ -695,10 +700,11 @@ function parseTask(comment) {
     title = title.slice(tagMatch[0].length);
   }
 
-  const dateMatch = title.match(/^(\d{1,2})\/(\d{1,2})\s*/);
+  const dateMatch = title.match(/^(?:(\d{4})\/)?(\d{1,2})\/(\d{1,2})\s*/);
   if (dateMatch) {
-    month = parseInt(dateMatch[1], 10);
-    day = parseInt(dateMatch[2], 10);
+    year = dateMatch[1] ? parseInt(dateMatch[1], 10) : null; // 年なし=今年扱い
+    month = parseInt(dateMatch[2], 10);
+    day = parseInt(dateMatch[3], 10);
     title = title.slice(dateMatch[0].length);
   }
 
@@ -710,7 +716,7 @@ function parseTask(comment) {
 
   title = title.trim();
 
-  return { id: comment.id, raw, tag, month, day, time, title, done,
+  return { id: comment.id, raw, tag, year, month, day, time, title, done,
     color: tag ? (TAG_COLORS[tag] || DEFAULT_COLOR) : DEFAULT_COLOR };
 }
 
@@ -740,7 +746,7 @@ function renderCalendar() {
   const mebiusMap = {};
   const displayMonth = calMonth + 1;
   tasks.forEach(t => {
-    if (t.month === displayMonth && t.day) {
+    if (t.month === displayMonth && t.day && (t.year || todayY) === calYear) {
       if (!taskMap[t.day]) taskMap[t.day] = [];
       taskMap[t.day].push(t);
     }
@@ -808,7 +814,8 @@ function openDayModal(day) {
     `${calYear}/${String(displayMonth).padStart(2,'0')}/${String(day).padStart(2,'0')}`;
 
   const body = document.getElementById('day-modal-body');
-  const dayTasks = tasks.filter(t => t.month === displayMonth && t.day === day);
+  const nowY = new Date().getFullYear();
+  const dayTasks = tasks.filter(t => t.month === displayMonth && t.day === day && (t.year || nowY) === calYear);
 
   // Find Mebius events where this day is the completion date (end date only)
   const dateStr = `${calYear}-${String(displayMonth).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
@@ -867,7 +874,8 @@ async function addDayTask() {
   const tag = document.getElementById('day-tag-select').value;
   const mm = String(calMonth + 1).padStart(2, '0');
   const dd = String(selectedDate).padStart(2, '0');
-  const body = (tag ? `[${tag}] ` : '') + `${mm}/${dd}  ${title}`;
+  const yPrefix = calYear !== new Date().getFullYear() ? `${calYear}/` : '';
+  const body = (tag ? `[${tag}] ` : '') + `${yPrefix}${mm}/${dd}  ${title}`;
 
   input.disabled = true;
   try {
@@ -888,7 +896,7 @@ function taskCardHtml(t, overdue=false) {
   if (overdue) {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const dt = new Date(today.getFullYear(), t.month - 1, t.day);
+    const dt = new Date(t.year || today.getFullYear(), t.month - 1, t.day);
     const days = Math.round((today - dt) / 86400000);
     ovBadge = `<span class="ov-badge">${days}日超過</span>`;
   }
@@ -900,7 +908,7 @@ function taskCardHtml(t, overdue=false) {
           <div>
             ${ovBadge}
             ${t.tag ? `<span class="tag" style="background:${t.color}">${t.tag}</span>` : ''}
-            ${t.month ? `<span class="date">${t.month}/${t.day}</span>` : ''}
+            ${t.month ? `<span class="date">${t.year ? t.year + '/' : ''}${t.month}/${t.day}</span>` : ''}
             ${t.time ? `<span class="date">${t.time}</span>` : ''}
           </div>
         </div>
@@ -915,7 +923,7 @@ function isOverdue(t) {
   if (!t.month || !t.day || t.done) return false;
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const dt = new Date(today.getFullYear(), t.month - 1, t.day);
+  const dt = new Date(t.year || today.getFullYear(), t.month - 1, t.day);
   return dt < today;
 }
 
@@ -946,10 +954,13 @@ function renderTaskList() {
   renderTagFilter();
 
   const filtered = taskFilter ? tasks.filter(t => t.tag === taskFilter) : tasks;
+  const nowY = new Date().getFullYear();
   const sorted = [...filtered].sort((a, b) => {
     if (a.month && !b.month) return -1;
     if (!a.month && b.month) return 1;
     if (a.month && b.month) {
+      const ay = a.year || nowY, by = b.year || nowY;
+      if (ay !== by) return ay - by;
       if (a.month !== b.month) return a.month - b.month;
       return (a.day || 0) - (b.day || 0);
     }
@@ -995,8 +1006,9 @@ async function sendTask() {
   const dateEl = document.getElementById('task-date');
   let datePrefix = '';
   if (dateEl.value) {
-    const [, mm, dd] = dateEl.value.split('-'); // YYYY-MM-DD
-    datePrefix = `${mm}/${dd} `;
+    const [yy, mm, dd] = dateEl.value.split('-'); // YYYY-MM-DD
+    const yPrefix = parseInt(yy, 10) !== new Date().getFullYear() ? `${yy}/` : '';
+    datePrefix = `${yPrefix}${mm}/${dd} `;
   }
   const body = (tag ? `[${tag}] ` : '') + datePrefix + text;
 
