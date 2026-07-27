@@ -185,6 +185,14 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 
 /* Memo search */
 .memo-search{width:100%;padding:11px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);margin-bottom:14px}
+
+/* Task details (2行目以降の折りたたみ) */
+.details-toggle{background:none;border:none;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;padding:6px 0 0;display:inline-flex;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent}
+.details-toggle .chevron{display:inline-block;transition:transform .15s}
+.details-toggle.open .chevron{transform:rotate(90deg)}
+.task-details{display:none;margin-top:8px;padding:10px 12px;background:var(--bg3);border-radius:8px;font-size:13px;line-height:1.65;color:var(--text);white-space:pre-wrap;word-break:break-word}
+.task-details.open{display:block}
+.task-details a{color:var(--accent);word-break:break-all}
 </style>
 </head>
 <body>
@@ -686,7 +694,11 @@ async function loadMebius() {
 // ── Parse ──
 function parseTask(comment) {
   const raw = comment.body.trim();
-  let tag = null, year = null, month = null, day = null, time = null, done = false, title = raw;
+  // 1行目=タイトル（タグ・日付をパース）、2行目以降=折りたたみ詳細
+  const nl = raw.indexOf('\n');
+  const firstLine = nl === -1 ? raw : raw.slice(0, nl);
+  const details = nl === -1 ? '' : raw.slice(nl + 1).trim();
+  let tag = null, year = null, month = null, day = null, time = null, done = false, title = firstLine;
 
   const doneMatch = title.match(/^\[x\]\s*/i);
   if (doneMatch) {
@@ -716,7 +728,7 @@ function parseTask(comment) {
 
   title = title.trim();
 
-  return { id: comment.id, raw, tag, year, month, day, time, title, done,
+  return { id: comment.id, raw, tag, year, month, day, time, title, done, details,
     color: tag ? (TAG_COLORS[tag] || DEFAULT_COLOR) : DEFAULT_COLOR };
 }
 
@@ -915,7 +927,14 @@ function taskCardHtml(t, overdue=false) {
         <button class="delete-btn" onclick="deleteTask(${t.id})" title="削除">&times;</button>
       </div>
       <div class="title">${escHtml(t.title)}</div>
+      ${t.details ? `<button class="details-toggle" onclick="toggleDetails(this)"><span class="chevron">▸</span>詳細</button><div class="task-details">${linkify(t.details)}</div>` : ''}
     </div>`;
+}
+
+function toggleDetails(btn) {
+  btn.classList.toggle('open');
+  const box = btn.nextElementSibling;
+  if (box) box.classList.toggle('open');
 }
 
 // ── 期限切れ判定（日付ありの未完了で、今年の日付が今日より前）──
@@ -1147,6 +1166,11 @@ async function deleteMemo(id) {
 // ── Helpers ──
 function escHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function linkify(s) {
+  return escHtml(s).replace(/(https?:\/\/[^\s<]+)/g,
+    '<a href="$1" target="_blank" rel="noopener">$1</a>');
 }
 
 function formatTime(iso) {
