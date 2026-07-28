@@ -133,6 +133,8 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 .done-section-header{font-size:12px;font-weight:700;color:var(--text2);margin:20px 4px 10px;display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
 .done-section-header .chevron{transition:transform .15s}
 .done-section-header.collapsed .chevron{transform:rotate(-90deg)}
+.group-header{font-size:13px;font-weight:700;color:var(--text);margin:18px 4px 10px;letter-spacing:.02em}
+.group-header:first-child{margin-top:2px}
 
 /* Memo day grouping */
 .memo-day-header{font-size:12px;font-weight:700;color:var(--text2);margin:16px 4px 8px;letter-spacing:.02em}
@@ -336,6 +338,14 @@ const TAG_NAMES = {
 };
 const DEFAULT_COLOR = '#bdc3c7';
 const REPO = 'meyjiro/claude-context';
+
+// ── タスクのグループ分け（2026-07-28 メグ指定）──
+const TASK_GROUPS = [
+  { key:'work',  label:'💼 仕事',      tags:['B1','B2','B7'] },
+  { key:'legal', label:'⚖️ 裁判・法務', tags:['B3'] },
+  { key:'life',  label:'🏠 私生活',    tags:null },  // null = 上記以外すべて（タグなし含む）
+];
+const FUTURE_DAYS = 60;  // これより先の期日は「⏳先の予定・リマインド」へ折りたたみ
 
 // ── リンクランチャー（ここに追記すればタイルが増える）──
 const LINKS = [
@@ -992,19 +1002,47 @@ function renderTaskList() {
   }
 
   const overdue = sorted.filter(isOverdue);
-  const active = sorted.filter(t => !t.done && !isOverdue(t));
   const done = sorted.filter(t => t.done);
+  const pending = sorted.filter(t => !t.done && !isOverdue(t));
+
+  // 期日が FUTURE_DAYS より先 → 「先の予定・リマインド」へ
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const daysAhead = t => {
+    if (!t.month || !t.day) return null;
+    const dt = new Date(t.year || today.getFullYear(), t.month - 1, t.day);
+    return Math.round((dt - today) / 86400000);
+  };
+  const far = pending.filter(t => { const d = daysAhead(t); return d !== null && d > FUTURE_DAYS; });
+  const current = pending.filter(t => !far.includes(t));
+
+  const groupOf = t => {
+    for (const g of TASK_GROUPS) if (g.tags && g.tags.includes(t.tag)) return g.key;
+    return 'life';
+  };
 
   let html = '';
   if (overdue.length) {
     html += `<div class="overdue-header">⚠️ 期限切れ (${overdue.length})</div>`
           + overdue.map(t => taskCardHtml(t, true)).join('');
   }
-  html += active.length ? active.map(t => taskCardHtml(t)).join('')
-                        : (overdue.length ? '' : '<p class="empty">未完了タスクなし</p>');
+  if (current.length === 0 && !overdue.length) {
+    html += '<p class="empty">未完了タスクなし</p>';
+  } else {
+    TASK_GROUPS.forEach(g => {
+      const items = current.filter(t => groupOf(t) === g.key);
+      if (!items.length) return;
+      html += `<div class="group-header">${g.label} (${items.length})</div>`
+            + items.map(t => taskCardHtml(t)).join('');
+    });
+  }
+  if (far.length) {
+    html += `<div class="done-section-header collapsed" onclick="toggleDoneSection(this)"><span class="chevron">▾</span> ⏳ 先の予定・リマインド (${far.length})</div>`
+          + `<div class="done-list" style="display:none">` + far.map(t => taskCardHtml(t)).join('') + `</div>`;
+  }
   if (done.length) {
-    html += `<div class="done-section-header" onclick="toggleDoneSection(this)"><span class="chevron">▾</span> 完了済み (${done.length})</div>`
-          + `<div class="done-list">` + done.map(t => taskCardHtml(t)).join('') + `</div>`;
+    html += `<div class="done-section-header collapsed" onclick="toggleDoneSection(this)"><span class="chevron">▾</span> ✓ 完了済み (${done.length})</div>`
+          + `<div class="done-list" style="display:none">` + done.map(t => taskCardHtml(t)).join('') + `</div>`;
   }
   el.innerHTML = html;
 }
