@@ -336,6 +336,12 @@ const TAG_NAMES = {
   B1:'ガチレズ',B2:'メビウス',B3:'裁判法務',B4:'自己管理',B5:'学習',
   B6:'個人案件',B7:'投資',B8:'出張旅行',B9:'契約管理',B10:'インフラ',B11:'不動産'
 };
+// カード上のタグ表示は頭文字1字（B番号は覚えられないため。2026-07-28メグ指定）
+const TAG_SHORT = {
+  B1:'ガ',B2:'メ',B3:'裁',B4:'自',B5:'学',
+  B6:'個',B7:'投',B8:'出',B9:'契',B10:'イ',B11:'不'
+};
+const tagLabel = tag => TAG_SHORT[tag] || tag;
 const DEFAULT_COLOR = '#bdc3c7';
 const REPO = 'meyjiro/claude-context';
 
@@ -469,7 +475,7 @@ function renderAgenda() {
     return `<div class="agenda-line" onclick="openAgendaDay(${d.getFullYear()},${d.getMonth()},${d.getDate()})">
       <span class="ag-date">${md}<small>(${wd})</small></span>
       <span class="ag-rel${relCls}">${rel}</span>
-      <span class="ag-body">${t.tag ? `<span class="tag" style="background:${t.color}">${t.tag}</span>` : ''}${escHtml(t.title)}</span>
+      <span class="ag-body">${t.tag ? `<span class="tag" style="background:${t.color}">${tagLabel(t.tag)}</span>` : ''}${escHtml(t.title)}</span>
     </div>`;
   }).join('');
 }
@@ -929,7 +935,7 @@ function taskCardHtml(t, overdue=false) {
           <button class="check-btn${t.done ? ' done' : ''}" onclick="toggleTaskDone(${t.id}, ${t.done ? 'false' : 'true'})" title="${t.done ? '未完了に戻す' : '完了にする'}">${t.done ? '✓' : ''}</button>
           <div>
             ${ovBadge}
-            ${t.tag ? `<span class="tag" style="background:${t.color}">${t.tag}</span>` : ''}
+            ${t.tag ? `<span class="tag" style="background:${t.color}" title="${TAG_NAMES[t.tag] || t.tag}">${tagLabel(t.tag)}</span>` : ''}
             ${t.month ? `<span class="date">${t.year ? t.year + '/' : ''}${t.month}/${t.day}</span>` : ''}
             ${t.time ? `<span class="date">${t.time}</span>` : ''}
           </div>
