@@ -345,6 +345,9 @@ const tagLabel = tag => TAG_SHORT[tag] || tag;
 const DEFAULT_COLOR = '#bdc3c7';
 const REPO = 'meyjiro/claude-context';
 
+// ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
+const APP_VERSION = '2026-07-28.1';
+
 // ── タスクのグループ分け（2026-07-28 メグ指定）──
 const TASK_GROUPS = [
   { key:'work',  label:'💼 仕事',      tags:['B1','B2','B7'] },
@@ -394,7 +397,28 @@ document.addEventListener('DOMContentLoaded', () => {
   renderLinks();
   renderMebiusList();
   renderCountdown();
+  checkForUpdate();
+  // アプリに戻ってきた時にも確認（ホーム画面アプリはページを閉じないため）
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) checkForUpdate();
+  });
 });
+
+// ── 新バージョン検知 → 1回だけ自動リロード ──
+async function checkForUpdate() {
+  try {
+    const res = await fetch(location.pathname + '?_=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) return;
+    const html = await res.text();
+    const m = html.match(/const APP_VERSION = '([^']+)'/);
+    if (!m || m[1] === APP_VERSION) return;
+    // 同じバージョンで繰り返しリロードしないよう記録（リロード失敗時の無限ループ防止）
+    if (localStorage.getItem('reloaded_for') === m[1]) return;
+    localStorage.setItem('reloaded_for', m[1]);
+    toast('新しいバージョンに更新します…');
+    setTimeout(() => location.reload(true), 800);
+  } catch (e) { /* オフライン等は黙ってスキップ */ }
+}
 
 // ── Render Countdown (旅行などの残り日数バナー) ──
 function renderCountdown() {
