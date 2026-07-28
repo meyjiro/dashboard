@@ -346,7 +346,7 @@ const DEFAULT_COLOR = '#bdc3c7';
 const REPO = 'meyjiro/claude-context';
 
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-07-28.2';
+const APP_VERSION = '2026-07-28.3';
 
 // ── タスクのグループ分け（2026-07-28 メグ指定）──
 const TASK_GROUPS = [
@@ -356,16 +356,41 @@ const TASK_GROUPS = [
 ];
 const FUTURE_DAYS = 60;  // これより先の期日は「⏳先の予定・リマインド」へ折りたたみ
 
+// ── 旅行リスト（trip.html の TRIPS と同じ内容を貼る。タイルの飛び先が自動で変わる）──
+const TRIP_BASE = 'https://mebiusmagic.com/mebius_admin/';
+const TRIPS = [
+  { start:'2026-07-12', end:'2026-07-26', title:'2026年7月 日本', url:'trip_202507.html' },
+];
+
+// 開催中 → その行程ページへ直行。予定あり → 旅行トップ（日数を表示）。無ければ旅行トップ
+function tripTile() {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const d = s => new Date(s + 'T00:00:00');
+  const sorted = [...TRIPS].sort((a, b) => a.start.localeCompare(b.start));
+  const ongoing = sorted.find(t => d(t.start) <= today && today <= d(t.end));
+  const next = sorted.find(t => d(t.start) > today);
+  if (ongoing) {
+    return { icon:'✈️', label:'旅行中', sub:ongoing.title, url:TRIP_BASE + ongoing.url, bg:'#e0f7fa' };
+  }
+  if (next) {
+    const diff = Math.round((d(next.start) - today) / 86400000);
+    return { icon:'✈️', label:'旅行', sub:`${next.title} あと${diff}日`, url:TRIP_BASE + 'trip.html', bg:'#e0f7fa' };
+  }
+  return { icon:'✈️', label:'旅行', sub:'次の旅行・過去アーカイブ', url:TRIP_BASE + 'trip.html', bg:'#e0f7fa' };
+}
+
 // ── リンクランチャー（ここに追記すればタイルが増える）──
 const LINKS = [
   { icon:'🔮', label:'メビウス管理', sub:'相談・顧客対応', url:'https://mebiusmagic.com/mebius_admin/admin.php', bg:'#f0e6fa' },
-  { icon:'✈️', label:'旅行',   sub:'次の旅行・過去アーカイブ', url:'https://mebiusmagic.com/mebius_admin/trip.html', bg:'#e0f7fa' },
+  tripTile(),
   { icon:'💰', label:'売上管理',     sub:'revenue',        url:'https://mebiusmagic.com/mebius_admin/revenue.php', bg:'#fdf3d7' },
 ];
 
 // ── カウントダウン（date=開始日, end=終了日。終了翌日で自動的に消える）──
+// 旅行は TRIPS から自動生成。それ以外のイベントを足したいときはここに追記する
 const COUNTDOWNS = [
-  { emoji:'✈️', label:'日本旅行（広島・福岡・大阪・四国）', date:'2026-07-12', end:'2026-07-26' },
+  ...TRIPS.map(t => ({ emoji:'✈️', label:t.title, date:t.start, end:t.end })),
 ];
 
 // ── State ──
