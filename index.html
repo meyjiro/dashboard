@@ -134,12 +134,14 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
         <textarea id="inbox-text" placeholder="なんでもここに投げる。タスク・メモ・愚痴・体重・買った物・アイデア… 分類は考えなくていい"></textarea>
         <div class="inbox-actions">
           <button class="btn btn-ghost" id="photo-btn">📷</button>
+          <button class="btn btn-ghost" id="rec-btn">🎤</button>
           <input type="file" id="photo-input" accept="image/*" style="display:none">
+          <input type="file" id="audio-input" accept="audio/*" style="display:none">
           <button class="btn btn-primary" id="inbox-send">投げ込む</button>
         </div>
         <div class="hint" id="photo-hint"></div>
       </div>
-      <div class="hint" style="margin:0 4px 14px">朝8:30と夜22:30にClaudeが仕分けて、各記録に記帳します。夜は日記にも織り込まれます。</div>
+      <div class="hint" style="margin:0 4px 14px">日時は自動で記録されます。🎤は録音（長押し不要・もう一度押すと停止）。音声はMacのローカルWhisperが30分以内に文字起こしして仕分けに乗ります。朝8:30と夜22:30にClaudeが仕分けし、夜は日記にも織り込まれます。</div>
       <div class="section-title">⏳ 仕分け待ち</div>
       <div id="queue-list"><p class="empty">読み込み中…</p></div>
       <div class="section-title">✅ 最近の仕分け結果</div>
@@ -203,7 +205,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-15.1';
+const APP_VERSION = '2026-08-15.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -239,7 +241,9 @@ const MEBIUS_API = 'https://mebiusmagic.com/mebius_admin/api_calendar.php';
 let pat = localStorage.getItem('gh_pat') || '';
 let mebiusToken = localStorage.getItem('mebius_token') || '';
 let briefing = null;
-let pendingPhoto = null; // {blob, name}
+let pendingPhoto = null; // {b64}
+let pendingAudio = null; // {b64, ext}
+let recorder = null, recChunks = [];
 
 // ── Utils ──
 const $ = id => document.getElementById(id);
@@ -310,9 +314,9 @@ function renderBriefing() {
   $('brief-pending-wrap').style.display = pen.length ? '' : 'none';
   $('brief-pending').innerHTML = pen.map(p => `<div class="card"><div class="t" style="font-size:14px">${esc(p.summary)}</div>${p.ask?`<div class="s">${esc(p.ask)}</div>`:''}</div>`).join('');
   const log = (b.sorted_log || []).slice(0, 8);
-  const logHtml = log.length ? log.map(l => `・${esc(l.at||'')} ${esc(l.summary)}`).join('<br>') : '（まだなし）';
-  $('brief-log').innerHTML = logHtml;
-  $('inbox-log').innerHTML = logHtml;
+  briefLogFallback = log.length ? log.map(l => `・${esc(l.at||'')} ${esc(l.summary)}`).join('<br>') : '（まだなし）';
+  $('brief-log').innerHTML = briefLogFallback;
+  if (!ledgerLoaded) $('inbox-log').innerHTML = briefLogFallback;
   if (b.health && b.health.note) $('health-note').innerHTML = `<div class="card"><div class="s" style="color:var(--text)">${esc(b.health.note)}</div></div>`;
   if (b.invest && (b.invest.digest || []).length) {
     $('invest-digest').innerHTML = b.invest.digest.map(d => `<div class="card"><div class="t" style="font-size:14px">${esc(d.src||'')}</div><div class="s">${esc(d.point||'')}</div></div>`).join('');
@@ -336,24 +340,76 @@ async function loadMebius() {
 }
 
 // ── 投げ込み ──
+function atNow() {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
 async function sendInbox() {
   const text = $('inbox-text').value.trim();
-  if (!text && !pendingPhoto) { toast('なにか書くか写真をつけてね'); return; }
+  if (!text && !pendingPhoto && !pendingAudio) { toast('なにか書くか、写真・録音をつけてね'); return; }
   const btn = $('inbox-send'); btn.disabled = true; btn.textContent = '送信中…';
   try {
     const stamp = ts();
-    let body = text;
+    // 🔴 日時は必ず記録する（メグ指定・2026-08-15）。メタ行→空行→原文の順
+    let meta = `at: ${atNow()}`;
     if (pendingPhoto) {
       const imgPath = `inbox/img/${stamp}.jpg`;
       await putFile(imgPath, pendingPhoto.b64, `投げ込み写真 ${stamp}`, true);
-      body = `img: ${imgPath}\n${text}`;
+      meta += `\nimg: ${imgPath}`;
     }
-    await putFile(`inbox/queue/${stamp}.md`, body, `投げ込み ${stamp}`);
-    $('inbox-text').value = ''; pendingPhoto = null; $('photo-hint').textContent = '';
+    if (pendingAudio) {
+      const audPath = `inbox/audio/${stamp}.${pendingAudio.ext}`;
+      await putFile(audPath, pendingAudio.b64, `投げ込み録音 ${stamp}`, true);
+      // 音声はMac側のWhisperが文字起こしして別の投げ込みmdを作るので、ここではmdを作らない
+      // （テキストも一緒に書いていた場合だけ、テキスト分のmdを作る）
+      if (!text) {
+        $('inbox-text').value = ''; pendingAudio = null; pendingPhoto = null; $('photo-hint').textContent = '';
+        toast('録音を投げ込んだ！ 文字起こしは30分以内 🎤');
+        btn.disabled = false; btn.textContent = '投げ込む';
+        return;
+      }
+      meta += `\naudio: ${audPath}`;
+    }
+    await putFile(`inbox/queue/${stamp}.md`, `${meta}\n\n${text}`, `投げ込み ${stamp}`);
+    $('inbox-text').value = ''; pendingPhoto = null; pendingAudio = null; $('photo-hint').textContent = '';
     toast('投げ込んだ！ 🧺');
     loadQueue();
   } catch (e) { toast('送信に失敗: ' + e.message); }
   btn.disabled = false; btn.textContent = '投げ込む';
+}
+async function pickAudio(file) {
+  if (!file) return;
+  if (file.size > 25 * 1024 * 1024) { toast('録音が大きすぎます（25MBまで・約20分）'); return; }
+  const ext = (file.name && file.name.includes('.')) ? file.name.split('.').pop().toLowerCase() : 'm4a';
+  const buf = await file.arrayBuffer();
+  let bin = ''; const bytes = new Uint8Array(buf);
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  pendingAudio = { b64: btoa(bin), ext };
+  $('photo-hint').textContent = `🎤 録音を添付済み（${Math.round(file.size/1024)}KB）。送信で投げ込みます`;
+}
+async function toggleRec() {
+  const btn = $('rec-btn');
+  if (recorder && recorder.state === 'recording') { recorder.stop(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mime = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : 'audio/webm';
+    recorder = new MediaRecorder(stream, { mimeType: mime });
+    recChunks = [];
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      btn.textContent = '🎤'; btn.style.background = '';
+      const blob = new Blob(recChunks, { type: recorder.mimeType });
+      const ext = recorder.mimeType.includes('mp4') ? 'm4a' : 'webm';
+      await pickAudio(new File([blob], `rec.${ext}`, { type: recorder.mimeType }));
+    };
+    recorder.start();
+    btn.textContent = '⏹'; btn.style.background = '#fdeaea';
+    toast('録音中… もう一度押すと停止');
+  } catch (e) {
+    // マイク不可（権限なし等）→ ボイスメモ等のファイル選択にフォールバック
+    $('audio-input').click();
+  }
 }
 async function pickPhoto(file) {
   if (!file) return;
@@ -376,12 +432,48 @@ async function loadQueue() {
     const items = await Promise.all(files.slice(0, 10).map(async f => {
       let txt = '';
       try { txt = dec((await api(`/repos/${REPO}/contents/inbox/queue/${f.name}?ref=${BRANCH}`)).content); } catch (e) {}
-      const m = f.name.match(/^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})/);
-      const when = m ? `${+m[2]}/${+m[3]} ${m[4]}:${m[5]}` : f.name;
-      return `<div class="card qitem"><div class="s" style="color:var(--text)">${esc(txt.slice(0, 140))}</div><div class="s" style="margin-top:5px;font-size:11px">${esc(when)}</div></div>`;
+      // メタ行（at:/img:/audio:）は本文プレビューから外し、日時表示に使う
+      const lines = txt.split('\n');
+      let when = '', badge = '';
+      while (lines.length && /^(at|img|audio):\s/.test(lines[0])) {
+        const l = lines.shift();
+        if (l.startsWith('at: ')) when = l.slice(4);
+        if (l.startsWith('img:')) badge += ' 📷';
+        if (l.startsWith('audio:')) badge += ' 🎤';
+      }
+      if (!when) {
+        const m = f.name.match(/^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})/);
+        when = m ? `${m[1]}-${m[2]}-${m[3]} ${m[4]}:${m[5]}` : f.name;
+      }
+      const body = lines.join('\n').trim();
+      return `<div class="card qitem"><div class="s" style="color:var(--text)">${esc(body.slice(0, 140)) || '（本文なし）'}</div><div class="s" style="margin-top:5px;font-size:11px">${esc(when)}${badge}</div></div>`;
     }));
     el.innerHTML = items.join('') + (files.length > 10 ? `<p class="empty">ほか${files.length - 10}件</p>` : '');
   } catch (e) { el.innerHTML = '<p class="empty">読み込みに失敗</p>'; }
+}
+
+// ── 仕分け済み台帳（いつ何を言ったかの恒久記録・月次）──
+let briefLogFallback = '（まだなし）';
+let ledgerLoaded = false;
+async function loadLedger() {
+  try {
+    const d = new Date(), ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    let md = await getFile(`inbox/ledger/${ym}.md`);
+    if (!md) { // 月初は先月分も見る
+      const prev = new Date(d.getFullYear(), d.getMonth()-1, 1);
+      md = await getFile(`inbox/ledger/${prev.getFullYear()}-${String(prev.getMonth()+1).padStart(2,'0')}.md`);
+    }
+    if (!md) { ledgerLoaded = false; return; }
+    const entries = md.split(/\n(?=## )/).filter(s => s.startsWith('## ')).slice(-6).reverse();
+    $('inbox-log').innerHTML = entries.map(e => {
+      const ls = e.split('\n');
+      const when = ls[0].replace(/^## /, '');
+      const sorted = (ls.find(l => l.startsWith('→仕分け')) || '').replace(/^→仕分け[::]?\s*/, '');
+      const body = ls.slice(1).filter(l => !l.startsWith('→仕分け') && !/^(img|audio):\s/.test(l)).join(' ').trim();
+      return `<div class="card"><div class="s" style="color:var(--text)">${esc(body.slice(0, 110))}</div><div class="s" style="margin-top:4px;font-size:11px">${esc(when)}${sorted?` → ${esc(sorted.slice(0,60))}`:''}</div></div>`;
+    }).join('');
+    ledgerLoaded = true;
+  } catch (e) { ledgerLoaded = false; }
 }
 
 // ── 投資タブ（ウォッチ表を portfolio.md から）──
@@ -446,7 +538,7 @@ let isLoading = false;
 async function loadAll() {
   if (isLoading || !pat) return;
   isLoading = true; $('refresh-btn').classList.add('spinning');
-  await Promise.all([loadBriefing(), loadQueue(), loadWatch(), loadMebius()]);
+  await Promise.all([loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadMebius()]);
   isLoading = false; $('refresh-btn').classList.remove('spinning');
 }
 
@@ -457,6 +549,8 @@ function setupEvents() {
   $('inbox-send').addEventListener('click', sendInbox);
   $('photo-btn').addEventListener('click', () => $('photo-input').click());
   $('photo-input').addEventListener('change', e => pickPhoto(e.target.files[0]));
+  $('rec-btn').addEventListener('click', toggleRec);
+  $('audio-input').addEventListener('change', e => pickAudio(e.target.files[0]));
   document.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
     switchTab('inbox');
     const ta = $('inbox-text');
