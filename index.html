@@ -201,8 +201,14 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
         <button class="chip" data-tpl="体調: ">🌡 体調</button>
         <button class="chip" data-tpl="気分: ">🙂 気分</button>
       </div>
-      <div class="section-title">📈 このごろ</div>
-      <div id="health-note"><p class="empty">記録が溜まるとここに推移が出ます（フェーズ2でグラフ化）</p></div>
+      <div id="health-stats" class="tiles" style="margin-bottom:6px"></div>
+      <div class="section-title">🚶 歩数（14日）</div>
+      <div class="card" id="health-steps"><p class="empty">Apple Watchのデータ待ち</p></div>
+      <div class="section-title">❤️ 安静時心拍（30日）</div>
+      <div class="card" id="health-rhr"><p class="empty">Apple Watchのデータ待ち</p></div>
+      <div class="section-title">🏃 直近のワークアウト</div>
+      <div id="health-workouts"><p class="empty">—</p></div>
+      <div id="health-note"></div>
     </div>
   </div>
 
@@ -240,7 +246,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-15.4';
+const APP_VERSION = '2026-08-15.5';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -598,6 +604,74 @@ async function addCalEvent() {
   btn.disabled = false;
 }
 
+// ── 健康タブ（personal/health/data/ のCSVから）──
+async function repoFile(repo, path) {
+  const r = await api(`/repos/${repo}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}`);
+  if (!r || r.__404) return null;
+  return dec(r.content);
+}
+function parseCsv(text) {
+  const [head, ...rows] = text.trim().split('\n');
+  const cols = head.split(',');
+  return rows.map(r => { const v = r.split(','); const o = {}; cols.forEach((c, i) => o[c] = v[i] ?? ''); return o; });
+}
+function sparkBars(el, data, unit) { // data: [{label, v}]（単系列・直接ラベルは最新とピークのみ）
+  const max = Math.max(...data.map(d => d.v), 1);
+  const W = 320, H = 74, bw = W / data.length;
+  const peak = data.reduce((a, b) => (b.v > a.v ? b : a), data[0]);
+  let s = `<svg viewBox="0 0 ${W} ${H + 16}" style="width:100%;height:auto;font-variant-numeric:tabular-nums">`;
+  data.forEach((d, i) => {
+    const h = Math.max(2, d.v / max * H);
+    const x = i * bw + bw * 0.18, y = H - h;
+    const last = i === data.length - 1;
+    s += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${(bw * 0.64).toFixed(1)}" height="${h.toFixed(1)}" rx="2.5" fill="var(--accent)"${last ? '' : ' opacity="0.45"'}/>`;
+    if (last || d === peak) s += `<text x="${(x + bw * 0.32).toFixed(1)}" y="${Math.max(y - 4, 9).toFixed(1)}" text-anchor="middle" font-size="9.5" fill="var(--text2)">${Math.round(d.v).toLocaleString()}</text>`;
+  });
+  s += `<text x="0" y="${H + 13}" font-size="9.5" fill="var(--text2)">${esc(data[0].label)}</text>`;
+  s += `<text x="${W}" y="${H + 13}" text-anchor="end" font-size="9.5" fill="var(--text2)">${esc(data[data.length - 1].label)}（${unit}）</text></svg>`;
+  el.innerHTML = s;
+}
+function sparkLine(el, data, unit) {
+  const vs = data.map(d => d.v);
+  const lo = Math.min(...vs), hi = Math.max(...vs), span = Math.max(hi - lo, 1);
+  const W = 320, H = 70, P = 6;
+  const pt = (d, i) => `${(i / (data.length - 1) * W).toFixed(1)},${(P + (1 - (d.v - lo) / span) * (H - P * 2)).toFixed(1)}`;
+  const lastP = pt(data[data.length - 1], data.length - 1).split(',');
+  let s = `<svg viewBox="0 0 ${W} ${H + 16}" style="width:100%;height:auto;font-variant-numeric:tabular-nums">`;
+  s += `<polyline points="${data.map(pt).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>`;
+  s += `<circle cx="${lastP[0]}" cy="${lastP[1]}" r="3.5" fill="var(--accent)"/>`;
+  s += `<text x="${Math.min(+lastP[0], W - 24)}" y="${Math.max(+lastP[1] - 7, 9)}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--text)">${data[data.length - 1].v}</text>`;
+  s += `<text x="0" y="${H + 13}" font-size="9.5" fill="var(--text2)">${esc(data[0].label)}　低${lo}〜高${hi}${unit}</text>`;
+  s += `<text x="${W}" y="${H + 13}" text-anchor="end" font-size="9.5" fill="var(--text2)">${esc(data[data.length - 1].label)}</text></svg>`;
+  el.innerHTML = s;
+}
+async function loadHealth() {
+  try {
+    const csv = await repoFile('meyjiro/personal', 'health/data/daily.csv');
+    if (!csv) return;
+    const rows = parseCsv(csv).filter(r => r.date);
+    const md = s => `${+s.slice(5, 7)}/${+s.slice(8, 10)}`;
+    const latest = rows[rows.length - 1] || {};
+    const lastVal = col => { for (let i = rows.length - 1; i >= 0; i--) if (rows[i][col]) return rows[i][col]; return '—'; };
+    $('health-stats').innerHTML = [
+      ['🚶 歩数（今日）', latest.steps ? (+latest.steps).toLocaleString() : '—'],
+      ['🏃 運動（今日）', latest.exercise_min ? `${latest.exercise_min}分` : '—'],
+      ['❤️ 安静時心拍', `${lastVal('resting_hr')}`],
+      ['📈 HRV', `${lastVal('hrv_ms')}ms`],
+    ].map(([l, v]) => `<div class="tile"><div class="s">${l}</div><div class="l" style="font-size:20px;font-variant-numeric:tabular-nums">${esc(String(v))}</div></div>`).join('');
+    const steps = rows.slice(-14).filter(r => r.steps).map(r => ({ label: md(r.date), v: +r.steps }));
+    if (steps.length > 1) sparkBars($('health-steps'), steps, '歩');
+    const rhr = rows.slice(-30).filter(r => r.resting_hr).map(r => ({ label: md(r.date), v: +r.resting_hr }));
+    if (rhr.length > 1) sparkLine($('health-rhr'), rhr, 'bpm');
+    const wcsv = await repoFile('meyjiro/personal', 'health/data/workouts.csv');
+    if (wcsv) {
+      const ws = parseCsv(wcsv).slice(-3).reverse();
+      $('health-workouts').innerHTML = ws.map(w =>
+        `<div class="card"><div class="t" style="font-size:14px">${esc(w.name)} ${w.duration_min}分${+w.distance_km ? `・${w.distance_km}km` : ''}</div><div class="s">${esc(w.start)}　平均${w.avg_hr || '—'}bpm・${w.kcal}kcal</div></div>`).join('');
+    }
+  } catch (e) {}
+}
+
 // ── 投資タブ（ウォッチ表を portfolio.md から）──
 async function loadWatch() {
   const el = $('invest-watch');
@@ -661,7 +735,7 @@ let isLoading = false;
 async function loadAll() {
   if (isLoading || !pat) return;
   isLoading = true; $('refresh-btn').classList.add('spinning');
-  await Promise.all([loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadMebius()]);
+  await Promise.all([loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadMebius(), loadHealth()]);
   await loadSchedule(); // メビウス予定をカレンダーに重ねるため後で描画
   isLoading = false; $('refresh-btn').classList.remove('spinning');
 }
