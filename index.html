@@ -83,6 +83,9 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 .cal-cell .dot{width:5px;height:5px;border-radius:50%;background:var(--accent)}
 .cal-cell .dot.mb{background:#a78bfa}
 .cal-cell .dot.trip{background:#38bdf8}
+.cal-cell .mk{font-size:9px;line-height:1}
+.cal-cell .mk.heart{color:#e0649b}
+.cal-cell .mk.zone{color:var(--warn);opacity:.5}
 .cal-add{display:flex;gap:8px;margin:12px 0}
 .cal-add input[type=text]{flex:1;padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text)}
 
@@ -195,15 +198,12 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
     <div id="tab-health" class="tab-panel">
       <div class="section-title">✍️ きょうの記録（タップで投げ込みに入る）</div>
       <div class="chips">
-        <button class="chip" data-tpl="生理きた">🩸 生理きた</button>
-        <button class="chip" data-tpl="生理おわった">🩸 終わった</button>
         <button class="chip" data-tpl="体重 ">⚖️ 体重</button>
         <button class="chip" data-tpl="睡眠 ">😴 睡眠</button>
         <button class="chip" data-tpl="運動: ">🏃 運動</button>
         <button class="chip" data-tpl="体調: ">🌡 体調</button>
         <button class="chip" data-tpl="気分: ">🙂 気分</button>
       </div>
-      <div id="health-cycle"></div>
       <div id="health-stats" class="tiles" style="margin-bottom:6px"></div>
       <div class="section-title">🚶 歩数（14日）</div>
       <div class="card" id="health-steps"><p class="empty">Apple Watchのデータ待ち</p></div>
@@ -211,6 +211,12 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
       <div class="card" id="health-rhr"><p class="empty">Apple Watchのデータ待ち</p></div>
       <div class="section-title">🏃 直近のワークアウト</div>
       <div id="health-workouts"><p class="empty">—</p></div>
+      <div class="section-title">🩸 周期</div>
+      <div class="chips">
+        <button class="chip" data-tpl="生理きた">🩸 生理きた</button>
+        <button class="chip" data-tpl="生理おわった">🩸 終わった</button>
+      </div>
+      <div id="health-cycle"></div>
       <div id="health-note"></div>
     </div>
   </div>
@@ -249,7 +255,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-15.6';
+const APP_VERSION = '2026-08-15.7';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -523,6 +529,7 @@ async function loadLedger() {
 
 // ── カレンダー（スケジュール.md＝期日の正本を表示・直接追記）──
 let calY, calM, calSel = null, schedRows = []; // {date:'YYYY-MM-DD', field, label, src}
+let cyclePred = []; // {date, kind:'heart'|'zone'}（loadCycleが計算）
 async function getFileWithSha(path) {
   const r = await api(`/repos/${REPO}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}?ref=${BRANCH}`);
   if (!r || r.__404) return null;
@@ -547,6 +554,9 @@ function calEvents() {
   schedRows.forEach(r => add(r.date, r));
   (window.__mebiusEvents || []).forEach(e => { if (e.end) add(e.end, { label: `🔮 ${e.name} 様 完了`, src: 'mb' }); });
   TRIPS.forEach(t => { add(t.start, { label: `✈️ ${t.title} 出発`, src: 'trip' }); add(t.end, { label: `✈️ ${t.title} 帰着`, src: 'trip' }); });
+  cyclePred.forEach(p => add(p.date, p.kind === 'heart'
+    ? { label: '♥ 次回生理予定（予測）', src: 'cyc-heart' }
+    : { label: '⚡ マキシマムザホルモンめぐちゃん開始予想', src: 'cyc-zone' }));
   return ev;
 }
 function renderCal() {
@@ -561,7 +571,11 @@ function renderCal() {
     const ds = d.toLocaleDateString('sv-SE');
     const inMonth = d.getMonth() === calM;
     const items = ev[ds] || [];
-    const dots = items.slice(0, 4).map(it => `<span class="dot ${it.src === 'mb' ? 'mb' : it.src === 'trip' ? 'trip' : ''}"></span>`).join('');
+    const dots = items.slice(0, 4).map(it => {
+      if (it.src === 'cyc-heart') return '<span class="mk heart">♥</span>';
+      if (it.src === 'cyc-zone') return '<span class="mk zone">⚠︎</span>';
+      return `<span class="dot ${it.src === 'mb' ? 'mb' : it.src === 'trip' ? 'trip' : ''}"></span>`;
+    }).join('');
     html += `<div class="cal-cell${inMonth ? '' : ' dim'}${ds === todayS ? ' today' : ''}${ds === calSel ? ' sel' : ''}" data-d="${ds}">${d.getDate()}<div class="dots">${dots}</div></div>`;
   }
   $('cal-grid').innerHTML = html;
@@ -666,6 +680,14 @@ async function loadCycle() {
     const avg = gaps.length ? Math.round(gaps.reduce((a, b) => a + b) / gaps.length) : 28;
     const next = new Date(d0(last.start_date)); next.setDate(next.getDate() + avg);
     const toNext = Math.round((next - today) / 86400000);
+    // カレンダー用: 今後3周期分の ♥（開始予測）と ⚡（ホルモン期入り=予測7日前）
+    cyclePred = [];
+    for (let c = 0; c < 3; c++) {
+      const p = new Date(d0(last.start_date)); p.setDate(p.getDate() + avg * (c + 1));
+      const z = new Date(p); z.setDate(z.getDate() - 7);
+      cyclePred.push({ date: p.toLocaleDateString('sv-SE'), kind: 'heart' });
+      cyclePred.push({ date: z.toLocaleDateString('sv-SE'), kind: 'zone' });
+    }
     const md = d => `${d.getMonth() + 1}/${d.getDate()}`;
     // ホルモン期ゾーン: 次回予測の7日前〜予測日（生理前 = 審理延期ゾーン）
     const inZone = toNext <= 7 && toNext >= -2;
