@@ -69,6 +69,23 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 .tile .s{font-size:11px;color:var(--text2);margin-top:2px}
 .countdown{background:#e0f7fa;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:600;margin-bottom:10px}
 
+/* カレンダー */
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 10px}
+.cal-head .ym{font-weight:700;font-size:16px}
+.cal-head button{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:6px 14px;cursor:pointer;color:var(--text)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:8px}
+.cal-dow{font-size:10px;color:var(--text2);text-align:center;padding:4px 0;font-weight:700}
+.cal-cell{min-height:44px;border-radius:8px;padding:3px 2px;text-align:center;font-size:13px;cursor:pointer;position:relative}
+.cal-cell.dim{color:var(--text2);opacity:.35}
+.cal-cell.today{background:var(--accent-light);font-weight:700}
+.cal-cell.sel{outline:2px solid var(--accent)}
+.cal-cell .dots{display:flex;justify-content:center;gap:2px;margin-top:2px;flex-wrap:wrap}
+.cal-cell .dot{width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.cal-cell .dot.mb{background:#a78bfa}
+.cal-cell .dot.trip{background:#38bdf8}
+.cal-add{display:flex;gap:8px;margin:12px 0}
+.cal-add input[type=text]{flex:1;padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text)}
+
 /* 投げ込みタブ */
 .inbox-form{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:14px}
 .inbox-form textarea{width:100%;border:none;outline:none;resize:none;min-height:88px;background:transparent;line-height:1.6}
@@ -128,6 +145,23 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
       <div class="tiles" id="link-tiles"></div>
     </div>
 
+    <!-- カレンダー -->
+    <div id="tab-cal" class="tab-panel">
+      <div class="cal-head">
+        <button id="cal-prev">‹</button>
+        <div class="ym" id="cal-ym"></div>
+        <button id="cal-next">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="cal-add">
+        <input type="date" id="cal-date" style="padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text)">
+        <input type="text" id="cal-text" placeholder="予定を書く（例: 歯医者14時）">
+        <button class="btn btn-primary" id="cal-save" style="flex:0 0 auto">追加</button>
+      </div>
+      <div class="hint" style="margin:0 4px 10px">追加した予定はスケジュール表（正本）に直接入り、前日と当日の朝・夜の通知に自動で出ます。</div>
+      <div id="cal-day-list"></div>
+    </div>
+
     <!-- 投げ込み -->
     <div id="tab-inbox" class="tab-panel">
       <div class="inbox-form">
@@ -174,6 +208,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
   <div class="bottom-nav">
     <button class="nav-btn active" data-tab="today"><span class="em">☀️</span><span>今日</span></button>
+    <button class="nav-btn" data-tab="cal"><span class="em">📅</span><span>予定</span></button>
     <button class="nav-btn" data-tab="inbox"><span class="em">📥</span><span>投げ込み</span></button>
     <button class="nav-btn" data-tab="invest"><span class="em">📈</span><span>投資</span></button>
     <button class="nav-btn" data-tab="health"><span class="em">💪</span><span>健康</span></button>
@@ -205,7 +240,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-15.2';
+const APP_VERSION = '2026-08-15.3';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -331,7 +366,8 @@ async function loadMebius() {
     const res = await fetch(MEBIUS_API, { headers: { 'X-Api-Token': mebiusToken }, cache: 'no-store' });
     if (!res.ok) throw new Error(res.status);
     const data = await res.json();
-    const evs = (data.events || data || []).filter(e => e.end && !e.completed)
+    window.__mebiusEvents = (data.events || data || []).filter(e => e.end && !e.completed);
+    const evs = window.__mebiusEvents
       .sort((a, b) => (a.end || '').localeCompare(b.end || '')).slice(0, 6);
     el.innerHTML = evs.length
       ? evs.map(e => `<div class="due"><span class="d">${esc((e.end||'').slice(5).replace('-','/'))}</span><span class="l">${esc(e.name)} 様（${esc(String(e.nights||'?'))}夜）</span></div>`).join('')
@@ -476,6 +512,92 @@ async function loadLedger() {
   } catch (e) { ledgerLoaded = false; }
 }
 
+// ── カレンダー（スケジュール.md＝期日の正本を表示・直接追記）──
+let calY, calM, calSel = null, schedRows = []; // {date:'YYYY-MM-DD', field, label, src}
+async function getFileWithSha(path) {
+  const r = await api(`/repos/${REPO}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}?ref=${BRANCH}`);
+  if (!r || r.__404) return null;
+  return { text: dec(r.content), sha: r.sha };
+}
+async function loadSchedule() {
+  schedRows = [];
+  try {
+    const f = await getFileWithSha('スケジュール.md');
+    if (!f) return;
+    for (const line of f.text.split('\n')) {
+      if (/^\s*\|~/.test(line)) continue; // 完了済み
+      const m = line.match(/^\s*\|\s*(\d{4})-(\d{2})-(\d{2})\s*\|([^|]*)\|(.*?)\|?\s*$/);
+      if (m) schedRows.push({ date: `${m[1]}-${m[2]}-${m[3]}`, field: m[4].trim(), label: m[5].trim(), src: 'sched' });
+    }
+  } catch (e) {}
+  renderCal();
+}
+function calEvents() {
+  const ev = {};
+  const add = (date, item) => { (ev[date] = ev[date] || []).push(item); };
+  schedRows.forEach(r => add(r.date, r));
+  (window.__mebiusEvents || []).forEach(e => { if (e.end) add(e.end, { label: `🔮 ${e.name} 様 完了`, src: 'mb' }); });
+  TRIPS.forEach(t => { add(t.start, { label: `✈️ ${t.title} 出発`, src: 'trip' }); add(t.end, { label: `✈️ ${t.title} 帰着`, src: 'trip' }); });
+  return ev;
+}
+function renderCal() {
+  if (calY === undefined) { const n = new Date(); calY = n.getFullYear(); calM = n.getMonth(); }
+  $('cal-ym').textContent = `${calY}年${calM + 1}月`;
+  const ev = calEvents();
+  const first = new Date(calY, calM, 1), start = new Date(first); start.setDate(1 - first.getDay());
+  const todayS = new Date().toLocaleDateString('sv-SE');
+  let html = ['日','月','火','水','木','金','土'].map(d => `<div class="cal-dow">${d}</div>`).join('');
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    const ds = d.toLocaleDateString('sv-SE');
+    const inMonth = d.getMonth() === calM;
+    const items = ev[ds] || [];
+    const dots = items.slice(0, 4).map(it => `<span class="dot ${it.src === 'mb' ? 'mb' : it.src === 'trip' ? 'trip' : ''}"></span>`).join('');
+    html += `<div class="cal-cell${inMonth ? '' : ' dim'}${ds === todayS ? ' today' : ''}${ds === calSel ? ' sel' : ''}" data-d="${ds}">${d.getDate()}<div class="dots">${dots}</div></div>`;
+  }
+  $('cal-grid').innerHTML = html;
+  document.querySelectorAll('.cal-cell').forEach(c => c.addEventListener('click', () => {
+    calSel = c.dataset.d; $('cal-date').value = calSel; renderCal();
+  }));
+  renderDayList(ev);
+}
+function renderDayList(ev) {
+  const el = $('cal-day-list');
+  if (!calSel) { el.innerHTML = '<p class="empty">日付をタップすると予定が出ます</p>'; return; }
+  const items = (ev || calEvents())[calSel] || [];
+  const [y, mo, dd] = calSel.split('-');
+  el.innerHTML = `<div class="section-title">📌 ${+mo}/${+dd} の予定</div>` + (items.length
+    ? items.map(it => `<div class="card"><div class="s" style="color:var(--text)">${it.field ? `[${esc(it.field)}] ` : ''}${esc(it.label)}</div></div>`).join('')
+    : '<p class="empty">予定なし。下のフォームから追加できます</p>');
+}
+async function addCalEvent() {
+  const date = $('cal-date').value, text = $('cal-text').value.trim();
+  if (!date || !text) { toast('日付と内容を入れてね'); return; }
+  const btn = $('cal-save'); btn.disabled = true;
+  const row = `| ${date} | 予定 | ${text.replace(/\|/g, '／')} |`;
+  try {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const f = await getFileWithSha('スケジュール.md');
+      if (!f) throw new Error('スケジュール.mdが見つかりません');
+      // 「## 期日つき」表の末尾（最後の表の行）の直後に挿入する
+      const lines = f.text.split('\n');
+      let last = -1;
+      lines.forEach((l, i) => { if (/^\s*\|~?\s*\d{4}-\d{2}-\d{2}\s*\|/.test(l)) last = i; });
+      if (last < 0) throw new Error('表が見つかりません');
+      lines.splice(last + 1, 0, row);
+      try {
+        await api(`/repos/${REPO}/contents/${encodeURIComponent('スケジュール.md')}`, 'PUT',
+          { message: `予定追加: ${date} ${text}（ダッシュボード）`, content: enc(lines.join('\n')), sha: f.sha, branch: BRANCH });
+        break;
+      } catch (e) { if (attempt === 1) throw e; } // sha競合は1回だけ再取得して再試行
+    }
+    $('cal-text').value = ''; calSel = date;
+    toast('予定を入れた！前日と当日の朝に通知が来ます 📅');
+    await loadSchedule();
+  } catch (e) { toast('追加に失敗: ' + e.message); }
+  btn.disabled = false;
+}
+
 // ── 投資タブ（ウォッチ表を portfolio.md から）──
 async function loadWatch() {
   const el = $('invest-watch');
@@ -510,8 +632,9 @@ function switchTab(tab) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   $('tab-' + tab).classList.add('active');
-  $('page-title').innerHTML = { today:`今日<span class="sub" id="today-date"></span>`, inbox:'投げ込み', invest:'投資', health:'健康' }[tab];
+  $('page-title').innerHTML = { today:`今日<span class="sub" id="today-date"></span>`, cal:'予定', inbox:'投げ込み', invest:'投資', health:'健康' }[tab];
   if (tab === 'today') setToday();
+  if (tab === 'cal' && !$('cal-date').value) $('cal-date').value = new Date().toLocaleDateString('sv-SE');
 }
 function setToday() {
   const el = $('today-date'); if (!el) return;
@@ -539,6 +662,7 @@ async function loadAll() {
   if (isLoading || !pat) return;
   isLoading = true; $('refresh-btn').classList.add('spinning');
   await Promise.all([loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadMebius()]);
+  await loadSchedule(); // メビウス予定をカレンダーに重ねるため後で描画
   isLoading = false; $('refresh-btn').classList.remove('spinning');
 }
 
@@ -551,6 +675,9 @@ function setupEvents() {
   $('photo-input').addEventListener('change', e => pickPhoto(e.target.files[0]));
   $('rec-btn').addEventListener('click', toggleRec);
   $('audio-input').addEventListener('change', e => pickAudio(e.target.files[0]));
+  $('cal-prev').addEventListener('click', () => { calM--; if (calM < 0) { calM = 11; calY--; } renderCal(); });
+  $('cal-next').addEventListener('click', () => { calM++; if (calM > 11) { calM = 0; calY++; } renderCal(); });
+  $('cal-save').addEventListener('click', addCalEvent);
   document.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
     switchTab('inbox');
     const ta = $('inbox-text');
