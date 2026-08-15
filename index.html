@@ -195,12 +195,15 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
     <div id="tab-health" class="tab-panel">
       <div class="section-title">✍️ きょうの記録（タップで投げ込みに入る）</div>
       <div class="chips">
+        <button class="chip" data-tpl="生理きた">🩸 生理きた</button>
+        <button class="chip" data-tpl="生理おわった">🩸 終わった</button>
         <button class="chip" data-tpl="体重 ">⚖️ 体重</button>
         <button class="chip" data-tpl="睡眠 ">😴 睡眠</button>
         <button class="chip" data-tpl="運動: ">🏃 運動</button>
         <button class="chip" data-tpl="体調: ">🌡 体調</button>
         <button class="chip" data-tpl="気分: ">🙂 気分</button>
       </div>
+      <div id="health-cycle"></div>
       <div id="health-stats" class="tiles" style="margin-bottom:6px"></div>
       <div class="section-title">🚶 歩数（14日）</div>
       <div class="card" id="health-steps"><p class="empty">Apple Watchのデータ待ち</p></div>
@@ -246,7 +249,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-15.5';
+const APP_VERSION = '2026-08-15.6';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -645,7 +648,36 @@ function sparkLine(el, data, unit) {
   s += `<text x="${W}" y="${H + 13}" text-anchor="end" font-size="9.5" fill="var(--text2)">${esc(data[data.length - 1].label)}</text></svg>`;
   el.innerHTML = s;
 }
+async function loadCycle() {
+  try {
+    const csv = await repoFile('meyjiro/personal', 'health/cycle.csv');
+    const el = $('health-cycle');
+    if (!csv) return;
+    const rows = parseCsv(csv).filter(r => r.start_date).sort((a, b) => a.start_date.localeCompare(b.start_date));
+    if (!rows.length) { el.innerHTML = `<div class="card"><div class="s">🩸 周期データはまだありません。「生理きた」ボタンで記録が始まります（過去の開始日を投げ込みで教えてもらえれば予測も出ます）</div></div>`; return; }
+    const d0 = s => new Date(s + 'T00:00:00');
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const last = rows[rows.length - 1];
+    const dayN = Math.round((today - d0(last.start_date)) / 86400000) + 1;
+    // 平均周期: 直近の開始日どうしの間隔（最大6周期）
+    const gaps = [];
+    for (let i = Math.max(1, rows.length - 6); i < rows.length; i++)
+      gaps.push((d0(rows[i].start_date) - d0(rows[i - 1].start_date)) / 86400000);
+    const avg = gaps.length ? Math.round(gaps.reduce((a, b) => a + b) / gaps.length) : 28;
+    const next = new Date(d0(last.start_date)); next.setDate(next.getDate() + avg);
+    const toNext = Math.round((next - today) / 86400000);
+    const md = d => `${d.getMonth() + 1}/${d.getDate()}`;
+    // ホルモン期ゾーン: 次回予測の7日前〜予測日（生理前 = 審理延期ゾーン）
+    const inZone = toNext <= 7 && toNext >= -2;
+    el.innerHTML = `<div class="card" style="${inZone ? 'border-color:var(--warn);background:var(--warn-light)' : ''}">
+      <div class="t" style="font-size:14px">🩸 周期 ${dayN}日目 <span style="font-weight:400;color:var(--text2)">（前回 ${md(d0(last.start_date))}開始・平均${avg}日）</span></div>
+      <div class="s">次回予測 ${md(next)}${toNext >= 0 ? `（あと${toNext}日）` : `（${-toNext}日超過）`}${gaps.length ? '' : '　※予測は仮の28日周期。過去の開始日が入ると精度が出ます'}</div>
+      ${inZone ? '<div class="s" style="color:var(--warn);font-weight:700;margin-top:4px">⚠️ ホルモン期ゾーン — 大きな判断・判定は審理延期の期間</div>' : ''}
+    </div>`;
+  } catch (e) {}
+}
 async function loadHealth() {
+  await loadCycle();
   try {
     const csv = await repoFile('meyjiro/personal', 'health/data/daily.csv');
     if (!csv) return;
