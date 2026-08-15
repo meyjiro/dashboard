@@ -240,7 +240,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-15.3';
+const APP_VERSION = '2026-08-15.4';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -712,6 +712,7 @@ function setupEvents() {
 }
 
 setToday();
+renderCal();
 renderLinks();
 renderCountdown();
 setupEvents();
