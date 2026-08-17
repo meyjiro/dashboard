@@ -202,11 +202,20 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
     <!-- 投資 -->
     <div id="tab-invest" class="tab-panel">
+      <div class="section-title">🔭 注目企業（Yパパ基準クリアのみ・毎朝わき出る）</div>
+      <div id="invest-scout"><p class="empty">読み込み中…</p></div>
+      <div class="hint" style="margin:0 4px 14px">気になった企業は「⚖️ 裁判にかける」を押すと投げ込みに入り、Claudeが裁判資料を作ります。過去の分も消えずに残ります。</div>
       <div class="section-title">📰 コーパス新着ダイジェスト</div>
       <div id="invest-digest"><p class="empty">フェーズ4で本格稼働（Yパパ・太郎の新着要約がここに届く）</p></div>
       <div class="section-title">👁 ウォッチ銘柄（B7/portfolio.md）</div>
       <div id="invest-watch"><p class="empty">読み込み中…</p></div>
       <div class="hint" style="margin:8px 4px">銘柄の追加は投げ込み箱に「〇〇ウォッチして」でOK。保有の記帳も「〇〇を100株買った」でOK。</div>
+      <div class="section-title">⚖️ 裁判の与件ヒアリング（8/29まで）</div>
+      <div class="card" id="yoken-card">
+        <div class="s" style="margin-bottom:8px">長期投資（5〜10年）・マンション売却金（約8千万円）の再投資・目標10億円という前提で、AI裁判のルールを決める質問です。全22問・選択式。途中でやめても回答は端末に残ります。</div>
+        <button class="btn btn-primary" id="yoken-open">質問に答える</button>
+      </div>
+      <div id="yoken-form" style="display:none"></div>
     </div>
 
     <!-- 健康 -->
@@ -277,7 +286,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-17.1';
+const APP_VERSION = '2026-08-17.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -763,6 +772,107 @@ async function loadWatch() {
   } catch (e) { el.innerHTML = '<p class="empty">読み込みに失敗</p>'; }
 }
 
+// ── 投資タブ: 注目企業（inbox/watchlist.json・蓄積表示）──
+async function loadScout() {
+  const el = $('invest-scout');
+  try {
+    const raw = await getFile('inbox/watchlist.json');
+    const list = raw ? (JSON.parse(raw).entries || []) : [];
+    if (!list.length) { el.innerHTML = '<p class="empty">明日の朝から毎日1社わき出ます 🔭</p>'; return; }
+    const sent = JSON.parse(localStorage.getItem('scout-sent') || '[]');
+    el.innerHTML = list.slice().reverse().map((e, i) => {
+      const key = `${e.date}_${e.code || e.name}`;
+      const done = e.status === '裁判送り' || sent.includes(key);
+      return `<div class="card"><div class="t" style="font-size:14px">${esc(e.name)}${e.code ? `（${esc(e.code)}）` : ''}<span class="s" style="float:right">${esc(e.date)}</span></div>
+        <div class="s">${esc(e.reason)}</div>
+        ${e.articles && e.articles.length ? `<div class="s" style="font-size:11px;margin-top:4px">Yパパ基準: ${e.articles.map(esc).join('・')}</div>` : ''}
+        <div style="margin-top:8px"><button class="btn ${done ? '' : 'btn-primary'}" data-scout="${esc(key)}" data-name="${esc(e.name)}" data-code="${esc(e.code || '')}" ${done ? 'disabled' : ''}>${done ? '⚖️ 裁判送り済み' : '⚖️ 裁判にかける'}</button></div></div>`;
+    }).join('');
+    el.querySelectorAll('[data-scout]').forEach(btn => btn.addEventListener('click', async () => {
+      btn.disabled = true; btn.textContent = '送信中…';
+      try {
+        await putFile(`inbox/queue/${ts()}.md`, `at: ${atNow()}\nkind: 裁判依頼\n\n注目企業「${btn.dataset.name}${btn.dataset.code ? '（' + btn.dataset.code + '）' : ''}」を裁判にかけてください（注目企業ウォッチからピックアップ）`, `裁判依頼 ${btn.dataset.name}`);
+        const s = JSON.parse(localStorage.getItem('scout-sent') || '[]');
+        s.push(btn.dataset.scout); localStorage.setItem('scout-sent', JSON.stringify(s));
+        btn.textContent = '⚖️ 裁判送り済み'; btn.classList.remove('btn-primary');
+        toast('裁判にかけた！ 資料ができたら報告します ⚖️');
+      } catch (e) { btn.disabled = false; btn.textContent = '⚖️ 裁判にかける'; toast('送信に失敗: ' + e.message); }
+    }));
+  } catch (e) { el.innerHTML = '<p class="empty">読み込みに失敗</p>'; }
+}
+
+// ── 投資タブ: 裁判の与件ヒアリング ──
+const YOKEN_Q = [
+  ['守りの現金', '投資と完全に分けて現金で持つ生活防衛資金は？（第2条: 守りは意思力でなく構造）', ['生活費6ヶ月分', '1年分', '2年分'], 0],
+  ['投入の仕方', 'マンション売却金（約8千万円）はどう投入する？（第20条・第21条）', ['計画を決めて数ヶ月〜1年かけて段階投入', '裁判で買いが決まるたび都度投入（期限を切らない）', '早めに一括投入', '未定・裁判で決めたい'], 0],
+  ['入金時期', '売却金が手元に入る時期の想定は？', ['2026年内', '2027年前半', '未定（買い手次第）'], 0],
+  ['売り急ぎ防止', '希望価格を下回る買付けしか来なかったら？（第12条: 選択肢の有無が力関係）', ['待てる（売り急がない）', '時期を優先して多少の値下げは受ける', 'ケースバイケース'], 0],
+  ['手取りの把握', '売却の税金・費用を引いた手取り額は把握してる？（第4条: 分解するまで情報ではない）', ['だいたい把握してる', 'まだ計算してない（裁判の前に一緒に計算したい）'], 0],
+  ['全体の退場ライン', '総資産が高値から何%減ったら計画全体を見直す臨時裁判を開く？（第11条: 一発退場の回避が最優先）', ['-20%', '-30%', '-40%', '決めない（銘柄ごとに判断）'], 0],
+  ['1銘柄の上限', '1つの銘柄に張れる上限は総資産の？（第19条: 値段でなくサイズで閉じる）', ['10%まで', '20%まで', '30%まで', '上限を決めず裁判都度'], 0],
+  ['レバレッジ', '信用取引・借入での投資は？（第29条: 借入は条件が書き換わる日で管理）', ['一切使わない（現物のみ）', '為替などの実務上の借入のみ（今の円借入のような）', '機会があれば信用も検討'], 0],
+  ['フェーズ認定', '今の自分は「作るフェーズ」？「守るフェーズ」？（第16条🔴: 適用前にフェーズ認定）', ['作る（集中もあり・稼ぐ力で取り返せる）', '半々（8千万投入後は守り寄りに移行）', '守る（減らさないのが最優先）'], 0],
+  ['集中か分散か', 'ポートフォリオの形は？（第16条: 分散とは壊れ方の違うものを持つこと）', ['5銘柄以内に厚く', '10銘柄前後', 'コア（指数・大型）＋サテライト個別', '裁判都度'], 0],
+  ['主戦場', '主戦場はどこ？（第8条: 堀のない場所に長期の利益は残らない）※複数選択', ['日本個別株（防衛・重工・半導体・エネルギー等Yパパの土俵）', '米国個別株', '日米インデックス', '高配当・インカム', '新興・小型（上振れ枠）'], 1],
+  ['エンジン', '10億へのエンジンは値上がり？配当？（第26条: 最大の変数は時間）', ['値上がり重視', '値上がり＋配当も並行', '将来は配当収入へ移行（5〜10年後）'], 0],
+  ['打席枠', '上振れ狙い（新興・小型）に許す枠は総資産の？（第35条: 青天井の領域は打席数が決める）', ['0%（やらない）', '5%まで', '10%まで', '20%まで'], 0],
+  ['通貨配分', '円:ドルの目標比率は？（第18条: どこに置いてあるか）', ['ドル多め（3:7）', '半々', '円多め（7:3）', '決めない・機会次第'], 0],
+  ['口座の置き場', '口座はIBKR集中でいい？（第18条・第31条: 備えは発動実績で測る）', ['IBKR集中でよい', '日本の証券口座も併用したい', '裁判で精査'], 0],
+  ['金の位置づけ', '金（インゴット2枚＋IBKR分）の扱いは？', ['守り枠として一定割合を維持', '現状維持（買い増さない）', '裁判で精査'], 0],
+  ['暗号通貨', '暗号通貨（Bitkub）の位置づけは？（第10条: スイッチを誰が握るか）', ['入れない', 'ごく少額（総資産1%以下）の実験枠', '裁判で精査（現状の方針）'], 0],
+  ['使える時間', '投資の調査・裁判に使える時間は？（第27条: 判断だけは渡さない）', ['月1回のマネーデー15分＋気になったとき', '週に1時間くらい', 'ほぼ毎日ちょっと見る'], 0],
+  ['Claudeの役割', 'Claudeにどこまでやらせる？（第27条: AIがそう言ったからは免責にならない）', ['資料作成と執行だけ（判断は全部メグ）', '推奨まで出す（最終判断はメグ）', 'ルール化した範囲は自動執行も可'], 0],
+  ['暴落時の自分', '-30%の暴落が来たら自分は何をしそう？（第5条・第34条: 自己認識）', ['売りたくなると思う', '買いたくなると思う', '見ないふりをしそう', 'わからない'], 0],
+  ['暴落時のルール', '暴落が来たときのルールは？（第26条: 複利は続けた者にしか効かない）', ['保有は売らない、と先に決めておく', '暴落時こそ臨時裁判を開く（売買はそこで）', '裁判都度'], 0],
+  ['10億の扱い', '「10億」はどう扱う？（第14条: 答えの出る問いに立て替える）', ['方角として掲げ、5年ごとの中間目標を裁判で決める', '期限付きの目標にしたい（下のメモに年数を）', '金額より配当収入◯◯円/年のほうがしっくりくる（メモに）'], 0],
+];
+function renderYoken() {
+  const saved = JSON.parse(localStorage.getItem('yoken-draft') || '{}');
+  $('yoken-form').innerHTML = YOKEN_Q.map(([label, q, opts, multi], i) =>
+    `<div class="card"><div class="t" style="font-size:13px">Q${i+1}. ${esc(label)}</div><div class="s" style="margin:4px 0 8px">${esc(q)}</div>` +
+    opts.map((o, j) => {
+      const checked = multi ? (saved[i] || []).includes(j) : saved[i] === j;
+      return `<label style="display:block;padding:6px 4px;font-size:13px"><input type="${multi ? 'checkbox' : 'radio'}" name="yq${i}" value="${j}" ${checked ? 'checked' : ''}> ${esc(o)}</label>`;
+    }).join('') + '</div>'
+  ).join('') +
+  `<div class="card"><div class="t" style="font-size:13px">自由メモ（補足・迷った点・ここに書いてないこと）</div><textarea id="yoken-memo" style="width:100%;border:none;outline:none;resize:none;min-height:70px;background:transparent;line-height:1.6">${esc(saved.memo || '')}</textarea></div>` +
+  `<button class="btn btn-primary" id="yoken-send" style="width:100%;margin:4px 0 20px">回答を送信する</button>`;
+  $('yoken-form').querySelectorAll('input').forEach(inp => inp.addEventListener('change', saveYokenDraft));
+  $('yoken-memo').addEventListener('input', saveYokenDraft);
+  $('yoken-send').addEventListener('click', sendYoken);
+}
+function collectYoken() {
+  const d = {};
+  YOKEN_Q.forEach(([,, opts, multi], i) => {
+    const els = [...document.querySelectorAll(`input[name="yq${i}"]:checked`)].map(e => +e.value);
+    if (multi) d[i] = els; else if (els.length) d[i] = els[0];
+  });
+  d.memo = $('yoken-memo') ? $('yoken-memo').value : '';
+  return d;
+}
+function saveYokenDraft() { localStorage.setItem('yoken-draft', JSON.stringify(collectYoken())); }
+async function sendYoken() {
+  const d = collectYoken();
+  const unanswered = YOKEN_Q.map((q, i) => (d[i] === undefined || (Array.isArray(d[i]) && !d[i].length)) ? i + 1 : null).filter(Boolean);
+  if (unanswered.length && !confirm(`未回答: Q${unanswered.join(', Q')}\nこのまま送信する？（未回答は「裁判で精査」扱いになります）`)) return;
+  const btn = $('yoken-send'); btn.disabled = true; btn.textContent = '送信中…';
+  const lines = YOKEN_Q.map(([label, q, opts, multi], i) => {
+    const a = d[i];
+    const ans = a === undefined || (Array.isArray(a) && !a.length) ? '（未回答）'
+      : multi ? a.map(j => opts[j]).join('／') : opts[a];
+    return `Q${i+1} ${label}: ${ans}`;
+  });
+  const body = `at: ${atNow()}\nkind: 裁判与件回答\n\n【裁判の与件ヒアリング回答（全${YOKEN_Q.length}問）】\n前提: 長期5〜10年／マンション売却約8千万円を再投資／目標10億円（志・運も理解）\n\n${lines.join('\n')}\n\n【自由メモ】\n${d.memo || '（なし）'}`;
+  try {
+    await putFile(`inbox/queue/${ts()}_yoken.md`, body, '裁判与件回答');
+    toast('回答を送信した！ B7に反映します ⚖️');
+    $('yoken-card').innerHTML = '<div class="s">✅ 回答済み（送り直したいときはもう一度開いて送信すれば上書きで届きます）</div><button class="btn" id="yoken-open">もう一度開く</button>';
+    $('yoken-open').addEventListener('click', () => { $('yoken-form').style.display = ''; renderYoken(); });
+    $('yoken-form').style.display = 'none';
+  } catch (e) { toast('送信に失敗: ' + e.message); }
+  btn.disabled = false; btn.textContent = '回答を送信する';
+}
+
 // ── 共通描画 ──
 function renderLinks() {
   $('link-tiles').innerHTML = LINKS.map(l =>
@@ -847,7 +957,7 @@ let isLoading = false;
 async function loadAll() {
   if (isLoading || !pat) return;
   isLoading = true; $('refresh-btn').classList.add('spinning');
-  await Promise.all([loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadMebius(), loadHealth()]);
+  await Promise.all([loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadScout(), loadMebius(), loadHealth()]);
   await loadSchedule(); // メビウス予定をカレンダーに重ねるため後で描画
   isLoading = false; $('refresh-btn').classList.remove('spinning');
 }
@@ -857,6 +967,7 @@ function setupEvents() {
   document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
   $('refresh-btn').addEventListener('click', loadAll);
   $('inbox-send').addEventListener('click', sendInbox);
+  $('yoken-open').addEventListener('click', () => { $('yoken-form').style.display = ''; renderYoken(); $('yoken-form').scrollIntoView({behavior:'smooth'}); });
   $('photo-btn').addEventListener('click', () => $('photo-input').click());
   $('photo-input').addEventListener('change', e => pickPhoto(e.target.files[0]));
   $('rec-btn').addEventListener('click', toggleRec);
