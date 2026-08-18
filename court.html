@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0bb7ae">
+<title>投資法廷</title>
+<style>
+:root{
+  --bg:#f7f8fa;--bg2:#ffffff;--bg3:#eef1f6;
+  --text:#1a1a2e;--text2:#6b7280;--text3:#9ca3af;
+  --accent:#0bb7ae;--accent-light:#e0f7f6;
+  --brass:#9a742a;--brass-light:#f6efdd;
+  --navy:#2a3a5c;
+  --ok:#0f8a5f;--ok-light:#e3f4ec;
+  --warn:#b8791a;--warn-light:#fdf1de;
+  --red:#c0392b;--red-light:#fbeae8;
+  --card:#ffffff;--border:#e5e7eb;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased}
+.wrap{max-width:760px;margin:0 auto;padding:14px 14px calc(40px + var(--safe-bottom))}
+a{color:var(--accent)}
+.tabnum{font-variant-numeric:tabular-nums}
+
+/* ヘッダ */
+.top{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.back{font-size:14px;color:var(--text2);text-decoration:none;flex-shrink:0}
+h1{font-size:21px;margin:0;font-weight:800;letter-spacing:.02em}
+.lede{font-size:12.5px;color:var(--text2);margin:2px 0 14px}
+
+/* 統計 */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:14px}
+.tile{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:9px 8px;text-align:center}
+.tile .n{font-size:19px;font-weight:800;line-height:1.2;font-variant-numeric:tabular-nums}
+.tile .l{font-size:9.5px;color:var(--text2);line-height:1.4;margin-top:1px}
+
+/* 検索・フィルタ */
+.search{width:100%;border:1px solid var(--border);border-radius:12px;padding:11px 14px;
+  font-size:15px;background:var(--card);color:var(--text);outline:none;margin-bottom:9px}
+.search:focus{border-color:var(--accent)}
+.filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:7px;margin-bottom:4px;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.fchip{flex:0 0 auto;font-size:12px;padding:5px 12px;border-radius:99px;border:1px solid var(--border);
+  background:var(--card);color:var(--text2);cursor:pointer;white-space:nowrap;font-weight:600}
+.fchip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.fchip.sep{border:none;background:none;color:var(--text3);padding:5px 2px;pointer-events:none}
+.views{display:flex;gap:6px;margin:10px 0 12px}
+.vbtn{flex:1;font-size:12.5px;padding:8px;border-radius:10px;border:1px solid var(--border);
+  background:var(--card);color:var(--text2);cursor:pointer;font-weight:700}
+.vbtn.on{background:var(--text);color:var(--bg2);border-color:var(--text)}
+
+/* 一覧 */
+.row{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--border);
+  border-radius:12px;padding:11px 13px;margin-bottom:8px;cursor:pointer}
+.row.conditional{border-left-color:var(--warn)}
+.row.approved{border-left-color:var(--ok)}
+.row.rejected{border-left-color:var(--red)}
+.r1{display:flex;align-items:center;gap:8px}
+.rname{font-size:16px;font-weight:800;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rcode{font-size:11.5px;color:var(--text2);font-weight:500;font-variant-numeric:tabular-nums}
+.badge{font-size:10.5px;font-weight:800;border-radius:99px;padding:3px 9px;white-space:nowrap;flex-shrink:0}
+.b-conditional{background:var(--warn-light);color:var(--warn)}
+.b-approved{background:var(--ok-light);color:var(--ok)}
+.b-rejected{background:var(--red-light);color:var(--red)}
+.r2{font-size:11px;color:var(--text2);margin-top:2px;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.tg{background:var(--bg3);border-radius:5px;padding:1px 6px;font-size:10px}
+.tg.g{background:var(--brass-light);color:var(--brass);font-weight:700}
+.r3{font-size:12px;color:var(--text2);margin-top:5px;overflow:hidden;display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical}
+.prog{display:flex;align-items:center;gap:7px;margin-top:7px}
+.pbar{flex:1;height:4px;background:var(--bg3);border-radius:99px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--warn);border-radius:99px}
+.pbar i.full{background:var(--ok)}
+.plabel{font-size:10.5px;color:var(--text2);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* 詳細オーバーレイ */
+.overlay{position:fixed;inset:0;background:var(--bg);z-index:50;overflow-y:auto;
+  -webkit-overflow-scrolling:touch;display:none}
+.overlay.on{display:block}
+.obar{position:sticky;top:0;background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:11px 14px;display:flex;align-items:center;gap:10px;z-index:2}
+.obar button{background:none;border:none;font-size:15px;color:var(--accent);font-weight:700;cursor:pointer;padding:0}
+.obar .ot{font-weight:800;font-size:15px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.obody{max-width:760px;margin:0 auto;padding:14px 14px 60px}
+
+/* 判決ブロック */
+.decision{border:2px solid var(--warn);border-radius:14px;overflow:hidden;margin-bottom:16px}
+.decision.approved{border-color:var(--ok)} .decision.rejected{border-color:var(--red)}
+.dhead{padding:8px 13px;font-size:11.5px;font-weight:800;letter-spacing:.09em;
+  background:var(--warn-light);color:var(--warn)}
+.decision.approved .dhead{background:var(--ok-light);color:var(--ok)}
+.decision.rejected .dhead{background:var(--red-light);color:var(--red)}
+.dbody{padding:12px 14px 14px;background:var(--card)}
+.dsum{font-size:15px;font-weight:800;line-height:1.75;margin:0 0 13px}
+.condh{font-size:10.5px;letter-spacing:.07em;color:var(--text3);font-weight:800;margin:0 0 6px}
+.cond{display:flex;gap:9px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--border)}
+.cbox{flex:0 0 auto;width:18px;height:18px;border-radius:5px;border:2px solid var(--warn);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;
+  color:var(--warn);margin-top:2px}
+.cond.ready .cbox{border-color:var(--ok);color:var(--ok)}
+.ct{font-size:13.5px;font-weight:800;line-height:1.5}
+.cd{font-size:12px;color:var(--text2);line-height:1.7;margin-top:2px}
+.cbadge{font-size:9.5px;font-weight:800;border-radius:5px;padding:1px 6px;margin-left:5px;
+  background:var(--warn-light);color:var(--warn);white-space:nowrap}
+.cond.ready .cbadge{background:var(--ok-light);color:var(--ok)}
+.why{display:grid;gap:8px;margin-top:13px}
+.why>div{border-radius:11px;padding:10px 12px}
+.wy{background:var(--ok-light)} .wn{background:var(--warn-light)}
+.why h5{font-size:11px;margin:0 0 5px;font-weight:800;letter-spacing:.04em}
+.wy h5{color:var(--ok)} .wn h5{color:var(--warn)}
+.why ul{margin:0;padding-left:15px;font-size:12.5px;line-height:1.7}
+.why li{margin:3px 0}
+
+/* セクション */
+.sec{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden}
+.sec>summary{padding:12px 14px;font-size:13.5px;font-weight:800;cursor:pointer;list-style:none;
+  display:flex;align-items:center;gap:7px}
+.sec>summary::-webkit-details-marker{display:none}
+.sec>summary::after{content:"▾";margin-left:auto;color:var(--text3);font-size:12px}
+.sec[open]>summary::after{content:"▴"}
+.secb{padding:0 14px 14px}
+.blk{margin-top:14px}
+.blk h4{font-size:11px;letter-spacing:.07em;color:var(--text3);margin:0 0 6px;font-weight:800}
+.blk ul{margin:0;padding-left:17px;font-size:13px;line-height:1.75}
+.blk li{margin:3px 0}
+.oneliner{font-size:13.5px;line-height:1.85;margin:12px 0 0}
+
+/* 工程図 */
+.steps{display:flex;gap:6px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:none}
+.steps::-webkit-scrollbar{display:none}
+.step{flex:0 0 auto;width:130px;border:1px solid var(--border);border-radius:10px;padding:8px 10px;background:var(--bg3)}
+.step.here{background:var(--brass-light);border-color:var(--brass);box-shadow:0 0 0 1px var(--brass)}
+.step .sn{font-size:11.5px;font-weight:800;line-height:1.4}
+.step.here .sn{color:var(--brass)}
+.step .sw{font-size:10px;color:var(--text2);margin-top:3px;line-height:1.5}
+
+/* 事実 */
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);
+  border-radius:10px;overflow:hidden;margin-top:12px}
+.fact{background:var(--card);padding:8px 10px}
+.fact .v{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.3}
+.fact .l{font-size:9.5px;color:var(--text3)}
+.fact .s{font-size:10px;color:var(--ok);font-variant-numeric:tabular-nums}
+
+/* シェア・競合 */
+.sharebar{display:flex;height:28px;border-radius:8px;overflow:hidden;margin:7px 0 5px}
+.sharebar div{display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;color:#fff}
+.sb-self{background:var(--brass)}.sb-rival{background:var(--navy)}.sb-other{background:var(--text3)}
+.peer{border-left:3px solid var(--border);padding:1px 0 1px 10px;margin:10px 0}
+.peer.rival{border-left-color:var(--navy)}.peer.threat{border-left-color:var(--red)}
+.peer .pr{font-size:10px;color:var(--text3);letter-spacing:.04em;font-weight:700}
+.peer .pn{font-size:13.5px;font-weight:800}
+.peer .pw{font-size:12px;color:var(--text2);margin-top:2px;line-height:1.7}
+.ctx{border:1px solid var(--border);border-radius:11px;padding:11px 12px;margin:8px 0}
+.ctx h5{font-size:12.5px;margin:0 0 4px;font-weight:800}
+.ctx p{font-size:12.5px;color:var(--text2);margin:0;line-height:1.8}
+.gl{background:var(--bg3);border-radius:9px;padding:8px 10px;margin:6px 0}
+.gl b{font-size:12px}.gl span{display:block;font-size:11.5px;color:var(--text2);line-height:1.65}
+
+/* 検察 */
+.pros{border:1px solid var(--border);border-radius:11px;padding:10px 12px;margin:7px 0;background:var(--bg3)}
+.pros .c{font-size:13px;font-weight:800;display:flex;gap:7px;align-items:flex-start}
+.pros .n{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.7}
+.tag{font-size:9.5px;font-weight:800;border-radius:5px;padding:2px 6px;white-space:nowrap;flex-shrink:0}
+.t-survived{background:var(--red-light);color:var(--red)}
+.t-partial{background:var(--warn-light);color:var(--warn)}
+.t-refuted{background:var(--ok-light);color:var(--ok)}
+
+/* 条文 */
+.art{display:flex;gap:9px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--border)}
+.cell{flex:0 0 auto;width:24px;height:22px;border-radius:6px;display:flex;align-items:center;
+  justify-content:center;font-size:11.5px;font-weight:800}
+.c-pass{background:var(--ok-light);color:var(--ok)}
+.c-partial,.c-warn{background:var(--warn-light);color:var(--warn)}
+.c-unknown,.c-hold{background:var(--bg3);color:var(--text2)}
+.c-fail{background:var(--red-light);color:var(--red)}
+.acode{font-size:12.5px;font-weight:800;white-space:nowrap}
+.alabel{font-size:10px;color:var(--text3)}
+.anote{font-size:12px;color:var(--text2);line-height:1.7}
+
+/* 出典 */
+.src{border:1px solid var(--brass);background:var(--brass-light);border-radius:11px;padding:11px 12px;margin:8px 0}
+.src .sh{font-size:12.5px;font-weight:800;color:var(--brass)}
+.src .sq{font-size:12px;color:var(--text2);border-left:2px solid var(--brass);padding-left:8px;margin:6px 0;line-height:1.75}
+.src .sw2{font-size:12px;margin-top:4px;line-height:1.7}
+.src a{font-size:11.5px;word-break:break-all}
+.warnbox{background:var(--red-light);border-radius:11px;padding:11px 12px;font-size:12.5px;margin:9px 0;line-height:1.75}
+.note{background:var(--brass-light);border-radius:11px;padding:11px 12px;font-size:12.5px;margin:10px 0;line-height:1.8}
+
+/* 壊れ方マップ */
+.gcard{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:9px}
+.gid{font-size:16px;font-weight:800;color:var(--navy)}
+.gt{font-size:13px;font-weight:700}
+.gn{font-size:11.5px;color:var(--text2);margin:3px 0 8px;line-height:1.7}
+.bar{height:4px;background:var(--bg3);border-radius:99px;overflow:hidden;margin-bottom:9px}
+.bar i{display:block;height:100%;background:var(--brass);border-radius:99px}
+.items{display:flex;flex-wrap:wrap;gap:5px}
+.item{font-size:11px;border-radius:8px;padding:4px 9px;border:1px solid var(--border);background:var(--bg3);color:var(--text2)}
+.item.held{background:var(--navy);color:#fff;border-color:transparent;font-weight:700}
+.item.judged{background:var(--brass-light);color:var(--brass);border-color:var(--brass);font-weight:700}
+.item.watch{border-style:dashed;background:transparent}
+.item small{opacity:.75}
+.empty{font-size:12px;color:var(--text3);padding:20px 0;text-align:center}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--text2);margin:10px 2px 0}
+.legend span{display:flex;align-items:center;gap:4px}
+
+/* 条文マトリクス */
+.scroll{overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{padding:7px 9px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+th{font-size:10px;color:var(--text3);font-weight:800;background:var(--bg3);position:sticky;top:0}
+tr:last-child td{border-bottom:none}
+.foot{font-size:11px;color:var(--text3);margin-top:24px;padding-top:12px;border-top:1px solid var(--border);line-height:1.7}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a class="back" href="./index.html">‹ 戻る</a><h1>⚖️ 投資法廷</h1></div>
+  <p class="lede">Yパパ法典で審査した判決の記録。Claudeが弁護、別会社のAI（Gemini）が検察。
+  <b>初めて見る会社でもわかるように</b>事業と背景から書いてある。<span id="meta"></span></p>
+
+  <div class="tiles" id="stats"></div>
+  <input class="search" id="q" placeholder="🔍 銘柄・コード・カテゴリ・タグで探す" autocomplete="off">
+  <div class="filters" id="filters"></div>
+  <div class="views">
+    <button class="vbtn on" data-view="list">判例</button>
+    <button class="vbtn" data-view="map">壊れ方マップ</button>
+    <button class="vbtn" data-view="matrix">条文マトリクス</button>
+  </div>
+
+  <div id="view-list"></div>
+  <div id="view-map" style="display:none"></div>
+  <div id="view-matrix" style="display:none"></div>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<div class="overlay" id="ov">
+  <div class="obar"><button onclick="closeOv()">‹ 判例一覧</button><span class="ot" id="ovt"></span></div>
+  <div class="obody" id="ovb"></div>
+</div>
+
+<script>
+const REPO='meyjiro/claude-context', BRANCH='main';
+const DIR='projects/B7_投資/判例/data';
+const pat=localStorage.getItem('gh_pat')||'';
+const esc=s=>{const d=document.createElement('div');d.textContent=s??'';return d.innerHTML};
+const dec=s=>decodeURIComponent(escape(atob(s.replace(/\n/g,''))));
+const MARK={pass:'✓',partial:'△',warn:'△',unknown:'?',hold:'?',fail:'✕'};
+const PLABEL={survived:'潰せなかった',partial:'半分潰した',refuted:'潰した'};
+let IDX=null, MAP=null, DETAIL={}, FILT={level:'',g:'',cat:''}, Q='';
+
+async function getFile(path){
+  const url='https://api.github.com/repos/'+REPO+'/contents/'+encodeURIComponent(path).replace(/%2F/g,'/')+'?ref='+BRANCH;
+  const r=await fetch(url,{cache:'no-store',headers:{Authorization:'token '+pat,Accept:'application/vnd.github.v3+json'}});
+  if(!r.ok) throw new Error('取得できません ('+r.status+')');
+  return dec((await r.json()).content);
+}
+async function load(){
+  if(!pat){document.getElementById('view-list').innerHTML='<div class="empty">⚙ ダッシュボードの設定でGitHubトークンを入れてください</div>';return}
+  try{
+    IDX=JSON.parse(await getFile(DIR+'/_index.json'));
+    MAP=JSON.parse(await getFile(DIR+'/_map.json'));
+    renderAll();
+  }catch(e){document.getElementById('view-list').innerHTML='<div class="empty">読み込みに失敗: '+esc(e.message)+'</div>'}
+}
+function renderAll(){renderStats();renderFilters();renderList();renderMap();renderMatrix();
+  document.getElementById('meta').textContent='（判決'+IDX.count+'件・更新 '+IDX.updated+'）';
+  document.getElementById('foot').innerHTML='判決文の正本は claude-context/projects/B7_投資/判例/ の各md。<br>🔴 判断はメグ本人が行う。AIが2社になっても「AIがそう言ったから」は免責にならない（第27条）。';
+}
+function renderStats(){
+  const v=IDX.verdicts;
+  const ready=v.filter(x=>x.cond_total>0&&x.cond_done===x.cond_total).length;
+  const done=v.filter(x=>x.status==='執行済み').length;
+  const sv=v.reduce((a,b)=>a+(b.survived||0),0);
+  document.getElementById('stats').innerHTML=[
+    [v.length,'判決'],[ready,'執行できる'],[done,'執行済み'],[sv,'残った反論']
+  ].map(([n,l])=>'<div class="tile"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>').join('');
+}
+function renderFilters(){
+  const f=[];
+  f.push(['level','','すべて']);
+  [['approved','可'],['conditional','条件付き'],['rejected','棄却']].forEach(([k,l])=>f.push(['level',k,l]));
+  f.push(['sep','','｜']);
+  [...new Set(IDX.verdicts.map(v=>v.gclass))].filter(Boolean).sort().forEach(g=>f.push(['g',g,g]));
+  f.push(['sep','','｜']);
+  IDX.categories.forEach(c=>f.push(['cat',c,c]));
+  document.getElementById('filters').innerHTML=f.map(([k,val,l])=>
+    k==='sep'?'<span class="fchip sep">'+l+'</span>'
+    :'<button class="fchip'+(FILT[k]===val?' on':'')+'" data-k="'+k+'" data-v="'+esc(val)+'">'+esc(l)+'</button>').join('');
+  document.querySelectorAll('.fchip[data-k]').forEach(b=>b.onclick=()=>{
+    FILT[b.dataset.k]=FILT[b.dataset.k]===b.dataset.v?'':b.dataset.v;
+    if(b.dataset.k==='level'&&b.dataset.v==='')FILT.level='';
+    renderFilters();renderList();
+  });
+}
+function match(v){
+  if(FILT.level&&v.level!==FILT.level)return false;
+  if(FILT.g&&v.gclass!==FILT.g)return false;
+  if(FILT.cat&&v.category!==FILT.cat)return false;
+  if(Q){const h=[v.name,v.code,v.category,v.oneliner,v.ruling,(v.tags||[]).join(' ')].join(' ').toLowerCase();
+    if(!h.includes(Q.toLowerCase()))return false}
+  return true;
+}
+function renderList(){
+  const rows=IDX.verdicts.filter(match);
+  document.getElementById('view-list').innerHTML=rows.length?rows.map(v=>{
+    const pct=v.cond_total?Math.round(v.cond_done/v.cond_total*100):100;
+    return '<div class="row '+esc(v.level)+'" onclick="openOv(\''+esc(v.code)+'\')">'
+      +'<div class="r1"><span class="rname">'+esc(v.name)+' <span class="rcode">'+esc(v.code)+'</span></span>'
+      +'<span class="badge b-'+esc(v.level)+'">'+esc(v.ruling)+'</span></div>'
+      +'<div class="r2"><span class="tg g">'+esc(v.gclass)+'</span><span class="tg">'+esc(v.category)+'</span>'
+      +'<span class="tabnum">'+esc(v.date)+'</span>'+(v.status&&v.status!=='未執行'?'<span class="tg">'+esc(v.status)+'</span>':'')+'</div>'
+      +'<div class="r3">'+esc(v.oneliner)+'</div>'
+      +(v.cond_total?'<div class="prog"><div class="pbar"><i class="'+(pct===100?'full':'')+'" style="width:'+pct+'%"></i></div>'
+        +'<span class="plabel">条件 '+v.cond_done+'/'+v.cond_total+'</span></div>':'')
+      +'</div>';
+  }).join(''):'<div class="empty">該当なし</div>';
+}
+function renderMap(){
+  if(!MAP)return;
+  const gm=MAP.gmap, max=Math.max(1,...Object.values(gm).map(g=>(g.items||[]).length));
+  document.getElementById('view-map').innerHTML=
+    '<p class="lede">🔴 分散とは銘柄数ではなく<b>壊れ方の違うものを持つこと</b>。同じ群で数を増やしても分散にはならない（第16条）。</p>'
+    +Object.entries(gm).map(([gid,g])=>{
+      const it=g.items||[];
+      return '<div class="gcard"><div><span class="gid">'+esc(gid)+'</span> <span class="gt">'+esc(g.trigger)+'</span></div>'
+        +'<div class="gn">'+esc(g.note)+'</div>'
+        +'<div class="bar"><i style="width:'+Math.round(it.length/max*100)+'%"></i></div>'
+        +'<div class="items">'+(it.length?it.map(i=>'<span class="item '+esc(i.state)+'">'+esc(i.name)
+          +(i.detail?' <small>'+esc(i.detail)+'</small>':'')+'</span>').join('')
+          :'<span class="empty" style="padding:4px 0">この壊れ方に備えた資産を持っていない</span>')+'</div></div>';
+    }).join('')
+    +'<div class="legend"><span><i class="item held" style="padding:2px 7px">保有中</i></span>'
+    +'<span><i class="item judged" style="padding:2px 7px">判決済み</i></span>'
+    +'<span><i class="item watch" style="padding:2px 7px">ウォッチ</i></span></div>';
+}
+async function renderMatrix(){
+  const el=document.getElementById('view-matrix');
+  el.innerHTML='<p class="lede">どの銘柄が、どの条文で引っかかったか。縦に積むほど<b>自分が毎回どこで詰まるか</b>が見えてくる。</p><div class="empty">読み込み中…</div>';
+  for(const v of IDX.verdicts){ if(!DETAIL[v.code]) try{DETAIL[v.code]=JSON.parse(await getFile(DIR+'/'+v.code+'.json'))}catch(e){} }
+  const codes=[];
+  IDX.verdicts.forEach(v=>(DETAIL[v.code]?.articles||[]).forEach(a=>{if(!codes.includes(a.code))codes.push(a.code)}));
+  el.innerHTML='<p class="lede">どの銘柄が、どの条文で引っかかったか。縦に積むほど<b>自分が毎回どこで詰まるか</b>が見えてくる。</p>'
+    +'<div class="scroll"><table><thead><tr><th>銘柄</th>'+codes.map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'
+    +IDX.verdicts.map(v=>{const m=Object.fromEntries((DETAIL[v.code]?.articles||[]).map(a=>[a.code,a]));
+      return '<tr><td><b>'+esc(v.name)+'</b></td>'+codes.map(c=>{const a=m[c];
+        return '<td>'+(a?'<span class="cell c-'+esc(a.verdict)+'" title="'+esc(a.note)+'">'+(MARK[a.verdict]||'?')+'</span>':'–')+'</td>'}).join('')+'</tr>'
+    }).join('')+'</tbody></table></div>'
+    +'<div class="legend"><span><i class="cell c-pass">✓</i>適合</span><span><i class="cell c-warn">△</i>留保</span>'
+    +'<span><i class="cell c-unknown">?</i>未検証</span><span><i class="cell c-fail">✕</i>違反</span></div>';
+}
+async function openOv(code){
+  const ov=document.getElementById('ov'), b=document.getElementById('ovb');
+  document.getElementById('ovt').textContent='読み込み中…';
+  b.innerHTML='<div class="empty">読み込み中…</div>';ov.classList.add('on');document.body.style.overflow='hidden';
+  try{
+    if(!DETAIL[code])DETAIL[code]=JSON.parse(await getFile(DIR+'/'+code+'.json'));
+    const v=DETAIL[code];
+    document.getElementById('ovt').textContent=v.name+' '+v.code;
+    b.innerHTML=detailHTML(v);
+  }catch(e){b.innerHTML='<div class="empty">読み込みに失敗: '+esc(e.message)+'</div>'}
+}
+function closeOv(){document.getElementById('ov').classList.remove('on');document.body.style.overflow=''}
+function detailHTML(v){
+  const d=v.decision, p=v.profile, s=v.sources;
+  let h='';
+  if(d){
+    h+='<div class="decision '+esc(v.level)+'"><div class="dhead">判　決　—　'+esc(v.ruling)+'</div><div class="dbody">'
+      +'<p class="dsum">'+esc(d.summary)+'</p>';
+    if((d.conditions||[]).length){
+      h+='<div class="condh">この条件を満たしたら執行できる（'+d.conditions.filter(c=>c.status==='ready').length+' / '+d.conditions.length+' 済み）</div>'
+        +d.conditions.map((c,i)=>'<div class="cond '+esc(c.status)+'"><div class="cbox">'+(c.status==='ready'?'✓':i+1)+'</div>'
+        +'<div><div class="ct">'+esc(c.t)+'<span class="cbadge">'+(c.status==='ready'?'準備できている':'未達')+'</span></div>'
+        +'<div class="cd">'+esc(c.d)+'</div></div></div>').join('');
+    }
+    h+='<div class="why"><div class="wy"><h5>◯ 買ってよいと判断した理由</h5><ul>'
+      +(d.because_yes||[]).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div>'
+      +'<div class="wn"><h5>△ だから「条件付き」にした理由</h5><ul>'
+      +(d.because_not_full||[]).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div></div></div></div>';
+  }
+  if(p){
+    h+='<details class="sec" open><summary>🏭 この会社を知る</summary><div class="secb">'
+      +'<p class="oneliner">'+esc(p.oneliner)+'</p>';
+    if(p.chain){h+='<div class="blk"><h4>'+esc(p.chain.caption)+'</h4><div class="steps">'
+      +p.chain.steps.map(st=>'<div class="step'+(st.here?' here':'')+'"><div class="sn">'+esc(st.n)+'</div><div class="sw">'+esc(st.who)+'</div></div>').join('')+'</div></div>'}
+    if((v.facts||[]).length){h+='<div class="facts">'+v.facts.map(f=>'<div class="fact"><div class="v">'+esc(f.value)+'</div>'
+      +'<div class="l">'+esc(f.label)+'</div>'+(f.sub?'<div class="s">'+esc(f.sub)+'</div>':'')+'</div>').join('')+'</div>'}
+    if(p.founded_note)h+='<div class="note">'+esc(p.founded_note)+'</div>';
+    if(p.share){h+='<div class="blk"><h4>'+esc(p.share.caption)+'</h4><div class="sharebar">'
+      +p.share.bars.map(bb=>'<div class="sb-'+esc(bb.tone)+'" style="width:'+bb.pct+'%">'+esc(bb.name)+' '+bb.pct+'%</div>').join('')
+      +'</div><div style="font-size:11px;color:var(--text3)">'+esc(p.share.note)+'</div></div>'}
+    if((p.peers||[]).length){h+='<div class="blk"><h4>まわりにいる会社</h4>'
+      +p.peers.map(x=>'<div class="peer '+esc(x.tone)+'"><div class="pr">'+esc(x.role)+'</div><div class="pn">'+esc(x.name)+'</div><div class="pw">'+x.what+'</div></div>').join('')+'</div>'}
+    if((p.context||[]).length){h+='<div class="blk"><h4>背景を知る</h4>'
+      +p.context.map(c=>'<div class="ctx"><h5>'+esc(c.title)+'</h5><p>'+c.body+'</p></div>').join('')+'</div>'}
+    if((p.glossary||[]).length){h+='<div class="blk"><h4>用語</h4>'
+      +p.glossary.map(g=>'<div class="gl"><b>'+esc(g.term)+'</b><span>'+esc(g.desc)+'</span></div>').join('')+'</div>'}
+    h+='</div></details>';
+  }
+  h+='<details class="sec"><summary>⚖️ 審理の中身</summary><div class="secb">';
+  if((v.prosecution||[]).length){h+='<div class="blk"><h4>検察の反論と、その仕分け</h4>'
+    +v.prosecution.map(x=>'<div class="pros"><div class="c"><span class="tag t-'+esc(x.result)+'">'+esc(PLABEL[x.result]||x.result)+'</span>'
+    +'<span>'+esc(x.claim)+'</span></div><div class="n">'+esc(x.note)+'</div></div>').join('')+'</div>'}
+  if(v.judge_addition)h+='<div class="blk"><h4>裁判官が職権で追加した論拠</h4><div class="note">'+esc(v.judge_addition)+'</div></div>';
+  if((v.articles||[]).length){h+='<div class="blk"><h4>条文ごとの審査</h4>'
+    +v.articles.map(a=>'<div class="art"><span class="cell c-'+esc(a.verdict)+'">'+(MARK[a.verdict]||'?')+'</span>'
+    +'<div><div class="acode">'+esc(a.code)+' <span class="alabel">'+esc(a.label)+'</span></div>'
+    +'<div class="anote">'+esc(a.note)+'</div></div></div>').join('')+'</div>'}
+  [['monitor','中間評価（四半期ごとに見る）'],['exit','撤退条件（先に決めてある）'],['pending','執行前に埋めること']].forEach(([k,l])=>{
+    if((v[k]||[]).length)h+='<div class="blk"><h4>'+l+'</h4><ul>'+v[k].map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div>'});
+  h+='</div></details>';
+  if(s){
+    h+='<details class="sec"><summary>📺 出典（動画で復習する）</summary><div class="secb">'
+      +(s.corpus||[]).map(x=>'<div class="src"><div class="sh">'+esc(x.who)+'　'+esc(x.date)+'「'+esc(x.title)+'」</div>'
+      +(x.quote?'<div class="sq">'+esc(x.quote)+'</div>':'')+'<div class="sw2">'+esc(x.why)+'</div>'
+      +'<div style="margin-top:5px"><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.url)+'</a></div></div>').join('');
+    if(s.caveat)h+='<div class="warnbox">'+esc(s.caveat)+'</div>';
+    if((s.web||[]).length)h+='<div class="blk"><h4>裁判官が裏取りに使った資料</h4><ul>'
+      +s.web.map(x=>'<li>'+esc(x.title)+'<br><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.url)+'</a></li>').join('')+'</ul></div>';
+    h+='</div></details>';
+  }
+  return h;
+}
+document.getElementById('q').addEventListener('input',e=>{Q=e.target.value.trim();renderList()});
+document.querySelectorAll('.vbtn').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.vbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  ['list','map','matrix'].forEach(v=>document.getElementById('view-'+v).style.display=v===b.dataset.view?'':'none');
+});
+window.addEventListener('popstate',closeOv);
+load();
+</script>
+</body>
+</html>

@@ -212,8 +212,8 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
       <div class="hint" style="margin:8px 4px">銘柄の追加は投げ込み箱に「〇〇ウォッチして」でOK。保有の記帳も「〇〇を100株買った」でOK。</div>
       <div class="section-title">⚖️ 投資法廷（判例集）</div>
       <div class="card">
-        <div class="s" style="margin-bottom:8px">Yパパ法典で審査した判決の記録。条文ごとの判定・検察（Gemini）の反論・撤退条件と、ポートフォリオ設計用の「壊れ方マップ」が見られます。</div>
-        <a class="btn btn-primary" href="https://claude.ai/code/artifact/0fbab161-ed80-48ad-9376-076a8d1e0db5" target="_blank" rel="noopener">判例集をひらく</a>
+        <div class="s" style="margin-bottom:8px">Yパパ法典で審査した判決を積み重ねる台帳。検索・絞り込み、壊れ方マップ、条文マトリクスが見られます。<b>判決が増えるとここに自動で溜まります。</b></div>
+        <a class="btn btn-primary" href="./court.html" style="display:inline-block;text-decoration:none;text-align:center">判例をひらく</a>
       </div>
       <div class="section-title">⚖️ 裁判の与件ヒアリング（8/29まで）</div>
       <div class="card" id="yoken-card">
@@ -291,7 +291,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-18.1';
+const APP_VERSION = '2026-08-18.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
