@@ -55,7 +55,21 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 .due .d{font-size:12px;font-weight:700;white-space:nowrap;padding:3px 8px;border-radius:8px;background:var(--bg3);color:var(--text2)}
 .due.warn .d{background:var(--warn-light);color:var(--warn)}
 .due.overdue .d{background:var(--red-light);color:var(--red)}
-.due .l{font-size:14px;line-height:1.55}
+.due .l{font-size:14px;line-height:1.55;flex:1}
+.due{flex-wrap:wrap}
+.due.done{opacity:.5}
+.due.done .l{text-decoration:line-through}
+.due-btn{flex:0 0 auto;border:1px solid var(--border);background:var(--bg3);color:var(--text2);
+  border-radius:9px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.due-btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.due-rep{flex-basis:100%;margin-top:8px;display:none}
+.due-rep.open{display:block}
+.due-rep textarea{width:100%;border:1px solid var(--border);border-radius:10px;padding:9px 11px;
+  font-size:14px;font-family:inherit;line-height:1.6;min-height:64px;resize:none;
+  background:var(--bg2);color:var(--text);outline:none}
+.due-rep textarea:focus{border-color:var(--accent)}
+.due-rep .row2{display:flex;gap:8px;margin-top:7px}
+.due-rep .hint2{font-size:11px;color:var(--text2);margin-top:5px;line-height:1.5}
 .stale{background:var(--warn-light);color:var(--warn);border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:12px}
 .loglist{font-size:13px;color:var(--text2);line-height:1.9;padding:2px 6px}
 details.fold{margin-bottom:10px}
@@ -291,7 +305,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-18.2';
+const APP_VERSION = '2026-08-19.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -390,9 +404,23 @@ function renderBriefing() {
   if (age > 26) $('brief-stale').innerHTML = `<div class="stale">⚠️ これは ${new Date(b.generated_at).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})} のブリーフィングです（今朝の分がまだ届いていません）</div>`;
   $('brief-quote').innerHTML = b.quote ? `<div class="quote-card"><div class="q">${esc(b.quote.text)}</div><div class="a">— ${esc(b.quote.author || '')}</div></div>` : '';
   const dues = (b.today || []);
+  const doneKeys = getDoneDues();
   $('brief-due').innerHTML = dues.length
-    ? dues.map(d => `<div class="due ${esc(d.urgency||'normal')}"><span class="d">${esc(d.date)}</span><span class="l">${esc(d.label)}</span></div>`).join('')
+    ? dues.map((d, i) => {
+        const key = d.date + '|' + d.label;
+        const done = doneKeys.some(x => x.key === key);
+        return `<div class="due ${esc(d.urgency||'normal')} ${done?'done':''}" data-key="${esc(key)}">
+          <span class="d">${esc(d.date)}</span><span class="l">${esc(d.label)}</span>
+          <button class="due-btn ${done?'on':''}" data-i="${i}" ${done?'disabled':''}>${done?'✓ 報告済み':'✓ 完了'}</button>
+          <div class="due-rep" id="rep-${i}">
+            <textarea placeholder="どうやって終わった？ 気づいたこと・次にやること・結果など（空でもOK）"></textarea>
+            <div class="hint2">メモは投げ込みと同じように自動で仕分けされ、必要なら別の記録にも残ります。</div>
+            <div class="row2"><button class="btn btn-primary" data-send="${i}">報告する</button>
+            <button class="btn btn-ghost" data-cancel="${i}">やめる</button></div>
+          </div></div>`;
+      }).join('')
     : '<p class="empty">14日以内の期日はありません 🎉</p>';
+  bindDueButtons(dues);
   const att = (b.attention || []);
   $('brief-attention-wrap').style.display = att.length ? '' : 'none';
   $('brief-attention').innerHTML = att.map(a => `<div class="card"><div class="s" style="color:var(--text)">${esc(a)}</div></div>`).join('');
@@ -431,6 +459,54 @@ function atNow() {
   const d = new Date(), p = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
+// ── 期日の完了報告 ──
+function getDoneDues() {
+  let a = [];
+  try { a = JSON.parse(localStorage.getItem('done-dues') || '[]'); } catch (e) {}
+  // 30日より古い記録は捨てる（ブリーフィングから消えた分の掃除）
+  const lim = Date.now() - 30 * 86400000;
+  const keep = a.filter(x => (x.at || 0) > lim);
+  if (keep.length !== a.length) localStorage.setItem('done-dues', JSON.stringify(keep));
+  return keep;
+}
+function markDueDone(key) {
+  const a = getDoneDues();
+  a.push({ key, at: Date.now() });
+  localStorage.setItem('done-dues', JSON.stringify(a));
+}
+function bindDueButtons(dues) {
+  document.querySelectorAll('#brief-due .due-btn[data-i]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const rep = $('rep-' + btn.dataset.i);
+      const opening = !rep.classList.contains('open');
+      document.querySelectorAll('#brief-due .due-rep').forEach(r => r.classList.remove('open'));
+      if (opening) { rep.classList.add('open'); rep.querySelector('textarea').focus(); }
+    });
+  });
+  document.querySelectorAll('#brief-due [data-cancel]').forEach(b =>
+    b.addEventListener('click', () => $('rep-' + b.dataset.cancel).classList.remove('open')));
+  document.querySelectorAll('#brief-due [data-send]').forEach(b =>
+    b.addEventListener('click', () => sendDueDone(+b.dataset.send, dues[+b.dataset.send], b)));
+}
+async function sendDueDone(i, due, btn) {
+  const rep = $('rep-' + i);
+  const memo = rep.querySelector('textarea').value.trim();
+  btn.disabled = true; btn.textContent = '送信中…';
+  try {
+    const body = `at: ${atNow()}\nkind: 完了報告\ndue_date: ${due.date}\ndue_label: ${due.label}\n\n`
+      + (memo || '（メモなし・完了だけ報告）');
+    await putFile(`inbox/queue/${ts()}_done.md`, body, `完了報告 ${due.date}`);
+    markDueDone(due.date + '|' + due.label);
+    const row = rep.closest('.due');
+    row.classList.add('done');
+    rep.classList.remove('open');
+    const mainBtn = row.querySelector('.due-btn[data-i]');
+    mainBtn.textContent = '✓ 報告済み'; mainBtn.classList.add('on'); mainBtn.disabled = true;
+    toast(memo ? '報告した！ メモは仕分けに乗ります 📝' : '完了を報告した！ ✓');
+    loadQueue();
+  } catch (e) { toast('送信に失敗: ' + e.message); btn.disabled = false; btn.textContent = '報告する'; }
+}
+
 async function sendInbox() {
   const text = $('inbox-text').value.trim();
   if (!text && !pendingPhoto && !pendingAudio) { toast('なにか書くか、写真・録音をつけてね'); return; }
