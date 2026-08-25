@@ -47,6 +47,36 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 .card .s{font-size:13px;color:var(--text2);margin-top:3px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
 .empty{color:var(--text2);font-size:14px;padding:16px 6px;text-align:center}
 
+/* 投資タブ: 資産カード・保有 */
+.section-title .sec-note{margin-left:auto;font-weight:600;color:var(--text2);font-size:11px}
+.navcard{background:linear-gradient(140deg,var(--accent-light),transparent);border:1px solid var(--accent-light);
+  border-radius:16px;padding:16px 18px;margin-bottom:10px}
+.navcard .lbl{font-size:11px;color:var(--text2);display:flex;align-items:center;gap:6px}
+.navcard .main{font-size:29px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.navline{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;min-width:0}
+.navcard .lbl{flex-wrap:wrap}
+.hcard .r1{flex-wrap:wrap}
+.hcard .r2{flex-wrap:wrap}
+#tab-invest .card,#tab-invest .hcard,#tab-invest .navcard,#tab-invest .vcard{max-width:100%;overflow-wrap:anywhere}
+.navcard .sub{font-size:14px;color:var(--text2);font-variant-numeric:tabular-nums;font-weight:600}
+.navcard .swap{margin-left:auto;font-size:11px;color:var(--accent);font-weight:700;background:none;border:0;cursor:pointer;padding:2px 6px}
+.mixbar{display:flex;height:7px;border-radius:4px;overflow:hidden;margin-top:11px;background:var(--bg3);gap:2px}
+.mixbar i{display:block;height:100%}
+.mixleg{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--text2);margin-top:6px}
+.mixleg span{display:flex;align-items:center;gap:4px}
+.mixleg i{width:9px;height:9px;border-radius:3px;display:inline-block}
+.hcard{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:12px 14px;margin-bottom:8px}
+.hcard .r1{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.hcard .sym{font-weight:700;font-size:14.5px}
+.hcard .nm{font-size:11.5px;color:var(--text2)}
+.hcard .pnl{margin-left:auto;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hcard .r2{display:flex;align-items:center;gap:7px;margin-top:5px;font-size:11.5px;color:var(--text2);flex-variant:wrap}
+.hcard .r2 .val{font-variant-numeric:tabular-nums}
+.up{color:#0f9d58} .down{color:var(--red)}
+.flag{font-size:12px}
+.borrow{display:flex;align-items:center;gap:6px;margin-top:9px;padding:7px 10px;border-radius:9px;
+  background:var(--warn-light);color:var(--warn);font-size:11.5px;font-weight:600}
+
 /* 投資タブ: 判決カード */
 .section-title .sec-link{margin-left:auto;font-weight:600;color:var(--accent);text-decoration:none;font-size:12px}
 .vcard{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:9px;border-left:4px solid var(--border)}
@@ -239,7 +269,12 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
     <!-- 投資 -->
     <div id="tab-invest" class="tab-panel">
-      <div class="section-title" style="margin-top:6px">⚖️ 判決（新しい順）<a href="./court.html" class="sec-link">ぜんぶ見る →</a></div>
+      <div id="invest-nav"><p class="empty">読み込み中…</p></div>
+
+      <div class="section-title">💼 保有銘柄<span id="hold-count" class="sec-note"></span></div>
+      <div id="invest-holdings"><p class="empty">読み込み中…</p></div>
+
+      <div class="section-title">⚖️ 判決（新しい順）<a href="./court.html" class="sec-link">ぜんぶ見る →</a></div>
       <div id="invest-verdicts"><p class="empty">読み込み中…</p></div>
 
       <div class="section-title">⏳ 開廷待ち</div>
@@ -392,8 +427,8 @@ async function api(path, method = 'GET', body = null) {
   if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
   return res.json();
 }
-async function getFile(path) {
-  const r = await api(`/repos/${REPO}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}?ref=${BRANCH}`);
+async function getFile(path, repo) {
+  const r = await api(`/repos/${repo || REPO}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}?ref=${BRANCH}`);
   if (!r || r.__404) return null;
   return dec(r.content);
 }
@@ -879,6 +914,92 @@ async function loadWatch() {
   } catch (e) { el.innerHTML = '<p class="empty">読み込みに失敗</p>'; }
 }
 
+// ── 投資タブ: IBKR 資産・保有（personal/money・毎朝9:05に自動更新）──
+const JP_RE = /\.(T|JP)$/i;                       // 日本株の判定（513A.T など）
+let ibkrData = null;
+function money(v, cur) {
+  const s = Math.abs(v) >= 1000 ? Math.round(v).toLocaleString('ja-JP')
+          : (Math.round(v * 100) / 100).toLocaleString('ja-JP');
+  return (cur === 'JPY' ? '¥' : '$') + s;
+}
+function signed(v, cur) { return (v >= 0 ? '+' : '−') + money(Math.abs(v), cur); }
+
+async function loadIbkr() {
+  const navEl = $('invest-nav'), hEl = $('invest-holdings');
+  try {
+    const raw = await getFile('money/ibkr_summary.json', 'meyjiro/personal');
+    if (!raw) { navEl.innerHTML = ''; hEl.innerHTML = '<p class="empty">IBKRデータなし</p>'; return; }
+    const d = JSON.parse(raw); ibkrData = d;
+    const c = d.cash || {};
+    // 為替は外部に取りに行かず、基軸通貨サマリーから逆算する（base = USD + JPY/rate）
+    const rate = (c.BASE_SUMMARY != null && c.USD != null && c.JPY != null && (c.BASE_SUMMARY - c.USD) !== 0)
+      ? c.JPY / (c.BASE_SUMMARY - c.USD) : 150;
+    const toUsd = (v, cur) => cur === 'JPY' ? v / rate : v;
+    const pos = d.positions || [];
+    let jpStock = 0, usStock = 0, pnlUsd = 0;
+    pos.forEach(p => {
+      const u = toUsd(p.value, p.currency);
+      (p.currency === 'JPY' || JP_RE.test(p.symbol)) ? jpStock += u : usStock += u;
+      pnlUsd += toUsd(p.unrealized_pnl || 0, p.currency);
+    });
+    const stock = jpStock + usStock, cashUsd = c.BASE_SUMMARY || 0, navUsd = d.nav_end || (stock + cashUsd);
+    const navJpy = navUsd * rate;
+    // 円建てとドル建ての主従は端末に記憶（どちらでも見たい人向け）
+    const yenFirst = localStorage.getItem('nav-cur') !== 'usd';
+    const [mainTxt, subTxt] = yenFirst
+      ? [money(navJpy, 'JPY'), money(navUsd, 'USD')] : [money(navUsd, 'USD'), money(navJpy, 'JPY')];
+    const pct = t => stock + cashUsd > 0 ? (t / (stock + cashUsd) * 100) : 0;
+    navEl.innerHTML = `<div class="navcard">
+      <div class="lbl">総資産（IBKR）<span style="color:var(--text2)">・${esc(d.updated || '')}時点</span>
+        <button class="swap" id="nav-swap">${yenFirst ? '$で見る' : '¥で見る'}</button></div>
+      <div class="navline"><span class="main">${mainTxt}</span><span class="sub">${subTxt}</span></div>
+      <div style="margin-top:5px"><span class="badge ${pnlUsd >= 0 ? 'b-approve' : 'b-reject'}">含み損益 ${signed(yenFirst ? pnlUsd * rate : pnlUsd, yenFirst ? 'JPY' : 'USD')}</span></div>
+      <div class="mixbar">
+        <i style="width:${pct(jpStock)}%;background:#0bb7ae" title="日本株"></i>
+        <i style="width:${pct(usStock)}%;background:#6366f1" title="米国株"></i>
+        <i style="width:${pct(cashUsd)}%;background:var(--border)" title="現金"></i>
+      </div>
+      <div class="mixleg">
+        <span><i style="background:#0bb7ae"></i>🇯🇵 日本株 ${pct(jpStock).toFixed(0)}%</span>
+        <span><i style="background:#6366f1"></i>🇺🇸 米国株 ${pct(usStock).toFixed(0)}%</span>
+        <span><i style="background:var(--border)"></i>現金 ${pct(cashUsd).toFixed(0)}%</span>
+        <span style="margin-left:auto">¥${rate.toFixed(2)}/$</span>
+      </div>
+      ${c.JPY < 0 ? `<div class="borrow">⚠️ 円建て借入 ${money(c.JPY, 'JPY')}（第29条: 借入は条件が書き換わる日で管理）</div>` : ''}
+    </div>`;
+    $('nav-swap').addEventListener('click', () => {
+      localStorage.setItem('nav-cur', yenFirst ? 'usd' : 'jpy'); loadIbkr();
+    });
+
+    // 判決の有無をひも付ける
+    let judged = {};
+    try {
+      const ix = await getFile('projects/B7_投資/判例/data/_index.json');
+      (JSON.parse(ix || '{}').verdicts || []).forEach(v => { if (v.code) judged[String(v.code).toUpperCase()] = v; });
+    } catch (e) {}
+    $('hold-count').textContent = `${pos.length}件`;
+    hEl.innerHTML = pos.slice().sort((a, b) => toUsd(b.value, b.currency) - toUsd(a.value, a.currency)).map(p => {
+      const isJp = p.currency === 'JPY' || JP_RE.test(p.symbol);
+      const pnl = p.unrealized_pnl || 0, cur = p.currency;
+      const alt = money(toUsd(p.value, cur) * (isJp ? 1 : rate), isJp ? 'USD' : 'JPY'); // 反対通貨での併記
+      const code = String(p.symbol).replace(/\.(T|JP)$/i, '').toUpperCase();
+      const v = judged[code];
+      const badge = v
+        ? `<span class="badge ${(LV[v.level] || ['b-mini'])[0]}">判決${esc(v.id)} ${esc(v.ruling || '')}</span>`
+        : `<span class="badge b-mini">法廷未通過</span>`;
+      return `<div class="hcard">
+        <div class="r1"><span class="flag">${isJp ? '🇯🇵' : '🇺🇸'}</span><span class="sym">${esc(p.symbol)}</span>
+          <span class="nm">${p.qty ? Math.round(p.qty).toLocaleString('ja-JP') + (isJp ? '株' : '') : ''}</span>
+          <span class="pnl ${pnl >= 0 ? 'up' : 'down'}">${signed(pnl, cur)}</span></div>
+        <div class="r2"><span class="val">${money(p.value, cur)}</span>
+          <span style="opacity:.6">≈ ${alt}</span>${badge}</div>
+      </div>`;
+    }).join('') + `<div class="hint" style="margin:2px 4px">評価額の大きい順。<b>「法廷未通過」＝裁判にかけずに買った銘柄</b>です。</div>`;
+  } catch (e) {
+    navEl.innerHTML = ''; hEl.innerHTML = '<p class="empty">読み込みに失敗（personalリポの権限を確認）</p>';
+  }
+}
+
 // ── 投資タブ: 判決一覧（判例/data/_index.json）──
 const LV = { reject:['b-reject','lv-reject'], conditional:['b-conditional','lv-conditional'], approve:['b-approve','lv-approve'] };
 async function loadVerdicts() {
@@ -1116,7 +1237,7 @@ let isLoading = false;
 async function loadAll() {
   if (isLoading || !pat) return;
   isLoading = true; $('refresh-btn').classList.add('spinning');
-  await Promise.all([loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadVerdicts(), loadDocket(), loadScout(), loadMebius(), loadHealth()]);
+  await Promise.all([loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadIbkr(), loadVerdicts(), loadDocket(), loadScout(), loadMebius(), loadHealth()]);
   await loadSchedule(); // メビウス予定をカレンダーに重ねるため後で描画
   isLoading = false; $('refresh-btn').classList.remove('spinning');
 }
