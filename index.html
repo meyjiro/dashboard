@@ -47,6 +47,29 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 .card .s{font-size:13px;color:var(--text2);margin-top:3px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
 .empty{color:var(--text2);font-size:14px;padding:16px 6px;text-align:center}
 
+/* 投資タブ: 判決カード */
+.section-title .sec-link{margin-left:auto;font-weight:600;color:var(--accent);text-decoration:none;font-size:12px}
+.vcard{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:9px;border-left:4px solid var(--border)}
+.vcard.lv-reject{border-left-color:var(--red)}
+.vcard.lv-conditional{border-left-color:var(--warn)}
+.vcard.lv-approve{border-left-color:var(--accent)}
+.vcard .vhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.vcard .vname{font-weight:700;font-size:15px;line-height:1.4}
+.vcard .vno{font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums}
+.vcard .vdate{margin-left:auto;font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums}
+.vcard .vone{font-size:12.5px;color:var(--text2);line-height:1.6;margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vcard .vmeta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.b-reject{background:var(--red-light);color:var(--red)}
+.b-conditional{background:var(--warn-light);color:var(--warn)}
+.b-approve{background:var(--accent-light);color:var(--accent)}
+.b-mini{background:var(--bg3);color:var(--text2);font-weight:600}
+.fold{margin:22px 4px 10px;border-top:1px solid var(--border);padding-top:12px}
+.fold>summary{font-size:13px;font-weight:700;color:var(--text2);cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px}
+.fold>summary::before{content:"▸";display:inline-block;transition:transform .15s}
+.fold[open]>summary::before{transform:rotate(90deg)}
+.fold>summary::-webkit-details-marker{display:none}
+
 /* 今日タブ */
 .quote-card{background:linear-gradient(135deg,#0bb7ae10,#0bb7ae04);border:1px solid var(--accent-light);border-radius:14px;padding:16px 18px;margin-bottom:12px}
 .quote-card .q{font-size:15px;line-height:1.75;font-weight:600}
@@ -216,25 +239,31 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
     <!-- 投資 -->
     <div id="tab-invest" class="tab-panel">
-      <div class="section-title">🔭 注目企業（Yパパ基準クリアのみ・毎朝わき出る）</div>
+      <div class="section-title" style="margin-top:6px">⚖️ 判決（新しい順）<a href="./court.html" class="sec-link">ぜんぶ見る →</a></div>
+      <div id="invest-verdicts"><p class="empty">読み込み中…</p></div>
+
+      <div class="section-title">⏳ 開廷待ち</div>
+      <div id="invest-docket"><p class="empty">読み込み中…</p></div>
+
+      <div class="section-title">🔭 注目企業（Yパパ基準クリア・毎朝わき出る）</div>
       <div id="invest-scout"><p class="empty">読み込み中…</p></div>
-      <div class="hint" style="margin:0 4px 14px">気になった企業は「⚖️ 裁判にかける」を押すと投げ込みに入り、Claudeが裁判資料を作ります。過去の分も消えずに残ります。</div>
-      <div class="section-title">📰 コーパス新着ダイジェスト</div>
-      <div id="invest-digest"><p class="empty">フェーズ4で本格稼働（Yパパ・太郎の新着要約がここに届く）</p></div>
+      <div class="hint" style="margin:0 4px 14px">気になった企業は「⚖️ 裁判にかける」を押すと投げ込みに入ります。翌朝の7時に検察意見書、10時に判決が出ます。</div>
+
       <div class="section-title">👁 ウォッチ銘柄（B7/portfolio.md）</div>
       <div id="invest-watch"><p class="empty">読み込み中…</p></div>
       <div class="hint" style="margin:8px 4px">銘柄の追加は投げ込み箱に「〇〇ウォッチして」でOK。保有の記帳も「〇〇を100株買った」でOK。</div>
-      <div class="section-title">⚖️ 投資法廷（判例集）</div>
-      <div class="card">
-        <div class="s" style="margin-bottom:8px">Yパパ法典で審査した判決を積み重ねる台帳。検索・絞り込み、壊れ方マップ、条文マトリクスが見られます。<b>判決が増えるとここに自動で溜まります。</b></div>
-        <a class="btn btn-primary" href="./court.html" style="display:inline-block;text-decoration:none;text-align:center">判例をひらく</a>
-      </div>
-      <div class="section-title">⚖️ 裁判の与件ヒアリング（8/29まで）</div>
-      <div class="card" id="yoken-card">
-        <div class="s" style="margin-bottom:8px">長期投資（5〜10年）・マンション売却金（約8千万円）の再投資・目標10億円という前提で、AI裁判のルールを決める質問です。全22問・選択式。途中でやめても回答は端末に残ります。</div>
-        <button class="btn btn-primary" id="yoken-open">質問に答える</button>
-      </div>
-      <div id="yoken-form" style="display:none"></div>
+
+      <div class="section-title">📰 コーパス新着ダイジェスト</div>
+      <div id="invest-digest"><p class="empty">フェーズ4で本格稼働（Yパパ・太郎の新着要約がここに届く）</p></div>
+
+      <details class="fold" id="yoken-fold">
+        <summary>⚖️ 裁判の与件ヒアリング（回答済み・2026-08-20）</summary>
+        <div class="card" id="yoken-card" style="margin-top:10px">
+          <div class="s" style="margin-bottom:8px">全22問は<b>8/20に回答済み</b>で、判決の前提に使われています（portfolio.md の「与件」節が正本）。答え直したいときだけ開いてください。</div>
+          <button class="btn" id="yoken-open">もう一度答える</button>
+        </div>
+        <div id="yoken-form" style="display:none"></div>
+      </details>
     </div>
 
     <!-- 健康 -->
@@ -853,6 +882,56 @@ async function loadWatch() {
   } catch (e) { el.innerHTML = '<p class="empty">読み込みに失敗</p>'; }
 }
 
+// ── 投資タブ: 判決一覧（判例/data/_index.json）──
+const LV = { reject:['b-reject','lv-reject'], conditional:['b-conditional','lv-conditional'], approve:['b-approve','lv-approve'] };
+async function loadVerdicts() {
+  const el = $('invest-verdicts');
+  try {
+    const raw = await getFile('projects/B7_投資/判例/data/_index.json');
+    const v = raw ? (JSON.parse(raw).verdicts || []) : [];
+    if (!v.length) { el.innerHTML = '<p class="empty">まだ判決がありません</p>'; return; }
+    const rows = v.slice().sort((a, b) => String(b.id).localeCompare(String(a.id))).slice(0, 5);
+    el.innerHTML = rows.map(x => {
+      const [bcls, lcls] = LV[x.level] || ['b-mini', ''];
+      const meta = [];
+      if (x.cond_total) meta.push(`条件 ${x.cond_done ?? 0}/${x.cond_total}`);
+      if (x.survived) meta.push(`未決の反論 ${x.survived}`);
+      if (x.unverified) meta.push(`裏取り不能 ${x.unverified}`);
+      if (x.gclass) meta.push(x.gclass);
+      if (x.status) meta.push(x.status);
+      return `<a class="vcard ${lcls}" href="./court.html">
+        <div class="vhead">
+          <span class="vno">${esc(x.id)}</span>
+          <span class="vname">${esc(x.name)}${x.code ? `<span class="vno"> ${esc(x.code)}</span>` : ''}</span>
+          <span class="badge ${bcls}">${esc(x.ruling || '—')}</span>
+          <span class="vdate">${esc((x.date || '').slice(5))}</span>
+        </div>
+        ${x.oneliner ? `<div class="vone">${esc(x.oneliner)}</div>` : ''}
+        <div class="vmeta">${meta.map(m => `<span class="badge b-mini">${esc(m)}</span>`).join('')}</div>
+      </a>`;
+    }).join('') + (v.length > rows.length
+      ? `<div class="hint" style="margin:2px 4px">ほか${v.length - rows.length}件 — 「ぜんぶ見る」から検索・絞り込みできます</div>` : '');
+  } catch (e) { el.innerHTML = '<p class="empty">読み込みに失敗</p>'; }
+}
+
+// ── 投資タブ: 開廷待ち（watchlist の「裁判送り」）──
+async function loadDocket() {
+  const el = $('invest-docket');
+  try {
+    const raw = await getFile('inbox/watchlist.json');
+    const list = raw ? (JSON.parse(raw).entries || []) : [];
+    const waiting = list.filter(e => (e.status || '').includes('裁判送り') && !(e.status || '').includes('裁判済み'));
+    if (!waiting.length) {
+      el.innerHTML = '<p class="empty">開廷待ちはありません ⚖️</p>'; return;
+    }
+    el.innerHTML = waiting.map(e => `<div class="card" style="padding:11px 15px">
+        <div class="t" style="font-size:14px">${esc(e.name)}${e.code ? `（${esc(e.code)}）` : ''}</div>
+        <div class="s" style="font-size:12px;margin-top:2px">${esc((e.status || '').replace(/^裁判送り[（(]?/, '').replace(/[）)]$/, ''))}</div>
+      </div>`).join('')
+      + `<div class="hint" style="margin:2px 4px">毎朝7時に検察意見書、<b>10時に1件ずつ判決</b>が出ます（${waiting.length}件なら${waiting.length}日で消化）。</div>`;
+  } catch (e) { el.innerHTML = '<p class="empty">読み込みに失敗</p>'; }
+}
+
 // ── 投資タブ: 注目企業（inbox/watchlist.json・蓄積表示）──
 async function loadScout() {
   const el = $('invest-scout');
@@ -863,11 +942,13 @@ async function loadScout() {
     const sent = JSON.parse(localStorage.getItem('scout-sent') || '[]');
     el.innerHTML = list.slice().reverse().map((e, i) => {
       const key = `${e.date}_${e.code || e.name}`;
-      const done = e.status === '裁判送り' || sent.includes(key);
+      const st = e.status || '';
+      const judged = st.includes('裁判済み');
+      const done = judged || st.includes('裁判送り') || sent.includes(key);
       return `<div class="card"><div class="t" style="font-size:14px">${esc(e.name)}${e.code ? `（${esc(e.code)}）` : ''}<span class="s" style="float:right">${esc(e.date)}</span></div>
         <div class="s">${esc(e.reason)}</div>
         ${e.articles && e.articles.length ? `<div class="s" style="font-size:11px;margin-top:4px">Yパパ基準: ${e.articles.map(esc).join('・')}</div>` : ''}
-        <div style="margin-top:8px"><button class="btn ${done ? '' : 'btn-primary'}" data-scout="${esc(key)}" data-name="${esc(e.name)}" data-code="${esc(e.code || '')}" ${done ? 'disabled' : ''}>${done ? '⚖️ 裁判送り済み' : '⚖️ 裁判にかける'}</button></div></div>`;
+        <div style="margin-top:8px"><button class="btn ${done ? '' : 'btn-primary'}" data-scout="${esc(key)}" data-name="${esc(e.name)}" data-code="${esc(e.code || '')}" ${done ? 'disabled' : ''}>${judged ? '⚖️ 判決ずみ' : done ? '⚖️ 裁判送り済み' : '⚖️ 裁判にかける'}</button></div></div>`;
     }).join('');
     el.querySelectorAll('[data-scout]').forEach(btn => btn.addEventListener('click', async () => {
       btn.disabled = true; btn.textContent = '送信中…';
@@ -1038,7 +1119,7 @@ let isLoading = false;
 async function loadAll() {
   if (isLoading || !pat) return;
   isLoading = true; $('refresh-btn').classList.add('spinning');
-  await Promise.all([loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadScout(), loadMebius(), loadHealth()]);
+  await Promise.all([loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadVerdicts(), loadDocket(), loadScout(), loadMebius(), loadHealth()]);
   await loadSchedule(); // メビウス予定をカレンダーに重ねるため後で描画
   isLoading = false; $('refresh-btn').classList.remove('spinning');
 }
