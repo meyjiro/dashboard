@@ -963,35 +963,49 @@ function money(v, cur) {
 function signed(v, cur) { return (v >= 0 ? '+' : '−') + money(Math.abs(v), cur); }
 
 // ── 💱 円転タイミング（Wiseで円→ドルにした時の実効レートを基準線に、今戻すと得か損か）──
-// 基準: 2026-07-30 Wiseで ¥715,100 → $4,479.59（手数料はレートに織込み済みの実効値）
-const FX_BASE = { date: '2026-07-30', jpy: 715100, usd: 4479.59, rate: 715100 / 4479.59 };
+// 全4回の両替（Wise API全期間・2026-08-27棚卸し・手数料は実効レートに織込み済み）
+const FX_LOTS = [
+  { date: '2025-03-31', jpy: 427606, usd: 2872.05 },
+  { date: '2025-04-05', jpy: 298044, usd: 2027.92 },
+  { date: '2026-05-14', jpy: 396925, usd: 2514.73 },
+  { date: '2026-07-30', jpy: 715100, usd: 4479.59 },
+];
+const FX_BASE = (() => {
+  const jpy = FX_LOTS.reduce((a, l) => a + l.jpy, 0), usd = FX_LOTS.reduce((a, l) => a + l.usd, 0);
+  return { jpy, usd, rate: jpy / usd };
+})();
 async function loadFx(ibkrRate, jpyDebt) {
   const el = $('fx-card');
   if (!el) return;
-  let live = null, liveAt = '';
+  let live = null;
   try {
     const r = await fetch('https://open.er-api.com/v6/latest/USD');
     const j = await r.json();
-    if (j && j.rates && j.rates.JPY) { live = j.rates.JPY; liveAt = (j.time_last_update_utc || '').replace(/ \d\d:.*$/, ''); }
+    if (j && j.rates && j.rates.JPY) live = j.rates.JPY;
   } catch (e) {}
   const rate = live || ibkrRate;                     // API不通ならIBKR逆算レートで代用
   const diffPct = (rate - FX_BASE.rate) / FX_BASE.rate * 100;
-  const backJpy = FX_BASE.usd * rate;                // Wiseで作った$を今円に戻すと
+  const backJpy = FX_BASE.usd * rate;                // 両替で作った$を全部今円に戻すと
   const gain = backJpy - FX_BASE.jpy;                // 元手との差（円）
   const debt = Math.abs(jpyDebt || 0);
-  const needUsdBase = debt / FX_BASE.rate, needUsdNow = debt / rate;
+  const needUsdNow = debt / rate;
   const good = diffPct >= 0;
-  const verdict = diffPct >= 1 ? '🟢 基準より円安。戻しどき寄り'
-                : diffPct <= -1 ? '🔴 基準より円高。待ち'
-                : '🟡 基準とほぼ同じ。急がなくていい';
+  const verdict = diffPct >= 1 ? '🟢 仕入れ平均より円安。戻すと得'
+                : diffPct <= -1 ? '🔴 仕入れ平均より円高。待ち'
+                : '🟡 仕入れ平均とほぼ同じ';
+  const lots = FX_LOTS.map(l =>
+    `<tr><td>${l.date}</td><td style="text-align:right">¥${l.jpy.toLocaleString()}</td><td style="text-align:right">$${l.usd.toLocaleString()}</td><td style="text-align:right">${(l.jpy / l.usd).toFixed(2)}</td></tr>`).join('');
   el.innerHTML = `
     <div class="lbl">💱 円転タイミング <span style="color:var(--text2)">今 ¥${rate.toFixed(2)}/$${live ? '' : '（IBKR時点値）'}</span></div>
     <div style="font-size:13px;line-height:2">
       <div>${verdict}</div>
-      <div>基準（Wise ${FX_BASE.date}・手数料込み実効）: <b>¥${FX_BASE.rate.toFixed(2)}/$</b> → 今との差 <b style="color:${good ? 'var(--green,#16a34a)' : 'var(--red,#dc2626)'}">${diffPct >= 0 ? '+' : ''}${diffPct.toFixed(2)}%</b></div>
-      <div>あの時の $${FX_BASE.usd.toLocaleString()} を今戻すと ¥${Math.round(backJpy).toLocaleString()}（元手¥${FX_BASE.jpy.toLocaleString()}比 <b style="color:${gain >= 0 ? 'var(--green,#16a34a)' : 'var(--red,#dc2626)'}">${gain >= 0 ? '+' : ''}¥${Math.round(gain).toLocaleString()}</b>）</div>
-      ${debt ? `<div>円借入 ¥${debt.toLocaleString()} の返済に必要な$: 今 <b>$${needUsdNow.toFixed(0)}</b>（基準レート比 ${needUsdNow <= needUsdBase ? '−' : '+'}$${Math.abs(needUsdBase - needUsdNow).toFixed(0)}）</div>` : ''}
-      <div style="color:var(--text2);font-size:11.5px;margin-top:2px">レートは日次更新（ECB系）。IBKR内でのUSD→JPY両替はほぼ仲値＋手数料$2程度。Wise経由よりIBKR内両替のほうが安い</div>
+      <div>ドルの仕入れ値（4回の加重平均・手数料込み）: <b>¥${FX_BASE.rate.toFixed(2)}/$</b> → 今との差 <b style="color:${good ? 'var(--green,#16a34a)' : 'var(--red,#dc2626)'}">${diffPct >= 0 ? '+' : ''}${diffPct.toFixed(2)}%</b></div>
+      <div>両替で作った $${Math.round(FX_BASE.usd).toLocaleString()} を全部今戻すと ¥${Math.round(backJpy).toLocaleString()}（元手¥${FX_BASE.jpy.toLocaleString()}比 <b style="color:${gain >= 0 ? 'var(--green,#16a34a)' : 'var(--red,#dc2626)'}">${gain >= 0 ? '+' : ''}¥${Math.round(gain).toLocaleString()}</b>）</div>
+      ${debt ? `<div>円借入 ¥${debt.toLocaleString()} の返済に必要な$: <b>$${needUsdNow.toFixed(0)}</b>（IBKR内両替がほぼ仲値＋$2で最安）</div>` : ''}
+      <details style="margin-top:2px"><summary style="cursor:pointer;color:var(--text2);font-size:12px">仕入れの内訳（Wise実効レート）</summary>
+        <table style="font-size:12px;margin-top:4px;border-collapse:collapse;font-variant-numeric:tabular-nums"><tr style="color:var(--text2)"><th style="text-align:left">日付</th><th style="text-align:right;padding-left:10px">払った円</th><th style="text-align:right;padding-left:10px">得た$</th><th style="text-align:right;padding-left:10px">円/$</th></tr>${lots}</table>
+      </details>
+      <div style="color:var(--text2);font-size:11.5px;margin-top:2px">レートは日次更新（ECB系）。金利は円借入に月約¥1,330かかり続ける</div>
     </div>`;
 }
 
