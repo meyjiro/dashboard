@@ -150,7 +150,17 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 .cal-cell .dot{width:5px;height:5px;border-radius:50%;background:var(--accent)}
 .cal-cell .dot.mb{background:#a78bfa}
 .cal-cell .dot.trip{background:#38bdf8}
-.cal-cell .dot.done{background:var(--text3,#888);opacity:.4}
+/* 分野別の色（2026-08-26: 何の予定か一目で分かるように。過去も同じ色で残す） */
+.dot.f-life{background:#4ade80}     /* 個人・生活＝緑 */
+.dot.f-glz{background:#f472b6}      /* ガチレズ＝ピンク */
+.dot.f-plan{background:#fbbf24}     /* 予定（プライベート）＝黄 */
+.dot.f-mbs,.dot.mb{background:#a78bfa}      /* メビウス＝紫 */
+.dot.f-law{background:#f87171}      /* 裁判・相続＝赤 */
+.dot.f-os{background:#2dd4bf}       /* 生活OS＝ティール */
+.dot.f-inv,.dot.trip{background:#38bdf8}    /* 投資・旅行＝水色 */
+.cal-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin:6px 4px 10px;font-size:11px;color:var(--text2)}
+.cal-legend span{display:inline-flex;align-items:center;gap:4px}
+.cal-legend i{width:7px;height:7px;border-radius:50%;display:inline-block}
 .cal-cell .mk{font-size:9px;line-height:1}
 .cal-cell .mk.heart{color:#e0649b}
 .cal-cell .mk.zone{color:var(--warn);opacity:.5}
@@ -239,6 +249,15 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
         <button id="cal-next">›</button>
       </div>
       <div class="cal-grid" id="cal-grid"></div>
+      <div class="cal-legend">
+        <span><i style="background:#fbbf24"></i>プライベート</span>
+        <span><i style="background:#4ade80"></i>個人・生活</span>
+        <span><i style="background:#f472b6"></i>ガチレズ</span>
+        <span><i style="background:#a78bfa"></i>メビウス</span>
+        <span><i style="background:#f87171"></i>裁判・相続</span>
+        <span><i style="background:#2dd4bf"></i>生活OS</span>
+        <span><i style="background:#38bdf8"></i>投資・旅行</span>
+      </div>
       <div class="cal-add">
         <input type="date" id="cal-date" style="padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text)">
         <input type="text" id="cal-text" placeholder="予定を書く（例: 歯医者14時）">
@@ -724,6 +743,17 @@ async function loadSchedule() {
   } catch (e) {}
   renderCal();
 }
+function fieldClass(f) {
+  f = (f || '').trim();
+  if (f.includes('ガチレズ')) return 'f-glz';
+  if (f.includes('メビウス')) return 'f-mbs';
+  if (f.includes('裁判') || f.includes('相続')) return 'f-law';
+  if (f.includes('生活OS')) return 'f-os';
+  if (f.includes('投資')) return 'f-inv';
+  if (f.includes('個人') || f.includes('生活')) return 'f-life';
+  if (f.includes('予定')) return 'f-plan';
+  return 'f-plan';
+}
 function calEvents() {
   const ev = {};
   const add = (date, item) => { (ev[date] = ev[date] || []).push(item); };
@@ -750,7 +780,9 @@ function renderCal() {
     const dots = items.slice(0, 4).map(it => {
       if (it.src === 'cyc-heart') return '<span class="mk heart">♥</span>';
       if (it.src === 'cyc-zone') return '<span class="mk zone">⚠︎</span>';
-      return `<span class="dot ${it.done ? 'done' : it.src === 'mb' ? 'mb' : it.src === 'trip' ? 'trip' : ''}"></span>`;
+      if (it.src === 'mb') return '<span class="dot mb"></span>';
+      if (it.src === 'trip') return '<span class="dot trip"></span>';
+      return `<span class="dot ${fieldClass(it.field)}"></span>`;
     }).join('');
     html += `<div class="cal-cell${inMonth ? '' : ' dim'}${ds === todayS ? ' today' : ''}${ds === calSel ? ' sel' : ''}" data-d="${ds}">${d.getDate()}<div class="dots">${dots}</div></div>`;
   }
@@ -766,7 +798,10 @@ function renderDayList(ev) {
   const items = (ev || calEvents())[calSel] || [];
   const [y, mo, dd] = calSel.split('-');
   el.innerHTML = `<div class="section-title">📌 ${+mo}/${+dd} の予定</div>` + (items.length
-    ? items.map(it => `<div class="card"${it.done ? ' style="opacity:.55"' : ''}><div class="s" style="color:var(--text)">${it.done ? '✅ ' : ''}${it.field ? `[${esc(it.field)}] ` : ''}${esc(it.label)}</div></div>`).join('')
+    ? items.map(it => {
+        const cls = it.src === 'mb' ? 'mb' : it.src === 'trip' ? 'trip' : fieldClass(it.field);
+        return `<div class="card"><div class="s" style="color:var(--text)"><span class="dot ${cls}" style="display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px" data-f></span>${it.done ? '✅ ' : ''}${it.field ? `[${esc(it.field)}] ` : ''}${esc(it.label)}</div></div>`;
+      }).join('')
     : '<p class="empty">予定なし。下のフォームから追加できます</p>');
 }
 async function addCalEvent() {
