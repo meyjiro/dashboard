@@ -963,11 +963,9 @@ function money(v, cur) {
 function signed(v, cur) { return (v >= 0 ? '+' : '−') + money(Math.abs(v), cur); }
 
 // ── 💱 円転タイミング（Wiseで円→ドルにした時の実効レートを基準線に、今戻すと得か損か）──
-// 全4回の両替（Wise API全期間・2026-08-27棚卸し・手数料は実効レートに織込み済み）
+// 円転の判断基準は 2026年7〜8月に円→ドルにした分だけ（2026-08-27 メグ指定）。
+// それ以前の分（2025年春・2026-05）は米国株の買い付けに充てる想定なので基準から外す。
 const FX_LOTS = [
-  { date: '2025-03-31', jpy: 427606, usd: 2872.05 },
-  { date: '2025-04-05', jpy: 298044, usd: 2027.92 },
-  { date: '2026-05-14', jpy: 396925, usd: 2514.73 },
   { date: '2026-07-30', jpy: 715100, usd: 4479.59 },
 ];
 const FX_BASE = (() => {
@@ -999,8 +997,8 @@ async function loadFx(ibkrRate, jpyDebt) {
     <div class="lbl">💱 円転タイミング <span style="color:var(--text2)">今 ¥${rate.toFixed(2)}/$${live ? '' : '（IBKR時点値）'}</span></div>
     <div style="font-size:13px;line-height:2">
       <div>${verdict}</div>
-      <div>ドルの仕入れ値（4回の加重平均・手数料込み）: <b>¥${FX_BASE.rate.toFixed(2)}/$</b> → 今との差 <b style="color:${good ? 'var(--green,#16a34a)' : 'var(--red,#dc2626)'}">${diffPct >= 0 ? '+' : ''}${diffPct.toFixed(2)}%</b></div>
-      <div>両替で作った $${Math.round(FX_BASE.usd).toLocaleString()} を全部今戻すと ¥${Math.round(backJpy).toLocaleString()}（元手¥${FX_BASE.jpy.toLocaleString()}比 <b style="color:${gain >= 0 ? 'var(--green,#16a34a)' : 'var(--red,#dc2626)'}">${gain >= 0 ? '+' : ''}¥${Math.round(gain).toLocaleString()}</b>）</div>
+      <div>ドルの仕入れ値（26年7〜8月分・手数料込み）: <b>¥${FX_BASE.rate.toFixed(2)}/$</b> → 今との差 <b style="color:${good ? 'var(--green,#16a34a)' : 'var(--red,#dc2626)'}">${diffPct >= 0 ? '+' : ''}${diffPct.toFixed(2)}%</b></div>
+      <div>7〜8月に作った $${Math.round(FX_BASE.usd).toLocaleString()} を全部今戻すと ¥${Math.round(backJpy).toLocaleString()}（元手¥${FX_BASE.jpy.toLocaleString()}比 <b style="color:${gain >= 0 ? 'var(--green,#16a34a)' : 'var(--red,#dc2626)'}">${gain >= 0 ? '+' : ''}¥${Math.round(gain).toLocaleString()}</b>）</div>
       ${debt ? `<div>円借入 ¥${debt.toLocaleString()} の返済に必要な$: <b>$${needUsdNow.toFixed(0)}</b>（IBKR内両替がほぼ仲値＋$2で最安）</div>` : ''}
       <details style="margin-top:2px"><summary style="cursor:pointer;color:var(--text2);font-size:12px">仕入れの内訳（Wise実効レート）</summary>
         <table style="font-size:12px;margin-top:4px;border-collapse:collapse;font-variant-numeric:tabular-nums"><tr style="color:var(--text2)"><th style="text-align:left">日付</th><th style="text-align:right;padding-left:10px">払った円</th><th style="text-align:right;padding-left:10px">得た$</th><th style="text-align:right;padding-left:10px">円/$</th></tr>${lots}</table>
