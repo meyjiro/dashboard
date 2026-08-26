@@ -150,6 +150,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 .cal-cell .dot{width:5px;height:5px;border-radius:50%;background:var(--accent)}
 .cal-cell .dot.mb{background:#a78bfa}
 .cal-cell .dot.trip{background:#38bdf8}
+.cal-cell .dot.done{background:var(--text3,#888);opacity:.4}
 .cal-cell .mk{font-size:9px;line-height:1}
 .cal-cell .mk.heart{color:#e0649b}
 .cal-cell .mk.zone{color:var(--warn);opacity:.5}
@@ -714,9 +715,11 @@ async function loadSchedule() {
     const f = await getFileWithSha('スケジュール.md');
     if (!f) return;
     for (const line of f.text.split('\n')) {
-      if (/^\s*\|~/.test(line)) continue; // 完了済み
-      const m = line.match(/^\s*\|\s*(\d{4})-(\d{2})-(\d{2})\s*\|([^|]*)\|(.*?)\|?\s*$/);
-      if (m) schedRows.push({ date: `${m[1]}-${m[2]}-${m[3]}`, field: m[4].trim(), label: m[5].trim(), src: 'sched' });
+      // 完了済み(|~)も「過去の記録」としてカレンダーに残す（2026-08-26: ワクチン等を振り返れるように）
+      const done = /^\s*\|~/.test(line);
+      const m = line.match(/^\s*\|~?\s*(\d{4})-(\d{2})-(\d{2})\s*\|([^|]*)\|(.*?)\|?\s*$/);
+      if (m) schedRows.push({ date: `${m[1]}-${m[2]}-${m[3]}`, field: m[4].trim(),
+        label: m[5].trim().replace(/\s*\|/g, ' '), src: 'sched', done });
     }
   } catch (e) {}
   renderCal();
@@ -747,7 +750,7 @@ function renderCal() {
     const dots = items.slice(0, 4).map(it => {
       if (it.src === 'cyc-heart') return '<span class="mk heart">♥</span>';
       if (it.src === 'cyc-zone') return '<span class="mk zone">⚠︎</span>';
-      return `<span class="dot ${it.src === 'mb' ? 'mb' : it.src === 'trip' ? 'trip' : ''}"></span>`;
+      return `<span class="dot ${it.done ? 'done' : it.src === 'mb' ? 'mb' : it.src === 'trip' ? 'trip' : ''}"></span>`;
     }).join('');
     html += `<div class="cal-cell${inMonth ? '' : ' dim'}${ds === todayS ? ' today' : ''}${ds === calSel ? ' sel' : ''}" data-d="${ds}">${d.getDate()}<div class="dots">${dots}</div></div>`;
   }
@@ -763,7 +766,7 @@ function renderDayList(ev) {
   const items = (ev || calEvents())[calSel] || [];
   const [y, mo, dd] = calSel.split('-');
   el.innerHTML = `<div class="section-title">📌 ${+mo}/${+dd} の予定</div>` + (items.length
-    ? items.map(it => `<div class="card"><div class="s" style="color:var(--text)">${it.field ? `[${esc(it.field)}] ` : ''}${esc(it.label)}</div></div>`).join('')
+    ? items.map(it => `<div class="card"${it.done ? ' style="opacity:.55"' : ''}><div class="s" style="color:var(--text)">${it.done ? '✅ ' : ''}${it.field ? `[${esc(it.field)}] ` : ''}${esc(it.label)}</div></div>`).join('')
     : '<p class="empty">予定なし。下のフォームから追加できます</p>');
 }
 async function addCalEvent() {
