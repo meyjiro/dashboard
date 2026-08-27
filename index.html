@@ -968,13 +968,16 @@ function signed(v, cur) { return (v >= 0 ? '+' : '−') + money(Math.abs(v), cur
 // 🔴 Wiseの両替は「送金型」(/v1/transfers)と「残高間両替」(INTERBALANCE・activities API)の
 //    2系統あり、後者は送金履歴に出ない。以下はactivities APIまで見た完全版（2026-08-27棚卸し）。
 const FX_LOTS = [
-  { date: '2026-07-30', jpy: 715100,  usd: 4479.59 },   // 送金型（IBKR宛）
-  { date: '2026-07-30', jpy: 1000000, usd: 6219.71 },   // 残高間両替
-  { date: '2026-08-01', jpy: 250000,  usd: 1576.04 },   // 残高間両替
-  { date: '2026-08-03', jpy: 500000,  usd: 3175.26 },   // 残高間両替
+  // rate はWise画面の「為替レート」（ミッド・手数料抜き）。8/27にメグの画面と照合済み。
+  // 手数料は別枠（3件とも約0.66%・計約¥11,500）。今のミッドレートと比べるため基準はミッドで揃える。
+  { date: '2026-07-30', usd: 4479.59, rate: 159.635 },   // 送金型（IBKR宛・¥715,100）
+  { date: '2026-07-30', usd: 6219.71, rate: 159.725 },   // 残高間両替（¥1,000,000）
+  { date: '2026-08-01', usd: 1576.04, rate: 157.585 },   // 残高間両替（¥250,000）
+  { date: '2026-08-03', usd: 3175.26, rate: 156.435 },   // 残高間両替（¥500,000）
 ];
 const FX_BASE = (() => {
-  const jpy = FX_LOTS.reduce((a, l) => a + l.jpy, 0), usd = FX_LOTS.reduce((a, l) => a + l.usd, 0);
+  const usd = FX_LOTS.reduce((a, l) => a + l.usd, 0);
+  const jpy = FX_LOTS.reduce((a, l) => a + l.usd * l.rate, 0);   // ミッド換算の円
   return { jpy, usd, rate: jpy / usd };
 })();
 async function loadFx(ibkrRate, jpyDebt) {
@@ -997,16 +1000,16 @@ async function loadFx(ibkrRate, jpyDebt) {
                 : diffPct <= -1 ? '🔴 仕入れ平均より円高。待ち'
                 : '🟡 仕入れ平均とほぼ同じ';
   const lots = FX_LOTS.map(l =>
-    `<tr><td>${l.date}</td><td style="text-align:right">¥${l.jpy.toLocaleString()}</td><td style="text-align:right">$${l.usd.toLocaleString()}</td><td style="text-align:right">${(l.jpy / l.usd).toFixed(2)}</td></tr>`).join('');
+    `<tr><td>${l.date}</td><td style="text-align:right">$${l.usd.toLocaleString()}</td><td style="text-align:right">${l.rate.toFixed(3)}</td></tr>`).join('');
   el.innerHTML = `
     <div class="lbl">💱 円転タイミング <span style="color:var(--text2)">今 ¥${rate.toFixed(2)}/$${live ? '' : '（IBKR時点値）'}</span></div>
     <div style="font-size:13px;line-height:2">
       <div>${verdict}</div>
-      <div>ドルの仕入れ値（26年7〜8月分・手数料込み）: <b>¥${FX_BASE.rate.toFixed(2)}/$</b> → 今との差 <b style="color:${good ? 'var(--green,#16a34a)' : 'var(--red,#dc2626)'}">${diffPct >= 0 ? '+' : ''}${diffPct.toFixed(2)}%</b></div>
-      <div>7〜8月に作った $${Math.round(FX_BASE.usd).toLocaleString()} を全部今戻すと ¥${Math.round(backJpy).toLocaleString()}（元手¥${FX_BASE.jpy.toLocaleString()}比 <b style="color:${gain >= 0 ? 'var(--green,#16a34a)' : 'var(--red,#dc2626)'}">${gain >= 0 ? '+' : ''}¥${Math.round(gain).toLocaleString()}</b>）</div>
+      <div>ドルの仕入れ値（26年7〜8月・4回のミッド加重平均）: <b>¥${FX_BASE.rate.toFixed(2)}/$</b> → 今との差 <b style="color:${good ? 'var(--green,#16a34a)' : 'var(--red,#dc2626)'}">${diffPct >= 0 ? '+' : ''}${diffPct.toFixed(2)}%</b></div>
+      <div>7〜8月に作った $${Math.round(FX_BASE.usd).toLocaleString()} を全部今戻すと ¥${Math.round(backJpy).toLocaleString()}（ミッド換算元手¥${Math.round(FX_BASE.jpy).toLocaleString()}比 <b style="color:${gain >= 0 ? 'var(--green,#16a34a)' : 'var(--red,#dc2626)'}">${gain >= 0 ? '+' : ''}¥${Math.round(gain).toLocaleString()}</b>）</div>
       ${debt ? `<div>円借入 ¥${debt.toLocaleString()} の返済に必要な$: <b>$${needUsdNow.toFixed(0)}</b>（IBKR内両替がほぼ仲値＋$2で最安）</div>` : ''}
       <details style="margin-top:2px"><summary style="cursor:pointer;color:var(--text2);font-size:12px">仕入れの内訳（Wise実効レート）</summary>
-        <table style="font-size:12px;margin-top:4px;border-collapse:collapse;font-variant-numeric:tabular-nums"><tr style="color:var(--text2)"><th style="text-align:left">日付</th><th style="text-align:right;padding-left:10px">払った円</th><th style="text-align:right;padding-left:10px">得た$</th><th style="text-align:right;padding-left:10px">円/$</th></tr>${lots}</table>
+        <table style="font-size:12px;margin-top:4px;border-collapse:collapse;font-variant-numeric:tabular-nums"><tr style="color:var(--text2)"><th style="text-align:left">日付</th><th style="text-align:right;padding-left:10px">得た$</th><th style="text-align:right;padding-left:10px">レート(ミッド)</th></tr>${lots}</table><div style="font-size:11.5px;color:var(--text2)">別途Wise手数料 計約¥11,500（約0.66%）。上のレートはWiseアプリの表示と同じもの</div>
       </details>
       <div style="color:var(--text2);font-size:11.5px;margin-top:2px">レートは日次更新（ECB系）。金利は円借入に月約¥1,330かかり続ける</div>
     </div>`;
