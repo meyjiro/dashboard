@@ -965,8 +965,13 @@ function signed(v, cur) { return (v >= 0 ? '+' : '−') + money(Math.abs(v), cur
 // ── 💱 円転タイミング（Wiseで円→ドルにした時の実効レートを基準線に、今戻すと得か損か）──
 // 円転の判断基準は 2026年7〜8月に円→ドルにした分だけ（2026-08-27 メグ指定）。
 // それ以前の分（2025年春・2026-05）は米国株の買い付けに充てる想定なので基準から外す。
+// 🔴 Wiseの両替は「送金型」(/v1/transfers)と「残高間両替」(INTERBALANCE・activities API)の
+//    2系統あり、後者は送金履歴に出ない。以下はactivities APIまで見た完全版（2026-08-27棚卸し）。
 const FX_LOTS = [
-  { date: '2026-07-30', jpy: 715100, usd: 4479.59 },
+  { date: '2026-07-30', jpy: 715100,  usd: 4479.59 },   // 送金型（IBKR宛）
+  { date: '2026-07-30', jpy: 1000000, usd: 6219.71 },   // 残高間両替
+  { date: '2026-08-01', jpy: 250000,  usd: 1576.04 },   // 残高間両替
+  { date: '2026-08-03', jpy: 500000,  usd: 3175.26 },   // 残高間両替
 ];
 const FX_BASE = (() => {
   const jpy = FX_LOTS.reduce((a, l) => a + l.jpy, 0), usd = FX_LOTS.reduce((a, l) => a + l.usd, 0);
