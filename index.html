@@ -15,7 +15,7 @@
 :root{
   --bg:#f7f8fa;--bg2:#ffffff;--bg3:#eef1f6;
   --text:#1a1a2e;--text2:#6b7280;--accent:#0bb7ae;--accent-light:#e0f7f6;
-  --warn:#d97706;--warn-light:#fef3e2;--red:#dc2626;--red-light:#fdeaea;
+  --warn:#d97706;--warn-light:#fdf6e7;--red:#dc2626;--red-light:#fdefef;--ok:#15803d;--ok-light:#ecf8f0;
   --card:#ffffff;--border:#e5e7eb;
   --safe-bottom:env(safe-area-inset-bottom,0px);
 }
@@ -130,6 +130,40 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 /* タイル */
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* 健康タブ: コンディション（2026-08-28） */
+.hero{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 15px;margin-bottom:12px}
+.hero-top{display:flex;align-items:center;gap:15px}
+.ring{flex:none;position:relative;width:100px;height:100px}
+.ring .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.ring .num b{font-size:31px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.ring .num span{font-size:9px;color:var(--text2);margin-top:3px;letter-spacing:.02em}
+.hero-txt{flex:1;min-width:0}
+.hero-txt .st{font-size:19px;font-weight:800;line-height:1.3}
+.hero-txt .msg{font-size:12.5px;color:var(--text2);margin-top:5px;line-height:1.65}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:13px}
+.badge{font-size:11.5px;font-weight:700;border-radius:999px;padding:4px 10px;line-height:1.5}
+.badge.good{background:var(--accent-light);color:var(--accent)}
+.badge.warn{background:var(--warn-light);color:var(--warn)}
+.badge.bad{background:var(--red-light);color:var(--red)}
+.spark7{display:flex;align-items:flex-end;gap:3px;height:34px;margin-top:14px}
+.spark7 i{flex:1;border-radius:2px 2px 0 0;min-height:3px}
+.sparkcap{font-size:10px;color:var(--text2);margin-top:5px}
+.mgroup{margin-bottom:14px}
+.mgroup h4{font-size:11.5px;font-weight:700;color:var(--text2);letter-spacing:.06em;margin:0 4px 6px}
+.mrows{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.mrow{display:grid;grid-template-columns:66px minmax(64px,auto) 1fr 42px;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid var(--border)}
+.mrow:last-child{border-bottom:0}
+.mrow.ok{background:var(--ok-light)}
+.mrow.wn{background:var(--warn-light)}
+.mrow.bd{background:var(--red-light)}
+.mrow .mname{font-size:12.5px;color:var(--text2);font-weight:600;white-space:nowrap}
+.mrow .mval{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.mrow .mval u{text-decoration:none;font-size:10px;color:var(--text2);font-weight:500;margin-left:2px}
+.mrow .mdiff{font-size:11px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.mbar{position:relative;height:6px;border-radius:3px;background:var(--bg3)}
+.mbar::before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--border)}
+.mbar i{position:absolute;top:0;height:6px;border-radius:3px}
+.mnote{font-size:10.5px;color:var(--text2);line-height:1.7;margin:6px 5px 0}
 .tile{border-radius:14px;padding:14px;border:1px solid var(--border);text-decoration:none;color:var(--text);display:block;background:var(--card)}
 .tile .em{font-size:20px}
 .tile .l{font-weight:700;font-size:14px;margin-top:4px}
@@ -316,29 +350,24 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
     <!-- 健康 -->
     <div id="tab-health" class="tab-panel">
+      <div id="health-hero"></div>
+      <div id="health-cycle"></div>
+      <div id="health-groups"></div>
       <div class="section-title">✍️ きょうの記録（タップで投げ込みに入る）</div>
       <div class="chips">
         <button class="chip" data-tpl="体重 ">⚖️ 体重</button>
         <button class="chip" data-tpl="睡眠 ">😴 睡眠</button>
-        <button class="chip" data-tpl="運動: ">🏃 運動</button>
         <button class="chip" data-tpl="体調: ">🌡 体調</button>
         <button class="chip" data-tpl="気分: ">🙂 気分</button>
+        <button class="chip" data-tpl="生理きた">🩸 生理きた</button>
+        <button class="chip" data-tpl="生理おわった">🩸 終わった</button>
       </div>
-      <div id="health-stats" style="margin-bottom:6px"></div>
-      <div id="health-advice"></div>
-      <div class="hint" id="health-hint" style="margin:0 4px 12px"></div>
       <div class="section-title">🚶 歩数（14日）</div>
       <div class="card" id="health-steps"><p class="empty">Apple Watchのデータ待ち</p></div>
       <div class="section-title">❤️ 安静時心拍（30日）</div>
       <div class="card" id="health-rhr"><p class="empty">Apple Watchのデータ待ち</p></div>
       <div class="section-title">🏃 直近のワークアウト</div>
       <div id="health-workouts"><p class="empty">—</p></div>
-      <div class="section-title">🩸 周期</div>
-      <div class="chips">
-        <button class="chip" data-tpl="生理きた">🩸 生理きた</button>
-        <button class="chip" data-tpl="生理おわった">🩸 終わった</button>
-      </div>
-      <div id="health-cycle"></div>
       <div id="health-note"></div>
     </div>
 
@@ -912,76 +941,202 @@ async function loadCycle() {
     </div>`;
   } catch (e) {}
 }
-// ── 健康の一言アドバイス（2026-08-28 メグ依頼）──
-// 数字を並べるだけでは「で、どうすればいいか」が読み取れないので1行で出す。
-// 🔴 判定は必ず「その人の過去のベースラインとの差分」で行うこと。
-//    HRV 40ms が良いか悪いかは一般論では決まらない（測り方も個人差も大きい）。
-//    ベースライン＝直近7日を除いた過去N日の中央値（外れ値に強い）。
-// 🔴 7日平均だけを見ると谷を見落とす。実例: 8/21〜27は前半51〜56・後半32〜36で
-//    平均は基準どおりなのに、実際は後半3日がはっきり落ちていた。直近3日も必ず見る。
-function renderHealthAdvice(rows, todayS) {
-  const el = $('health-advice');
-  if (!el) return;
-  const ser  = c => rows.filter(r => r.date !== todayS && r[c] !== '' && r[c] != null && !isNaN(+r[c])).map(r => +r[c]);
-  const mean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
-  const med  = a => { if (!a.length) return null; const t = [...a].sort((x, y) => x - y); return t[t.length >> 1]; };
-  const cmp  = (a, n) => a.length >= n ? { now: mean(a.slice(-7)), base: med(a.slice(-n, -7)) } : null;
+// ══ 健康タブ（2026-08-28 全面刷新）══
+// メグの要件: ①今の状態が一目でわかる ②注意が要る時がわかる ③絶好調なら褒められる
+// 🔴 判定は必ず「メグ自身の過去との差分」。HRV 40msが良いかは一般論では決まらない。
+//    ベースライン = 直近60日（今日を除く）の中央値。ばらつきは標準偏差。
+// 列, 表示名, 単位, 小数桁, 向き(1=高いほど良い / -1=低いほど良い / 0=表示のみ), グループ
+const H_METRICS = [
+  ['hrv_ms',             'HRV',        'ms',    1,  1, 'recover'],
+  ['resting_hr',         '安静時心拍',  'bpm',   0, -1, 'recover'],
+  ['walk_hr',            '歩行時心拍',  'bpm',   0,  0, 'recover'],
+  ['steps',              '歩数',        '歩',    0,  1, 'active'],
+  ['exercise_min',       '運動',        '分',    0,  1, 'active'],
+  ['distance_km',        '距離',        'km',    1,  0, 'active'],
+  ['basal_kcal',         '基礎代謝',    'kcal',  0,  0, 'active'],
+  ['walking_speed_kmh',  '歩行速度',    'km/h',  2,  1, 'gait'],
+  ['step_length_cm',     '歩幅',        'cm',    0,  1, 'gait'],
+  ['double_support_pct', '両脚支持',    '%',     1, -1, 'gait'],
+  ['asymmetry_pct',      '左右差',      '%',     1, -1, 'gait'],
+];
+const H_GROUPS = [
+  ['recover', '回復',     0.40, '寝ている間にどれだけ体が戻ったか。HRVは高いほど・安静時心拍は低いほど良好です。'],
+  ['active',  '活動',     0.35, 'どれだけ動いたか。基礎代謝はじっとしていても燃える分なので、増減より安定しているかを見ます。'],
+  ['gait',    '歩き方',   0.25, '疲れると速度が落ち歩幅が縮み、両脚が地面についている時間が伸びます。左右差は3%以下が正常です。'],
+];
 
-  const hrv = ser('hrv_ms'), rhr = ser('resting_hr'), ex = ser('exercise_min'), st = ser('steps');
-  const H = cmp(hrv, 21), R = cmp(rhr, 21);
-  const hd  = H ? (H.now - H.base) / H.base * 100 : null;                       // HRV 7日の増減（％）
-  const hd3 = H && hrv.length >= 3 ? (mean(hrv.slice(-3)) - H.base) / H.base * 100 : null;  // 直近3日
-  const rd  = R ? R.now - R.base : null;                                        // 安静時心拍の増減（bpm）
-  const ex7 = ex.slice(-7), st7 = st.slice(-7);
-  const exDays = ex7.filter(v => v >= 30).length;
-  const stMed  = st7.length ? med(st7) : null;   // 2万歩の日が1日あると平均は嘘をつくので中央値
-  const zone   = !!window.__hormoneZone;
-  const r1 = v => Math.round(v), sg = v => (v > 0 ? '+' : '') + v.toFixed(1);
+function hStats(rows, todayS) {
+  const base = {};
+  for (const [col] of H_METRICS) {
+    const v = rows.filter(r => r.date !== todayS && r[col] !== '' && r[col] != null && !isNaN(+r[col])).map(r => +r[col]);
+    if (v.length < 8) continue;
+    const win = v.slice(-60);
+    const sorted = [...win].sort((a, b) => a - b);
+    const m = sorted[sorted.length >> 1];
+    const sd = Math.sqrt(win.reduce((s, x) => s + (x - m) ** 2, 0) / win.length) || 1;
+    base[col] = { med: m, sd, n: v.length, all: v };
+  }
+  return base;
+}
+// 1日ぶんのスコア（0〜100）。ベースラインは共通、日ごとの値だけ差し替える
+function hScore(row, base) {
+  const g = {};
+  for (const [col, , , , dir, grp] of H_METRICS) {
+    if (!dir || !base[col] || !row || !row[col]) continue;
+    const z = Math.max(-2.5, Math.min(2.5, (+row[col] - base[col].med) / base[col].sd * dir));
+    (g[grp] = g[grp] || []).push(Math.max(5, Math.min(100, 50 + z * 22)));
+  }
+  // 🔴 指標が1本しかないグループを満額の重みで扱うと、その1本のブレが総合を支配する。
+  //    （歩き方が歩行速度だけだった時、全指標が良い日でも総合が伸びなかった）
+  let sum = 0, w = 0;
+  const per = {};
+  for (const [key, , weight] of H_GROUPS) {
+    if (!g[key] || !g[key].length) continue;
+    per[key] = g[key].reduce((a, b) => a + b, 0) / g[key].length;
+    const wt = weight * Math.min(1, g[key].length / 2);
+    sum += per[key] * wt; w += wt;
+  }
+  return w ? { total: Math.round(sum / w), per } : null;
+}
 
-  // ── 疲労レベル: -2 好調 / -1 回復 / 0 標準 / 1 下降 / 2 疲労 ──
-  let lv = 0;
-  if      ((hd != null && hd <= -12) || (hd3 != null && hd3 <= -15) || (rd != null && rd >= 4)) lv = 2;
-  else if ((hd != null && hd <=  -6) || (hd3 != null && hd3 <=  -8) || (rd != null && rd >= 2)) lv = 1;
-  else if (hd != null && hd >= 6 && (rd == null || rd <= 0)) lv = -2;
-  else if (hd3 != null && hd != null && hd3 >= hd + 5) lv = -1;
+function renderHealthHero(rows, todayS) {
+  const done = rows.filter(r => r.date !== todayS);
+  const cur = done[done.length - 1];
+  if (!cur) return;
+  const base = hStats(rows, todayS);
+  const sc = hScore(cur, base);
+  if (!sc) return;
+  const n = sc.total;
 
-  const why = [];
-  if (H) why.push(`HRVは直近3日 ${mean(hrv.slice(-3)).toFixed(1)}ms・7日 ${H.now.toFixed(1)}ms（基準 ${H.base.toFixed(1)}ms）`);
-  if (R) why.push(`安静時心拍は ${r1(R.now)}bpm（基準 ${r1(R.base)} / ${sg(rd)}）`);
+  // ── 状態と一言 ──
+  // 50点 = ふだん通り。実データの分布（直近10日で47〜72点）に合わせた閾値
+  const LV = n >= 74 ? { i: '🔥', c: 'var(--ok)',     t: '絶好調', m: 'ここまで整うのは珍しいです。今日は何をやっても大丈夫。' }
+          : n >= 62 ? { i: '🟢', c: 'var(--accent)', t: '好調',   m: 'ふだんより良い状態です。このまま進めて問題ありません。' }
+          : n >= 50 ? { i: '⚪️', c: 'var(--text2)',  t: 'ふつう', m: 'いつも通りです。特に気にすることはありません。' }
+          : n >= 40 ? { i: '🟡', c: 'var(--warn)',   t: '要注意', m: '少し落ちています。無理をしなければ2〜3日で戻ります。' }
+                    : { i: '🔴', c: 'var(--red)',    t: '休養',   m: '回復を優先してください。重い判断は明日に回すのが安全です。' };
 
-  let icon, color, head, act;
-  if (lv === 2)       { icon = '🔴'; color = 'var(--red)';    head = '回復が追いついていません'; act = '今日は重い判断と長い作業を避けて、睡眠を優先してください。2〜3日で戻ります。'; }
-  else if (lv === 1)  { icon = '🟡'; color = 'var(--warn)';   head = '疲れが溜まりはじめています'; act = '運動は軽めに切り上げて、早めに寝れば戻せる段階です。'; }
-  else if (lv === -2) { icon = '🟢'; color = 'var(--accent)'; head = 'コンディション良好'; act = '負荷をかけるならこの時期です。長めの運動や重い作業を入れて大丈夫。'; }
-  else if (lv === -1) { icon = '🟢'; color = 'var(--accent)'; head = '回復に向かっています'; act = '通常運転で問題ありません。'; }
-  else                { icon = '⚪️'; color = 'var(--text2)';  head = '安定しています'; act = '今のペースを維持できています。'; }
+  // ── 褒めるところ（具体的な事実だけ。無理に褒めない）──
+  const good = [], warn = [];
+  const tail = (col, k) => (base[col] ? base[col].all.slice(-k) : []);
+  const best = (col, k, hi) => {
+    const v = tail(col, k); if (v.length < Math.min(k, 7)) return false;
+    const x = v[v.length - 1];
+    return hi ? x >= Math.max(...v) : x <= Math.min(...v);
+  };
+  // 運動の連続日数
+  const dayDiff = (a, b) => Math.round((new Date(a) - new Date(b)) / 86400000);
+  let streak = 0;
+  for (let i = done.length - 1; i >= 0; i--) {
+    if (i < done.length - 1 && dayDiff(done[i + 1].date, done[i].date) !== 1) break;  // 日が飛んだら打ち切り
+    if (+done[i].exercise_min >= 30) streak++; else break;
+  }
+  if (streak >= 3) good.push(['🔥', `運動${streak}日連続`]);
+  if (best('hrv_ms', 14, true))     good.push(['📈', 'HRVが2週間で最高']);
+  if (best('resting_hr', 30, false))good.push(['❤️', '心拍が1か月で最も低い']);
+  if (best('steps', 30, true))      good.push(['🚶', '今月いちばん歩いた']);
+  if (best('walking_speed_kmh', 14, true)) good.push(['🚀', '歩くのが2週間で一番速い']);
+  const st7 = tail('steps', 7);
+  if (st7.length === 7 && st7.every(v => v >= 8000)) good.push(['🎯', '7日連続で8,000歩超え']);
+  // 7日ぶんのスコアを出して自己ベスト判定にも使う
+  const hist = done.slice(-14).map(r => ({ d: r.date, s: (hScore(r, base) || {}).total })).filter(x => x.s != null);
+  if (hist.length >= 7 && hist[hist.length - 1].s >= Math.max(...hist.map(x => x.s))) good.push(['⭐️', '2週間で最高のコンディション']);
 
-  // 運動量は疲労とは別軸。疲労が出ていない時だけ主役に繰り上げる
-  const lowMove = ex7.length >= 5 && exDays <= 2;
-  const lowStep = stMed != null && stMed < 6500;
-  if (lv <= 0 && (lowMove || lowStep)) {
-    icon = '🟡'; color = 'var(--warn)'; head = '体は元気。動けていないだけです';
-    act = lowMove ? `運動30分以上が7日で${exDays}日。3日以上に戻すと安静時心拍が下がります。`
-                  : `歩数が7日中央値 ${r1(stMed).toLocaleString()}歩。8,000歩の日を増やすとVO2maxが上がります。`;
-  } else if (lowMove || lowStep) {
-    why.push(lowMove ? `運動30分以上は7日で${exDays}日` : `歩数は7日中央値 ${r1(stMed).toLocaleString()}歩`);
+  // 何も褒めるところが無い日でも、ふだんより良い指標が1つは拾う（毎日ここを見る動機になる）
+  if (!good.length) {
+    let bestOne = null;
+    for (const [col, name, , , dir] of H_METRICS) {
+      if (!dir || !base[col] || !cur[col]) continue;
+      const z = (+cur[col] - base[col].med) / base[col].sd * dir;
+      if (z > 0.35 && (!bestOne || z > bestOne.z)) bestOne = { z, name, dir };
+    }
+    if (bestOne) good.push(['👍', `${bestOne.name}はふだんより${bestOne.dir > 0 ? '良い' : '低い'}`]);
   }
 
-  const notes = [];
-  if (lv >= 1 && hrv.length >= 3 && hrv[hrv.length - 1] > mean(hrv.slice(-3)) * 1.05)
-    notes.push(`※ ただし直近の1日は ${hrv[hrv.length - 1].toFixed(1)}ms まで戻っています。底は越えた可能性があります。`);
-  if (zone && lv >= 1)
-    notes.push('※ ホルモン期ゾーンと重なっています。この時期のHRV低下は自然な変動なので、疲労と決めつけなくて大丈夫です。');
-  if (!H)
-    notes.push(`※ HRVはあと${Math.max(1, 21 - hrv.length)}日分たまると傾向判定に入ります（現在${hrv.length}日分）。`);
+  // ── 注意するところ ──
+  const dv = (col) => base[col] && cur[col] ? +cur[col] - base[col].med : null;
+  const hd = base.hrv_ms && cur.hrv_ms ? (+cur.hrv_ms - base.hrv_ms.med) / base.hrv_ms.med * 100 : null;
+  if (hd != null && hd <= -12) warn.push(['bad',  `HRVが基準より${Math.abs(Math.round(hd))}%低い`]);
+  const rd = dv('resting_hr');
+  if (rd != null && rd >= 4) warn.push(['bad', `安静時心拍が${Math.round(rd)}bpm高い`]);
+  let zero = 0;
+  for (let i = done.length - 1; i >= 0; i--) {
+    if (i < done.length - 1 && dayDiff(done[i + 1].date, done[i].date) !== 1) break;
+    if (!(+done[i].exercise_min >= 15)) zero++; else break;
+  }
+  if (zero >= 3) warn.push(['warn', `${zero}日ほとんど動けていない`]);
+  const az = tail('asymmetry_pct', 3);
+  if (az.length === 3 && az.every(v => v > 3)) warn.push(['warn', '左右差が3日続いている']);
+  const dd = dv('double_support_pct');
+  if (dd != null && dd >= 1.5) warn.push(['warn', '両脚支持が伸びている（かばい歩き）']);
+  if (window.__hormoneZone && n < 50) warn.push(['warn', 'ホルモン期と重なる時期です']);
 
-  el.innerHTML = `<div class="card" style="border-left:4px solid ${color};margin-bottom:8px">
-    <div class="t" style="font-size:14px">${icon} ${head}</div>
-    <div class="s" style="margin-top:2px">${act}</div>
-    ${why.length ? `<div class="s" style="font-size:11px;color:var(--text3,#9aa0a6);margin-top:5px;font-variant-numeric:tabular-nums">${why.join(' ／ ')}</div>` : ''}
-    ${notes.map(n => `<div class="s" style="font-size:11px;color:var(--warn);margin-top:4px">${n}</div>`).join('')}
+  // ── リング ──
+  const C = 2 * Math.PI * 42;
+  const ring = `<div class="ring">
+    <svg viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="コンディション ${n}点">
+      <circle cx="50" cy="50" r="42" fill="none" stroke="var(--bg3)" stroke-width="9"/>
+      <circle cx="50" cy="50" r="42" fill="none" stroke="${LV.c}" stroke-width="9" stroke-linecap="round"
+              stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C * (1 - n / 100)).toFixed(1)}"
+              transform="rotate(-90 50 50)"/>
+    </svg>
+    <div class="num"><b style="color:${LV.c}">${n}</b><span>コンディション</span></div>
+  </div>`;
+
+  const dl = `${+cur.date.slice(5, 7)}/${+cur.date.slice(8, 10)}`;
+  $('health-hero').innerHTML = `<div class="hero">
+    <div class="hero-top">${ring}
+      <div class="hero-txt">
+        <div class="st">${LV.i} ${LV.t}<span style="font-size:11px;color:var(--text2);font-weight:400;margin-left:7px">${dl}の記録</span></div>
+        <div class="msg">${LV.m}</div>
+      </div>
+    </div>
+    ${(good.length || warn.length) ? `<div class="badges">
+      ${warn.map(([k, t]) => `<span class="badge ${k}">${k === 'bad' ? '🔴' : '⚠️'} ${t}</span>`).join('')}
+      ${good.map(([i, t]) => `<span class="badge good">${i} ${t}</span>`).join('')}
+    </div>` : ''}
+    ${hist.length >= 3 ? `<div class="spark7">
+      ${hist.slice(-14).map(x => {
+        const c = x.s >= 74 ? 'var(--ok)' : x.s >= 62 ? 'var(--accent)' : x.s >= 50 ? 'var(--text2)' : x.s >= 40 ? 'var(--warn)' : 'var(--red)';
+        return `<i title="${x.d} ${x.s}点" style="height:${Math.max(8, x.s)}%;background:${c};opacity:${x.d === cur.date ? 1 : .42}"></i>`;
+      }).join('')}
+    </div><div class="sparkcap">直近${hist.length}日のコンディション（右が最新）</div>` : ''}
   </div>`;
 }
+
+function renderHealthRows(rows, todayS) {
+  const done = rows.filter(r => r.date !== todayS);
+  const cur = done[done.length - 1];
+  if (!cur) return;
+  const base = hStats(rows, todayS);
+  const out = [];
+  for (const [key, title, , note] of H_GROUPS) {
+    const list = H_METRICS.filter(([col, , , , , g]) => g === key && base[col] && cur[col]);
+    if (!list.length) continue;
+    const rowsHtml = list.map(([col, name, unit, nd, dir]) => {
+      const v = +cur[col], b = base[col].med;
+      const diff = v - b, pct = b ? diff / b * 100 : 0;
+      // 🔴 判定は「ふだんの差」の何個ぶん離れたか（z）で行う。符号だけだと
+      //    誤差レベルのブレまで色がついてしまい、毎日ちらついて読めなくなる。
+      const z = base[col].sd ? diff / base[col].sd * dir : 0;
+      const cls = !dir ? '' : z >= -0.4 ? ' ok' : z >= -1.2 ? ' wn' : ' bd';
+      const c = !dir ? 'var(--text2)' : z >= -0.4 ? 'var(--accent)' : z >= -1.2 ? 'var(--warn)' : 'var(--red)';
+      const w = Math.min(46, Math.abs(base[col].sd ? diff / base[col].sd : 0) * 20);
+      const left = diff >= 0 ? 50 : 50 - w;
+      return `<div class="mrow${cls}">
+        <div class="mname">${name}</div>
+        <div class="mval">${v.toFixed(nd) * 1 === v ? v.toLocaleString(undefined, { minimumFractionDigits: nd, maximumFractionDigits: nd }) : v.toFixed(nd)}<u>${unit}</u></div>
+        <div class="mbar"><i style="left:${left}%;width:${Math.max(2, w)}%;background:${c}"></i></div>
+        <div class="mdiff" style="color:${c}">${!dir ? '' : (pct >= 0 ? '+' : '') + pct.toFixed(0) + '%'}</div>
+      </div>`;
+    }).join('');
+    out.push(`<div class="mgroup"><h4>${title}<span style="font-weight:500;letter-spacing:0;text-transform:none"> ・ふだんとの差</span></h4>
+      <div class="mrows">${rowsHtml}</div>
+      <div class="mnote">${note}</div></div>`);
+  }
+  $('health-groups').innerHTML = out.join('');
+}
+
 async function loadHealth() {
   await loadCycle();
   try {
@@ -989,69 +1144,15 @@ async function loadHealth() {
     if (!csv) return;
     const rows = parseCsv(csv).filter(r => r.date);
     const md = s => `${+s.slice(5, 7)}/${+s.slice(8, 10)}`;
-    // 🔴 いつの・何の数字か分かるように（2026-08-28 メグ指摘）。
-    //    最新行は「今日の途中経過」のことがあるので、日付と7日平均を必ず添える。
     const todayS = new Date().toLocaleDateString('sv-SE');
-    const dLabel = d => d === todayS ? '今日（途中）' : (d ? `${+d.slice(5,7)}/${+d.slice(8,10)}` : '—');
-    const lastRow = col => { for (let i = rows.length - 1; i >= 0; i--) if (rows[i][col]) return rows[i]; return null; };
-    const avg7 = col => {
-      const v = rows.slice(-8).filter(r => r.date !== todayS && r[col]).slice(-7).map(r => +r[col]);
-      if (!v.length) return null;
-      return v.reduce((a, b) => a + b, 0) / v.length;
-    };
-    const tile = (icon, name, col, unit, fmt) => {
-      const r = lastRow(col);
-      const a = avg7(col);
-      const val = r ? (fmt ? fmt(+r[col]) : (+r[col]).toLocaleString()) : '—';
-      return `<div class="tile">
-        <div class="s">${icon} ${name}<span style="color:var(--text3,#9aa0a6);font-weight:400"> ・${dLabel(r && r.date)}</span></div>
-        <div class="l" style="font-size:22px;font-variant-numeric:tabular-nums">${esc(val)}<span style="font-size:12px;color:var(--text2);font-weight:400">${unit}</span></div>
-        <div class="s" style="font-size:10.5px;color:var(--text3,#9aa0a6)">${a != null ? `7日平均 ${fmt ? fmt(a) : Math.round(a).toLocaleString()}${unit}` : '　'}</div>
-      </div>`;
-    };
-    // 10項目を平坦に並べると読めないので3グループに分ける（2026-08-28）
-    const grp = (title, tiles, note) => {
-      const t = tiles.filter(Boolean);
-      if (!t.length) return '';
-      return `<div class="s" style="font-weight:700;margin:12px 4px 6px;font-size:12px;letter-spacing:.04em;color:var(--text2)">${title}</div>
-        <div class="tiles">${t.join('')}</div>
-        ${note ? `<div class="s" style="font-size:10.5px;color:var(--text3,#9aa0a6);margin:5px 4px 0">${note}</div>` : ''}`;
-    };
-    const has = c => rows.some(r => r[c]);   // 一度も来ていない項目はタイルごと出さない
-    const t = (i, n, c, u, f) => has(c) ? tile(i, n, c, u, f) : '';
-    $('health-stats').innerHTML =
-      grp('活動量', [
-        t('🚶', '歩数',   'steps',        '歩',    null),
-        t('📏', '距離',   'distance_km',  'km',    v => v.toFixed(1)),
-        t('🏃', '運動',   'exercise_min', '分',    v => Math.round(v)),
-        t('🔥', '基礎代謝', 'basal_kcal', 'kcal',  v => Math.round(v)),
-      ]) +
-      grp('体の状態', [
-        t('❤️', '安静時心拍', 'resting_hr', 'bpm', v => Math.round(v)),
-        t('📈', 'HRV',        'hrv_ms',     'ms',  v => v.toFixed(1)),
-        t('💓', '歩行時心拍', 'walk_hr',    'bpm', v => Math.round(v)),
-      ], '安静時＝寝起きの心臓の楽さ。歩行時＝歩いているときの平均で、同じ速さで下がってきたら心肺機能が上がったサインです。') +
-      grp('歩き方の質', [
-        t('🚀', '歩行速度', 'walking_speed_kmh',  'km/h', v => v.toFixed(2)),
-        t('👣', '歩幅',     'step_length_cm',     'cm', v => Math.round(v)),
-        t('⚖️', '両脚支持', 'double_support_pct', '%',  v => v.toFixed(1)),
-        t('↔️', '左右差',   'asymmetry_pct',      '%',  v => v.toFixed(1)),
-      ], '歩行速度は室内のうろうろも混ざるので、屋外だけの速さより遅く出ます（メグの基準は3.9km/h前後）。歩幅は身長の約4割で154cmなら57〜69cm、両脚支持は26〜30%、左右差は3%以下が目安。歩幅が縮んで両脚支持が上がったら疲れのサインです。');
+    renderHealthHero(rows, todayS);
+    renderHealthRows(rows, todayS);
+
     const steps = rows.slice(-14).filter(r => r.steps).map(r => ({ label: md(r.date), v: +r.steps }));
-    if (steps.length > 1) {
-      $('health-steps').insertAdjacentHTML('beforebegin', '');
-      sparkBars($('health-steps'), steps, '歩');
-      $('health-steps').setAttribute('title', `歩数の推移（直近${steps.length}日）`);
-    }
+    if (steps.length > 1) { sparkBars($('health-steps'), steps, '歩'); $('health-steps').setAttribute('title', `歩数の推移（直近${steps.length}日）`); }
     const rhr = rows.slice(-30).filter(r => r.resting_hr).map(r => ({ label: md(r.date), v: +r.resting_hr }));
-    if (rhr.length > 1) {
-      sparkLine($('health-rhr'), rhr, 'bpm');
-      $('health-rhr').setAttribute('title', `安静時心拍の推移（直近${rhr.length}日）`);
-    }
-    renderHealthAdvice(rows, todayS);
-    // HRVは「自律神経のゆとり」。高いほど回復している、が一般的な読み方
-    const hint = $('health-hint');
-    if (hint) hint.innerHTML = 'HRV＝心拍のゆらぎ。<b>高いほど回復・低いほど疲労</b>の目安です。安静時心拍は<b>低いほど良好</b>。数字はアップルウォッチの記録日ベースで、7日平均は今日を除いた直近7日です。';
+    if (rhr.length > 1) { sparkLine($('health-rhr'), rhr, 'bpm'); $('health-rhr').setAttribute('title', `安静時心拍の推移（直近${rhr.length}日）`); }
+
     const wcsv = await repoFile('meyjiro/personal', 'health/data/workouts.csv');
     if (wcsv) {
       const ws = parseCsv(wcsv).slice(-3).reverse();
