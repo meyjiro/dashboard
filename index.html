@@ -330,7 +330,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
       <div class="section-title">💼 保有銘柄<span id="hold-count" class="sec-note"></span></div>
       <div id="invest-holdings"><p class="empty">読み込み中…</p></div>
 
-      <div class="section-title">⚖️ 判決（新しい順）<a href="./court.html?v=20260828" class="sec-link">ぜんぶ見る →</a></div>
+      <div class="section-title">⚖️ 判決（新しい順）<a href="./court.html" class="sec-link" id="court-link">ぜんぶ見る →</a></div>
       <div id="invest-verdicts"><p class="empty">読み込み中…</p></div>
 
       <div class="section-title">⏳ 開廷待ち</div>
@@ -415,7 +415,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-19.1';
+const APP_VERSION = '2026-08-28.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1342,7 +1342,7 @@ async function loadVerdicts() {
       if (x.unverified) meta.push(`裏取り不能 ${x.unverified}`);
       if (x.gclass) meta.push(x.gclass);
       if (x.status) meta.push(x.status);
-      return `<a class="vcard ${lcls}" href="./court.html?v=20260828">
+      return `<a class="vcard ${lcls}" href="./court.html?v=${APP_VERSION}">
         <div class="vhead">
           <span class="vno">${esc(x.id)}</span>
           <span class="vname">${esc(x.name)}${x.code ? `<span class="vno"> ${esc(x.code)}</span>` : ''}</span>
@@ -1553,7 +1553,7 @@ async function checkVersion() {
     if (localStorage.getItem('reloaded_for') === m[1]) return;
     localStorage.setItem('reloaded_for', m[1]);
     toast('新しいバージョンに更新します…');
-    setTimeout(() => location.reload(), 800);
+    setTimeout(() => location.replace(location.pathname + '?v=' + m[1]), 800);
   } catch (e) {}
 }
 
@@ -1619,6 +1619,7 @@ renderLinks();
 renderCountdown();
 setupEvents();
 checkVersion();
+document.querySelectorAll('a[href^="./court.html"]').forEach(a => a.href = './court.html?v=' + APP_VERSION);
 if (!pat) $('auth-modal').classList.remove('hidden'); else loadAll();
 </script>
 </body>
