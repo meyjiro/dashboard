@@ -1032,10 +1032,11 @@ async function loadHealth() {
         t('💓', '歩行時心拍', 'walk_hr',    'bpm', v => Math.round(v)),
       ], '安静時＝寝起きの心臓の楽さ。歩行時＝歩いているときの平均で、同じ速さで下がってきたら心肺機能が上がったサインです。') +
       grp('歩き方の質', [
+        t('🚀', '歩行速度', 'walking_speed_kmh',  'km/h', v => v.toFixed(2)),
         t('👣', '歩幅',     'step_length_cm',     'cm', v => Math.round(v)),
         t('⚖️', '両脚支持', 'double_support_pct', '%',  v => v.toFixed(1)),
         t('↔️', '左右差',   'asymmetry_pct',      '%',  v => v.toFixed(1)),
-      ], '歩幅は身長の約4割（154cmなら57〜69cm）、両脚支持は26〜30%、左右差は3%以下が目安。両脚支持が上がり左右差が出てきたら、どこかをかばって歩いています。');
+      ], '歩行速度は室内のうろうろも混ざるので、屋外だけの速さより遅く出ます（メグの基準は3.9km/h前後）。歩幅は身長の約4割で154cmなら57〜69cm、両脚支持は26〜30%、左右差は3%以下が目安。歩幅が縮んで両脚支持が上がったら疲れのサインです。');
     const steps = rows.slice(-14).filter(r => r.steps).map(r => ({ label: md(r.date), v: +r.steps }));
     if (steps.length > 1) {
       $('health-steps').insertAdjacentHTML('beforebegin', '');
