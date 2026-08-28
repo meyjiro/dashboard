@@ -325,6 +325,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
         <button class="chip" data-tpl="気分: ">🙂 気分</button>
       </div>
       <div id="health-stats" class="tiles" style="margin-bottom:6px"></div>
+      <div class="hint" id="health-hint" style="margin:0 4px 12px"></div>
       <div class="section-title">🚶 歩数（14日）</div>
       <div class="card" id="health-steps"><p class="empty">Apple Watchのデータ待ち</p></div>
       <div class="section-title">❤️ 安静時心拍（30日）</div>
@@ -916,18 +917,46 @@ async function loadHealth() {
     if (!csv) return;
     const rows = parseCsv(csv).filter(r => r.date);
     const md = s => `${+s.slice(5, 7)}/${+s.slice(8, 10)}`;
-    const latest = rows[rows.length - 1] || {};
-    const lastVal = col => { for (let i = rows.length - 1; i >= 0; i--) if (rows[i][col]) return rows[i][col]; return '—'; };
+    // 🔴 いつの・何の数字か分かるように（2026-08-28 メグ指摘）。
+    //    最新行は「今日の途中経過」のことがあるので、日付と7日平均を必ず添える。
+    const todayS = new Date().toLocaleDateString('sv-SE');
+    const dLabel = d => d === todayS ? '今日（途中）' : (d ? `${+d.slice(5,7)}/${+d.slice(8,10)}` : '—');
+    const lastRow = col => { for (let i = rows.length - 1; i >= 0; i--) if (rows[i][col]) return rows[i]; return null; };
+    const avg7 = col => {
+      const v = rows.slice(-8).filter(r => r.date !== todayS && r[col]).slice(-7).map(r => +r[col]);
+      if (!v.length) return null;
+      return v.reduce((a, b) => a + b, 0) / v.length;
+    };
+    const tile = (icon, name, col, unit, fmt) => {
+      const r = lastRow(col);
+      const a = avg7(col);
+      const val = r ? (fmt ? fmt(+r[col]) : (+r[col]).toLocaleString()) : '—';
+      return `<div class="tile">
+        <div class="s">${icon} ${name}<span style="color:var(--text3,#9aa0a6);font-weight:400"> ・${dLabel(r && r.date)}</span></div>
+        <div class="l" style="font-size:22px;font-variant-numeric:tabular-nums">${esc(val)}<span style="font-size:12px;color:var(--text2);font-weight:400">${unit}</span></div>
+        <div class="s" style="font-size:10.5px;color:var(--text3,#9aa0a6)">${a != null ? `7日平均 ${fmt ? fmt(a) : Math.round(a).toLocaleString()}${unit}` : '　'}</div>
+      </div>`;
+    };
     $('health-stats').innerHTML = [
-      ['🚶 歩数（今日）', latest.steps ? (+latest.steps).toLocaleString() : '—'],
-      ['🏃 運動（今日）', latest.exercise_min ? `${latest.exercise_min}分` : '—'],
-      ['❤️ 安静時心拍', `${lastVal('resting_hr')}`],
-      ['📈 HRV', `${lastVal('hrv_ms')}ms`],
-    ].map(([l, v]) => `<div class="tile"><div class="s">${l}</div><div class="l" style="font-size:20px;font-variant-numeric:tabular-nums">${esc(String(v))}</div></div>`).join('');
+      tile('🚶', '歩数',       'steps',        '歩',   null),
+      tile('🏃', '運動',       'exercise_min', '分',   v => Math.round(v)),
+      tile('❤️', '安静時心拍', 'resting_hr',   'bpm',  v => Math.round(v)),
+      tile('📈', 'HRV',        'hrv_ms',       'ms',   v => v.toFixed(1)),
+    ].join('');
     const steps = rows.slice(-14).filter(r => r.steps).map(r => ({ label: md(r.date), v: +r.steps }));
-    if (steps.length > 1) sparkBars($('health-steps'), steps, '歩');
+    if (steps.length > 1) {
+      $('health-steps').insertAdjacentHTML('beforebegin', '');
+      sparkBars($('health-steps'), steps, '歩');
+      $('health-steps').setAttribute('title', `歩数の推移（直近${steps.length}日）`);
+    }
     const rhr = rows.slice(-30).filter(r => r.resting_hr).map(r => ({ label: md(r.date), v: +r.resting_hr }));
-    if (rhr.length > 1) sparkLine($('health-rhr'), rhr, 'bpm');
+    if (rhr.length > 1) {
+      sparkLine($('health-rhr'), rhr, 'bpm');
+      $('health-rhr').setAttribute('title', `安静時心拍の推移（直近${rhr.length}日）`);
+    }
+    // HRVは「自律神経のゆとり」。高いほど回復している、が一般的な読み方
+    const hint = $('health-hint');
+    if (hint) hint.innerHTML = 'HRV＝心拍のゆらぎ。<b>高いほど回復・低いほど疲労</b>の目安です。安静時心拍は<b>低いほど良好</b>。数字はアップルウォッチの記録日ベースで、7日平均は今日を除いた直近7日です。';
     const wcsv = await repoFile('meyjiro/personal', 'health/data/workouts.csv');
     if (wcsv) {
       const ws = parseCsv(wcsv).slice(-3).reverse();
