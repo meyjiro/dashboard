@@ -415,7 +415,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-28.5';
+const APP_VERSION = '2026-08-29.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1210,12 +1210,25 @@ const FX_BASE = (() => {
 async function loadFx(ibkrRate, jpyDebt) {
   const el = $('fx-card');
   if (!el) return;
-  let live = null;
+  // 🔴 ブラウザから直接叩ける無料の為替APIは軒並み「1日1回更新」で、朝に見ると前日の値
+  //    のままだった（2026-08-29 メグ指摘）。Macが1時間ごとに取って personal/money/fx.json に
+  //    置いているので、そちらを最優先で読む。古い/無い時だけ従来のAPIへ落ちる。
+  let live = null, liveAt = null, liveSrc = '';
   try {
-    const r = await fetch('https://open.er-api.com/v6/latest/USD');
-    const j = await r.json();
-    if (j && j.rates && j.rates.JPY) live = j.rates.JPY;
+    const t = await repoFile('meyjiro/personal', 'money/fx.json');
+    if (t) {
+      const f = JSON.parse(t);
+      const ageH = (Date.now() - new Date(f.updated).getTime()) / 3600000;
+      if (f.usdjpy && ageH < 6) { live = f.usdjpy; liveAt = f.updated; liveSrc = f.src || ''; }
+    }
   } catch (e) {}
+  if (live === null) {
+    try {
+      const r = await fetch('https://open.er-api.com/v6/latest/USD');
+      const j = await r.json();
+      if (j && j.rates && j.rates.JPY) { live = j.rates.JPY; liveSrc = 'er-api(1日1回)'; }
+    } catch (e) {}
+  }
   const rate = live || ibkrRate;                     // API不通ならIBKR逆算レートで代用
   const IBKR_FEE_USD = 2;                            // IBKR内でUSD→JPYに両替する場合の手数料
   const backJpy = (FX_BASE.usd - IBKR_FEE_USD) * rate;   // 今全部円に戻したら手に入る円（実額）
@@ -1231,7 +1244,9 @@ async function loadFx(ibkrRate, jpyDebt) {
   const lots = FX_LOTS.map(l =>
     `<tr><td>${l.date}</td><td style="text-align:right">¥${l.jpy.toLocaleString()}</td><td style="text-align:right">$${l.usd.toLocaleString()}</td><td style="text-align:right">${l.rate.toFixed(3)}</td></tr>`).join('');
   el.innerHTML = `
-    <div class="lbl">💱 円転タイミング <span style="color:var(--text2)">今 ¥${rate.toFixed(2)}/$${live ? '' : '（IBKR時点値）'}</span></div>
+    <div class="lbl">💱 円転タイミング <span style="color:var(--text2)">今 ¥${rate.toFixed(2)}/$${
+      live ? (liveAt ? `　<span style="font-size:10px">${new Date(liveAt).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}時点</span>` : (liveSrc ? `　<span style="font-size:10px">${liveSrc}</span>` : ''))
+           : '（IBKR時点値）'}</span></div>
     <div style="font-size:13px;line-height:2">
       <div>${verdict}</div>
       <div style="font-size:15px;margin:2px 0">今 $${Math.round(FX_BASE.usd).toLocaleString()} を全部戻すと
