@@ -164,6 +164,20 @@ h1{font-size:21px;margin:0;font-weight:800;letter-spacing:.02em}
 .gl{background:var(--bg3);border-radius:9px;padding:8px 10px;margin:6px 0}
 .gl b{font-size:12px}.gl span{display:block;font-size:11.5px;color:var(--text2);line-height:1.65}
 
+/* やさしい言い換え（2026-08-28）。硬い原文は消さずに「詳しく」へ畳む */
+.plain p{font-size:14.5px;line-height:2;margin:0 0 11px}
+.plain p:last-child{margin-bottom:0}
+.plainline{font-size:13px !important;line-height:1.85 !important;color:var(--text) !important}
+.more{margin-top:7px}
+.more>summary{font-size:11px;color:var(--text3);cursor:pointer;list-style:none;font-weight:700;
+  display:inline-flex;align-items:center;gap:3px;padding:2px 0}
+.more>summary::-webkit-details-marker{display:none}
+.more>summary::after{content:"▾";font-size:10px}
+.more[open]>summary::after{content:"▴"}
+.more>p,.more>div,.more>ul{margin-top:6px;padding-top:8px;border-top:1px dashed var(--border);
+  font-size:12px;color:var(--text2);line-height:1.8}
+.more>ul{padding-left:17px}
+
 /* 結論バー・導入（2026-08-28 読み物として組み直し） */
 .vbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:var(--card);
   border:1px solid var(--border);border-left:4px solid var(--warn);border-radius:12px;
@@ -479,24 +493,43 @@ function detailHTML(v){
     h+='<details class="sec" open><summary>④ 何が争われたか<span class="scount">'
       +'検察の攻撃 '+v.prosecution.length+'件中 '+surv+'件を潰せなかった</span></summary><div class="secb">'
       +v.prosecution.map(x=>'<div class="pros"><div class="c"><span class="tag t-'+esc(x.result)+'">'+esc(PLABEL[x.result]||x.result)+'</span>'
-      +'<span>'+esc(x.claim)+'</span></div><div class="n">'+esc(x.note)+'</div></div>').join('')
+      +'<span>'+esc(x.claim)+'</span></div>'
+      +(x.plain?'<div class="n plainline">'+esc(x.plain)+'</div><details class="more"><summary>詳しく</summary><div class="n">'+esc(x.note)+'</div></details>'
+               :'<div class="n">'+esc(x.note)+'</div>')
+      +'</div>').join('')
       +'</div></details>';
   }
 
   // ── ⑤ 判決 ──
   if(d){
-    h+='<div id="dec" class="decision '+esc(v.level)+'"><div class="dhead">⑤　判　決　—　'+esc(v.ruling)+'</div><div class="dbody">'
-      +'<p class="dsum">'+esc(d.summary)+'</p>';
+    h+='<div id="dec" class="decision '+esc(v.level)+'"><div class="dhead">⑤　判　決　—　'+esc(v.ruling)+'</div><div class="dbody">';
+    if(d.plain){
+      h+='<div class="plain">'+d.plain.split('\n\n').map(x=>'<p>'+esc(x)+'</p>').join('')+'</div>'
+        +'<details class="more"><summary>もとの判決文を読む</summary><p class="dsum">'+esc(d.summary)+'</p></details>';
+    }else{
+      h+='<p class="dsum">'+esc(d.summary)+'</p>';
+    }
     if((d.conditions||[]).length){
       h+='<div class="condh">この条件を満たしたら執行できる（'+d.conditions.filter(c=>c.status==='ready').length+' / '+d.conditions.length+' 済み）</div>'
         +d.conditions.map((c,i)=>'<div class="cond '+esc(c.status)+'"><div class="cbox">'+(c.status==='ready'?'✓':i+1)+'</div>'
         +'<div><div class="ct">'+esc(c.t)+'<span class="cbadge">'+(c.status==='ready'?'準備できている':'未達')+'</span></div>'
-        +'<div class="cd">'+esc(c.d)+'</div></div></div>').join('');
+        +(c.plain?'<div class="cd plainline">'+esc(c.plain)+'</div><details class="more"><summary>詳しく</summary><div class="cd">'+esc(c.d)+'</div></details>'
+                 :'<div class="cd">'+esc(c.d)+'</div>')
+        +'</div></div>').join('');
     }
-    h+='<div class="why"><div class="wy"><h5>◯ ここが良い</h5><ul>'
-      +(d.because_yes||[]).map(x=>'<li>'+txt(x,s2)+'</li>').join('')+'</ul></div>'
-      +'<div class="wn"><h5>△ ここが危うい</h5><ul>'
-      +(d.because_not_full||[]).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div></div></div></div>';
+    const side=(cls,ttl,plainArr,rawArr,useTxt)=>{
+      const usePlain=(plainArr||[]).length;
+      return '<div class="'+cls+'"><h5>'+ttl+'</h5><ul>'
+        +(usePlain?plainArr.map(x=>'<li>'+esc(x)+'</li>').join('')
+                  :(rawArr||[]).map(x=>'<li>'+(useTxt?txt(x,s2):esc(x))+'</li>').join(''))+'</ul>'
+        +(usePlain?'<details class="more"><summary>もとの文（条文つき）</summary><ul>'
+          +(rawArr||[]).map(x=>'<li>'+(useTxt?txt(x,s2):txt(x,s2))+'</li>').join('')+'</ul></details>':'')
+        +'</div>';
+    };
+    h+='<div class="why">'
+      +side('wy','◯ ここが良い',d.plain_yes,d.because_yes,true)
+      +side('wn','△ ここが危うい',d.plain_not,d.because_not_full,true)
+      +'</div></div></div>';
   }
 
   // ── ⑥ 細かい審査 ──
