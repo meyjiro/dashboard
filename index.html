@@ -325,6 +325,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
         <button class="chip" data-tpl="気分: ">🙂 気分</button>
       </div>
       <div id="health-stats" class="tiles" style="margin-bottom:6px"></div>
+      <div id="health-advice"></div>
       <div class="hint" id="health-hint" style="margin:0 4px 12px"></div>
       <div class="section-title">🚶 歩数（14日）</div>
       <div class="card" id="health-steps"><p class="empty">Apple Watchのデータ待ち</p></div>
@@ -903,12 +904,83 @@ async function loadCycle() {
     const md = d => `${d.getMonth() + 1}/${d.getDate()}`;
     // ホルモン期ゾーン: 次回予測の7日前〜予測日（生理前 = 審理延期ゾーン）
     const inZone = toNext <= 7 && toNext >= -2;
+    window.__hormoneZone = inZone;  // 健康アドバイスが参照（HRV低下の誤警報を防ぐ）
     el.innerHTML = `<div class="card" style="${inZone ? 'border-color:var(--warn);background:var(--warn-light)' : ''}">
       <div class="t" style="font-size:14px">🩸 周期 ${dayN}日目 <span style="font-weight:400;color:var(--text2)">（前回 ${md(d0(last.start_date))}開始・平均${avg}日）</span></div>
       <div class="s">次回予測 ${md(next)}${toNext >= 0 ? `（あと${toNext}日）` : `（${-toNext}日超過）`}${gaps.length ? '' : '　※予測は仮の28日周期。過去の開始日が入ると精度が出ます'}</div>
       ${inZone ? '<div class="s" style="color:var(--warn);font-weight:700;margin-top:4px">⚠️ ホルモン期ゾーン — 大きな判断・判定は審理延期の期間</div>' : ''}
     </div>`;
   } catch (e) {}
+}
+// ── 健康の一言アドバイス（2026-08-28 メグ依頼）──
+// 数字を並べるだけでは「で、どうすればいいか」が読み取れないので1行で出す。
+// 🔴 判定は必ず「その人の過去のベースラインとの差分」で行うこと。
+//    HRV 40ms が良いか悪いかは一般論では決まらない（測り方も個人差も大きい）。
+//    ベースライン＝直近7日を除いた過去N日の中央値（外れ値に強い）。
+// 🔴 7日平均だけを見ると谷を見落とす。実例: 8/21〜27は前半51〜56・後半32〜36で
+//    平均は基準どおりなのに、実際は後半3日がはっきり落ちていた。直近3日も必ず見る。
+function renderHealthAdvice(rows, todayS) {
+  const el = $('health-advice');
+  if (!el) return;
+  const ser  = c => rows.filter(r => r.date !== todayS && r[c] !== '' && r[c] != null && !isNaN(+r[c])).map(r => +r[c]);
+  const mean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+  const med  = a => { if (!a.length) return null; const t = [...a].sort((x, y) => x - y); return t[t.length >> 1]; };
+  const cmp  = (a, n) => a.length >= n ? { now: mean(a.slice(-7)), base: med(a.slice(-n, -7)) } : null;
+
+  const hrv = ser('hrv_ms'), rhr = ser('resting_hr'), ex = ser('exercise_min'), st = ser('steps');
+  const H = cmp(hrv, 21), R = cmp(rhr, 21);
+  const hd  = H ? (H.now - H.base) / H.base * 100 : null;                       // HRV 7日の増減（％）
+  const hd3 = H && hrv.length >= 3 ? (mean(hrv.slice(-3)) - H.base) / H.base * 100 : null;  // 直近3日
+  const rd  = R ? R.now - R.base : null;                                        // 安静時心拍の増減（bpm）
+  const ex7 = ex.slice(-7), st7 = st.slice(-7);
+  const exDays = ex7.filter(v => v >= 30).length;
+  const stMed  = st7.length ? med(st7) : null;   // 2万歩の日が1日あると平均は嘘をつくので中央値
+  const zone   = !!window.__hormoneZone;
+  const r1 = v => Math.round(v), sg = v => (v > 0 ? '+' : '') + v.toFixed(1);
+
+  // ── 疲労レベル: -2 好調 / -1 回復 / 0 標準 / 1 下降 / 2 疲労 ──
+  let lv = 0;
+  if      ((hd != null && hd <= -12) || (hd3 != null && hd3 <= -15) || (rd != null && rd >= 4)) lv = 2;
+  else if ((hd != null && hd <=  -6) || (hd3 != null && hd3 <=  -8) || (rd != null && rd >= 2)) lv = 1;
+  else if (hd != null && hd >= 6 && (rd == null || rd <= 0)) lv = -2;
+  else if (hd3 != null && hd != null && hd3 >= hd + 5) lv = -1;
+
+  const why = [];
+  if (H) why.push(`HRVは直近3日 ${mean(hrv.slice(-3)).toFixed(1)}ms・7日 ${H.now.toFixed(1)}ms（基準 ${H.base.toFixed(1)}ms）`);
+  if (R) why.push(`安静時心拍は ${r1(R.now)}bpm（基準 ${r1(R.base)} / ${sg(rd)}）`);
+
+  let icon, color, head, act;
+  if (lv === 2)       { icon = '🔴'; color = 'var(--red)';    head = '回復が追いついていません'; act = '今日は重い判断と長い作業を避けて、睡眠を優先してください。2〜3日で戻ります。'; }
+  else if (lv === 1)  { icon = '🟡'; color = 'var(--warn)';   head = '疲れが溜まりはじめています'; act = '運動は軽めに切り上げて、早めに寝れば戻せる段階です。'; }
+  else if (lv === -2) { icon = '🟢'; color = 'var(--accent)'; head = 'コンディション良好'; act = '負荷をかけるならこの時期です。長めの運動や重い作業を入れて大丈夫。'; }
+  else if (lv === -1) { icon = '🟢'; color = 'var(--accent)'; head = '回復に向かっています'; act = '通常運転で問題ありません。'; }
+  else                { icon = '⚪️'; color = 'var(--text2)';  head = '安定しています'; act = '今のペースを維持できています。'; }
+
+  // 運動量は疲労とは別軸。疲労が出ていない時だけ主役に繰り上げる
+  const lowMove = ex7.length >= 5 && exDays <= 2;
+  const lowStep = stMed != null && stMed < 6500;
+  if (lv <= 0 && (lowMove || lowStep)) {
+    icon = '🟡'; color = 'var(--warn)'; head = '体は元気。動けていないだけです';
+    act = lowMove ? `運動30分以上が7日で${exDays}日。3日以上に戻すと安静時心拍が下がります。`
+                  : `歩数が7日中央値 ${r1(stMed).toLocaleString()}歩。8,000歩の日を増やすとVO2maxが上がります。`;
+  } else if (lowMove || lowStep) {
+    why.push(lowMove ? `運動30分以上は7日で${exDays}日` : `歩数は7日中央値 ${r1(stMed).toLocaleString()}歩`);
+  }
+
+  const notes = [];
+  if (lv >= 1 && hrv.length >= 3 && hrv[hrv.length - 1] > mean(hrv.slice(-3)) * 1.05)
+    notes.push(`※ ただし直近の1日は ${hrv[hrv.length - 1].toFixed(1)}ms まで戻っています。底は越えた可能性があります。`);
+  if (zone && lv >= 1)
+    notes.push('※ ホルモン期ゾーンと重なっています。この時期のHRV低下は自然な変動なので、疲労と決めつけなくて大丈夫です。');
+  if (!H)
+    notes.push(`※ HRVはあと${Math.max(1, 21 - hrv.length)}日分たまると傾向判定に入ります（現在${hrv.length}日分）。`);
+
+  el.innerHTML = `<div class="card" style="border-left:4px solid ${color};margin-bottom:8px">
+    <div class="t" style="font-size:14px">${icon} ${head}</div>
+    <div class="s" style="margin-top:2px">${act}</div>
+    ${why.length ? `<div class="s" style="font-size:11px;color:var(--text3,#9aa0a6);margin-top:5px;font-variant-numeric:tabular-nums">${why.join(' ／ ')}</div>` : ''}
+    ${notes.map(n => `<div class="s" style="font-size:11px;color:var(--warn);margin-top:4px">${n}</div>`).join('')}
+  </div>`;
 }
 async function loadHealth() {
   await loadCycle();
@@ -954,6 +1026,7 @@ async function loadHealth() {
       sparkLine($('health-rhr'), rhr, 'bpm');
       $('health-rhr').setAttribute('title', `安静時心拍の推移（直近${rhr.length}日）`);
     }
+    renderHealthAdvice(rows, todayS);
     // HRVは「自律神経のゆとり」。高いほど回復している、が一般的な読み方
     const hint = $('health-hint');
     if (hint) hint.innerHTML = 'HRV＝心拍のゆらぎ。<b>高いほど回復・低いほど疲労</b>の目安です。安静時心拍は<b>低いほど良好</b>。数字はアップルウォッチの記録日ベースで、7日平均は今日を除いた直近7日です。';
