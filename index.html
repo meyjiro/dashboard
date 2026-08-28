@@ -324,7 +324,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
         <button class="chip" data-tpl="体調: ">🌡 体調</button>
         <button class="chip" data-tpl="気分: ">🙂 気分</button>
       </div>
-      <div id="health-stats" class="tiles" style="margin-bottom:6px"></div>
+      <div id="health-stats" style="margin-bottom:6px"></div>
       <div id="health-advice"></div>
       <div class="hint" id="health-hint" style="margin:0 4px 12px"></div>
       <div class="section-title">🚶 歩数（14日）</div>
@@ -1009,12 +1009,33 @@ async function loadHealth() {
         <div class="s" style="font-size:10.5px;color:var(--text3,#9aa0a6)">${a != null ? `7日平均 ${fmt ? fmt(a) : Math.round(a).toLocaleString()}${unit}` : '　'}</div>
       </div>`;
     };
-    $('health-stats').innerHTML = [
-      tile('🚶', '歩数',       'steps',        '歩',   null),
-      tile('🏃', '運動',       'exercise_min', '分',   v => Math.round(v)),
-      tile('❤️', '安静時心拍', 'resting_hr',   'bpm',  v => Math.round(v)),
-      tile('📈', 'HRV',        'hrv_ms',       'ms',   v => v.toFixed(1)),
-    ].join('');
+    // 10項目を平坦に並べると読めないので3グループに分ける（2026-08-28）
+    const grp = (title, tiles, note) => {
+      const t = tiles.filter(Boolean);
+      if (!t.length) return '';
+      return `<div class="s" style="font-weight:700;margin:12px 4px 6px;font-size:12px;letter-spacing:.04em;color:var(--text2)">${title}</div>
+        <div class="tiles">${t.join('')}</div>
+        ${note ? `<div class="s" style="font-size:10.5px;color:var(--text3,#9aa0a6);margin:5px 4px 0">${note}</div>` : ''}`;
+    };
+    const has = c => rows.some(r => r[c]);   // 一度も来ていない項目はタイルごと出さない
+    const t = (i, n, c, u, f) => has(c) ? tile(i, n, c, u, f) : '';
+    $('health-stats').innerHTML =
+      grp('活動量', [
+        t('🚶', '歩数',   'steps',        '歩',    null),
+        t('📏', '距離',   'distance_km',  'km',    v => v.toFixed(1)),
+        t('🏃', '運動',   'exercise_min', '分',    v => Math.round(v)),
+        t('🔥', '基礎代謝', 'basal_kcal', 'kcal',  v => Math.round(v)),
+      ]) +
+      grp('体の状態', [
+        t('❤️', '安静時心拍', 'resting_hr', 'bpm', v => Math.round(v)),
+        t('📈', 'HRV',        'hrv_ms',     'ms',  v => v.toFixed(1)),
+        t('💓', '歩行時心拍', 'walk_hr',    'bpm', v => Math.round(v)),
+      ], '安静時＝寝起きの心臓の楽さ。歩行時＝歩いているときの平均で、同じ速さで下がってきたら心肺機能が上がったサインです。') +
+      grp('歩き方の質', [
+        t('👣', '歩幅',     'step_length_cm',     'cm', v => Math.round(v)),
+        t('⚖️', '両脚支持', 'double_support_pct', '%',  v => v.toFixed(1)),
+        t('↔️', '左右差',   'asymmetry_pct',      '%',  v => v.toFixed(1)),
+      ], '歩幅は身長の約4割（154cmなら57〜69cm）、両脚支持は26〜30%、左右差は3%以下が目安。両脚支持が上がり左右差が出てきたら、どこかをかばって歩いています。');
     const steps = rows.slice(-14).filter(r => r.steps).map(r => ({ label: md(r.date), v: +r.steps }));
     if (steps.length > 1) {
       $('health-steps').insertAdjacentHTML('beforebegin', '');
