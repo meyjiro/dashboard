@@ -132,6 +132,11 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 /* タイル */
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fxmeta{font-size:10px;color:var(--text3,#9ca3af);font-variant-numeric:tabular-nums;margin-left:4px}
+.fxbtn{background:none;border:0;cursor:pointer;font-size:13px;padding:2px 4px;line-height:1;
+  margin-left:auto;opacity:.65}
+.fxbtn:active{opacity:1}
+.fxbtn:disabled{opacity:.35}
 /* 健康タブ: コンディション（2026-08-28） */
 .hero{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 15px;margin-bottom:12px}
 .hero-top{display:flex;align-items:center;gap:15px}
@@ -415,7 +420,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-29.1';
+const APP_VERSION = '2026-08-29.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1207,22 +1212,33 @@ const FX_BASE = (() => {
   const jpy = FX_LOTS.reduce((a, l) => a + l.jpy, 0);   // 実際に払った円（手数料込み）
   return { jpy, usd, rate: jpy / usd };
 })();
+let FX_ARGS = [null, 0];
 async function loadFx(ibkrRate, jpyDebt) {
   const el = $('fx-card');
   if (!el) return;
-  // 🔴 ブラウザから直接叩ける無料の為替APIは軒並み「1日1回更新」で、朝に見ると前日の値
-  //    のままだった（2026-08-29 メグ指摘）。Macが1時間ごとに取って personal/money/fx.json に
-  //    置いているので、そちらを最優先で読む。古い/無い時だけ従来のAPIへ落ちる。
-  let live = null, liveAt = null, liveSrc = '';
-  try {
+  FX_ARGS = [ibkrRate, jpyDebt];
+  // 🔴 レートの取り方（2026-08-29 メグ指摘「更新されない」への対応）
+  //    無料の為替APIはCORSが通るものが軒並み「1日1回更新」で、朝に見ると前日の値のままだった
+  //    （実測で0.7円ずれていた）。Coinbaseだけはブラウザから直接叩けてリアルタイムなので主にする。
+  //    Wiseのミッドレート（実際に円転する相手）はMacが1時間ごとに fx.json へ置いている。
+  let live = null, liveAt = null, liveSrc = '', wiseRate = null;
+  try {                                            // ① Coinbase（リアルタイム・CORS可）
+    const r = await fetch('https://api.coinbase.com/v2/exchange-rates?currency=USD', { cache: 'no-store' });
+    const j = await r.json();
+    const v = j && j.data && j.data.rates && +j.data.rates.JPY;
+    if (v) { live = v; liveAt = new Date().toISOString(); liveSrc = 'Coinbase'; }
+  } catch (e) {}
+  try {                                            // ② Wiseの参考値（Macが1時間ごとに更新）
     const t = await repoFile('meyjiro/personal', 'money/fx.json');
     if (t) {
       const f = JSON.parse(t);
-      const ageH = (Date.now() - new Date(f.updated).getTime()) / 3600000;
-      if (f.usdjpy && ageH < 6) { live = f.usdjpy; liveAt = f.updated; liveSrc = f.src || ''; }
+      if (f.wise) wiseRate = f.wise;
+      if (live === null && f.usdjpy && (Date.now() - new Date(f.updated).getTime()) / 3600000 < 6) {
+        live = f.usdjpy; liveAt = f.updated; liveSrc = 'Wise/Yahoo';
+      }
     }
   } catch (e) {}
-  if (live === null) {
+  if (live === null) {                             // ③ 最後の砦（1日1回更新）
     try {
       const r = await fetch('https://open.er-api.com/v6/latest/USD');
       const j = await r.json();
@@ -1244,9 +1260,10 @@ async function loadFx(ibkrRate, jpyDebt) {
   const lots = FX_LOTS.map(l =>
     `<tr><td>${l.date}</td><td style="text-align:right">¥${l.jpy.toLocaleString()}</td><td style="text-align:right">$${l.usd.toLocaleString()}</td><td style="text-align:right">${l.rate.toFixed(3)}</td></tr>`).join('');
   el.innerHTML = `
-    <div class="lbl">💱 円転タイミング <span style="color:var(--text2)">今 ¥${rate.toFixed(2)}/$${
-      live ? (liveAt ? `　<span style="font-size:10px">${new Date(liveAt).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}時点</span>` : (liveSrc ? `　<span style="font-size:10px">${liveSrc}</span>` : ''))
-           : '（IBKR時点値）'}</span></div>
+    <div class="lbl">💱 円転タイミング
+      <span style="color:var(--text2)">今 ¥${rate.toFixed(2)}/$${live ? '' : '（IBKR時点値）'}</span>
+      <span class="fxmeta">${liveAt ? new Date(liveAt).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}) : ''}${liveSrc ? ' ' + liveSrc : ''}${wiseRate ? ` ／ Wise ${wiseRate.toFixed(2)}` : ''}</span>
+      <button class="fxbtn" id="fx-reload" title="レートを取り直す">🔄</button></div>
     <div style="font-size:13px;line-height:2">
       <div>${verdict}</div>
       <div style="font-size:15px;margin:2px 0">今 $${Math.round(FX_BASE.usd).toLocaleString()} を全部戻すと
@@ -1258,8 +1275,14 @@ async function loadFx(ibkrRate, jpyDebt) {
       <details style="margin-top:2px"><summary style="cursor:pointer;color:var(--text2);font-size:12px">仕入れの内訳（4回）</summary>
         <table style="font-size:12px;margin-top:4px;border-collapse:collapse;font-variant-numeric:tabular-nums"><tr style="color:var(--text2)"><th style="text-align:left">日付</th><th style="text-align:right;padding-left:10px">払った円</th><th style="text-align:right;padding-left:10px">得た$</th><th style="text-align:right;padding-left:10px">Wise画面レート</th></tr>${lots}</table>
       </details>
-      <div style="color:var(--text2);font-size:11.5px;margin-top:2px">レートは日次更新（ECB系）。円借入には金利が月約¥1,330かかり続ける</div>
+      <div style="color:var(--text2);font-size:11.5px;margin-top:2px">レートは🔄を押すと取り直せます（Coinbaseのリアルタイム値）。円借入には金利が月約¥1,330かかり続ける</div>
     </div>`;
+  const rb = $('fx-reload');
+  if (rb) rb.onclick = async () => {
+    rb.textContent = '⏳'; rb.disabled = true;
+    await loadFx(FX_ARGS[0], FX_ARGS[1]);
+    toast('レートを取り直しました');
+  };
 }
 
 async function loadIbkr() {
