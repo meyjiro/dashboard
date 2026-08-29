@@ -132,6 +132,20 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 /* タイル */
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* 自動処理の見張り（2026-08-30） */
+.numgrid{display:grid;gap:8px;margin-bottom:12px}
+.numcard{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:11px 13px}
+.numcard .nt{display:flex;align-items:baseline;gap:8px;font-size:16px;font-weight:800}
+.numcard .ns{font-size:13px;color:var(--text2);margin-top:2px;line-height:1.65}
+.numcard .nm{font-size:10.5px;color:var(--text3,#9ca3af);margin-top:2px}
+.ops{border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:13px;line-height:1.7}
+.ops.ok{background:var(--card);border:1px solid var(--border);color:var(--text2);
+  display:flex;gap:9px;align-items:flex-start}
+.ops.bad{background:var(--red-light);border:1px solid var(--red)}
+.opsh{font-weight:800;color:var(--red);font-size:13.5px;margin-bottom:6px}
+.opsrow{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;padding:4px 0}
+.opsrow b{font-size:13.5px}
+.opsmini{font-size:10.5px;color:var(--text3,#9ca3af);display:block;width:100%;line-height:1.6}
 .fxmeta{font-size:10px;color:var(--text3,#9ca3af);font-variant-numeric:tabular-nums;margin-left:4px}
 .fxbtn{background:none;border:0;cursor:pointer;font-size:13px;padding:2px 4px;line-height:1;
   margin-left:auto;opacity:.65}
@@ -263,6 +277,8 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
     <!-- 今日 -->
     <div id="tab-today" class="tab-panel active">
       <div id="brief-stale"></div>
+      <div id="ops-status"></div>
+      <div id="today-nums"></div>
       <div id="brief-quote"></div>
       <div class="section-title">📅 期日</div>
       <div id="brief-due"></div>
@@ -420,7 +436,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-29.2';
+const APP_VERSION = '2026-08-30.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -500,6 +516,129 @@ async function listDir(path) {
 }
 
 // ── 今日タブ ──
+
+// ══ ⚙️ 自動処理の見張り（朝のメニュー【5】・2026-08-30）══
+// 🔴 この仕組みの最大の弱点は「気づかないうちに止まること」。
+//    2026-08-29 だけで3件見つかった（健康データ1日／投資候補3日／repeat-guardのすり抜け）。
+//    だから毎朝ここを見れば、次からは1日で気づける。
+const OPS = [
+  { name:'健康データ',   why:'Apple Watch → iCloud → Mac',
+    repo:'meyjiro/personal', path:'health/data/daily.csv', limit:2,
+    read:t=>{ const r=t.trim().split('\n'); return r[r.length-1].split(',')[0]; } },
+  // 🔴 為替は土日に市場が閉まる。値が動かないとファイルを書かない仕様なので、
+  //    週末は「更新が無い＝正常」。月曜の朝までしきい値を伸ばす（2026-08-30の誤検知で判明）。
+  { name:'為替',         why:'Macが1時間ごとに取得（土日は市場が閉まる）',
+    repo:'meyjiro/personal', path:'money/fx.json', limit:0.5, weekend:3,
+    read:t=>JSON.parse(t).updated },
+  { name:'IBKR',         why:'毎朝9:05に保有と取引',
+    repo:'meyjiro/personal', path:'money/ibkr_summary.json', limit:2,
+    read:t=>{ const j=JSON.parse(t); return j.updated||j.asof||j.date||j.generated_at; } },
+  { name:'朝の巡回',     why:'クラウドが毎朝ブリーフィングを作る',
+    repo:'meyjiro/claude-context', path:'inbox/briefing.json', limit:1.2,
+    read:t=>JSON.parse(t).generated_at },
+  { name:'投資の新候補', why:'注目企業台帳に毎日1社',
+    repo:'meyjiro/claude-context', path:'projects/B7_投資/注目企業台帳.md', limit:2,
+    read:t=>{ const m=[...t.matchAll(/^## (\d{4}-\d\d-\d\d)/gm)]; return m.length?m[m.length-1][1]:null; } },
+  { name:'判例',         why:'クラウドが毎朝10時に1件裁く',
+    repo:'meyjiro/claude-context', path:'projects/B7_投資/判例/data/_index.json', limit:3,
+    read:t=>JSON.parse(t).updated },
+];
+async function loadOps(){
+  const el = $('ops-status');
+  if(!el) return;
+  const now = Date.now();
+  const rows = await Promise.all(OPS.map(async o=>{
+    try{
+      const t = await repoFile(o.repo, o.path);
+      if(!t) return {...o, err:'ファイルが無い'};
+      const raw = o.read(t);
+      if(!raw) return {...o, err:'日付を読めない'};
+      const d = new Date(String(raw).length<=10 ? raw+'T12:00:00+09:00' : raw);
+      if(isNaN(d)) return {...o, err:'日付を読めない'};
+      const wd = new Date().getDay();               // 0=日 6=土
+      const lim = (o.weekend && (wd===0 || wd===6 || wd===1)) ? o.weekend : o.limit;
+      return {...o, at:d, days:(now-d.getTime())/86400000, limit:lim};
+    }catch(e){ return {...o, err:'読み込みに失敗'}; }
+  }));
+  const bad = rows.filter(r=>r.err || r.days>r.limit);
+  const fmt = d=>d.toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  const ago = n=> n<1 ? Math.round(n*24)+'時間前' : Math.floor(n)+'日前';
+  if(!bad.length){
+    el.innerHTML = `<div class="ops ok"><span>⚙️</span><div>自動処理は${rows.length}件とも動いています
+      <span class="opsmini">最終: ${rows.map(r=>r.name+' '+ago(r.days)).join(' ／ ')}</span></div></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="ops bad"><div class="opsh">🔴 止まっているものがあります</div>
+    ${bad.map(r=>`<div class="opsrow"><b>${r.name}</b>
+      <span>${r.err ? r.err : '最終 '+fmt(r.at)+'（'+ago(r.days)+'）'}</span>
+      <span class="opsmini">${r.why}</span></div>`).join('')}
+    ${rows.length-bad.length ? `<div class="opsmini" style="margin-top:6px">ほか${rows.length-bad.length}件は正常</div>`:''}
+  </div>`;
+}
+
+
+// ══ 📊 今日の数字（朝のメニュー【4】・2026-08-30）══
+// 各タブに散っている数字のうち、朝いちばんに見たいものだけを1行にまとめる。
+// 計算は各タブと同じロジックを使い、ここでは表示だけにする（二重管理にしない）。
+async function loadNums(){
+  const el = $('today-nums'); if(!el) return;
+  const cards = [];
+
+  // 💱 円転（Coinbaseのリアルタイム→無ければMacのfx.json）
+  try{
+    let rate=null, src='';
+    try{ const r=await fetch('https://api.coinbase.com/v2/exchange-rates?currency=USD',{cache:'no-store'});
+         const j=await r.json(); const v=j&&j.data&&j.data.rates&&+j.data.rates.JPY;
+         if(v){ rate=v; src='Coinbase'; } }catch(e){}
+    if(rate===null){ const t=await repoFile('meyjiro/personal','money/fx.json');
+      if(t){ const f=JSON.parse(t); rate=f.usdjpy; src='Wise/Yahoo'; } }
+    if(rate){
+      const usd=FX_LOTS.reduce((a,l)=>a+l.usd,0), jpy=FX_LOTS.reduce((a,l)=>a+l.jpy,0);
+      const gain=(usd-2)*rate - jpy, pct=gain/jpy*100;
+      cards.push({i:'💱', t:`¥${rate.toFixed(2)}/$`,
+        s:`今戻すと <b style="color:${gain>=0?'var(--green,#16a34a)':'var(--red)'}">${gain>=0?'+':'−'}¥${Math.abs(Math.round(gain)).toLocaleString()}</b>（${pct>=0?'+':''}${pct.toFixed(1)}%）`,
+        m:src});
+    }
+  }catch(e){}
+
+  // 💪 コンディション（健康タブと同じ計算）
+  try{
+    const csv=await repoFile('meyjiro/personal','health/data/daily.csv');
+    if(csv){
+      const rows=parseCsv(csv).filter(r=>r.date);
+      const todayS=new Date().toLocaleDateString('sv-SE');
+      const done=rows.filter(r=>r.date!==todayS), cur=done[done.length-1];
+      const base=hStats(rows,todayS), sc=hScore(cur,base);
+      if(sc){
+        const n=sc.total;
+        const lv = n>=74?['🔥','絶好調']: n>=62?['🟢','好調']: n>=50?['⚪️','ふつう']: n>=40?['🟡','要注意']:['🔴','休養'];
+        let streak=0;
+        for(let i=done.length-1;i>=0;i--){ if(+done[i].exercise_min>=30) streak++; else break; }
+        cards.push({i:lv[0], t:`${n}点 ${lv[1]}`,
+          s:streak>=3?`運動<b>${streak}日連続</b>`:`歩数 ${(+cur.steps||0).toLocaleString()}歩`,
+          m:`${+cur.date.slice(5,7)}/${+cur.date.slice(8,10)}の記録`});
+      }
+    }
+  }catch(e){}
+
+  // ⚖️ 裁判の待ち
+  try{
+    const t=await repoFile('meyjiro/claude-context','inbox/watchlist.json');
+    if(t){
+      const es=JSON.parse(t).entries||[];
+      const wait=es.filter(e=>(e.status||'').includes('裁判送り') && !(e.status||'').includes('裁判済'));
+      if(wait.length) cards.push({i:'⚖️', t:`判決待ち ${wait.length}件`,
+        s:wait.map(e=>e.name).join('・'), m:'毎朝10時に1件ずつ'});
+    }
+  }catch(e){}
+
+  if(!cards.length){ el.innerHTML=''; return; }
+  el.innerHTML = `<div class="section-title">📊 今日の数字</div>
+    <div class="numgrid">${cards.map(c=>`<div class="numcard">
+      <div class="nt"><span>${c.i}</span><b>${c.t}</b></div>
+      <div class="ns">${c.s}</div><div class="nm">${c.m}</div></div>`).join('')}</div>`;
+}
+
 async function loadBriefing() {
   try {
     const raw = await getFile('inbox/briefing.json');
@@ -1600,7 +1739,7 @@ let isLoading = false;
 async function loadAll() {
   if (isLoading || !pat) return;
   isLoading = true; $('refresh-btn').classList.add('spinning');
-  await Promise.all([loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadIbkr(), loadVerdicts(), loadDocket(), loadScout(), loadMebius(), loadHealth()]);
+  await Promise.all([loadOps(), loadNums(), loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadIbkr(), loadVerdicts(), loadDocket(), loadScout(), loadMebius(), loadHealth()]);
   await loadSchedule(); // メビウス予定をカレンダーに重ねるため後で描画
   isLoading = false; $('refresh-btn').classList.remove('spinning');
 }
