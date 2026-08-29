@@ -196,8 +196,8 @@ const Q = [
  c:['8時','8時20分','7時','8時40分'],a:0},
 {f:'da',q:'洗濯機を回している間にできることは、どれですか。',
  c:['部屋のそうじ','洗濯物を干す','洗濯機の中を見る','待つ'],a:0},
-{f:'da',q:'病院・郵便局・スーパーに行きます。病院は予約が11時。いちばん良い回り方はどれですか。',
- c:['病院 → 郵便局 → スーパー','スーパー → 病院 → 郵便局','郵便局 → スーパー → 病院','スーパー → 郵便局 → 病院'],a:0},
+{f:'da',q:'いまは<b>9時</b>です。<b>11時に病院の予約</b>があります。郵便局は17時まで、スーパーはいつでも開いています。買うのは<b>冷凍食品</b>です。どの順番で回るのがよいですか。',
+ c:['郵便局 → 病院 → スーパー','病院 → 郵便局 → スーパー','スーパー → 郵便局 → 病院','スーパー → 病院 → 郵便局'],a:0},
 {f:'da',q:'料理の途中で、調味料が切れているのに気づきました。まずどうしますか。',
  c:['代わりになるものがないか探す','そのまま作り続ける','料理をやめる','あとで買いに行く'],a:0},
 {f:'da',q:'旅行の前の日にやっておくと、いちばん困らないのはどれですか。',
@@ -271,19 +271,28 @@ let st = {i:0, ans:{}, done:false, order:null};
 try{ const s=localStorage.getItem(KEY); if(s) st=JSON.parse(s); }catch(e){}
 // 🔴 出題データは正解を先頭に書いてあるので、必ず並べ替えてから出す
 //    （そうしないと答えが全部いちばん上に並ぶ）。並び順は端末に保存する。
+// 🔴 出題を直したら FIXV を上げ、直した問題の番号（0始まり）を FIXED に足すこと。
+//    途中まで解いている人の答えは残したまま、その問題だけ答え直してもらう仕組み。
+const FIXV = 3;
+const FIXED = [18, 21, 37];   // 19問=回転の図／22問=折り紙の折り目／38問=現在時刻の明示
+const midway = Object.keys(st.ans).length > 0;
 if(!st.order || st.order.length!==Q.length){
-  // 🔴 すでに解きはじめている人の答えを壊さないこと（2026-08-29）。
-  //    途中で並べ替えると、保存済みの「何番目を選んだか」が別の選択肢を指してしまう。
-  //    なので途中の人はそのままの並び順にし、図を直した2問だけ答え直してもらう。
-  const midway = Object.keys(st.ans).length > 0;
+  // 途中で並べ替えると、保存済みの「何番目を選んだか」が別の選択肢を指してしまう。
   st.order = Q.map(q=>{
     const n=(q.figc||q.c).length, a=[...Array(n).keys()];
     if(midway) return a;
     for(let i=n-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
     return a;
   });
-  if(midway){ [18,21].forEach(i=>{ delete st.ans[i]; });   // 第19問・第22問＝図を描き直した問題
-    if(st.i>18 && st.done!==true) st.fix=[18,21].filter(i=>i<st.i); }
+}
+if(st.fixv !== FIXV){
+  if(midway){
+    const redo = FIXED.filter(i=>st.ans[i]!==undefined);
+    redo.forEach(i=>{ delete st.ans[i]; });
+    if(redo.length) st.fix = redo;
+    if(st.done && redo.length) st.done = false;
+  }
+  st.fixv = FIXV;
 }
 const shown=i=>st.order[i];
 const isRight=i=>st.ans[i]!==undefined && st.order[i][st.ans[i]]===Q[i].a;
@@ -321,9 +330,9 @@ function render(){
     const i=st.fix[0];
     el.innerHTML=`<div class="card">
       <div class="qno">お知らせ</div>
-      <p class="q">第${i+1}問の図に描きもれがありました。ごめんなさい。</p>
-      <p class="qsub">図を描き直したので、その1問だけ答え直してください。
-      ほかの答えはそのまま残っています。</p>
+      <p class="q">第${i+1}問に足りない情報がありました。ごめんなさい。</p>
+      <p class="qsub">問題を直したので、その1問だけ答え直してください。
+      ほかの答えはそのまま残っています。（あと ${st.fix.length} 問）</p>
       <button class="btn" onclick="st.fix.shift();st.i=${i};save();render()">第${i+1}問にもどる</button>
     </div>`;
     window.scrollTo(0,0); return;
