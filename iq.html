@@ -257,6 +257,12 @@ function start(){
   el.innerHTML=`<h1>知能テスト</h1>
   <p class="lede">40問・6分野。目安は35分ですが、時間を過ぎても続けられます。<br>
   分からない問題は飛ばさず、いちばん近いと思うものを選んでください。</p>
+  <div style="background:var(--accent-soft);border-radius:12px;padding:13px 15px;font-size:13px;line-height:1.85;margin:0 0 16px">
+    <b>やり方</b><br>
+    ・<b>紙とペンは使ってOK</b>（筆算はふだんもやることなので）<br>
+    ・<b>電卓・スマホの計算機は使わない</b>でください<br>
+    ・<b>時間制限はありません。</b>ゆっくりで大丈夫
+  </div>
   <div class="card">
     <div style="display:grid;gap:9px">
       ${Object.entries(F).map(([k,v])=>`<div style="display:flex;align-items:center;gap:10px">
