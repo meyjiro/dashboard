@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#e8938f">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>とくい・にがて マップ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Roboto+Mono:wght@500&display=swap">
+<style>
+:root{
+  --bg:#fdfbf7; --card:#ffffff; --ink:#3d3a44; --sub:#8b8593; --line:#ece6dd;
+  --accent:#e8938f; --accent-soft:#fdeeed;
+  --c1:#e8938f; --c2:#dda355; --c3:#6faf87; --c4:#6f9ec4; --c5:#a58ac4; --c6:#d489ac;
+  --c1s:#fdeeed; --c2s:#fbf1e2; --c3s:#e9f5ee; --c4s:#e9f1f8; --c5s:#f2edf8; --c6s:#fbecf3;
+  --ok:#5a9c78; --warn:#c98a3c;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#211f26; --card:#2b2932; --ink:#eee9f0; --sub:#a49daf; --line:#3a3743;
+  --accent:#f0a5a1; --accent-soft:#3b2b2c;
+  --c1s:#3b2b2c; --c2s:#3a3126; --c3s:#26362d; --c4s:#25323d; --c5s:#332c3f; --c6s:#3a2b35;
+  --ok:#7dc3a0; --warn:#e0aa6a;
+}}
+:root[data-theme="dark"]{
+  --bg:#211f26; --card:#2b2932; --ink:#eee9f0; --sub:#a49daf; --line:#3a3743;
+  --accent:#f0a5a1; --accent-soft:#3b2b2c;
+  --c1s:#3b2b2c; --c2s:#3a3126; --c3s:#26362d; --c4s:#25323d; --c5s:#332c3f; --c6s:#3a2b35;
+  --ok:#7dc3a0; --warn:#e0aa6a;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN",system-ui,sans-serif;
+  font-size:16px;line-height:1.9;-webkit-font-smoothing:antialiased}
+.wrap{max-width:620px;margin:0 auto;padding:18px 16px 120px}
+h1{font-size:26px;font-weight:700;margin:0 0 6px;letter-spacing:.02em}
+.lede{color:var(--sub);font-size:13.5px;line-height:1.85;margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 20px;margin-bottom:14px}
+.btn{display:block;width:100%;border:0;border-radius:16px;padding:15px;font-size:16px;font-weight:700;
+  font-family:inherit;background:var(--accent);color:#fff;cursor:pointer;margin-top:8px}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.ghost{background:transparent;color:var(--sub);border:1px solid var(--line);font-weight:500;font-size:14px}
+
+/* 進捗 */
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 12px;margin:-18px -16px 14px;padding-left:16px;padding-right:16px}
+.bar .t{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--sub);margin-bottom:6px}
+.bar .t b{font-size:12.5px;color:var(--ink)}
+.track{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.track i{display:block;height:100%;border-radius:99px;transition:width .35s cubic-bezier(.3,1,.4,1)}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+
+/* 設問 */
+.qno{font-size:11px;letter-spacing:.1em;color:var(--sub);font-weight:700;margin-bottom:6px}
+.q{font-size:18px;font-weight:700;line-height:1.75;margin:0 0 4px}
+.qsub{font-size:13px;color:var(--sub);margin:6px 0 0;line-height:1.8}
+.figure{margin:16px 0 4px;text-align:center}
+.figure svg{max-width:100%;height:auto}
+.choices{display:grid;gap:9px;margin-top:16px}
+.ch{display:flex;align-items:center;gap:11px;border:1.5px solid var(--line);border-radius:15px;
+  padding:14px 15px;background:var(--card);cursor:pointer;font-size:15.5px;line-height:1.6;text-align:left;
+  font-family:inherit;color:var(--ink);transition:border-color .15s, background .15s}
+.ch:active{transform:scale(.99)}
+.ch .mk{flex:none;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--sub)}
+.ch.on{border-color:var(--accent);background:var(--accent-soft)}
+.ch.on .mk{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* 記憶パート */
+.memo{background:var(--c4s);border-radius:16px;padding:18px;margin:14px 0}
+.memo .items{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.memo .items span{background:var(--card);border-radius:11px;padding:8px 14px;font-size:16px;font-weight:700}
+.timer{font-family:"Roboto Mono",monospace;font-size:13px;color:var(--sub);text-align:center;margin-top:12px}
+
+/* 結果 */
+.score{display:flex;align-items:flex-end;gap:10px;margin:2px 0 18px}
+.score b{font-family:"Roboto Mono",monospace;font-size:44px;font-weight:500;line-height:1}
+.score span{color:var(--sub);font-size:13px;padding-bottom:6px}
+.res{margin-bottom:11px}
+.res .h{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:700;margin-bottom:5px}
+.res .h .n{margin-left:auto;font-family:"Roboto Mono",monospace;font-size:13px;color:var(--sub)}
+.rtrack{height:26px;border-radius:9px;background:var(--line);overflow:hidden;position:relative}
+.rtrack i{display:block;height:100%;border-radius:9px;transition:width .8s cubic-bezier(.3,1,.4,1)}
+.res .c{font-size:12.5px;color:var(--sub);margin-top:5px;line-height:1.8}
+.tag{display:inline-block;font-size:11px;font-weight:700;border-radius:8px;padding:2px 8px;margin-left:2px}
+.tag.g{background:var(--c3s);color:var(--ok)}
+.tag.w{background:var(--c2s);color:var(--warn)}
+.note{background:var(--accent-soft);border-radius:16px;padding:16px 18px;font-size:13px;line-height:1.9;margin-top:18px}
+.mini{font-size:11.5px;color:var(--sub);line-height:1.8;margin-top:16px}
+details.rev{margin-top:14px}
+details.rev>summary{cursor:pointer;font-size:13px;color:var(--sub);font-weight:700;list-style:none;padding:8px 0}
+details.rev>summary::-webkit-details-marker{display:none}
+details.rev>summary::after{content:" ▾"}
+details.rev[open]>summary::after{content:" ▴"}
+.rv{border-top:1px solid var(--line);padding:11px 0;font-size:13.5px;line-height:1.8}
+.rv .a{color:var(--ok);font-weight:700}
+.rv .x{color:var(--accent);font-weight:700}
+</style>
+</head>
+<body>
+
+<div class="wrap" id="app"></div>
+
+<script>
+const F = {
+  go:{name:'ことば',   c:'--c1', s:'--c1s', d:'読む・聞く・意味をつかむ'},
+  su:{name:'かず',     c:'--c2', s:'--c2s', d:'計算・お金・割合'},
+  zu:{name:'かたち',   c:'--c3', s:'--c3s', d:'図形・空間・方向'},
+  ki:{name:'おぼえる', c:'--c4', s:'--c4s', d:'覚えて使う・注意を向ける'},
+  da:{name:'だんどり', c:'--c5', s:'--c5s', d:'順番・見通し・逆算'},
+  ku:{name:'くらし',   c:'--c6', s:'--c6s', d:'生活の中の判断'},
+};
+
+const Q = [
+// ── ことば 9 ──
+{f:'go',q:'「彼は約束を守らなかった。だから信用を失った。」信用を失ったのは、なぜですか。',
+ c:['約束を守らなかったから','信用が大切だから','彼が悪い人だから','約束をしたから'],a:0},
+{f:'go',q:'「油を売る」は、どんな意味ですか。',
+ c:['むだ話をしてサボる','商売がうまい','お金をためる','人に親切にする'],a:0},
+{f:'go',q:'「この店の料理が必ずしもおいしいとは限らない」これはどういう意味ですか。',
+ c:['おいしくないものもある','ぜんぶおいしくない','ぜんぶおいしい','おいしいかどうか誰も知らない'],a:0},
+{f:'go',q:'「雨が降ったので、試合は中止になった。ただし、来週の同じ時間にやり直す。」試合はどうなりますか。',
+ c:['来週やる','もうやらない','今日の夜にやる','決まっていない'],a:0},
+{f:'go',q:'「ゆるい」の反対の意味に、いちばん近いのはどれですか。',
+ c:['きつい','ながい','おもい','あたらしい'],a:0},
+{f:'go',q:'「妹が犬を連れてきた。<u>それ</u>はとても小さかった。」<u>それ</u>は何を指していますか。',
+ c:['犬','妹','家','連れてきたこと'],a:0},
+{f:'go',q:'お客さんに「座ってください」とていねいに言うなら、どれですか。',
+ c:['おかけになってください','お座りしてください','座らせていただきます','座ってもいいです'],a:0},
+{f:'go',q:'「行けないことはない」これはどういう意味ですか。',
+ c:['行こうと思えば行ける','ぜったいに行けない','行きたくない','行く予定がある'],a:0},
+{f:'go',q:'「彼の心は氷のようだった」これはどういう意味ですか。',
+ c:['冷たい態度だった','体が冷えていた','とうめいだった','とけそうだった'],a:0},
+// ── かず 9 ──
+{f:'su',q:'1個 780円のケーキを 3個 買います。3000円 出したら、おつりはいくらですか。',
+ c:['660円','560円','760円','460円'],a:0},
+{f:'su',q:'2500円の服が 2割引になっています。いくらになりますか。',
+ c:['2000円','2300円','1500円','2250円'],a:0},
+{f:'su',q:'30人のクラスで、12人がめがねをかけています。全体の何％ですか。',
+ c:['40%','30%','12%','25%'],a:0},
+{f:'su',q:'1.5リットルは、何ミリリットルですか。',
+ c:['1500mL','150mL','15mL','15000mL'],a:0},
+{f:'su',q:'今 14時40分です。50分後は何時何分ですか。',
+ c:['15時30分','15時20分','14時90分','16時30分'],a:0},
+{f:'su',q:'テストの点が 60点・80点・70点 でした。平均は何点ですか。',
+ c:['70点','75点','65点','80点'],a:0},
+{f:'su',q:'Aは「300gで450円」、Bは「500gで700円」。1gあたり安いのはどちらですか。',
+ c:['B','A','おなじ','わからない'],a:0},
+{f:'su',q:'3/4 と 2/3 では、どちらが大きいですか。',
+ c:['3/4','2/3','おなじ','くらべられない'],a:0},
+{f:'su',q:'980円のものを2つと、150円のものを1つ買います。合計はいくらですか。',
+ c:['2110円','2010円','1130円','2260円'],a:0},
+// ── かたち 8 ──
+{f:'zu',q:'左の形を、右に90度まわすとどうなりますか。',fig:'rot',
+ c:['①','②','③','④'],a:0},
+{f:'zu',q:'この形を、点線で 2つに折るとぴったり重なりますか。',fig:'sym',
+ c:['重なる','重ならない','半分だけ重なる','形による'],a:0},
+{f:'zu',q:'積み木がこのように積んであります。ぜんぶで何個ですか。',fig:'cube',
+ c:['6個','5個','7個','4個'],a:0},
+{f:'zu',q:'紙を半分に折って、まん中を三角に切りました。開くとどんな形の穴があきますか。',fig:'fold',
+ c:['ひし形','三角形','四角形','丸'],a:0},
+{f:'zu',q:'北を向いて立っています。右に曲がって、もう一度右に曲がりました。今どちらを向いていますか。',
+ c:['南','北','東','西'],a:0},
+{f:'zu',q:'鏡に「Ｅ」の字をうつすと、どう見えますか。',
+ c:['左右が反対になる','上下が反対になる','そのまま見える','ちいさく見える'],a:0},
+{f:'zu',q:'サイコロは、向かい合う面の数を足すと7になります。1の裏はいくつですか。',
+ c:['6','5','7','2'],a:0},
+{f:'zu',q:'地図の上が北のとき、右はどちらですか。',
+ c:['東','西','南','北'],a:0},
+// ── おぼえる 8（記憶パートあり）──
+{f:'ki',memo:['たまご','しょうゆ','くつした','電池','バナナ'],
+ q:'さっきのリストに<b>入っていなかった</b>ものはどれですか。',
+ c:['牛乳','電池','バナナ','くつした'],a:0},
+{f:'ki',q:'さっきのリストに、食べ物はいくつありましたか。',
+ c:['3つ','2つ','4つ','5つ'],a:0},
+{f:'ki',q:'「7 → 2 → 9」この数字を、<b>逆から</b>言うとどうなりますか。',
+ c:['9 → 2 → 7','7 → 9 → 2','2 → 7 → 9','9 → 7 → 2'],a:0},
+{f:'ki',q:'「木曜日の3時に、田中さんが青い車で来ます」何曜日に来ますか。',
+ c:['木曜日','水曜日','金曜日','土曜日'],a:0},
+{f:'ki',q:'いまの田中さんの話で、車は何色でしたか。',
+ c:['青','赤','白','黒'],a:0},
+{f:'ki',q:'買い物に行って、3つのうち1つだけ買い忘れました。家に帰ってから気づくために、いちばん役に立つのはどれですか。',
+ c:['出かける前にメモを書く','よく思い出す','ゆっくり歩く','お店を変える'],a:0},
+{f:'ki',q:'「6 → 4 → 8 → 1」この数字を、<b>逆から</b>言うとどうなりますか。',
+ c:['1 → 8 → 4 → 6','6 → 8 → 4 → 1','1 → 4 → 8 → 6','8 → 1 → 6 → 4'],a:0},
+{f:'ki',q:'人の名前を覚えるのが苦手なとき、いちばん助けになるのはどれですか。',
+ c:['顔と名前をセットで何度か呼ぶ','あとで思い出そうとする','名前を聞かないでおく','人に聞く'],a:0},
+// ── だんどり 8 ──
+{f:'da',q:'カレーを作ります。正しい順番はどれですか。',
+ c:['材料を切る → いためる → 煮る → ルーを入れる','ルーを入れる → 材料を切る → 煮る','煮る → 材料を切る → いためる','いためる → 材料を切る → ルーを入れる'],a:0},
+{f:'da',q:'9時に待ち合わせです。行くのに40分かかり、支度に20分かかります。何時に起きて動きはじめればよいですか。',
+ c:['8時','8時20分','7時','8時40分'],a:0},
+{f:'da',q:'洗濯機を回している間にできることは、どれですか。',
+ c:['部屋のそうじ','洗濯物を干す','洗濯機の中を見る','待つ'],a:0},
+{f:'da',q:'病院・郵便局・スーパーに行きます。病院は予約が11時。いちばん良い回り方はどれですか。',
+ c:['病院 → 郵便局 → スーパー','スーパー → 病院 → 郵便局','郵便局 → スーパー → 病院','スーパー → 郵便局 → 病院'],a:0},
+{f:'da',q:'料理の途中で、調味料が切れているのに気づきました。まずどうしますか。',
+ c:['代わりになるものがないか探す','そのまま作り続ける','料理をやめる','あとで買いに行く'],a:0},
+{f:'da',q:'旅行の前の日にやっておくと、いちばん困らないのはどれですか。',
+ c:['持ち物を並べて確認する','早く寝る','天気を見る','お金をおろす'],a:0},
+{f:'da',q:'3日後に提出する書類があります。今日やっておくと良いのはどれですか。',
+ c:['何が必要か確認する','3日後に一気に書く','人に頼む','忘れないようにする'],a:0},
+{f:'da',q:'ごはんを炊きながら、おかずも作りたい。先にはじめるのはどちらですか。',
+ c:['時間のかかるごはん','手早くできるおかず','どちらでもよい','同時にはじめる'],a:0},
+// ── くらし 8 ──
+{f:'ku',q:'「今だけ無料です。カードの番号を教えてください」と電話が来ました。どうしますか。',
+ c:['教えずに切る','番号を教える','家族の番号を教える','あとでかけ直すと言って教える'],a:0},
+{f:'ku',q:'薬に「1日3回 食後に飲む」と書いてあります。朝ごはんを食べなかった日はどうしますか。',
+ c:['薬をもらった所に聞く','2回分まとめて飲む','飲まない','食べなくても飲む'],a:0},
+{f:'ku',q:'明日の天気予報は「降水確率 80%」です。どうしますか。',
+ c:['かさを持っていく','かさは要らない','出かけない','半分だけぬれる'],a:0},
+{f:'ku',q:'家の水道から水がもれています。まずどうしますか。',
+ c:['元栓を止めて業者に連絡する','ぞうきんで拭き続ける','様子を見る','水道代を調べる'],a:0},
+{f:'ku',q:'人にものを頼むとき、いちばん伝わりやすいのはどれですか。',
+ c:['何を・いつまでに、をはっきり言う','察してもらう','ていねいに長く話す','急いでいると言う'],a:0},
+{f:'ku',q:'熱が3日続いています。どうしますか。',
+ c:['病院に行く','ようすを見る','薬を増やす','寝てすごす'],a:0},
+{f:'ku',q:'「絶対にもうかる投資」とすすめられました。どう考えますか。',
+ c:['絶対にもうかる話はないと考える','少しだけやってみる','くわしく聞いてから決める','友だちに聞いてから決める'],a:0},
+{f:'ku',q:'知らない人から「お金を貸してほしい」と言われました。いちばん安全なのはどれですか。',
+ c:['断る','少しだけ貸す','理由を聞いてから貸す','家族に相談してから貸す'],a:0},
+];
+
+// 図（SVGは currentColor で線を描くのでテーマに追従する）
+const FIGS = {
+  rot:`<svg viewBox="0 0 320 92" role="img" aria-label="L字の図形を右に90度回した形を選ぶ問題">
+    <g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round">
+      <path d="M14 14h26v40h26v24H14z"/>
+      <path d="M118 68V42h40V16h24v52z" stroke="var(--accent)"/>
+      <path d="M198 14h26v40h26v24h-52z"/>
+      <path d="M268 68h52V44h-26V16h-26z"/>
+    </g>
+    <g font-size="11" fill="currentColor" opacity=".55" text-anchor="middle">
+      <text x="40" y="88">もとの形</text><text x="150" y="88">①</text><text x="224" y="88">②</text><text x="294" y="88">③</text>
+    </g></svg>`,
+  sym:`<svg viewBox="0 0 200 100" role="img" aria-label="ハートに似た左右対称の形と、中央の折り線">
+    <path d="M100 84C60 58 44 44 44 30c0-12 10-18 20-18 8 0 14 4 18 10H118c4-6 10-10 18-10 10 0 20 6 20 18 0 14-16 28-56 54z"
+      fill="var(--accent)" opacity=".22" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>
+    <line x1="100" y1="6" x2="100" y2="94" stroke="currentColor" stroke-width="2" stroke-dasharray="5 5" opacity=".6"/>
+    </svg>`,
+  cube:`<svg viewBox="0 0 200 116" role="img" aria-label="下の段に3個、その上に2個、いちばん上に1個積んだ積み木">
+    <g fill="var(--accent)" fill-opacity=".2" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round">
+      <rect x="30" y="76" width="34" height="34" rx="4"/><rect x="68" y="76" width="34" height="34" rx="4"/><rect x="106" y="76" width="34" height="34" rx="4"/>
+      <rect x="49" y="42" width="34" height="34" rx="4"/><rect x="87" y="42" width="34" height="34" rx="4"/>
+      <rect x="68" y="8" width="34" height="34" rx="4"/>
+    </g></svg>`,
+  fold:`<svg viewBox="0 0 260 104" role="img" aria-label="半分に折った紙の折り目側を三角に切り取った図">
+    <g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round">
+      <path d="M22 14h72v76H22z"/>
+      <path d="M94 40l-22 12 22 12z" fill="var(--accent)" fill-opacity=".25" stroke="var(--accent)"/>
+      <path d="M158 14h76v76h-76z"/>
+      <text x="196" y="58" font-size="26" text-anchor="middle" fill="currentColor" stroke="none" opacity=".35">?</text>
+    </g>
+    <g font-size="11" fill="currentColor" opacity=".55" text-anchor="middle">
+      <text x="58" y="102">折って切る</text><text x="196" y="102">開くと？</text>
+    </g></svg>`,
+};
+
+// ── 状態 ──
+const KEY='tokuimap_v1';
+let st = {i:0, ans:{}, done:false};
+try{ const s=localStorage.getItem(KEY); if(s) st=JSON.parse(s); }catch(e){}
+const save=()=>{ try{ localStorage.setItem(KEY, JSON.stringify(st)); }catch(e){} };
+const el=document.getElementById('app');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// 記憶パートの表示フラグ（設問27の直前に一度だけ）
+let memoShown = false;
+
+function start(){
+  el.innerHTML=`<h1>とくい・にがて マップ</h1>
+  <p class="lede">50問こたえると、6つの分野それぞれで<b>とくい・にがて</b>がはっきり出ます。<br>
+  早さは関係ありません。とちゅうでやめても、続きから再開できます。</p>
+  <div class="card">
+    <div style="display:grid;gap:10px">
+      ${Object.entries(F).map(([k,v])=>`<div style="display:flex;align-items:center;gap:10px">
+        <span class="dot" style="background:var(${v.c})"></span>
+        <b style="font-size:14.5px">${v.name}</b>
+        <span style="font-size:12.5px;color:var(--sub)">${v.d}</span></div>`).join('')}
+    </div>
+    <button class="btn" onclick="begin()">はじめる</button>
+    ${Object.keys(st.ans).length?`<button class="btn ghost" onclick="reset()">さいしょからやり直す</button>`:''}
+  </div>
+  <p class="mini">※ これは病院の検査ではありません。得意なこと・苦手なことの地図をつくるだけのものです。<br>
+  結果はこの端末の中だけに残ります。どこにも送られません。</p>`;
+}
+function begin(){ if(st.done){st.done=false;} render(); }
+function reset(){ st={i:0,ans:{},done:false}; memoShown=false; save(); start(); }
+
+function render(){
+  if(st.done) return result();
+  if(st.i>=Q.length){ st.done=true; save(); return result(); }
+  const q=Q[st.i], f=F[q.f];
+  // 記憶リストは、その設問に入る直前に一度だけ見せる
+  if(q.memo && !memoShown) return showMemo(q);
+  const pct=Math.round(st.i/Q.length*100);
+  el.innerHTML=`
+  <div class="bar">
+    <div class="t"><span class="dot" style="background:var(${f.c})"></span>
+      <b>${f.name}</b><span>${f.d}</span>
+      <span style="margin-left:auto;font-family:'Roboto Mono',monospace">${st.i+1} / ${Q.length}</span></div>
+    <div class="track"><i style="width:${pct}%;background:var(${f.c})"></i></div>
+  </div>
+  <div class="card">
+    <div class="qno">だい ${st.i+1} もん</div>
+    <p class="q">${q.q}</p>
+    ${q.fig?`<div class="figure">${FIGS[q.fig]}</div>`:''}
+    <div class="choices">
+      ${q.c.map((c,i)=>`<button class="ch${st.ans[st.i]===i?' on':''}" onclick="pick(${i})">
+        <span class="mk">${'アイウエ'[i]}</span><span>${c}</span></button>`).join('')}
+    </div>
+  </div>
+  ${st.i>0?`<button class="btn ghost" onclick="back()">ひとつ前にもどる</button>`:''}`;
+  window.scrollTo(0,0);
+}
+function showMemo(q){
+  el.innerHTML=`<div class="card">
+    <div class="qno">おぼえてください</div>
+    <p class="q">つぎの5つを覚えてください。</p>
+    <div class="memo"><div style="font-size:12.5px;color:var(--sub)">買い物リスト</div>
+      <div class="items">${q.memo.map(m=>`<span>${m}</span>`).join('')}</div></div>
+    <p class="qsub">覚えたら下のボタンを押してください。押すとリストは消えます。</p>
+    <button class="btn" onclick="memoShown=true;render()">おぼえた</button>
+  </div>`;
+  window.scrollTo(0,0);
+}
+function pick(i){ st.ans[st.i]=i; save(); setTimeout(()=>{ st.i++; render(); },180); render(); }
+function back(){ if(st.i>0){ st.i--; render(); } }
+
+function result(){
+  const by={}; Object.keys(F).forEach(k=>by[k]={n:0,ok:0,miss:[]});
+  Q.forEach((q,i)=>{ const b=by[q.f]; b.n++; if(st.ans[i]===q.a) b.ok++; else b.miss.push(i); });
+  const total=Q.filter((q,i)=>st.ans[i]===q.a).length;
+  const rows=Object.entries(F).map(([k,v])=>({k,v,...by[k],p:Math.round(by[k].ok/by[k].n*100)}))
+    .sort((a,b)=>b.p-a.p);
+  const best=rows[0], worst=rows[rows.length-1];
+  const cmt=r=> r.p>=85?'とくい。ここは任せて大丈夫。'
+            : r.p>=70?'できている。'
+            : r.p>=50?'半分くらい。時間をかければ届く。'
+            : r.p>=30?'にがて。ひとりでやると間違えやすい。'
+            :'かなりにがて。ここは仕組みで補ったほうが早い。';
+  el.innerHTML=`
+  <h1>けっか</h1>
+  <div class="score"><b>${total}</b><span>／ ${Q.length}問</span></div>
+  <div class="card">
+    ${rows.map(r=>`<div class="res">
+      <div class="h"><span class="dot" style="background:var(${r.v.c})"></span>${r.v.name}
+        ${r.k===best.k?'<span class="tag g">いちばん とくい</span>':''}
+        ${r.k===worst.k&&worst.p<best.p?'<span class="tag w">いちばん にがて</span>':''}
+        <span class="n">${r.ok}/${r.n}</span></div>
+      <div class="rtrack"><i style="width:${r.p}%;background:var(${r.v.c})"></i></div>
+      <div class="c">${r.v.d} ・ ${cmt(r)}</div>
+    </div>`).join('')}
+  </div>
+  <div class="note">
+    <b>${best.v.name}（${best.p}%）</b>がいちばん得意、<b>${worst.v.name}（${worst.p}%）</b>がいちばん苦手でした。
+    その差は<b>${best.p-worst.p}ポイント</b>です。<br><br>
+    ${best.p-worst.p>=40
+      ? '分野ごとの差が大きいタイプです。得意な分野で押して、苦手な分野は道具や仕組みで補うのが向いています。'
+      : '分野ごとの差は小さめです。全体的に同じくらいの力の使い方をしています。'}<br><br>
+    苦手なところは、やり方を変えると届くことが多いです。
+    「おぼえる」が低ければメモ、「だんどり」が低ければ順番を紙に書く、「かず」が低ければ電卓を常に使う——それだけで変わります。
+  </div>
+  <details class="rev"><summary>まちがえた問題を見る（${Q.length-total}問）</summary>
+    ${Q.map((q,i)=>st.ans[i]===q.a?'':`<div class="rv">
+      <div style="color:var(--sub);font-size:11.5px">${F[q.f].name}・第${i+1}問</div>
+      <div style="margin:3px 0">${q.q}</div>
+      <div>こたえ: <span class="a">${esc(q.c[q.a])}</span>
+      ${st.ans[i]!==undefined?` ／ えらんだの: <span class="x">${esc(q.c[st.ans[i]])}</span>`:' ／ <span class="x">むかいとう</span>'}</div>
+    </div>`).join('')}
+  </details>
+  <button class="btn ghost" onclick="reset()">もういちど やる</button>
+  <p class="mini">※ これは病院の検査ではありません。心配なことがあれば、専門の窓口（かかりつけ医・保健センターなど）に相談してください。</p>`;
+  window.scrollTo(0,0);
+}
+if(st.done||Object.keys(st.ans).length===0) start(); else render();
+</script>
+
+</body>
+</html>
