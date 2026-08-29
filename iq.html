@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#4a6fa5">
+<meta name="robots" content="noindex, nofollow">
+<title>知能テスト 40問</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Roboto+Mono:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg:#f6f7fa; --card:#fff; --ink:#1e2430; --sub:#77808f; --line:#e3e7ee;
+  --accent:#4a6fa5; --accent-soft:#eaf0f8; --gold:#b8893b;
+  --c1:#4a6fa5; --c2:#3f8a7d; --c3:#a05c8a; --c4:#c07a3e; --c5:#5d6bb0; --c6:#7a8b4a;
+  --ok:#2f7d5c; --bad:#b5483f;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#151922; --card:#1e2430; --ink:#e8ecf3; --sub:#94a0b3; --line:#2d3542;
+  --accent:#7ba3d8; --accent-soft:#22303f; --gold:#d4a558;
+  --c1:#7ba3d8; --c2:#5fb3a2; --c3:#c78ab0; --c4:#dba368; --c5:#8b96d8; --c6:#a3b370;
+  --ok:#5cbf90; --bad:#e08078;
+}}
+:root[data-theme="dark"]{
+  --bg:#151922; --card:#1e2430; --ink:#e8ecf3; --sub:#94a0b3; --line:#2d3542;
+  --accent:#7ba3d8; --accent-soft:#22303f; --gold:#d4a558;
+  --c1:#7ba3d8; --c2:#5fb3a2; --c3:#c78ab0; --c4:#dba368; --c5:#8b96d8; --c6:#a3b370;
+  --ok:#5cbf90; --bad:#e08078;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Zen Kaku Gothic New","Hiragino Sans",system-ui,sans-serif;
+  font-size:16px;line-height:1.85;-webkit-font-smoothing:antialiased}
+.wrap{max-width:620px;margin:0 auto;padding:18px 16px 110px}
+h1{font-size:25px;font-weight:700;margin:0 0 4px;letter-spacing:.01em}
+.lede{color:var(--sub);font-size:13.5px;line-height:1.85;margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 20px;margin-bottom:12px}
+.btn{display:block;width:100%;border:0;border-radius:12px;padding:15px;font-size:16px;font-weight:700;
+  font-family:inherit;background:var(--accent);color:#fff;cursor:pointer;margin-top:10px}
+.btn.ghost{background:transparent;color:var(--sub);border:1px solid var(--line);font-weight:500;font-size:14px}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);margin:-18px -16px 14px;padding:11px 16px 12px;
+  border-bottom:1px solid var(--line)}
+.bar .t{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--sub);margin-bottom:7px}
+.bar .t b{font-size:12.5px;color:var(--ink)}
+.bar .clock{margin-left:auto;font-family:"Roboto Mono",monospace;font-size:12.5px;font-weight:700}
+.bar .clock.over{color:var(--bad)}
+.track{height:6px;border-radius:99px;background:var(--line);overflow:hidden}
+.track i{display:block;height:100%;border-radius:99px;transition:width .3s}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+.qno{font-size:10.5px;letter-spacing:.12em;color:var(--sub);font-weight:700;margin-bottom:7px}
+.q{font-size:17.5px;font-weight:700;line-height:1.75;margin:0}
+.seq{font-family:"Roboto Mono",monospace;font-size:21px;font-weight:700;letter-spacing:.06em;
+  background:var(--accent-soft);border-radius:12px;padding:16px;text-align:center;margin:15px 0 4px;
+  word-break:break-word;line-height:1.7}
+.figure{margin:15px 0 2px;text-align:center}
+.figure svg{max-width:100%;height:auto}
+.choices{display:grid;gap:8px;margin-top:15px}
+.choices.grid4{grid-template-columns:1fr 1fr}
+.ch{display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:12px;
+  padding:13px 14px;background:var(--card);cursor:pointer;font-size:15.5px;line-height:1.55;text-align:left;
+  font-family:inherit;color:var(--ink)}
+.ch.num{font-family:"Roboto Mono",monospace;font-weight:700;font-size:17px;justify-content:center}
+.ch .mk{flex:none;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--sub)}
+.ch.on{border-color:var(--accent);background:var(--accent-soft)}
+.ch.on .mk{background:var(--accent);border-color:var(--accent);color:#fff}
+.ch.figc{flex-direction:column;gap:6px;padding:12px 8px}
+.ch.figc svg{width:100%;height:auto;max-width:86px}
+/* 結果 */
+.hero{text-align:center;padding:26px 20px 22px}
+.hero .n{font-family:"Roboto Mono",monospace;font-size:56px;font-weight:700;line-height:1;letter-spacing:-.02em}
+.hero .of{color:var(--sub);font-size:13px;margin-top:6px}
+.hero .band{display:inline-block;margin-top:14px;background:var(--accent-soft);color:var(--accent);
+  border-radius:99px;padding:6px 16px;font-size:13.5px;font-weight:700}
+.res{margin-bottom:12px}
+.res .h{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;margin-bottom:5px}
+.res .h .n{margin-left:auto;font-family:"Roboto Mono",monospace;font-size:12.5px;color:var(--sub)}
+.rt{height:22px;border-radius:7px;background:var(--line);overflow:hidden}
+.rt i{display:block;height:100%;border-radius:7px;transition:width .7s cubic-bezier(.3,1,.4,1)}
+.res .c{font-size:12px;color:var(--sub);margin-top:4px}
+.note{background:var(--accent-soft);border-radius:14px;padding:15px 17px;font-size:13px;line-height:1.9;margin-top:16px}
+.mini{font-size:11.5px;color:var(--sub);line-height:1.8;margin-top:14px}
+details.rev{margin-top:12px}
+details.rev>summary{cursor:pointer;font-size:13px;color:var(--sub);font-weight:700;list-style:none;padding:8px 0}
+details.rev>summary::-webkit-details-marker{display:none}
+details.rev>summary::after{content:" ▾"} details.rev[open]>summary::after{content:" ▴"}
+.rv{border-top:1px solid var(--line);padding:12px 0;font-size:13.5px;line-height:1.8}
+.rv .a{color:var(--ok);font-weight:700} .rv .x{color:var(--bad);font-weight:700}
+.rv .ex{color:var(--sub);font-size:12.5px;margin-top:3px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const F={
+ sq:{n:'数列',    c:'--c1', d:'規則を見つける'},
+ vb:{n:'言語',    c:'--c2', d:'関係と語彙'},
+ mx:{n:'図形推理',c:'--c3', d:'行列の規則'},
+ sp:{n:'空間',    c:'--c4', d:'立体と回転'},
+ lg:{n:'論理',    c:'--c5', d:'推論の筋道'},
+ nm:{n:'数的推理',c:'--c6', d:'文章題'},
+};
+
+/* ── 図形ヘルパ ── */
+const SW='stroke="currentColor" stroke-width="2" fill="none"';
+const box=(inner,s=64)=>`<svg viewBox="0 0 ${s} ${s}" width="${s}" height="${s}">${inner}</svg>`;
+const cell=(inner)=>`<div style="border:1px solid var(--line);border-radius:8px;padding:4px;display:flex;align-items:center;justify-content:center">${box(inner)}</div>`;
+const qmark=`<div style="border:1.5px dashed var(--accent);border-radius:8px;padding:4px;display:flex;align-items:center;justify-content:center;min-height:72px;color:var(--accent);font-size:26px;font-weight:700">?</div>`;
+const matrix=(cells)=>`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;max-width:250px;margin:0 auto">${cells.map(c=>c===null?qmark:cell(c)).join('')}</div>`;
+// 部品
+const dots=n=>Array.from({length:n},(_,i)=>`<circle cx="${16+(i%3)*16}" cy="${16+Math.floor(i/3)*16}" r="5" fill="currentColor"/>`).join('');
+const arrow=deg=>`<g transform="rotate(${deg} 32 32)"><line x1="32" y1="50" x2="32" y2="14" ${SW}/><path d="M24 22l8-8 8 8" ${SW} stroke-linejoin="round"/></g>`;
+const sq_=(f)=>`<rect x="16" y="16" width="32" height="32" rx="3" ${SW} ${f?'fill="currentColor"':''}/>`;
+const ci_=(f)=>`<circle cx="32" cy="32" r="17" ${SW} ${f?'fill="currentColor"':''}/>`;
+const tri_=(f)=>`<path d="M32 14l18 34H14z" ${SW} stroke-linejoin="round" ${f?'fill="currentColor"':''}/>`;
+const bars=n=>Array.from({length:n},(_,i)=>`<line x1="${18+i*10}" y1="14" x2="${18+i*10}" y2="50" ${SW}/>`).join('');
+const half=(deg)=>`<g transform="rotate(${deg} 32 32)"><path d="M32 12a20 20 0 0 1 0 40z" fill="currentColor"/><circle cx="32" cy="32" r="20" ${SW}/></g>`;
+
+const Q=[
+/* ── 数列 8 ── */
+{f:'sq',q:'次に来る数はどれですか。',seq:'2, 6, 12, 20, 30, ?',c:['42','40','44','36'],a:0,
+ ex:'差が 4, 6, 8, 10 と2ずつ増える。次の差は12なので 30+12=42。'},
+{f:'sq',q:'次に来る数はどれですか。',seq:'3, 7, 16, 35, ?',c:['74','70','72','78'],a:0,
+ ex:'×2＋1, ×2＋2, ×2＋3 …と足す数が増える。35×2＋4＝74。'},
+{f:'sq',q:'次に来る数はどれですか。',seq:'4, 9, 25, 49, 121, ?',c:['169','144','196','225'],a:0,
+ ex:'素数 2,3,5,7,11 の2乗。次は13²＝169。'},
+{f:'sq',q:'次に来る数はどれですか。',seq:'21, 20, 18, 15, 11, ?',c:['6','7','5','8'],a:0,
+ ex:'引く数が 1,2,3,4 と増える。11−5＝6。'},
+{f:'sq',q:'次に来る数はどれですか。',seq:'1, 2, 6, 24, 120, ?',c:['720','600','640','840'],a:0,
+ ex:'×2, ×3, ×4, ×5 …。120×6＝720。'},
+{f:'sq',q:'次に来る数はどれですか。',seq:'8, 6, 7, 5, 6, 4, ?',c:['5','3','6','2'],a:0,
+ ex:'−2, ＋1 のくり返し。4＋1＝5。'},
+{f:'sq',q:'? に入る数はどれですか。',seq:'1, 3, 4, 7, 11, 18, ?',c:['29','25','27','36'],a:0,
+ ex:'前の2つの和（1+3=4, 3+4=7, 4+7=11 …）。11+18＝29。'},
+{f:'sq',q:'次に来る数はどれですか。',seq:'2, 3, 5, 9, 17, 33, ?',c:['65','64','66','49'],a:0,
+ ex:'差が 1,2,4,8,16 と倍になる。33＋32＝65。'},
+/* ── 言語 8 ── */
+{f:'vb',q:'「寒暖計 : 温度」と同じ関係になるのはどれですか。',c:['天秤 : 重さ','時計 : 針','地図 : 道','望遠鏡 : 星'],a:0,
+ ex:'「それを測る道具 : 測られる量」の関係。天秤は重さを測る。'},
+{f:'vb',q:'「饒舌 : 寡黙」と同じ関係になるのはどれですか。',c:['潤沢 : 欠乏','冗長 : 長文','緻密 : 精密','率直 : 正直'],a:0,
+ ex:'反対語の関係。潤沢（豊か）⇔欠乏（足りない）。'},
+{f:'vb',q:'「種 : 樹木」と同じ関係になるのはどれですか。',c:['卵 : 鳥','花 : 実','根 : 葉','水 : 川'],a:0,
+ ex:'「それが育つと何になるか」。種→樹木、卵→鳥。'},
+{f:'vb',q:'「拙速 : 巧遅」と同じ関係になるのはどれですか。',c:['軽率 : 慎重','早朝 : 深夜','安価 : 高級','簡素 : 複雑'],a:0,
+ ex:'拙速（下手でも速い）⇔巧遅（上手いが遅い）。軽率⇔慎重が同じ対比。'},
+{f:'vb',q:'仲間はずれはどれですか。',c:['憂鬱','歓喜','激怒','聡明'],a:3,
+ ex:'ほかは感情。聡明は知性を表す語。'},
+{f:'vb',q:'「氷 : 水 : 水蒸気」と同じ並びになるのはどれですか。',c:['幼虫 : さなぎ : 成虫','朝 : 昼 : 夜','春 : 夏 : 秋','固体 : 液体 : 気体'],a:0,
+ ex:'同じものが段階的に姿を変える順。氷→水→水蒸気は「一つのもの」の変化。幼虫→さなぎ→成虫も同じ個体の変態。'},
+{f:'vb',q:'「彼の説明は<b>要領を得ない</b>」の意味に、いちばん近いのはどれですか。',
+ c:['要点がはっきりしない','長すぎる','間違っている','声が小さい'],a:0,
+ ex:'「要領を得ない」は要点がつかめない・的を射ないの意。'},
+{f:'vb',q:'「敷居が高い」の本来の意味はどれですか。',
+ c:['不義理があって行きにくい','格式が高くて入りにくい','入り口が狭い','値段が高い'],a:0,
+ ex:'本来は「相手に不義理をして訪ねにくい」。近年は②の意味でも使われるが本来は①。'},
+/* ── 図形推理 6 ── */
+{f:'mx',q:'? に入る図はどれですか。',
+ mx:[dots(1),dots(2),dots(3), dots(2),dots(3),dots(4), dots(3),dots(4),null],
+ figc:[dots(5),dots(6),dots(3),dots(4)],a:0,
+ ex:'右へ1つ増え、下へ1つ増える。3,4 と来たので次は5。'},
+{f:'mx',q:'? に入る図はどれですか。',
+ mx:[arrow(0),arrow(45),arrow(90), arrow(90),arrow(135),arrow(180), arrow(180),arrow(225),null],
+ figc:[arrow(270),arrow(0),arrow(225),arrow(180)],a:0,
+ ex:'各行、右へ45度ずつ回る。225の次は270度。'},
+{f:'mx',q:'? に入る図はどれですか。',
+ mx:[sq_(0),ci_(0),tri_(0), ci_(0),tri_(0),sq_(0), tri_(0),sq_(0),null],
+ figc:[ci_(0),tri_(0),sq_(0),dots(1)],a:0,
+ ex:'四角→丸→三角の順で1つずつずれていく。三角・四角の次は丸。'},
+{f:'mx',q:'? に入る図はどれですか。',
+ mx:[sq_(0),sq_(1),sq_(0), ci_(0),ci_(1),ci_(0), tri_(0),tri_(1),null],
+ figc:[tri_(0),tri_(1),sq_(0),ci_(0)],a:0,
+ ex:'各行は「白・黒・白」。三角の行も白で終わる。'},
+{f:'mx',q:'? に入る図はどれですか。',
+ mx:[bars(1),bars(2),bars(3), bars(2),bars(3),bars(4), bars(3),bars(4),null],
+ figc:[bars(5),bars(4),bars(3),bars(2)],a:0,
+ ex:'線の数が右へ1本ずつ増える。4の次は5本。'},
+{f:'mx',q:'? に入る図はどれですか。',
+ mx:[half(0),half(90),half(180), half(90),half(180),half(270), half(180),half(270),null],
+ figc:[half(0),half(90),half(180),half(270)],a:0,
+ ex:'各行、90度ずつ回る。270の次は360＝0度。'},
+/* ── 空間 6 ── */
+{f:'sp',q:'サイコロは向かい合う面の和が7です。1・2・3 が見えているとき、<b>見えていない3面</b>の数の合計はいくつですか。',
+ c:['15','12','18','9'],a:0,ex:'全部の和は1〜6で21。見えているのは1+2+3=6。21−6＝15。'},
+{f:'sp',q:'立方体を4個ずつ3段に積んで、大きな立方体を作ろうとしています。1辺3個の立方体を作るには全部で何個必要ですか。',
+ c:['27個','12個','18個','24個'],a:0,ex:'3×3×3＝27個。'},
+{f:'sp',q:'立方体のすべての面を赤く塗ってから、1辺を3等分して27個の小立方体に切りました。<b>3面が赤い</b>小立方体はいくつですか。',
+ c:['8個','12個','6個','1個'],a:0,ex:'角にある立方体だけが3面赤い。角は8つ。'},
+{f:'sp',q:'同じ立方体で、<b>1面だけ赤い</b>小立方体はいくつですか。',
+ c:['6個','8個','12個','9個'],a:0,ex:'各面の中央の1個ずつ。面は6つなので6個。'},
+{f:'sp',q:'紙を縦半分に折り、さらに横半分に折ってから、角を1か所だけ三角に切りました。開くと穴はいくつあきますか。',
+ c:['4つ','2つ','1つ','8つ'],a:0,ex:'2回折ると4枚重なる。1か所切れば4つ穴があく。'},
+{f:'sp',q:'北を向いて立ち、右に90度・後ろに180度・左に90度まわりました。今どちらを向いていますか。',
+ c:['南','北','東','西'],a:0,ex:'北→東→西→南。'},
+/* ── 論理 8 ── */
+{f:'lg',q:'「すべての鳥は卵を産む。ペンギンは鳥である。」ここから<b>確実に言える</b>のはどれですか。',
+ c:['ペンギンは卵を産む','卵を産むものは鳥である','ペンギンは飛ぶ','鳥はすべて飛ぶ'],a:0,
+ ex:'前提から必ず導ける結論だけが正解。逆（卵を産む→鳥）は言えない。'},
+{f:'lg',q:'「雨が降れば試合は中止になる。試合は中止にならなかった。」ここから確実に言えるのはどれですか。',
+ c:['雨は降らなかった','雨が降った','試合は延期された','何も言えない'],a:0,
+ ex:'対偶。「AならばB」が真なら「BでないならAでない」も真。'},
+{f:'lg',q:'「一部の学生はアルバイトをしている。アルバイトをしている人はみな忙しい。」確実に言えるのはどれですか。',
+ c:['一部の学生は忙しい','すべての学生は忙しい','忙しい人はみな学生だ','学生は暇である'],a:0,
+ ex:'「一部の学生→アルバイト→忙しい」なので、一部の学生が忙しいことだけが導ける。'},
+{f:'lg',q:'A・B・C・D の身長について「AはBより高い」「CはAより高い」「DはBより低い」。いちばん高いのは誰ですか。',
+ c:['C','A','B','D'],a:0,ex:'C＞A＞B＞D。'},
+{f:'lg',q:'同じ4人で、<b>いちばん低い</b>のは誰ですか。',
+ c:['D','B','A','わからない'],a:0,ex:'C＞A＞B＞D なのでDがいちばん低い。'},
+{f:'lg',q:'「この箱の中身は本ではない。本でなければCDである。」ここから言えるのはどれですか。',
+ c:['中身はCDである','中身は本である','中身は本かCDである','何も言えない'],a:0,
+ ex:'「本でない」が確定していて「本でない→CD」なので、CDと確定する。'},
+{f:'lg',q:'3人のうち1人だけが本当のことを言っています。A「私は嘘つき」B「Aは嘘つき」C「Bは嘘つき」。本当を言っているのは誰ですか。',
+ c:['B','A','C','いない'],a:0,
+ ex:'Aが「私は嘘つき」と言うのは矛盾するのでAは嘘つき。するとB（Aは嘘つき）が本当。Cは嘘。'},
+{f:'lg',q:'「カードの片面が母音なら、裏面は偶数である」という規則を確かめます。〈A〉〈K〉〈4〉〈7〉の4枚のうち、<b>必ずめくる必要がある</b>のはどれとどれですか。',
+ c:['A と 7','A と 4','K と 7','4 と 7'],a:0,
+ ex:'Aの裏が偶数か（規則そのもの）と、7の裏が母音でないか（規則の反例になる）を確かめる。4の裏は何でも規則に反しない。'},
+/* ── 数的推理 4 ── */
+{f:'nm',q:'ある品物を定価の2割引で売ったところ、仕入れ値の1割の利益が出ました。定価は仕入れ値の何倍ですか。',
+ c:['1.375倍','1.2倍','1.3倍','1.5倍'],a:0,
+ ex:'仕入100として、売値110。定価×0.8＝110 → 定価＝137.5。1.375倍。'},
+{f:'nm',q:'A一人だと6日、B一人だと12日かかる仕事があります。2人でやると何日かかりますか。',
+ c:['4日','9日','3日','6日'],a:0,
+ ex:'1日の仕事量は 1/6＋1/12＝1/4。よって4日。'},
+{f:'nm',q:'8%の食塩水200gに、水を100g加えると濃度は何%になりますか。',
+ c:['約5.3%','4%','6%','8%'],a:0,
+ ex:'塩は16g。全体は300gなので 16/300＝5.33%。'},
+{f:'nm',q:'時速60kmで2時間、時速40kmで3時間走りました。全体の平均時速はいくらですか。',
+ c:['48km/h','50km/h','45km/h','52km/h'],a:0,
+ ex:'距離は120＋120＝240km、時間は5時間。240/5＝48km/h。'},
+];
+
+const KEY='iqtest_v1';
+let st={i:0,ans:{},done:false,t0:null,elapsed:0,order:null};
+try{const s=localStorage.getItem(KEY); if(s) st=JSON.parse(s);}catch(e){}
+// 🔴 出題データは正解を先頭に書いてあるので、必ず並べ替えてから出す。
+//    並び順は端末に保存する（途中再開で答えがズレないため）。
+if(!st.order || st.order.length!==Q.length){
+  st.order = Q.map(q=>{
+    const n=(q.figc||q.c).length, a=[...Array(n).keys()];
+    for(let i=n-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    return a;
+  });
+}
+const shown=(i)=>st.order[i];               // 表示位置 → もとの番号
+const isRight=(i)=>st.ans[i]!==undefined && st.order[i][st.ans[i]]===Q[i].a;
+const rightPos=(i)=>st.order[i].indexOf(Q[i].a);   // 正解が表示上どこか
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}};
+const el=document.getElementById('app');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LIMIT=35*60;
+let tick=null;
+function secs(){ return st.elapsed + (st.t0? Math.floor((Date.now()-st.t0)/1000):0); }
+function mmss(s){ const m=Math.floor(s/60), x=s%60; return `${m}:${String(x).padStart(2,'0')}`; }
+
+function start(){
+  el.innerHTML=`<h1>知能テスト</h1>
+  <p class="lede">40問・6分野。目安は35分ですが、時間を過ぎても続けられます。<br>
+  分からない問題は飛ばさず、いちばん近いと思うものを選んでください。</p>
+  <div class="card">
+    <div style="display:grid;gap:9px">
+      ${Object.entries(F).map(([k,v])=>`<div style="display:flex;align-items:center;gap:10px">
+        <span class="dot" style="background:var(${v.c})"></span><b style="font-size:14px">${v.n}</b>
+        <span style="font-size:12.5px;color:var(--sub)">${v.d}</span>
+        <span style="margin-left:auto;font-family:'Roboto Mono',monospace;font-size:12px;color:var(--sub)">${Q.filter(q=>q.f===k).length}問</span></div>`).join('')}
+    </div>
+    <button class="btn" onclick="begin()">はじめる</button>
+    ${Object.keys(st.ans).length?`<button class="btn ghost" onclick="reset()">最初からやり直す</button>`:''}
+  </div>
+  <p class="mini">結果はこの端末の中だけに保存されます。どこにも送信されません。<br>
+  ※ 正式な知能検査（WAIS等）は専門家が実施するものです。これはWeb上のテストと同じ、あくまで目安です。</p>`;
+}
+function begin(){ st.done=false; if(!st.t0) st.t0=Date.now(); save(); render(); }
+function reset(){ localStorage.removeItem(KEY); location.reload(); }
+
+function render(){
+  if(st.done) return result();
+  if(st.i>=Q.length){ st.elapsed=secs(); st.t0=null; st.done=true; save(); return result(); }
+  const q=Q[st.i], f=F[q.f], pct=Math.round(st.i/Q.length*100);
+  const figc = q.figc ? `<div class="choices grid4">${shown(st.i).map((o,i)=>`<button class="ch figc${st.ans[st.i]===i?' on':''}" onclick="pick(${i})">
+      ${box(q.figc[o],58)}<span style="font-size:12px;color:var(--sub)">${'①②③④'[i]}</span></button>`).join('')}</div>` : '';
+  const norm = !q.figc ? `<div class="choices">${shown(st.i).map((o,i)=>{
+      const c=q.c[o], isNum=/^[0-9０-９.,\s倍個つ日%km\/h時分約]+$/.test(c);
+      return `<button class="ch${isNum?' num':''}${st.ans[st.i]===i?' on':''}" onclick="pick(${i})">
+        ${isNum?'':`<span class="mk">${'アイウエ'[i]}</span>`}<span>${c}</span></button>`;}).join('')}</div>` : '';
+  el.innerHTML=`
+  <div class="bar">
+    <div class="t"><span class="dot" style="background:var(${f.c})"></span><b>${f.n}</b>
+      <span>${st.i+1} / ${Q.length}</span>
+      <span class="clock" id="clk"></span></div>
+    <div class="track"><i style="width:${pct}%;background:var(${f.c})"></i></div>
+  </div>
+  <div class="card">
+    <div class="qno">第 ${st.i+1} 問</div>
+    <p class="q">${q.q}</p>
+    ${q.seq?`<div class="seq">${q.seq}</div>`:''}
+    ${q.mx?`<div class="figure">${matrix(q.mx)}</div>`:''}
+    ${figc}${norm}
+  </div>
+  ${st.i>0?`<button class="btn ghost" onclick="back()">前の問題にもどる</button>`:''}`;
+  clock(); window.scrollTo(0,0);
+}
+function clock(){
+  if(tick) clearInterval(tick);
+  const upd=()=>{ const c=document.getElementById('clk'); if(!c) return;
+    const s=secs(); c.textContent=mmss(s); c.className='clock'+(s>LIMIT?' over':''); };
+  upd(); tick=setInterval(upd,1000);
+}
+function pick(i){ st.ans[st.i]=i; save(); render(); setTimeout(()=>{ st.i++; save(); render(); },170); }
+function back(){ if(st.i>0){ st.i--; render(); } }
+
+function result(){
+  if(tick) clearInterval(tick);
+  const by={}; Object.keys(F).forEach(k=>by[k]={n:0,ok:0});
+  Q.forEach((q,i)=>{ by[q.f].n++; if(isRight(i)) by[q.f].ok++; });
+  const total=Q.filter((q,i)=>isRight(i)).length;
+  const p=total/Q.length*100;
+  const band = p>=90?{t:'非常に高い',d:'この難易度で9割以上は、かなり上位の出来です。'}
+             : p>=75?{t:'高い',d:'安定して規則を見つけられています。'}
+             : p>=60?{t:'平均より上',d:'多くの分野で筋道を追えています。'}
+             : p>=45?{t:'平均あたり',d:'解ける問題と落とす問題が半々です。'}
+             : p>=30?{t:'平均より下',d:'型を知っていれば取れる問題を落としています。'}
+             :        {t:'低め',d:'まず得意分野から解き方の型を覚えると伸びます。'};
+  const rows=Object.entries(F).map(([k,v])=>({k,v,...by[k],p:Math.round(by[k].ok/by[k].n*100)})).sort((a,b)=>b.p-a.p);
+  const best=rows[0], worst=rows[rows.length-1];
+  el.innerHTML=`
+  <div class="card hero">
+    <div class="n">${total}<span style="font-size:22px;color:var(--sub)">/${Q.length}</span></div>
+    <div class="of">正答率 ${Math.round(p)}% ・ 所要 ${mmss(st.elapsed||secs())}</div>
+    <div class="band">${band.t}</div>
+  </div>
+  <div class="card">
+    ${rows.map(r=>`<div class="res">
+      <div class="h"><span class="dot" style="background:var(${r.v.c})"></span>${r.v.n}
+        <span class="n">${r.ok}/${r.n}</span></div>
+      <div class="rt"><i style="width:${r.p}%;background:var(${r.v.c})"></i></div>
+      <div class="c">${r.v.d}</div></div>`).join('')}
+  </div>
+  <div class="note">${band.d}<br><br>
+    いちばん取れたのは <b>${best.v.n}（${best.p}%）</b>、いちばん落としたのは <b>${worst.v.n}（${worst.p}%）</b>。
+    その差は <b>${best.p-worst.p}ポイント</b>です。
+    ${best.p-worst.p>=50?'分野による凸凹がはっきりしています。得意な型で押すのが向いています。'
+      :'分野ごとの差は大きくありません。'}
+  </div>
+  <details class="rev"><summary>解説を見る（間違えた ${Q.length-total}問）</summary>
+    ${Q.map((q,i)=>isRight(i)?'':`<div class="rv">
+      <div style="color:var(--sub);font-size:11.5px">${F[q.f].n}・第${i+1}問</div>
+      <div style="margin:3px 0">${q.q}${q.seq?`<br><span style="font-family:'Roboto Mono',monospace">${q.seq}</span>`:''}</div>
+      <div>正解: <span class="a">${q.figc?'①②③④'[rightPos(i)]:esc(q.c[q.a])}</span>
+      ${st.ans[i]!==undefined?` ／ 選択: <span class="x">${q.figc?'①②③④'[st.ans[i]]:esc(q.c[st.order[i][st.ans[i]]])}</span>`:' ／ <span class="x">無回答</span>'}</div>
+      <div class="ex">${q.ex}</div></div>`).join('')}
+  </details>
+  <button class="btn ghost" onclick="reset()">もう一度やる</button>
+  <p class="mini">※ 正式な知能検査ではありません。IQの数値は出していません。出せるのは「この40問での正答率と分野の凸凹」までです。</p>`;
+  window.scrollTo(0,0);
+}
+save();
+if(st.done||Object.keys(st.ans).length===0) start(); else render();
+</script>
+</body>
+</html>
