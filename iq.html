@@ -146,8 +146,8 @@ const Q=[
  ex:'拙速（下手でも速い）⇔巧遅（上手いが遅い）。軽率⇔慎重が同じ対比。'},
 {f:'vb',q:'仲間はずれはどれですか。',c:['憂鬱','歓喜','激怒','聡明'],a:3,
  ex:'ほかは感情。聡明は知性を表す語。'},
-{f:'vb',q:'「氷 : 水 : 水蒸気」と同じ並びになるのはどれですか。',c:['幼虫 : さなぎ : 成虫','朝 : 昼 : 夜','春 : 夏 : 秋','固体 : 液体 : 気体'],a:0,
- ex:'同じものが段階的に姿を変える順。氷→水→水蒸気は「一つのもの」の変化。幼虫→さなぎ→成虫も同じ個体の変態。'},
+{f:'vb',q:'「氷 : 水 : 水蒸気」と同じ並びになるのはどれですか。',c:['幼虫 : さなぎ : 成虫','朝 : 昼 : 夜','鉄 : 銅 : 金','山 : 川 : 海'],a:0,
+ ex:'ひとつの同じものが、順に姿を変えていく並び。氷→水→水蒸気は同じH₂Oの変化で、幼虫→さなぎ→成虫も同じ個体の変態。ほかは別々のものを並べただけ。'},
 {f:'vb',q:'「彼の説明は<b>要領を得ない</b>」の意味に、いちばん近いのはどれですか。',
  c:['要点がはっきりしない','長すぎる','間違っている','声が小さい'],a:0,
  ex:'「要領を得ない」は要点がつかめない・的を射ないの意。'},
@@ -182,14 +182,14 @@ const Q=[
 /* ── 空間 6 ── */
 {f:'sp',q:'サイコロは向かい合う面の和が7です。1・2・3 が見えているとき、<b>見えていない3面</b>の数の合計はいくつですか。',
  c:['15','12','18','9'],a:0,ex:'全部の和は1〜6で21。見えているのは1+2+3=6。21−6＝15。'},
-{f:'sp',q:'立方体を4個ずつ3段に積んで、大きな立方体を作ろうとしています。1辺3個の立方体を作るには全部で何個必要ですか。',
- c:['27個','12個','18個','24個'],a:0,ex:'3×3×3＝27個。'},
+{f:'sp',q:'同じ大きさの小さな立方体を積んで、<b>1辺に3個ずつ</b>並んだ大きな立方体を作ります。小さな立方体は全部で何個いりますか。',
+ c:['27個','9個','18個','12個'],a:0,ex:'たて3×よこ3×高さ3＝27個。'},
 {f:'sp',q:'立方体のすべての面を赤く塗ってから、1辺を3等分して27個の小立方体に切りました。<b>3面が赤い</b>小立方体はいくつですか。',
  c:['8個','12個','6個','1個'],a:0,ex:'角にある立方体だけが3面赤い。角は8つ。'},
 {f:'sp',q:'同じ立方体で、<b>1面だけ赤い</b>小立方体はいくつですか。',
  c:['6個','8個','12個','9個'],a:0,ex:'各面の中央の1個ずつ。面は6つなので6個。'},
-{f:'sp',q:'紙を縦半分に折り、さらに横半分に折ってから、角を1か所だけ三角に切りました。開くと穴はいくつあきますか。',
- c:['4つ','2つ','1つ','8つ'],a:0,ex:'2回折ると4枚重なる。1か所切れば4つ穴があく。'},
+{f:'sp',q:'紙を縦半分に折り、さらに横半分に折りました。重なった4枚をまとめて、<b>紙のまん中あたり（折り目にも端にもかからない場所）</b>に小さな穴を1つあけました。ひらくと穴はいくつありますか。',
+ c:['4つ','1つ','2つ','8つ'],a:0,ex:'2回折ると4枚重なる。折り目にかかっていないので、4枚それぞれに穴があいて4つ。'},
 {f:'sp',q:'北を向いて立ち、右に90度・後ろに180度・左に90度まわりました。今どちらを向いていますか。',
  c:['南','北','東','西'],a:0,ex:'北→東→西→南。'},
 /* ── 論理 8 ── */
@@ -235,12 +235,25 @@ let st={i:0,ans:{},done:false,t0:null,elapsed:0,order:null};
 try{const s=localStorage.getItem(KEY); if(s) st=JSON.parse(s);}catch(e){}
 // 🔴 出題データは正解を先頭に書いてあるので、必ず並べ替えてから出す。
 //    並び順は端末に保存する（途中再開で答えがズレないため）。
+// 🔴 出題を直したら FIXV を上げ、直した問題の番号（0始まり）を FIXED に足すこと。
+//    途中まで解いている人の答えを残したまま、その問題だけ答え直してもらう仕組み。
+const FIXV = 2;
+const FIXED = [13, 23, 26];   // 14問=氷:水:水蒸気／24問=立方体の個数／27問=折り紙の穴
+const midway = Object.keys(st.ans).length > 0;
 if(!st.order || st.order.length!==Q.length){
   st.order = Q.map(q=>{
     const n=(q.figc||q.c).length, a=[...Array(n).keys()];
     for(let i=n-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
     return a;
   });
+}
+if(st.fixv !== FIXV){
+  if(midway){
+    const redo = FIXED.filter(i=>st.ans[i]!==undefined).sort((a,b)=>a-b);
+    redo.forEach(i=>{ delete st.ans[i]; });
+    if(redo.length){ st.fix = redo; if(st.done) st.done=false; }
+  }
+  st.fixv = FIXV;
 }
 const shown=(i)=>st.order[i];               // 表示位置 → もとの番号
 const isRight=(i)=>st.ans[i]!==undefined && st.order[i][st.ans[i]]===Q[i].a;
@@ -280,6 +293,18 @@ function begin(){ st.done=false; if(!st.t0) st.t0=Date.now(); save(); render(); 
 function reset(){ localStorage.removeItem(KEY); location.reload(); }
 
 function render(){
+  // 出題を直した問題が残っていたら、先にそこへ案内する
+  if(!st.done && st.fix && st.fix.length){
+    const i=st.fix[0];
+    el.innerHTML=`<div class="card">
+      <div class="qno">お知らせ</div>
+      <p class="q">第${i+1}問に不備がありました。すみません。</p>
+      <p style="font-size:13.5px;color:var(--sub);line-height:1.85">問題を直したので、その1問だけ答え直してください。
+      ほかの答えはそのまま残っています。（あと ${st.fix.length} 問）</p>
+      <button class="btn" onclick="st.fix.shift();st.i=${i};save();render()">第${i+1}問にもどる</button>
+    </div>`;
+    window.scrollTo(0,0); return;
+  }
   if(st.done) return result();
   if(st.i>=Q.length){ st.elapsed=secs(); st.t0=null; st.done=true; save(); return result(); }
   const q=Q[st.i], f=F[q.f], pct=Math.round(st.i/Q.length*100);
