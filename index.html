@@ -561,7 +561,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.12';
+const APP_VERSION = '2026-08-30.13';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -863,7 +863,13 @@ async function loadNewStuff(){
   });
 
   // ガチレズ3サイト
-  const g = m.gachirezu;
+  // 🔴 クラウドからは3サイトに接続できない（プロキシが403）ので、Macが取った
+  //    inbox/glz_snapshot.json を読む。morning.json 側にあればそちらを優先。
+  let g = m.gachirezu;
+  if(!g || !(g.reports||[]).length && !Object.keys(g.counts||{}).length){
+    try{ const t = await repoFile('meyjiro/claude-context','inbox/glz_snapshot.json');
+         if(t) g = JSON.parse(t); }catch(e){}
+  }
   if(g){
     const cs = g.counts||{};
     const rp = (g.reports||[]);
@@ -881,8 +887,8 @@ async function loadNewStuff(){
         <div class="gcn">${esc(site)}</div>
         <div class="gcv">${Object.entries(v).map(([k,n])=>`<span${n>0&&k==='通報'?' class="hot"':''}>${esc(k)} ${n}</span>`).join('')}</div>
       </div>`).join('')}</div>
-      ${(ev.publish!=null||us.total!=null)?`<div class="glzfoot">
-        ${ev.publish!=null?`イベント 公開${ev.publish}${ev.new?`・新規${ev.new}`:''} ／ 主催者${ev.organizers}人${ev.bookings?`・予約${ev.bookings}`:''}`:''}
+      ${((ev.publish??ev.by_status?.publish)!=null||us.total!=null)?`<div class="glzfoot">
+        ${(ev.publish??ev.by_status?.publish)!=null?`イベント 公開${ev.publish??ev.by_status.publish}${(ev.new??ev.new_since)?`・新規${ev.new??ev.new_since}`:''} ／ 主催者${ev.organizers}人${(ev.bookings??ev.bookings_since)?`・予約${ev.bookings??ev.bookings_since}`:''}`:''}
         ${us.total!=null?`　会員${us.total}人${us.new_7d?`（7日で+${us.new_7d}）`:''}`:''}
       </div>`:''}
     </div>`);
