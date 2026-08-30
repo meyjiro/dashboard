@@ -220,7 +220,10 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 .nsl2{font-size:12.5px;color:var(--text2);margin-top:4px}
 #tab-today .nsbox.cand{border-color:var(--tt-line);background:linear-gradient(170deg,var(--tt-soft),transparent 55%)}
 .plainbox{margin-top:8px}
-.plainbox p{margin:0 0 7px;font-size:14.5px;line-height:1.95}
+.plainbox p{margin:0;font-size:14.5px;line-height:1.95}
+.pl{margin-bottom:11px}
+.pl:last-child{margin-bottom:0}
+.plk{font-size:11px;font-weight:800;color:var(--tt2);letter-spacing:.04em;margin-bottom:2px}
 .plainbox p:last-child{margin-bottom:0}
 .cmore{margin-top:9px}
 .cmore>summary{font-size:11px;color:var(--text3,#9ca3af);cursor:pointer;list-style:none;padding:3px 0}
@@ -228,6 +231,19 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 .cmore>summary::after{content:" ▾"} .cmore[open]>summary::after{content:" ▴"}
 .nsflag{background:var(--warn-light);color:var(--warn);border-radius:9px;padding:7px 10px;
   font-size:12px;line-height:1.7;margin-top:8px;font-weight:600}
+.glzrep{margin-top:7px}
+.glzrow{display:block;padding:7px 0;border-top:1px solid var(--border);text-decoration:none;color:var(--text)}
+.glzrow .g1{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;font-size:13px}
+.glzrow .gsite{font-size:10px;background:var(--bg3);border-radius:5px;padding:1px 6px;color:var(--text2)}
+.glzrow .gd{font-size:11.5px;color:var(--text2)}
+.glzrow .g2{font-size:11.5px;color:var(--text3,#9ca3af);margin-top:1px;overflow:hidden;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
+.glzgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:9px}
+.gc{background:var(--bg3);border-radius:9px;padding:6px 7px}
+.gc .gcn{font-size:10px;font-weight:800;color:var(--text2)}
+.gc .gcv{font-size:10.5px;color:var(--text2);line-height:1.6;display:flex;flex-direction:column}
+.gc .gcv .hot{color:var(--red);font-weight:800}
+.glzfoot{font-size:10.5px;color:var(--text3,#9ca3af);margin-top:8px;line-height:1.7}
 .nsnews{display:block;padding:8px 0;border-top:1px solid var(--border);text-decoration:none;color:var(--text);font-size:13.5px;line-height:1.7}
 .nsnews span{display:block;font-size:11.5px;color:var(--text2)}
 .mbsold{border-top:1px solid var(--border)}
@@ -545,7 +561,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.10';
+const APP_VERSION = '2026-08-30.11';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -809,12 +825,19 @@ async function loadNewStuff(){
   if(c && !c.skipped && c.name){
     // 🔴 平易な説明(plain)を主役に。専門用語入りの from/why/pitch は「詳しく」に畳む
     //    （2026-08-30 メグ指示: どういう会社でなぜ挙がったかが5行で分かること）
-    const pl = Array.isArray(c.plain) ? c.plain : (c.plain ? [c.plain] : []);
+    // plain は5つの見出しつき。古い配列形式も一応受ける
+    const P = c.plain && !Array.isArray(c.plain) && typeof c.plain === 'object' ? c.plain : null;
+    const pl = Array.isArray(c.plain) ? c.plain : (typeof c.plain === 'string' ? [c.plain] : []);
+    const LB = {what:'どんな会社？', strong:'なぜ強いの？', money:'儲かってるの？',
+                why_today:'なんで今日これ？', watch:'気をつけること'};
     parts.push(`<div class="nsbox cand">
       <div class="nsh">🆕 今日の投資候補<span class="nstag">${esc(c.market||'')}</span></div>
       <div class="nsname">${esc(c.name)}${c.code?` <span class="nscode">${esc(c.code)}</span>`:''}</div>
-      ${pl.length ? `<div class="plainbox">${pl.map(x=>`<p>${esc(x)}</p>`).join('')}</div>`
-                  : `<div class="nsl2">説明がまだありません</div>`}
+      ${P ? `<div class="plainbox">${['what','strong','money','why_today','watch']
+              .filter(k=>P[k]).map(k=>`<div class="pl"><div class="plk">${LB[k]}</div>
+                <p>${esc(P[k])}</p></div>`).join('')}</div>`
+          : pl.length ? `<div class="plainbox">${pl.map(x=>`<p>${esc(x)}</p>`).join('')}</div>`
+                      : `<div class="nsl2">説明がまだありません</div>`}
       ${c.flag?`<div class="nsflag">${esc(c.flag)}</div>`:''}
       ${(c.from||c.why||c.pitch)?`<details class="cmore"><summary>もとの記録</summary>
         ${c.from?`<div class="nsl"><span>どこから</span>${esc(c.from)}</div>`:''}
@@ -836,6 +859,32 @@ async function loadNewStuff(){
       ${v.conflict?`<div class="nsflag">⚠️ ${esc(v.conflict)}</div>`:''}
     </div>`);
   });
+
+  // ガチレズ3サイト
+  const g = m.gachirezu;
+  if(g){
+    const cs = g.counts||{};
+    const rp = (g.reports||[]);
+    const ev = g.events||{}, us = g.users||{};
+    parts.push(`<div class="nsbox">
+      <div class="nsh">🌸 ガチレズ 3サイト</div>
+      ${rp.length ? `<div class="glzrep">${rp.slice(0,5).map(r=>`
+        <a class="glzrow" href="${esc(r.url||'#')}" target="_blank" rel="noopener">
+          <div class="g1"><span class="gsite">${esc(r.site||'')}</span>
+            <b>${esc(r.reason||'')}</b>${r.detail?`<span class="gd">${esc(r.detail)}</span>`:''}</div>
+          ${r.target?`<div class="g2">${esc(r.target)}</div>`:''}</a>`).join('')}
+        ${rp.length>5?`<div class="nsl2">ほか ${rp.length-5}件</div>`:''}</div>`
+       : `<div class="nsl2">${esc(g.note||'新しい通報はありません')}</div>`}
+      <div class="glzgrid">${Object.entries(cs).map(([site,v])=>`<div class="gc">
+        <div class="gcn">${esc(site)}</div>
+        <div class="gcv">${Object.entries(v).map(([k,n])=>`<span${n>0&&k==='通報'?' class="hot"':''}>${esc(k)} ${n}</span>`).join('')}</div>
+      </div>`).join('')}</div>
+      ${(ev.publish!=null||us.total!=null)?`<div class="glzfoot">
+        ${ev.publish!=null?`イベント 公開${ev.publish}${ev.new?`・新規${ev.new}`:''} ／ 主催者${ev.organizers}人${ev.bookings?`・予約${ev.bookings}`:''}`:''}
+        ${us.total!=null?`　会員${us.total}人${us.new_7d?`（7日で+${us.new_7d}）`:''}`:''}
+      </div>`:''}
+    </div>`);
+  }
 
   // タイ・チェンマイ
   const th = m.thai||[];
