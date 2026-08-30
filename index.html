@@ -545,7 +545,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.9';
+const APP_VERSION = '2026-08-30.10';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -904,8 +904,11 @@ function renderBriefing() {
   $('brief-attention').innerHTML = att.map(a => `<div class="card"><div class="s" style="color:var(--text)">${esc(a)}</div></div>`).join('');
   const pen = (b.pending || []);
   $('brief-pending-wrap').style.display = pen.length ? '' : 'none';
-  $('brief-pending').innerHTML = pen.map(p => `<div class="card"><div class="t" style="font-size:14px">${esc(p.summary)}</div>${p.ask?`<div class="s">${esc(p.ask)}</div>`:''}
-    <button class="toinbox" onclick="answerPending(${JSON.stringify(esc(p.summary))})">投げ込みで答える →</button></div>`).join('');
+  // 🔴 文字列をonclickに直接埋めると引用符が衝突して属性が壊れる（2026-08-30に発生）。
+  //    配列に持たせて番号で渡す。
+  window.__pending = pen;
+  $('brief-pending').innerHTML = pen.map((p, i) => `<div class="card"><div class="t" style="font-size:14px">${esc(p.summary)}</div>${p.ask?`<div class="s">${esc(p.ask)}</div>`:''}
+    <button class="toinbox" onclick="answerPending(${i})">投げ込みで答える →</button></div>`).join('');
   const log = (b.sorted_log || []).slice(0, 8);
   briefLogFallback = log.length ? log.map(l => `・${esc(l.at||'')} ${esc(l.summary)}`).join('<br>') : '（まだなし）';
   $('brief-log').innerHTML = briefLogFallback;
@@ -1931,16 +1934,18 @@ async function loadQuick() {
   } catch (e) { el.innerHTML = `<p class="empty">読み込み失敗: ${esc(String(e.message || e))}</p>`; }
 }
 // 「投げ込みで答える」— 何についての返事かを本文に入れておく（2026-08-30 メグ指示）
-function answerPending(summary){
+function answerPending(i){
+  const p = (window.__pending || [])[i];
+  if(!p) return;
   switchTab('inbox');
   setTimeout(()=>{
     const t = document.getElementById('inbox-text');
     if(!t) return;
-    const head = `【${String(summary).replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')}】について\n`;
+    const head = `【${p.summary}】について\n`;
     if(!t.value.startsWith(head)) t.value = head + t.value;
     t.focus();
     t.setSelectionRange(t.value.length, t.value.length);
-  }, 60);
+  }, 80);
 }
 function switchTab(tab) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
