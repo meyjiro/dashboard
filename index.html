@@ -134,6 +134,17 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 /* 自動処理の見張り（2026-08-30） */
 .numgrid{display:grid;gap:8px;margin-bottom:12px}
+.sec-note{font-weight:400;font-size:10.5px;color:var(--text3,#9ca3af);margin-left:6px;letter-spacing:0}
+.mbs{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px}
+.mbsh{display:flex;align-items:baseline;gap:8px;padding:11px 13px 8px;font-size:14px}
+.mbsh .mbsn{margin-left:auto;font-family:"Roboto Mono",ui-monospace,monospace;font-size:13px;
+  background:var(--accent-light);color:var(--accent);border-radius:8px;padding:2px 9px;font-weight:700}
+.mbsrow{display:block;padding:9px 13px;border-top:1px solid var(--border);text-decoration:none;color:var(--text)}
+.mbsrow .mr1{display:flex;align-items:baseline;gap:7px;font-size:14.5px}
+.mbsrow .mtag{font-size:10.5px;color:var(--text2);background:var(--bg3);border-radius:6px;padding:1px 7px}
+.mbsrow .mr2{display:flex;font-size:11px;color:var(--text3,#9ca3af);margin-top:1px}
+.mbsrow .mopen{margin-left:auto;color:var(--accent);font-weight:700}
+.mbsmore,.mbswait{padding:8px 13px;border-top:1px solid var(--border);font-size:11.5px;color:var(--text2)}
 .numcard{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:11px 13px}
 .numcard .nt{display:flex;align-items:baseline;gap:8px;font-size:16px;font-weight:800}
 .numcard .ns{font-size:13px;color:var(--text2);margin-top:2px;line-height:1.65}
@@ -278,6 +289,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
     <div id="tab-today" class="tab-panel active">
       <div id="brief-stale"></div>
       <div id="ops-status"></div>
+      <div id="today-mebius"></div>
       <div id="today-nums"></div>
       <div id="brief-quote"></div>
       <div class="section-title">📅 期日</div>
@@ -436,7 +448,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.1';
+const APP_VERSION = '2026-08-30.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -637,6 +649,37 @@ async function loadNums(){
     <div class="numgrid">${cards.map(c=>`<div class="numcard">
       <div class="nt"><span>${c.i}</span><b>${c.t}</b></div>
       <div class="ns">${c.s}</div><div class="nm">${c.m}</div></div>`).join('')}</div>`;
+}
+
+
+// ══ ✉️ メビウス：草案ができている案件（朝のメニュー【1】・2026-08-30）══
+// 🔴 ここから送信は絶対にしない。表示と、管理画面へのリンクだけ。
+//    送信は必ずメグ本人（mebius/CLAUDE.md・memory: mebius-send-needs-megu）。
+//    エンドポイント mbs_status.php も読み取り専用で、書き込み系のコードを持たない。
+const MBS_URL = 'https://mebiusmagic.com/mebius_admin/mbs_status.php?k=mbs_status_9d4f7a2e6c81b350';
+async function loadMebiusDrafts(){
+  const el = $('today-mebius'); if(!el) return;
+  let d;
+  try{ const r = await fetch(MBS_URL, {cache:'no-store'}); d = await r.json(); }
+  catch(e){ el.innerHTML=''; return; }
+  if(!d || !d.counts){ el.innerHTML=''; return; }
+  const dr = d.draft_ready || [];
+  const c  = d.counts, L = d.labels || {};
+  // 今日動かないと止まるもの（草案以外）
+  const waits = ['noto','payment_wait','schedule','surgery'].filter(k=>c[k]>0)
+    .map(k=>`${L[k]||k} ${c[k]}`).join(' ／ ');
+  el.innerHTML = `
+  <div class="section-title">✉️ メビウス <span class="sec-note">送信するのはメグ本人。ここは一覧だけ</span></div>
+  <div class="mbs">
+    <div class="mbsh"><b>草案ができています</b><span class="mbsn">${dr.length}件</span></div>
+    ${dr.slice(0,5).map(x=>`<a class="mbsrow" href="${esc(x.url)}" target="_blank" rel="noopener">
+       <div class="mr1"><b>${esc(x.name||'（名前なし）')}</b>
+         <span class="mtag">${esc(x.magic||'術 未定')}</span></div>
+       <div class="mr2">${x.days!=null?x.days+'日 動きなし':''}<span class="mopen">ひらく →</span></div>
+     </a>`).join('')}
+    ${dr.length>5?`<div class="mbsmore">ほか ${dr.length-5} 件</div>`:''}
+    ${waits?`<div class="mbswait">待ちの案件: ${waits}</div>`:''}
+  </div>`;
 }
 
 async function loadBriefing() {
@@ -1739,7 +1782,7 @@ let isLoading = false;
 async function loadAll() {
   if (isLoading || !pat) return;
   isLoading = true; $('refresh-btn').classList.add('spinning');
-  await Promise.all([loadOps(), loadNums(), loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadIbkr(), loadVerdicts(), loadDocket(), loadScout(), loadMebius(), loadHealth()]);
+  await Promise.all([loadOps(), loadMebiusDrafts(), loadNums(), loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadIbkr(), loadVerdicts(), loadDocket(), loadScout(), loadMebius(), loadHealth()]);
   await loadSchedule(); // メビウス予定をカレンダーに重ねるため後で描画
   isLoading = false; $('refresh-btn').classList.remove('spinning');
 }
