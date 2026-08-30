@@ -143,6 +143,26 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 @media (prefers-color-scheme:dark){#tab-today{--tt:#e0a860;--tt2:#7fb99a;--tt-soft:#2b2317;--tt-line:#3a3325}}
 /* 名言＝朝いちばんに目に入るもの。畳まない */
 /* 名言: 小さく、でも枠に入れて美しく（2026-08-30 メグ指示）。明朝で頭に入りやすく */
+/* ── 通報カード: 読ませるのではなく押させる（2026-08-30 メグ指示） ── */
+#tab-today .glzrow{display:block;padding:11px 12px;border:1px solid var(--tt-line);border-radius:10px;
+  background:var(--card);margin:0 0 8px;text-decoration:none;color:inherit}
+#tab-today .glzrow.pushed{opacity:.55}
+#tab-today .glzrow .g1{display:flex;align-items:center;gap:7px;font-size:12.5px}
+#tab-today .glzrow .gsite{font-size:10.5px;padding:1px 7px;border-radius:99px;
+  background:var(--tt-soft);color:var(--tt);border:1px solid var(--tt-line);flex:none}
+#tab-today .glzrow .g1 b{font-weight:600}
+#tab-today .glzrow .gd{font-size:12px;color:var(--fg2);margin:5px 0 0;line-height:1.6}
+#tab-today .glzrow .g2{font-size:11.5px;color:var(--fg3);margin:4px 0 0;
+  padding-left:8px;border-left:2px solid var(--tt-line)}
+#tab-today .glzrow .gwhy{font-size:11.5px;color:var(--tt2);margin:7px 0 0}
+#tab-today .glzrow .gact{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 0}
+#tab-today .gbtn{font-size:12px;padding:7px 13px;border-radius:8px;border:1px solid var(--tt-line);
+  background:var(--card);color:var(--fg2);cursor:pointer;text-decoration:none;display:inline-block;
+  font-family:inherit;line-height:1.4}
+#tab-today .gbtn.gmain{background:var(--tt);border-color:var(--tt);color:#fff;font-weight:600}
+#tab-today .gbtn.gopen{background:var(--tt-soft);border-color:var(--tt-line);color:var(--tt);font-weight:600}
+#tab-today .gbtn:active{transform:translateY(1px)}
+#tab-today .glzrow .gdone{font-size:11.5px;color:var(--tt2);margin:8px 0 0}
 #tab-today .quote-card{background:var(--card);border:1px solid var(--tt-line);
   border-radius:12px;padding:14px 16px 12px;margin:4px 0 14px;position:relative;overflow:hidden}
 #tab-today .quote-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
@@ -561,7 +581,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.13';
+const APP_VERSION = '2026-08-30.14';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -874,14 +894,28 @@ async function loadNewStuff(){
     const cs = g.counts||{};
     const rp = (g.reports||[]);
     const ev = g.events||{}, us = g.users||{};
+    window.__glzReports = rp;   // 🔴 onclickには番号だけ渡す（文字列を埋めると引用符で壊れる）
     parts.push(`<div class="nsbox">
       <div class="nsh">🌸 ガチレズ 3サイト</div>
-      ${rp.length ? `<div class="glzrep">${rp.slice(0,5).map(r=>`
-        <a class="glzrow" href="${esc(r.url||'#')}" target="_blank" rel="noopener">
-          <div class="g1"><span class="gsite">${esc(r.site||'')}</span>
-            <b>${esc(r.reason||'')}</b>${r.detail?`<span class="gd">${esc(r.detail)}</span>`:''}</div>
-          ${r.target?`<div class="g2">${esc(r.target)}</div>`:''}</a>`).join('')}
-        ${rp.length>5?`<div class="nsl2">ほか ${rp.length-5}件</div>`:''}</div>`
+      ${rp.length ? `<div class="glzrep">${rp.map((r,i)=>{
+        const sg = r.suggest||{do:'judge',label:'中身を見て決める',why:''};
+        const pushed = (window.__glzPushed||{})[glzKey(r)];
+        return `<div class="glzrow${pushed?' pushed':''}">
+        <div class="g1"><span class="gsite">${esc(r.site||'')}</span>
+          <b>${esc(r.reason_ja||r.reason||'')}</b></div>
+        ${r.detail?`<div class="gd">${esc(r.detail)}</div>`:''}
+        ${r.target?`<div class="g2">${esc(r.target)}</div>`:''}
+        ${pushed ? `<div class="gdone">✓ ${esc(pushed)}　次の巡回で反映されます</div>` : `
+        <div class="gwhy">${esc(sg.why||'')}</div>
+        <div class="gact">
+          ${sg.do==='judge'
+            ? `<a class="gbtn gopen" href="${esc(r.url||'#')}" target="_blank" rel="noopener">中身を見る →</a>
+               <button class="gbtn gsub" onclick="glzDo(${i},'close')">対応不要にする</button>`
+            : `<button class="gbtn gmain" onclick="glzDo(${i},'${sg.do}')">${esc(sg.label)}</button>
+               <a class="gbtn gsub" href="${esc(r.url||'#')}" target="_blank" rel="noopener">先に中身を見る</a>
+               ${sg.do!=='close'?`<button class="gbtn gsub" onclick="glzDo(${i},'close')">対応不要</button>`:''}`}
+        </div>`}
+      </div>`}).join('')}</div>`
        : `<div class="nsl2">${esc(g.note||'新しい通報はありません')}</div>`}
       <div class="glzgrid">${Object.entries(cs).map(([site,v])=>`<div class="gc">
         <div class="gcn">${esc(site)}</div>
@@ -908,6 +942,36 @@ async function loadNewStuff(){
   if(!parts.length){ el.innerHTML=''; return; }
   el.innerHTML = `<div class="blk-h">🆕 新しく入ってきたもの
     ${age>30?`<span class="sec-note">🔴 ${Math.floor(age/24)}日前の内容です</span>`:''}</div>${parts.join('')}`;
+}
+
+// ── ガチレズ: ボタンを押したら操作をキューに積む（Macが次の巡回で実行する） ──
+// 🔴 サイトの操作キーは絶対にここに書かない。このページは公開されている。
+//    ボタンは claude-context（private）に1行足すだけ。実行はMacがやる。
+function glzKey(r){ return `${r.site}#${r.id}`; }
+window.__glzPushed = JSON.parse(localStorage.getItem('glzPushed')||'{}');
+
+async function glzDo(i, op){
+  const r = (window.__glzReports||[])[i];
+  if(!r) return;
+  const label = op==='close' ? '対応不要にした'
+              : op==='trash' ? '投稿を下げた'
+              : op==='trash_ban' ? '投稿を下げて7日ブロックした' : op;
+  if(op!=='close' && !confirm(`${r.site}の投稿を下げます。\n\n${r.target||''}\n\nゴミ箱に入るだけなので、あとで戻せます。`)) return;
+  const row = {at:new Date().toISOString(), site:r.site, do:op, report_id:r.id,
+               post_id:r.post_id, did:r.did||null, days:7,
+               reason:(r.reason_ja||r.reason||''), memo:(r.detail||'').slice(0,60)};
+  try{
+    const path = 'inbox/glz_actions.jsonl';
+    const ex = await getFileWithSha(path);          // 無ければ {content:null, sha:null}
+    const body = (ex && ex.text ? ex.text : '') + JSON.stringify(row) + '\n';
+    await api(`/repos/${REPO}/contents/${path}`, 'PUT',
+      Object.assign({ message:`ガチレズ操作: ${r.site} ${label}`, content: enc(body), branch: BRANCH },
+                    (ex && ex.sha) ? { sha: ex.sha } : {}));
+    window.__glzPushed[glzKey(r)] = label;
+    localStorage.setItem('glzPushed', JSON.stringify(window.__glzPushed));
+    loadNewStuff();
+    toast(`${label}。次の巡回（8:20/14:20/20:20）で反映されます`);
+  }catch(e){ alert('積めませんでした: ' + e.message); }
 }
 
 async function loadBriefing() {
