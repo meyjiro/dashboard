@@ -647,7 +647,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.18';
+const APP_VERSION = '2026-08-30.19';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1048,10 +1048,12 @@ function renderTodaySet(){
       st.streak = (st.lastDone === y) ? (st.streak||0)+1 : 1;
       st.lastDone = t; saveSet(st);
     }
+    // 実測だけ返す。褒めも責めもしない（メグの流儀）
+    const mins = st.started ? Math.max(1, Math.round((Date.now()-st.started)/60000)) : null;
     el.innerHTML = `<div class="tset done">
       <div class="tsdone">今日の分は終わりました</div>
       <div class="tsmeta">${new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}
-        ${st.streak>1?`　${st.streak}日つづけて終わっています`:''}</div></div>`;
+        ${mins?`　${st.total||0}件・${mins}分`:''}${st.streak>1?`　${st.streak}日つづけて終わっています`:''}</div></div>`;
     setTimeout(askOpened, 60);
     return;
   }
@@ -1072,6 +1074,8 @@ function buildSet(parts){
   const st = setState();
   if(st.items) { renderTodaySet(); return; }   // 🔴 今日ぶんは一度決めたら動かさない
   st.items = parts.filter(p=>p && p.n>0).map(p=>({id:p.id, label:p.label, mins:p.mins, anchor:p.anchor}));
+  st.started = Date.now();
+  st.total = st.items.length;
   saveSet(st); renderTodaySet();
 }
 // 主要ブロックが出そろってから1回だけ組む
