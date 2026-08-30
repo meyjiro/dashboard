@@ -133,6 +133,40 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 /* タイル */
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 /* 自動処理の見張り（2026-08-30） */
+/* 今日タブだけ配色を変える（2026-08-30 メグ「見る気がしない雰囲気」）
+   ── 全体のティール(#0bb7ae)は事務的なので、この画面だけ朝の光に寄せる。
+      地は白のまま、差し色を琥珀＋深緑にして、名言を主役に置く。 */
+#tab-today{--tt:#b5762e;--tt2:#3f6b52;--tt-soft:#fdf6ec;--tt-line:#efe6d8}
+@media (prefers-color-scheme:dark){#tab-today{--tt:#e0a860;--tt2:#7fb99a;--tt-soft:#2b2317;--tt-line:#3a3325}}
+/* 名言＝朝いちばんに目に入るもの。畳まない */
+#tab-today .quote-card{background:linear-gradient(160deg,var(--tt-soft),transparent 70%);
+  border:1px solid var(--tt-line);border-radius:18px;padding:20px 20px 17px;margin:2px 0 14px;position:relative}
+#tab-today .quote-card::before{content:"❝";position:absolute;top:6px;left:14px;
+  font-size:34px;line-height:1;color:var(--tt);opacity:.32}
+#tab-today .quote-card .q{font-size:16.5px;line-height:2;font-weight:700;padding-left:26px}
+#tab-today .quote-card .a{font-size:12px;color:var(--tt);margin-top:9px;text-align:right;font-weight:700}
+/* 見出しは琥珀の小さな帯 */
+#tab-today .blk-h{color:var(--tt);font-size:11px;letter-spacing:.14em;font-weight:800;
+  margin:20px 2px 8px;display:flex;align-items:center;gap:8px}
+#tab-today .blk-h::after{content:"";flex:1;height:1px;background:var(--tt-line)}
+#tab-today .blk-sub{color:var(--text3,#9ca3af)}
+/* 数字のストリップは琥珀の下線 */
+#tab-today .sc{border-bottom:2px solid var(--tt-line)}
+/* 期日カードの左線を琥珀に */
+#tab-today .due .d{background:var(--tt-soft);color:var(--tt)}
+#tab-today .mbsh .mbsn{background:var(--tt-soft);color:var(--tt)}
+#tab-today .mbsrow .mopen{color:var(--tt2)}
+#tab-today .nsh{color:var(--tt2)}
+#tab-today .nstitle{color:var(--text)}
+.toinbox{margin-top:8px;background:var(--tt-soft);color:var(--tt);border:0;border-radius:9px;
+  padding:7px 12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer}
+.laterd{margin:6px 0 2px}
+.laterd>summary{font-size:11.5px;color:var(--text3,#9ca3af);cursor:pointer;list-style:none;padding:6px 2px}
+.laterd>summary::-webkit-details-marker{display:none}
+.laterd>summary::after{content:" ▾"} .laterd[open]>summary::after{content:" ▴"}
+.ldrow{display:flex;gap:9px;font-size:12.5px;padding:5px 4px;color:var(--text2);line-height:1.7}
+.ldrow b{flex:none;font-family:"Roboto Mono",ui-monospace,monospace;color:var(--text)}
+
 /* 今日タブ 2026-08-30 再構成: 1画面に収める */
 .blk-h{font-size:11px;font-weight:800;letter-spacing:.12em;color:var(--text3,#9ca3af);
   margin:16px 2px 7px;text-transform:none}
@@ -178,6 +212,14 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 .nsl{font-size:12.5px;line-height:1.8;margin-top:6px;color:var(--text2)}
 .nsl span{display:block;font-size:10px;color:var(--text3,#9ca3af);font-weight:700;letter-spacing:.05em}
 .nsl2{font-size:12.5px;color:var(--text2);margin-top:4px}
+#tab-today .nsbox.cand{border-color:var(--tt-line);background:linear-gradient(170deg,var(--tt-soft),transparent 55%)}
+.plainbox{margin-top:8px}
+.plainbox p{margin:0 0 7px;font-size:14.5px;line-height:1.95}
+.plainbox p:last-child{margin-bottom:0}
+.cmore{margin-top:9px}
+.cmore>summary{font-size:11px;color:var(--text3,#9ca3af);cursor:pointer;list-style:none;padding:3px 0}
+.cmore>summary::-webkit-details-marker{display:none}
+.cmore>summary::after{content:" ▾"} .cmore[open]>summary::after{content:" ▴"}
 .nsflag{background:var(--warn-light);color:var(--warn);border-radius:9px;padding:7px 10px;
   font-size:12px;line-height:1.7;margin-top:8px;font-weight:600}
 .nsnews{display:block;padding:8px 0;border-top:1px solid var(--border);text-decoration:none;color:var(--text);font-size:13.5px;line-height:1.7}
@@ -329,11 +371,12 @@ details.ops.ok[open]>summary::after{content:" ▴"}
     <!-- 今日 -->
     <div id="tab-today" class="tab-panel active">
       <div id="brief-stale"></div>
-      <div id="ops-status"></div>
+      <div id="brief-quote"></div>
       <div id="today-nums"></div>
 
       <div class="blk-h">きょう やること</div>
       <div id="brief-due"></div>
+      <div id="brief-due-later"></div>
       <div id="today-mebius"></div>
       <div id="brief-pending-wrap" style="display:none">
         <div class="blk-sub">🤔 メグの返事待ち</div>
@@ -343,7 +386,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
       <div id="today-new"></div>
 
       <details class="more2"><summary>そのほか</summary>
-        <div id="brief-quote"></div>
+        <div id="ops-status"></div>
         <div id="brief-attention-wrap" style="display:none">
           <div class="blk-sub">👀 注目</div>
           <div id="brief-attention"></div>
@@ -496,7 +539,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.6';
+const APP_VERSION = '2026-08-30.7';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -758,13 +801,20 @@ async function loadNewStuff(){
   // 今日の投資候補
   const c = m.candidate;
   if(c && !c.skipped && c.name){
-    parts.push(`<div class="nsbox">
+    // 🔴 平易な説明(plain)を主役に。専門用語入りの from/why/pitch は「詳しく」に畳む
+    //    （2026-08-30 メグ指示: どういう会社でなぜ挙がったかが5行で分かること）
+    const pl = Array.isArray(c.plain) ? c.plain : (c.plain ? [c.plain] : []);
+    parts.push(`<div class="nsbox cand">
       <div class="nsh">🆕 今日の投資候補<span class="nstag">${esc(c.market||'')}</span></div>
       <div class="nsname">${esc(c.name)}${c.code?` <span class="nscode">${esc(c.code)}</span>`:''}</div>
-      ${c.from?`<div class="nsl"><span>どこから</span>${esc(c.from)}</div>`:''}
-      ${c.why?`<div class="nsl"><span>なぜ今日これか</span>${esc(c.why)}</div>`:''}
-      ${c.pitch?`<div class="nsl"><span>買い論拠</span>${esc(c.pitch)}</div>`:''}
+      ${pl.length ? `<div class="plainbox">${pl.map(x=>`<p>${esc(x)}</p>`).join('')}</div>`
+                  : `<div class="nsl2">説明がまだありません</div>`}
       ${c.flag?`<div class="nsflag">${esc(c.flag)}</div>`:''}
+      ${(c.from||c.why||c.pitch)?`<details class="cmore"><summary>もとの記録</summary>
+        ${c.from?`<div class="nsl"><span>どこから</span>${esc(c.from)}</div>`:''}
+        ${c.why?`<div class="nsl"><span>なぜ今日これか</span>${esc(c.why)}</div>`:''}
+        ${c.pitch?`<div class="nsl"><span>買い論拠</span>${esc(c.pitch)}</div>`:''}
+      </details>`:''}
     </div>`);
   } else if(c && c.skipped){
     parts.push(`<div class="nsbox dim">🆕 今日の投資候補はなし${c.skip_reason?`<div class="nsl2">${esc(c.skip_reason)}</div>`:''}</div>`);
@@ -815,11 +865,21 @@ function renderBriefing() {
   const age = (Date.now() - new Date(b.generated_at).getTime()) / 3600000;
   if (age > 26) $('brief-stale').innerHTML = `<div class="stale">⚠️ これは ${new Date(b.generated_at).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})} のブリーフィングです（今朝の分がまだ届いていません）</div>`;
   $('brief-quote').innerHTML = b.quote ? `<div class="quote-card"><div class="q">${esc(b.quote.text)}</div><div class="a">— ${esc(b.quote.author || '')}</div></div>` : '';
-  const dues = (b.today || []);
+  // 🔴 近日（3日以内）だけ出して、それ以降は畳む（2026-08-30 メグ指示）
+  const allDues = (b.today || []);
+  const dayLeft = d => { const m=String(d.date||d.due||'').match(/(\d{4})-(\d\d)-(\d\d)/);
+    if(!m) return 0; return Math.ceil((new Date(m[0]+'T12:00:00+09:00')-Date.now())/86400000); };
+  const dues = allDues.filter(d=>dayLeft(d)<=3);
+  const laterDues = allDues.filter(d=>dayLeft(d)>3);
   const doneKeys = getDoneDues();
   $('brief-due').innerHTML = dues.length
     ? dues.map((d, i) => {
         const key = d.date + '|' + d.label;
+  const ld = $('brief-due-later');
+  if (ld) ld.innerHTML = laterDues.length
+    ? `<details class="laterd"><summary>これから ${laterDues.length}件</summary>${laterDues.map(d=>
+        `<div class="ldrow"><b>${esc(String(d.date||d.due||'').slice(5).replace('-','/'))}</b>
+         <span>${esc(d.title||d.what||d.summary||'')}</span></div>`).join('')}</details>` : '';
         const done = doneKeys.some(x => x.key === key);
         return `<div class="due ${esc(d.urgency||'normal')} ${done?'done':''}" data-key="${esc(key)}">
           <span class="d">${esc(d.date)}</span><span class="l">${esc(d.label)}</span>
@@ -838,7 +898,8 @@ function renderBriefing() {
   $('brief-attention').innerHTML = att.map(a => `<div class="card"><div class="s" style="color:var(--text)">${esc(a)}</div></div>`).join('');
   const pen = (b.pending || []);
   $('brief-pending-wrap').style.display = pen.length ? '' : 'none';
-  $('brief-pending').innerHTML = pen.map(p => `<div class="card"><div class="t" style="font-size:14px">${esc(p.summary)}</div>${p.ask?`<div class="s">${esc(p.ask)}</div>`:''}</div>`).join('');
+  $('brief-pending').innerHTML = pen.map(p => `<div class="card"><div class="t" style="font-size:14px">${esc(p.summary)}</div>${p.ask?`<div class="s">${esc(p.ask)}</div>`:''}
+    <button class="toinbox" onclick="switchTab('inbox');document.getElementById('inbox-text')?.focus()">投げ込みで答える →</button></div>`).join('');
   const log = (b.sorted_log || []).slice(0, 8);
   briefLogFallback = log.length ? log.map(l => `・${esc(l.at||'')} ${esc(l.summary)}`).join('<br>') : '（まだなし）';
   $('brief-log').innerHTML = briefLogFallback;
