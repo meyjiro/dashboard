@@ -193,22 +193,25 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .tsask{font-size:13.5px;margin:2px 0 0}
 #tab-today .tsdone{font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;font-size:15px;color:var(--tt2)}
 #tab-today .tsmeta{font-size:11.5px;color:var(--text3);margin-top:5px}
-#tab-today .mbsq{font-size:12px;color:var(--text2);margin:0 0 9px}
-#tab-today .mbsq b{color:var(--tt);font-size:14px}
-#tab-today .mbsqs{color:var(--text3);font-size:11.5px}
-#tab-today .mbscard{border:1px solid var(--tt-line);border-radius:10px;background:var(--card);margin:0 0 7px;overflow:hidden}
+#tab-today .mbsq{font-size:13.5px;color:var(--text);margin:0 0 11px;line-height:1.7}
+#tab-today .mbsq b{color:var(--accent);font-size:17px;margin:0 2px;
+  font-variant-numeric:tabular-nums}
+#tab-today .mbsqs{display:block;color:var(--text2);font-size:12px;margin-top:2px}
+#tab-today .mbscard{border:1px solid var(--border);border-radius:11px;background:var(--card);
+  margin:0 0 8px;overflow:hidden}
 #tab-today .mbscard.open{border-color:var(--tt);box-shadow:0 1px 8px rgba(0,0,0,.05)}
-#tab-today .mbsch{display:flex;align-items:center;justify-content:space-between;gap:10px;
-  padding:11px 13px;cursor:pointer;user-select:none}
+#tab-today .mbsch{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 15px;cursor:pointer;user-select:none}
 #tab-today .mbsch:active{background:var(--tt-soft)}
 #tab-today .mbschl{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0}
-#tab-today .mbschl b{font-size:13.5px}
+#tab-today .mbschl b{font-size:14.5px;font-weight:700}
 #tab-today .mbschx{font-size:11.5px;color:var(--tt);white-space:nowrap;flex:none}
-#tab-today .mdays{font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums}
+#tab-today .mdays{font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums;
+  padding:2px 7px;border-radius:99px;border:1px solid var(--border)}
 #tab-today .mdays.warm{color:var(--tt)}
 #tab-today .mdays.cold{color:var(--text3);opacity:.7}
 #tab-today .mbscb:empty{display:none}
-#tab-today .mbscb{padding:0 13px 13px;border-top:1px solid var(--tt-line)}
+#tab-today .mbscb{padding:2px 15px 15px;border-top:1px solid var(--border2)}
 #tab-today .mbsload,#tab-today .mbsneed{font-size:12px;color:var(--text3);padding:11px 0}
 #tab-today .mbsmsg{margin:11px 0 0;font-size:12.5px;line-height:1.8}
 #tab-today .mbsmw{font-size:10.5px;color:var(--text3);margin:0 0 3px;letter-spacing:.03em}
@@ -322,19 +325,25 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 .more2>summary::after{content:" ▾"} .more2[open]>summary::after{content:" ▴"}
 .numgrid{display:grid;gap:8px;margin-bottom:12px}
 .sec-note{font-weight:400;font-size:10.5px;color:var(--text3,#9ca3af);margin-left:6px;letter-spacing:0}
-.mbs{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-bottom:8px}
+.mbs{margin-bottom:14px}
 .mbsh{display:flex;align-items:baseline;gap:8px;padding:10px 12px 7px;font-size:13.5px}
 .mbsh .mbsn{margin-left:auto;font-family:"Roboto Mono",ui-monospace,monospace;font-size:13px;
   background:var(--accent-light);color:var(--accent);border-radius:8px;padding:2px 9px;font-weight:700}
 .mbsrow{display:block;padding:9px 13px;border-top:1px solid var(--border);text-decoration:none;color:var(--text)}
 .mbsrow .mr1{display:flex;align-items:baseline;gap:7px;font-size:14.5px}
-.mbsrow .mtag{font-size:10.5px;color:var(--text2);background:var(--bg3);border-radius:6px;padding:1px 7px}
+.mbsrow .mtag{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--bg3);
+  color:var(--text2);flex:none;font-weight:500;line-height:1.6}
 .mbsrow .mr2{display:flex;font-size:11px;color:var(--text3,#9ca3af);margin-top:1px}
 .mbsrow .mopen{margin-left:auto;color:var(--accent);font-weight:700}
-.mbsmore,.mbswait{padding:8px 13px;border-top:1px solid var(--border);font-size:11.5px;color:var(--text2)}
-.nsbox{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:12px 13px;margin-bottom:7px}
+.mbsmore{padding:14px 15px;border:1px solid var(--border);border-radius:11px;
+  background:var(--card);font-size:13px;color:var(--text2);line-height:1.8}
+.mbswait{margin-top:10px;padding:9px 12px;background:var(--bg3);border-radius:9px;
+  font-size:11.5px;color:var(--text2);line-height:1.7}
+.nsbox{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:15px 16px;margin-bottom:9px}
 .nsbox.dim{color:var(--text2);font-size:13px}
-.nsh{display:flex;align-items:baseline;gap:8px;font-size:11.5px;font-weight:800;color:var(--text2);letter-spacing:.04em}
+.nsh{display:flex;align-items:baseline;gap:8px;font-size:12.5px;font-weight:700;
+  color:var(--text2);letter-spacing:.02em;margin-bottom:10px}
 .nsh .nstag{margin-left:auto;font-weight:500;font-size:10.5px;color:var(--text3,#9ca3af)}
 .nsname{font-size:18px;font-weight:800;margin-top:3px}
 .nsname .nscode{font-size:12px;color:var(--text2);font-family:"Roboto Mono",ui-monospace,monospace}
@@ -364,16 +373,18 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 .glzrow .gd{font-size:11.5px;color:var(--text2)}
 .glzrow .g2{font-size:11.5px;color:var(--text3,#9ca3af);margin-top:1px;overflow:hidden;
   display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
-.glzgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:9px}
-.gc{background:var(--bg3);border-radius:9px;padding:6px 7px}
+.glzgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}
+.gc{background:var(--bg3);border-radius:10px;padding:9px 10px}
 .gc .gcn{font-size:10px;font-weight:800;color:var(--text2)}
 .gc .gcv{font-size:10.5px;color:var(--text2);line-height:1.6;display:flex;flex-direction:column}
 .gc .gcv .hot{color:var(--red);font-weight:800}
 .glzfoot{font-size:10.5px;color:var(--text3,#9ca3af);margin-top:8px;line-height:1.7}
 .nsnews{display:block;padding:8px 0;border-top:1px solid var(--border);text-decoration:none;color:var(--text);font-size:13.5px;line-height:1.7}
 .nsnews span{display:block;font-size:11.5px;color:var(--text2)}
-.mbsold{border-top:1px solid var(--border)}
-.mbsold>summary{padding:9px 13px;font-size:11.5px;color:var(--text2);cursor:pointer;list-style:none}
+.mbsold{margin-top:10px}
+.mbsold>summary{padding:10px 13px;font-size:12px;color:var(--text2);cursor:pointer;list-style:none;
+  border:1px solid var(--border);border-radius:10px;background:var(--card)}
+.mbsold[open]>summary{margin-bottom:8px}
 .mbsold>summary::-webkit-details-marker{display:none}
 .mbsold>summary::after{content:" ▾"} .mbsold[open]>summary::after{content:" ▴"}
 .numcard{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:11px 13px}
@@ -701,7 +712,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.23';
+const APP_VERSION = '2026-08-30.24';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -961,7 +972,7 @@ async function loadMebiusDrafts(){
   <div class="blk-sub">✉️ メビウス <span class="sec-note">送るのはメグ本人</span></div>
   <div class="mbs">
     ${q.length ? `<div class="mbsq">1か月以内の相談が <b>${q.length}</b> 件
-        <span class="mbsqs">読んで決めるところまでここでできます</span></div>
+        <span class="mbsqs">タップすると中身が読めます。読んでから決められます</span></div>
       ${q.map(x=>rowHtml(x,false)).join('')}`
     : `<div class="mbsmore">1か月以内の相談は片づきました 🎉${
         olds.length?`　<span class="mbsqs">古いもの ${olds.length}件は下にあります</span>`:''}</div>`}
