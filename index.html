@@ -8,7 +8,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Dashboard">
-<meta name="theme-color" content="#0bb7ae">
+<meta name="theme-color" content="#f6f4f0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#191817" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&display=swap">
@@ -479,6 +480,11 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 .modal input{width:100%;padding:11px;border:1px solid var(--border);border-radius:10px;margin-bottom:12px}
 .modal a{color:var(--accent);font-size:13px}
 
+#stale-bar{position:fixed;left:12px;right:12px;bottom:calc(78px + var(--safe-bottom));
+  background:var(--accent);color:#fff;padding:11px 14px;border-radius:11px;font-size:12.5px;
+  line-height:1.6;z-index:150;display:flex;align-items:center;gap:10px;justify-content:space-between}
+#stale-bar button{flex:none;background:#fff;color:var(--accent);border:0;border-radius:8px;
+  padding:7px 13px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer}
 #toast{position:fixed;left:50%;bottom:calc(84px + var(--safe-bottom));transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:200;white-space:nowrap}
 #toast.show{opacity:.94}
 
@@ -667,6 +673,11 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 <div class="modal-overlay hidden" id="settings-modal">
   <div class="modal">
     <h2>設定</h2>
+    <p style="display:flex;justify-content:space-between;align-items:center;gap:10px;
+              padding:9px 11px;background:var(--bg3);border-radius:9px;margin-bottom:14px">
+      <span>今の版 <b id="ver-now" style="font-variant-numeric:tabular-nums"></b></span>
+      <button class="btn" id="force-update" style="padding:7px 12px;font-size:12.5px;flex:none">今すぐ最新にする</button>
+    </p>
     <p>メビウスの完了予定を表示するトークン（端末に記憶されます）:</p>
     <input type="password" id="mebius-token-input" placeholder="mbs_cal_...">
     <button class="btn btn-primary" id="mebius-token-save" style="width:100%;margin-bottom:14px">保存</button>
@@ -683,7 +694,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.21';
+const APP_VERSION = '2026-08-30.22';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2417,16 +2428,48 @@ function setToday() {
 // ── バージョン自動リロード ──
 async function checkVersion() {
   try {
-    const res = await fetch(location.pathname + '?v=' + Date.now(), { cache: 'no-store' });
+    // 🔴 no-store だけでは足りない。iOSのホーム画面アプリはURLごと覚えているので、
+    //    毎回ちがうURLで取りに行かせる（2026-08-30 スマホで更新されない件）。
+    const res = await fetch(location.pathname + '?_=' + Date.now(),
+                            { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
     if (!res.ok) return;
     const html = await res.text();
     const m = html.match(/const APP_VERSION = '([^']+)'/);
     if (!m || m[1] === APP_VERSION) return;
-    if (localStorage.getItem('reloaded_for') === m[1]) return;
+    // 🔴 同じ版で何度もリロードし続ける事故を防ぐ。ただし版が変われば必ず1回は動く
+    if (localStorage.getItem('reloaded_for') === m[1]) {
+      // すでにリロードしたはずなのにまだ古い＝キャッシュから読まれている。手で直せるよう伝える
+      showStaleBar(m[1]);
+      return;
+    }
     localStorage.setItem('reloaded_for', m[1]);
     toast('新しいバージョンに更新します…');
-    setTimeout(() => location.replace(location.pathname + '?v=' + m[1]), 800);
+    setTimeout(() => location.replace(location.pathname + '?v=' + m[1] + '.' + Date.now()), 800);
   } catch (e) {}
+}
+
+// リロードしても古いままのときだけ出る帯。押せばキャッシュごと捨てて取り直す
+function showStaleBar(newer){
+  if (document.getElementById('stale-bar')) return;
+  const b = document.createElement('div');
+  b.id = 'stale-bar';
+  b.innerHTML = `新しい版 (${newer}) が出ていますが、古いものが表示されています
+    <button onclick="forceUpdate()">最新にする</button>`;
+  document.body.appendChild(b);
+}
+
+// ── 手で最新にする ──
+// 🔴 自動更新は版番号の比較で動くが、スマホでは効かないことがある（2026-08-30 メグ報告）。
+//    確実な逃げ道として、キャッシュを全部捨てて取り直すボタンを設定に置く。
+async function forceUpdate(){
+  try{
+    if (window.caches) { for (const k of await caches.keys()) await caches.delete(k); }
+    if (navigator.serviceWorker) {
+      for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
+    }
+  }catch(e){}
+  localStorage.removeItem('reloaded_for');
+  location.replace(location.pathname + '?v=' + Date.now());
 }
 
 // ── Load all ──
@@ -2465,6 +2508,8 @@ function setupEvents() {
     $('auth-modal').classList.add('hidden');
     loadAll();
   });
+  if ($('ver-now')) $('ver-now').textContent = APP_VERSION;
+  if ($('force-update')) $('force-update').addEventListener('click', forceUpdate);
   $('settings-btn').addEventListener('click', () => {
     $('mebius-token-input').value = mebiusToken;
     $('settings-modal').classList.remove('hidden');
