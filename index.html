@@ -139,12 +139,12 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today{--tt:#b5762e;--tt2:#3f6b52;--tt-soft:#fdf6ec;--tt-line:#efe6d8}
 @media (prefers-color-scheme:dark){#tab-today{--tt:#e0a860;--tt2:#7fb99a;--tt-soft:#2b2317;--tt-line:#3a3325}}
 /* 名言＝朝いちばんに目に入るもの。畳まない */
-#tab-today .quote-card{background:linear-gradient(160deg,var(--tt-soft),transparent 70%);
-  border:1px solid var(--tt-line);border-radius:18px;padding:20px 20px 17px;margin:2px 0 14px;position:relative}
-#tab-today .quote-card::before{content:"❝";position:absolute;top:6px;left:14px;
-  font-size:34px;line-height:1;color:var(--tt);opacity:.32}
-#tab-today .quote-card .q{font-size:16.5px;line-height:2;font-weight:700;padding-left:26px}
-#tab-today .quote-card .a{font-size:12px;color:var(--tt);margin-top:9px;text-align:right;font-weight:700}
+/* 名言は最上部に置くが、場所は取らせない（2026-08-30 メグ「大きすぎる」） */
+#tab-today .quote-card{background:none;border:0;border-left:2px solid var(--tt);
+  border-radius:0;padding:1px 0 1px 11px;margin:4px 0 12px}
+#tab-today .quote-card::before{content:none}
+#tab-today .quote-card .q{font-size:12.5px;line-height:1.75;font-weight:500;color:var(--text2);padding-left:0}
+#tab-today .quote-card .a{font-size:10.5px;color:var(--text3,#9ca3af);margin-top:2px;text-align:left;font-weight:500}
 /* 見出しは琥珀の小さな帯 */
 #tab-today .blk-h{color:var(--tt);font-size:11px;letter-spacing:.14em;font-weight:800;
   margin:20px 2px 8px;display:flex;align-items:center;gap:8px}
@@ -539,7 +539,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.7';
+const APP_VERSION = '2026-08-30.8';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
