@@ -24,9 +24,9 @@
   /* 地と紙 — 白ではなく生成り。長時間見るものなので彩度と輝度を落とす */
   --bg:#f6f4f0;--bg2:#fffdfa;--bg3:#efebe4;
   /* 字 — 純黒は避ける。紙に乗ったインクの色 */
-  --text:#232323;--text2:#6a6560;--text3:#95908a;
+  --text:#232323;--text2:#6a6560;--text3:#78736d;
   /* 意味を持つ色は2つだけ。琥珀＝これから手を動かす、深緑＝もう済んだ */
-  --accent:#b5762e;--accent-light:#fbf3e8;
+  --accent:#986327;--accent-light:#fbf3e8;
   --ok:#3f6b52;--ok-light:#edf3ef;
   --warn:#a8721c;--warn-light:#fbf4e6;--red:#a8443a;--red-light:#f9eeec;
   --card:#fffdfa;--border:#e6e0d6;--border2:#f0ebe3;
@@ -683,7 +683,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.20';
+const APP_VERSION = '2026-08-30.21';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -849,7 +849,7 @@ async function loadNums(){
       const usd=FX_LOTS.reduce((a,l)=>a+l.usd,0), jpy=FX_LOTS.reduce((a,l)=>a+l.jpy,0);
       const gain=(usd-2)*rate - jpy, pct=gain/jpy*100;
       cards.push({i:'💱', t:`¥${rate.toFixed(2)}/$`,
-        s:`今戻すと <b style="color:${gain>=0?'var(--green,#16a34a)':'var(--red)'}">${gain>=0?'+':'−'}¥${Math.abs(Math.round(gain)).toLocaleString()}</b>（${pct>=0?'+':''}${pct.toFixed(1)}%）`,
+        s:`今戻すと <b style="color:${gain>=0?'var(--ok)':'var(--red)'}">${gain>=0?'+':'−'}¥${Math.abs(Math.round(gain)).toLocaleString()}</b>（${pct>=0?'+':''}${pct.toFixed(1)}%）`,
         m:src});
     }
   }catch(e){}
@@ -2080,7 +2080,7 @@ async function loadFx(ibkrRate, jpyDebt) {
       <div>${verdict}</div>
       <div style="font-size:15px;margin:2px 0">今 $${Math.round(FX_BASE.usd).toLocaleString()} を全部戻すと
         <b>¥${Math.round(backJpy).toLocaleString()}</b> →
-        <b style="font-size:17px;color:${good ? 'var(--green,#16a34a)' : 'var(--red,#dc2626)'}">${gain >= 0 ? '+' : '−'}¥${Math.abs(Math.round(gain)).toLocaleString()}</b>
+        <b style="font-size:17px;color:${good ? 'var(--ok)' : 'var(--red,#dc2626)'}">${gain >= 0 ? '+' : '−'}¥${Math.abs(Math.round(gain)).toLocaleString()}</b>
         <span style="color:var(--text2)">(${gainPct >= 0 ? '+' : ''}${gainPct.toFixed(2)}%)</span></div>
       <div style="color:var(--text2)">払った円 ¥${FX_BASE.jpy.toLocaleString()}（Wise手数料込みの実額）／ 戻しはIBKR内両替（手数料$2）で計算。Wise経由で戻すなら別途約0.6%かかる</div>
       ${debt ? `<div>円借入 ¥${debt.toLocaleString()} の返済に必要な$: <b>$${needUsdNow.toFixed(0)}</b></div>` : ''}
