@@ -15,21 +15,46 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-512.png">
 <title>Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#f7f8fa;--bg2:#ffffff;--bg3:#eef1f6;
-  --text:#1a1a2e;--text2:#6b7280;--accent:#0bb7ae;--accent-light:#e0f7f6;
-  --warn:#d97706;--warn-light:#fdf6e7;--red:#dc2626;--red-light:#fdefef;--ok:#15803d;--ok-light:#ecf8f0;
-  --card:#ffffff;--border:#e5e7eb;
+  /* 地と紙 — 白ではなく生成り。長時間見るものなので彩度と輝度を落とす */
+  --bg:#f6f4f0;--bg2:#fffdfa;--bg3:#efebe4;
+  /* 字 — 純黒は避ける。紙に乗ったインクの色 */
+  --text:#232323;--text2:#6a6560;--text3:#95908a;
+  /* 意味を持つ色は2つだけ。琥珀＝これから手を動かす、深緑＝もう済んだ */
+  --accent:#b5762e;--accent-light:#fbf3e8;
+  --ok:#3f6b52;--ok-light:#edf3ef;
+  --warn:#a8721c;--warn-light:#fbf4e6;--red:#a8443a;--red-light:#f9eeec;
+  --card:#fffdfa;--border:#e6e0d6;--border2:#f0ebe3;
   --safe-bottom:env(safe-area-inset-bottom,0px);
 }
-html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans',sans-serif;font-size:16px;background:var(--bg);color:var(--text);overflow:hidden;-webkit-tap-highlight-color:transparent}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#191817;--bg2:#232120;--bg3:#2c2a28;
+    --text:#eae6df;--text2:#a9a29a;--text3:#7d766e;
+    --accent:#e0a860;--accent-light:#2e2519;
+    --ok:#7fb99a;--ok-light:#1e2722;
+    --warn:#d7b95e;--warn-light:#2b2617;--red:#e08b80;--red-light:#2c1e1c;
+    --card:#232120;--border:#38342f;--border2:#2e2b28;
+  }
+}
+html,body{height:100%;
+  font-family:"Zen Kaku Gothic New",-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;
+  font-size:16px;line-height:1.8;background:var(--bg);color:var(--text);
+  overflow:hidden;-webkit-tap-highlight-color:transparent;
+  font-feature-settings:"palt" 1;                 /* 日本語の字送りを詰める */
+  -webkit-font-smoothing:antialiased}
+/* 数字が並ぶところは桁を揃える */
+.num,.big,td.num,.tsm,.gcv,.glzflow,.mdays{font-variant-numeric:tabular-nums}
 input,textarea,button,select{font-size:16px;font-family:inherit}
 
 #app{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .top-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;background:var(--bg2);border-bottom:1px solid var(--border)}
-.top-bar h1{font-size:17px;font-weight:700}
+.top-bar h1{font-size:16px;font-weight:700;letter-spacing:.02em}
 .top-bar .sub{font-size:12px;color:var(--text2);font-weight:400;margin-left:8px}
 .icon-btn{background:none;border:none;cursor:pointer;padding:8px;color:var(--text2);display:flex;align-items:center}
 .icon-btn svg{width:22px;height:22px;fill:currentColor;transition:transform .3s}
@@ -42,14 +67,24 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 
 .bottom-nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--bg2);border-top:1px solid var(--border);padding-bottom:var(--safe-bottom);z-index:50}
 .nav-btn{flex:1;padding:12px 0 8px;text-align:center;color:var(--text2);background:none;border:none;cursor:pointer;min-height:54px}
-.nav-btn.active{color:var(--accent)}
+.nav-btn{position:relative;transition:color .15s}
+.nav-btn.active{color:var(--accent);font-weight:700}
+.nav-btn.active::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:26px;height:2px;border-radius:0 0 2px 2px;background:var(--accent)}
 .nav-btn .em{display:block;font-size:20px;line-height:1;margin-bottom:3px}
-.nav-btn span{font-size:11px;font-weight:600}
+.nav-btn span{font-size:10.5px;font-weight:600;letter-spacing:.02em}
 
 .section-title{font-size:13px;font-weight:700;color:var(--text2);margin:22px 4px 10px;display:flex;align-items:center;gap:6px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px}
-.card .t{font-weight:600;line-height:1.5}
-.card .s{font-size:13px;color:var(--text2);margin-top:3px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:14px 16px;margin-bottom:8px}
+.card .t{font-weight:600;line-height:1.65;font-size:14.5px}
+.card .s{font-size:13px;color:var(--text2);margin-top:4px;line-height:1.85;
+  white-space:pre-wrap;word-break:break-word}
+/* 返事待ち: 完了ボタン */
+.card.pend .pendb{display:flex;gap:6px;align-items:center;margin-top:9px}
+.penddone{background:transparent;color:var(--text3);border:1px solid var(--border);
+  border-radius:9px;padding:7px 13px;font-size:12px;font-family:inherit;cursor:pointer}
+.penddone:active{background:var(--bg3)}
 .empty{color:var(--text2);font-size:14px;padding:16px 6px;text-align:center}
 
 /* 投資タブ: 資産カード・保有 */
@@ -139,27 +174,27 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 /* 今日タブだけ配色を変える（2026-08-30 メグ「見る気がしない雰囲気」）
    ── 全体のティール(#0bb7ae)は事務的なので、この画面だけ朝の光に寄せる。
       地は白のまま、差し色を琥珀＋深緑にして、名言を主役に置く。 */
-#tab-today{--tt:#b5762e;--tt2:#3f6b52;--tt-soft:#fdf6ec;--tt-line:#efe6d8}
-@media (prefers-color-scheme:dark){#tab-today{--tt:#e0a860;--tt2:#7fb99a;--tt-soft:#2b2317;--tt-line:#3a3325}}
+/* 今日タブ専用だった色は、全体のトークンを指すだけにした（2026-08-30） */
+#tab-today{--tt:var(--accent);--tt2:var(--ok);--tt-soft:var(--accent-light);--tt-line:var(--border)}
 /* 名言＝朝いちばんに目に入るもの。畳まない */
 /* 名言: 小さく、でも枠に入れて美しく（2026-08-30 メグ指示）。明朝で頭に入りやすく */
 #tab-today .tset{border:1px solid var(--tt-line);border-radius:11px;background:var(--card);
   padding:12px 14px;margin:0 0 16px}
 #tab-today .tset.done{background:var(--tt-soft);border-color:var(--tt-line);text-align:center;padding:18px 14px}
-#tab-today .tsh{font-size:11px;letter-spacing:.08em;color:var(--fg3);display:flex;
+#tab-today .tsh{font-size:11px;letter-spacing:.08em;color:var(--text3);display:flex;
   justify-content:space-between;align-items:baseline;margin:0 0 7px}
 #tab-today .tsh span{color:var(--tt);font-size:12.5px;font-weight:600}
 #tab-today .tsrow{display:flex;justify-content:space-between;align-items:center;gap:10px;
   padding:8px 0;border-top:1px solid var(--tt-line);text-decoration:none;color:inherit;font-size:13.5px}
 #tab-today .tsrow:first-of-type{border-top:none}
-#tab-today .tsm{font-size:11px;color:var(--fg3);flex:none;font-variant-numeric:tabular-nums}
+#tab-today .tsm{font-size:11px;color:var(--text3);flex:none;font-variant-numeric:tabular-nums}
 #tab-today .tset.ask{margin-top:-8px;background:var(--tt-soft)}
 #tab-today .tsask{font-size:13.5px;margin:2px 0 0}
 #tab-today .tsdone{font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;font-size:15px;color:var(--tt2)}
-#tab-today .tsmeta{font-size:11.5px;color:var(--fg3);margin-top:5px}
-#tab-today .mbsq{font-size:12px;color:var(--fg2);margin:0 0 9px}
+#tab-today .tsmeta{font-size:11.5px;color:var(--text3);margin-top:5px}
+#tab-today .mbsq{font-size:12px;color:var(--text2);margin:0 0 9px}
 #tab-today .mbsq b{color:var(--tt);font-size:14px}
-#tab-today .mbsqs{color:var(--fg3);font-size:11.5px}
+#tab-today .mbsqs{color:var(--text3);font-size:11.5px}
 #tab-today .mbscard{border:1px solid var(--tt-line);border-radius:10px;background:var(--card);margin:0 0 7px;overflow:hidden}
 #tab-today .mbscard.open{border-color:var(--tt);box-shadow:0 1px 8px rgba(0,0,0,.05)}
 #tab-today .mbsch{display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -168,18 +203,18 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .mbschl{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0}
 #tab-today .mbschl b{font-size:13.5px}
 #tab-today .mbschx{font-size:11.5px;color:var(--tt);white-space:nowrap;flex:none}
-#tab-today .mdays{font-size:11px;color:var(--fg3);font-variant-numeric:tabular-nums}
+#tab-today .mdays{font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums}
 #tab-today .mdays.warm{color:var(--tt)}
-#tab-today .mdays.cold{color:var(--fg3);opacity:.7}
+#tab-today .mdays.cold{color:var(--text3);opacity:.7}
 #tab-today .mbscb:empty{display:none}
 #tab-today .mbscb{padding:0 13px 13px;border-top:1px solid var(--tt-line)}
-#tab-today .mbsload,#tab-today .mbsneed{font-size:12px;color:var(--fg3);padding:11px 0}
+#tab-today .mbsload,#tab-today .mbsneed{font-size:12px;color:var(--text3);padding:11px 0}
 #tab-today .mbsmsg{margin:11px 0 0;font-size:12.5px;line-height:1.8}
-#tab-today .mbsmw{font-size:10.5px;color:var(--fg3);margin:0 0 3px;letter-spacing:.03em}
+#tab-today .mbsmw{font-size:10.5px;color:var(--text3);margin:0 0 3px;letter-spacing:.03em}
 #tab-today .mbsmw span{margin-left:7px;opacity:.75}
 #tab-today .mbsmb{padding:9px 11px;border-radius:9px;background:var(--tt-soft);
   max-height:210px;overflow-y:auto;-webkit-overflow-scrolling:touch}
-#tab-today .mbsmsg.me .mbsmb{background:var(--soft2,#f4f4f5)}
+#tab-today .mbsmsg.me .mbsmb{background:var(--bg3)}
 #tab-today .mbsdraft{margin:13px 0 0}
 #tab-today .mbsdh{font-size:10.5px;color:var(--tt2);letter-spacing:.08em;margin:0 0 5px}
 #tab-today .mbsdb{font-size:12.5px;line-height:1.85;padding:11px 12px;border-radius:9px;
@@ -189,23 +224,23 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .mbstop{border:1px solid var(--tt-line);border-radius:10px;padding:13px 14px;background:var(--tt-soft)}
 #tab-today .mbstl{font-size:11px;color:var(--tt);letter-spacing:.06em;margin:0 0 6px}
 #tab-today .mbstn{font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-#tab-today .mbstd{font-size:12px;color:var(--fg2);margin:6px 0 0}
+#tab-today .mbstd{font-size:12px;color:var(--text2);margin:6px 0 0}
 #tab-today .mbstb{display:flex;flex-wrap:wrap;gap:6px;margin:11px 0 0}
 #tab-today .mbsrow2{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--tt-line)}
 #tab-today .mbsrow2 a{flex:1;display:flex;align-items:center;gap:7px;text-decoration:none;color:inherit;font-size:12.5px;min-width:0}
 #tab-today .mbsrow2 a b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #tab-today .gbtn.gmini{padding:4px 9px;font-size:11px;flex:none}
 /* ── 通報カード: 読ませるのではなく押させる（2026-08-30 メグ指示） ── */
-#tab-today .glzflow{font-size:11px;color:var(--fg3);margin:0 0 7px;font-variant-numeric:tabular-nums}
-#tab-today .glzauto.ok{color:var(--fg3);background:transparent;padding:6px 0}
+#tab-today .glzflow{font-size:11px;color:var(--text3);margin:0 0 7px;font-variant-numeric:tabular-nums}
+#tab-today .glzauto.ok{color:var(--text3);background:transparent;padding:6px 0}
 #tab-today .glzpend{margin:0 0 10px}
 #tab-today .glzpendh{font-size:11.5px;color:var(--tt);margin:0 0 5px}
 #tab-today .glzprow{display:flex;justify-content:space-between;gap:9px;padding:8px 11px;
   border:1px solid var(--tt-line);border-radius:8px;margin:0 0 5px;text-decoration:none;color:inherit;font-size:12.5px}
-#tab-today .glzprow span{color:var(--fg3);font-size:11px;flex:none}
+#tab-today .glzprow span{color:var(--text3);font-size:11px;flex:none}
 #tab-today .glzauto{font-size:11.5px;color:var(--tt2);background:var(--tt-soft);
   border-radius:8px;padding:8px 11px;margin:0 0 9px;line-height:1.7}
-#tab-today .glzauto .glzautow{display:block;color:var(--fg3);font-size:11px;margin-top:2px}
+#tab-today .glzauto .glzautow{display:block;color:var(--text3);font-size:11px;margin-top:2px}
 #tab-today .glzrow{display:block;padding:11px 12px;border:1px solid var(--tt-line);border-radius:10px;
   background:var(--card);margin:0 0 8px;text-decoration:none;color:inherit}
 #tab-today .glzrow.pushed{opacity:.55}
@@ -213,15 +248,15 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .glzrow .gsite{font-size:10.5px;padding:1px 7px;border-radius:99px;
   background:var(--tt-soft);color:var(--tt);border:1px solid var(--tt-line);flex:none}
 #tab-today .glzrow .g1 b{font-weight:600}
-#tab-today .glzrow .gd{font-size:12px;color:var(--fg2);margin:5px 0 0;line-height:1.6}
-#tab-today .glzrow .g2{font-size:11.5px;color:var(--fg3);margin:4px 0 0;
+#tab-today .glzrow .gd{font-size:12px;color:var(--text2);margin:5px 0 0;line-height:1.6}
+#tab-today .glzrow .g2{font-size:11.5px;color:var(--text3);margin:4px 0 0;
   padding-left:8px;border-left:2px solid var(--tt-line)}
 #tab-today .glzrow .gwhy{font-size:11.5px;color:var(--tt2);margin:7px 0 0}
 #tab-today .glzrow .gact{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 0}
-#tab-today .gbtn{font-size:12px;padding:7px 13px;border-radius:8px;border:1px solid var(--tt-line);
-  background:var(--card);color:var(--fg2);cursor:pointer;text-decoration:none;display:inline-block;
-  font-family:inherit;line-height:1.4}
-#tab-today .gbtn.gmain{background:var(--tt);border-color:var(--tt);color:#fff;font-weight:600}
+#tab-today .gbtn{font-size:12.5px;padding:9px 15px;border-radius:9px;border:1px solid var(--border);
+  background:var(--card);color:var(--text2);cursor:pointer;text-decoration:none;display:inline-block;
+  font-family:inherit;font-weight:500;line-height:1.4;transition:transform .08s}
+#tab-today .gbtn.gmain{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
 #tab-today .gbtn.gopen{background:var(--tt-soft);border-color:var(--tt-line);color:var(--tt);font-weight:600}
 #tab-today .gbtn:active{transform:translateY(1px)}
 #tab-today .glzrow .gdone{font-size:11.5px;color:var(--tt2);margin:8px 0 0}
@@ -230,14 +265,16 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .quote-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
   background:linear-gradient(180deg,var(--tt),var(--tt2))}
 #tab-today .quote-card .q{font-family:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  font-feature-settings:"palt" 0;
   font-size:14.5px;line-height:1.95;font-weight:500;color:var(--text);padding-left:4px;letter-spacing:.02em}
 #tab-today .quote-card .a{font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;
   font-size:11px;color:var(--tt);margin-top:8px;text-align:right;font-weight:600;letter-spacing:.04em}
 /* 見出しは琥珀の小さな帯 */
-#tab-today .blk-h{color:var(--tt);font-size:11px;letter-spacing:.14em;font-weight:800;
-  margin:20px 2px 8px;display:flex;align-items:center;gap:8px}
-#tab-today .blk-h::after{content:"";flex:1;height:1px;background:var(--tt-line)}
-#tab-today .blk-sub{color:var(--text3,#9ca3af)}
+#tab-today .blk-h{color:var(--text2);font-size:12.5px;letter-spacing:.04em;font-weight:700;
+  margin:26px 2px 9px;display:flex;align-items:center;gap:9px}
+#tab-today .blk-h::after{content:"";flex:1;height:1px;background:var(--border2)}
+#tab-today .blk-sub{color:var(--text2);font-size:12px;font-weight:700;letter-spacing:.02em;
+  margin:16px 2px 7px;display:flex;align-items:center;gap:8px}
 /* 数字のストリップは琥珀の下線 */
 #tab-today .sc{border-bottom:2px solid var(--tt-line)}
 /* 期日カードの左線を琥珀に */
@@ -256,9 +293,8 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 .ldrow b{flex:none;font-family:"Roboto Mono",ui-monospace,monospace;color:var(--text)}
 
 /* 今日タブ 2026-08-30 再構成: 1画面に収める */
-.blk-h{font-size:11px;font-weight:800;letter-spacing:.12em;color:var(--text3,#9ca3af);
-  margin:16px 2px 7px;text-transform:none}
-.blk-sub{font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--text3,#9ca3af);margin:11px 2px 5px}
+.blk-h{font-size:12.5px;font-weight:700;letter-spacing:.04em;color:var(--text2);margin:22px 2px 8px}
+.blk-sub{font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--text2);margin:15px 2px 6px}
 /* 数字は1行のストリップに */
 .strip{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px;margin-bottom:2px;scrollbar-width:none}
 .strip::-webkit-scrollbar{display:none}
@@ -647,7 +683,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.19';
+const APP_VERSION = '2026-08-30.20';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1304,12 +1340,20 @@ function renderBriefing() {
   $('brief-attention-wrap').style.display = att.length ? '' : 'none';
   $('brief-attention').innerHTML = att.map(a => `<div class="card"><div class="s" style="color:var(--text)">${esc(a)}</div></div>`).join('');
   const pen = (b.pending || []);
-  $('brief-pending-wrap').style.display = pen.length ? '' : 'none';
   // 🔴 文字列をonclickに直接埋めると引用符が衝突して属性が壊れる（2026-08-30に発生）。
   //    配列に持たせて番号で渡す。
-  window.__pending = pen;
-  $('brief-pending').innerHTML = pen.map((p, i) => `<div class="card"><div class="t" style="font-size:14px">${esc(p.summary)}</div>${p.ask?`<div class="s">${esc(p.ask)}</div>`:''}
-    <button class="toinbox" onclick="answerPending(${i})">投げ込みで答える →</button></div>`).join('');
+  // 🔴 答えたあとも出続けるのが嫌、というメグの指摘（2026-08-30）。
+  //    完了は手動。押したものはこの端末で覚えておき、二度と出さない。
+  const pdone = JSON.parse(localStorage.getItem('pendingDone')||'{}');
+  const pshow = pen.filter(p => !pdone[pendKey(p)]);
+  $('brief-pending-wrap').style.display = pshow.length ? '' : 'none';
+  window.__pending = pshow;
+  $('brief-pending').innerHTML = pshow.map((p, i) => `<div class="card pend">
+    <div class="t" style="font-size:14px">${esc(p.summary)}</div>${p.ask?`<div class="s">${esc(p.ask)}</div>`:''}
+    <div class="pendb">
+      <button class="toinbox" onclick="answerPending(${i})">投げ込みで答える →</button>
+      <button class="penddone" onclick="pendingDone(${i})">完了</button>
+    </div></div>`).join('');
   const log = (b.sorted_log || []).slice(0, 8);
   briefLogFallback = log.length ? log.map(l => `・${esc(l.at||'')} ${esc(l.summary)}`).join('<br>') : '（まだなし）';
   $('brief-log').innerHTML = briefLogFallback;
@@ -2335,6 +2379,14 @@ async function loadQuick() {
   } catch (e) { el.innerHTML = `<p class="empty">読み込み失敗: ${esc(String(e.message || e))}</p>`; }
 }
 // 「投げ込みで答える」— 何についての返事かを本文に入れておく（2026-08-30 メグ指示）
+function pendKey(p){ return (p.summary||'') + '|' + (p.at||''); }
+function pendingDone(i){
+  const p = (window.__pending||[])[i]; if(!p) return;
+  const d = JSON.parse(localStorage.getItem('pendingDone')||'{}');
+  d[pendKey(p)] = new Date().toISOString();
+  localStorage.setItem('pendingDone', JSON.stringify(d));
+  renderBriefing(); toast('完了にしました');
+}
 function answerPending(i){
   const p = (window.__pending || [])[i];
   if(!p) return;
