@@ -9,6 +9,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Dashboard">
 <meta name="theme-color" content="#0bb7ae">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&display=swap">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-512.png">
 <title>Dashboard</title>
@@ -139,12 +142,15 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today{--tt:#b5762e;--tt2:#3f6b52;--tt-soft:#fdf6ec;--tt-line:#efe6d8}
 @media (prefers-color-scheme:dark){#tab-today{--tt:#e0a860;--tt2:#7fb99a;--tt-soft:#2b2317;--tt-line:#3a3325}}
 /* 名言＝朝いちばんに目に入るもの。畳まない */
-/* 名言は最上部に置くが、場所は取らせない（2026-08-30 メグ「大きすぎる」） */
-#tab-today .quote-card{background:none;border:0;border-left:2px solid var(--tt);
-  border-radius:0;padding:1px 0 1px 11px;margin:4px 0 12px}
-#tab-today .quote-card::before{content:none}
-#tab-today .quote-card .q{font-size:12.5px;line-height:1.75;font-weight:500;color:var(--text2);padding-left:0}
-#tab-today .quote-card .a{font-size:10.5px;color:var(--text3,#9ca3af);margin-top:2px;text-align:left;font-weight:500}
+/* 名言: 小さく、でも枠に入れて美しく（2026-08-30 メグ指示）。明朝で頭に入りやすく */
+#tab-today .quote-card{background:var(--card);border:1px solid var(--tt-line);
+  border-radius:12px;padding:14px 16px 12px;margin:4px 0 14px;position:relative;overflow:hidden}
+#tab-today .quote-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,var(--tt),var(--tt2))}
+#tab-today .quote-card .q{font-family:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  font-size:14.5px;line-height:1.95;font-weight:500;color:var(--text);padding-left:4px;letter-spacing:.02em}
+#tab-today .quote-card .a{font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;
+  font-size:11px;color:var(--tt);margin-top:8px;text-align:right;font-weight:600;letter-spacing:.04em}
 /* 見出しは琥珀の小さな帯 */
 #tab-today .blk-h{color:var(--tt);font-size:11px;letter-spacing:.14em;font-weight:800;
   margin:20px 2px 8px;display:flex;align-items:center;gap:8px}
@@ -539,7 +545,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.8';
+const APP_VERSION = '2026-08-30.9';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -899,7 +905,7 @@ function renderBriefing() {
   const pen = (b.pending || []);
   $('brief-pending-wrap').style.display = pen.length ? '' : 'none';
   $('brief-pending').innerHTML = pen.map(p => `<div class="card"><div class="t" style="font-size:14px">${esc(p.summary)}</div>${p.ask?`<div class="s">${esc(p.ask)}</div>`:''}
-    <button class="toinbox" onclick="switchTab('inbox');document.getElementById('inbox-text')?.focus()">投げ込みで答える →</button></div>`).join('');
+    <button class="toinbox" onclick="answerPending(${JSON.stringify(esc(p.summary))})">投げ込みで答える →</button></div>`).join('');
   const log = (b.sorted_log || []).slice(0, 8);
   briefLogFallback = log.length ? log.map(l => `・${esc(l.at||'')} ${esc(l.summary)}`).join('<br>') : '（まだなし）';
   $('brief-log').innerHTML = briefLogFallback;
@@ -1923,6 +1929,18 @@ async function loadQuick() {
     }));
     quickLoaded = true;
   } catch (e) { el.innerHTML = `<p class="empty">読み込み失敗: ${esc(String(e.message || e))}</p>`; }
+}
+// 「投げ込みで答える」— 何についての返事かを本文に入れておく（2026-08-30 メグ指示）
+function answerPending(summary){
+  switchTab('inbox');
+  setTimeout(()=>{
+    const t = document.getElementById('inbox-text');
+    if(!t) return;
+    const head = `【${String(summary).replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')}】について\n`;
+    if(!t.value.startsWith(head)) t.value = head + t.value;
+    t.focus();
+    t.setSelectionRange(t.value.length, t.value.length);
+  }, 60);
 }
 function switchTab(tab) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
