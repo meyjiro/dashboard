@@ -188,6 +188,10 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .tsrow{display:flex;justify-content:space-between;align-items:center;gap:10px;
   padding:8px 0;border-top:1px solid var(--tt-line);text-decoration:none;color:inherit;font-size:13.5px}
 #tab-today .tsrow:first-of-type{border-top:none}
+#tab-today .tsdoneb{flex:none;background:var(--card);border:1px solid var(--border);
+  border-radius:8px;padding:5px 12px;font-size:11.5px;color:var(--text2);
+  font-family:inherit;cursor:pointer}
+#tab-today .tsdoneb:active{background:var(--bg3)}
 #tab-today .tsm{font-size:11px;color:var(--text3);flex:none;font-variant-numeric:tabular-nums}
 #tab-today .tset.ask{margin-top:-8px;background:var(--tt-soft)}
 #tab-today .tsask{font-size:13.5px;margin:2px 0 0}
@@ -712,7 +716,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.26';
+const APP_VERSION = '2026-08-30.27';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1095,6 +1099,11 @@ async function mbsNoReply(id){
 //    今日の分がゼロになったら画面が空になる。その空白が「終わった」の合図。
 //    日中に増えたものは今日のセットに足さない（境界が動くと終わりが消える）。
 const SETKEY = 'todaySet';
+// 曜日で決まっている家のこと。dow: 0=日 1=月 … 6=土
+// 増やすときはここに1行足すだけ。
+const WEEKLY = [
+  { dow:0, id:'niwa', label:'庭掃除', mins:'' },
+];
 function setState(){
   const t = new Date().toLocaleDateString('sv-SE');
   let st;
@@ -1129,9 +1138,13 @@ function renderTodaySet(){
   }
   el.innerHTML = `<div class="tset">
     <div class="tsh">今日やること <span>あと ${left.length}</span></div>
-    ${left.map(i=>`<a class="tsrow" href="#${esc(i.anchor||'')}" onclick="jumpSet('${esc(i.anchor||'')}');return false">
-      <span class="tsn">${esc(i.label)}</span>
-      <span class="tsm">${esc(i.mins||'')}</span></a>`).join('')}
+    ${left.map(i=> i.manual
+      ? `<div class="tsrow">
+           <span class="tsn">${esc(i.label)}</span>
+           <button class="tsdoneb" onclick="markSetDone('${esc(i.id)}')">済んだ</button></div>`
+      : `<a class="tsrow" href="#${esc(i.anchor||'')}" onclick="jumpSet('${esc(i.anchor||'')}');return false">
+           <span class="tsn">${esc(i.label)}</span>
+           <span class="tsm">${esc(i.mins||'')}</span></a>`).join('')}
   </div>`;
   setTimeout(askOpened, 60);
 }
@@ -1142,8 +1155,21 @@ function jumpSet(a){
 // 各ブロックが読み込み終わったら、今日のセットを組み立てる（朝いちばんの1回だけ確定する）
 function buildSet(parts){
   const st = setState();
-  if(st.items) { renderTodaySet(); return; }   // 🔴 今日ぶんは一度決めたら動かさない
-  st.items = parts.filter(p=>p && p.n>0).map(p=>({id:p.id, label:p.label, mins:p.mins, anchor:p.anchor}));
+  if(st.items) {
+    // 🔴 今日ぶんは一度決めたら動かさない。ただし曜日で決まっている家のことだけは例外で、
+    //    朝の時点ですでに決まっているものなので、抜けていたら足す（日中に増えることはない）
+    let added = false;
+    for(const w of parts.filter(p=>p && p.manual)){
+      if(!st.items.some(i=>i.id===w.id) && !st.doneIds.includes(w.id)){
+        st.items.push({id:w.id, label:w.label, mins:w.mins, anchor:w.anchor, manual:true});
+        st.total = st.items.length; added = true;
+      }
+    }
+    if(added) saveSet(st);
+    renderTodaySet(); return;
+  }
+  st.items = parts.filter(p=>p && p.n>0).map(p=>({id:p.id, label:p.label, mins:p.mins,
+                                                  anchor:p.anchor, manual:p.manual||false}));
   st.started = Date.now();
   st.total = st.items.length;
   saveSet(st); renderTodaySet();
@@ -1152,7 +1178,9 @@ function buildSet(parts){
 function tryBuildSet(){
   const p = window.__setParts||{};
   if(!('mbs' in p) || !('glz' in p)) return;    // 両方そろうまで待つ
-  buildSet([p.due, p.mbs, p.glz].filter(Boolean));
+  const dow = new Date().getDay();
+  const week = WEEKLY.filter(w=>w.dow===dow).map(w=>({...w, n:1, manual:true}));
+  buildSet([p.due, p.mbs, p.glz, ...week].filter(Boolean));
 }
 function markSetDone(id){
   const st = setState(); if(!st.items) return;
