@@ -145,6 +145,22 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 .mbsrow .mr2{display:flex;font-size:11px;color:var(--text3,#9ca3af);margin-top:1px}
 .mbsrow .mopen{margin-left:auto;color:var(--accent);font-weight:700}
 .mbsmore,.mbswait{padding:8px 13px;border-top:1px solid var(--border);font-size:11.5px;color:var(--text2)}
+.nsbox{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 14px;margin-bottom:9px}
+.nsbox.dim{color:var(--text2);font-size:13px}
+.nsh{display:flex;align-items:baseline;gap:8px;font-size:11.5px;font-weight:800;color:var(--text2);letter-spacing:.04em}
+.nsh .nstag{margin-left:auto;font-weight:500;font-size:10.5px;color:var(--text3,#9ca3af)}
+.nsname{font-size:18px;font-weight:800;margin-top:3px}
+.nsname .nscode{font-size:12px;color:var(--text2);font-family:"Roboto Mono",ui-monospace,monospace}
+.nstitle{display:block;font-size:15px;font-weight:700;line-height:1.6;margin-top:4px;text-decoration:none;color:var(--text)}
+.nsul{margin:7px 0 0;padding-left:17px;font-size:13px;line-height:1.85;color:var(--text2)}
+.nsul li{margin:2px 0}
+.nsl{font-size:12.5px;line-height:1.8;margin-top:6px;color:var(--text2)}
+.nsl span{display:block;font-size:10px;color:var(--text3,#9ca3af);font-weight:700;letter-spacing:.05em}
+.nsl2{font-size:12.5px;color:var(--text2);margin-top:4px}
+.nsflag{background:var(--warn-light);color:var(--warn);border-radius:9px;padding:7px 10px;
+  font-size:12px;line-height:1.7;margin-top:8px;font-weight:600}
+.nsnews{display:block;padding:8px 0;border-top:1px solid var(--border);text-decoration:none;color:var(--text);font-size:13.5px;line-height:1.7}
+.nsnews span{display:block;font-size:11.5px;color:var(--text2)}
 .mbsold{border-top:1px solid var(--border)}
 .mbsold>summary{padding:9px 13px;font-size:11.5px;color:var(--text2);cursor:pointer;list-style:none}
 .mbsold>summary::-webkit-details-marker{display:none}
@@ -295,6 +311,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
       <div id="ops-status"></div>
       <div id="today-mebius"></div>
       <div id="today-nums"></div>
+      <div id="today-new"></div>
       <div id="brief-quote"></div>
       <div class="section-title">📅 期日</div>
       <div id="brief-due"></div>
@@ -452,7 +469,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.3';
+const APP_VERSION = '2026-08-30.4';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -695,6 +712,61 @@ async function loadMebiusDrafts(){
       </a>`).join('')}</details>`:''}
     ${waits?`<div class="mbswait">待ちの案件: ${waits}</div>`:''}
   </div>`;
+}
+
+
+// ══ 🆕 新しく入ってきたもの（朝のメニュー【3】・2026-08-30）══
+// クラウドroutine「☕ 朝のメニュー: 新しいもの」が毎朝9時に inbox/morning.json を作る。
+// ここは表示するだけ。中身の作り方は workflows/朝のメニュー.md が正本。
+async function loadNewStuff(){
+  const el = $('today-new'); if(!el) return;
+  let m;
+  try{ const t = await repoFile('meyjiro/claude-context','inbox/morning.json');
+       if(!t){ el.innerHTML=''; return; } m = JSON.parse(t); }
+  catch(e){ el.innerHTML=''; return; }
+  const age = (Date.now() - new Date(m.generated_at).getTime())/3600000;
+  const parts = [];
+
+  // 今日の投資候補
+  const c = m.candidate;
+  if(c && !c.skipped && c.name){
+    parts.push(`<div class="nsbox">
+      <div class="nsh">🆕 今日の投資候補<span class="nstag">${esc(c.market||'')}</span></div>
+      <div class="nsname">${esc(c.name)}${c.code?` <span class="nscode">${esc(c.code)}</span>`:''}</div>
+      ${c.from?`<div class="nsl"><span>どこから</span>${esc(c.from)}</div>`:''}
+      ${c.why?`<div class="nsl"><span>なぜ今日これか</span>${esc(c.why)}</div>`:''}
+      ${c.pitch?`<div class="nsl"><span>買い論拠</span>${esc(c.pitch)}</div>`:''}
+      ${c.flag?`<div class="nsflag">${esc(c.flag)}</div>`:''}
+    </div>`);
+  } else if(c && c.skipped){
+    parts.push(`<div class="nsbox dim">🆕 今日の投資候補はなし${c.skip_reason?`<div class="nsl2">${esc(c.skip_reason)}</div>`:''}</div>`);
+  }
+
+  // 動画（保有と無関係に全部・URL付き）
+  (m.videos||[]).forEach(v=>{
+    parts.push(`<div class="nsbox">
+      <div class="nsh">${v.who==='太郎'?'🔧':'📺'} ${esc(v.who||'')}<span class="nstag">${esc(v.date||'')}</span></div>
+      <a class="nstitle" href="${esc(v.url||'#')}" target="_blank" rel="noopener">${esc(v.title||'')} ▶</a>
+      <ul class="nsul">${(v.summary||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+      ${(v.names||[]).length?`<div class="nsl"><span>新しく出た銘柄</span>${v.names.map(esc).join('・')}</div>`:''}
+      ${v.conflict?`<div class="nsflag">⚠️ ${esc(v.conflict)}</div>`:''}
+    </div>`);
+  });
+
+  // タイ・チェンマイ
+  const th = m.thai||[];
+  if(th.length || m.thai_none){
+    parts.push(`<div class="nsbox">
+      <div class="nsh">🇹🇭 タイ・チェンマイ${m.pm25?`<span class="nstag">PM2.5 ${m.pm25.value} ${esc(m.pm25.level||'')}</span>`:''}</div>
+      ${th.length ? th.map(t=>`<a class="nsnews" href="${esc(t.url||'#')}" target="_blank" rel="noopener">
+          <b>${esc(t.title||'')}</b>${t.note?`<span>${esc(t.note)}</span>`:''}</a>`).join('')
+        : `<div class="nsl2">今日は特になし</div>`}
+    </div>`);
+  }
+
+  if(!parts.length){ el.innerHTML=''; return; }
+  el.innerHTML = `<div class="section-title">🆕 新しく入ってきたもの
+    ${age>30?`<span class="sec-note">🔴 ${Math.floor(age/24)}日前の内容です</span>`:''}</div>${parts.join('')}`;
 }
 
 async function loadBriefing() {
@@ -1797,7 +1869,7 @@ let isLoading = false;
 async function loadAll() {
   if (isLoading || !pat) return;
   isLoading = true; $('refresh-btn').classList.add('spinning');
-  await Promise.all([loadOps(), loadMebiusDrafts(), loadNums(), loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadIbkr(), loadVerdicts(), loadDocket(), loadScout(), loadMebius(), loadHealth()]);
+  await Promise.all([loadOps(), loadMebiusDrafts(), loadNums(), loadNewStuff(), loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadIbkr(), loadVerdicts(), loadDocket(), loadScout(), loadMebius(), loadHealth()]);
   await loadSchedule(); // メビウス予定をカレンダーに重ねるため後で描画
   isLoading = false; $('refresh-btn').classList.remove('spinning');
 }
