@@ -145,6 +145,10 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 .mbsrow .mr2{display:flex;font-size:11px;color:var(--text3,#9ca3af);margin-top:1px}
 .mbsrow .mopen{margin-left:auto;color:var(--accent);font-weight:700}
 .mbsmore,.mbswait{padding:8px 13px;border-top:1px solid var(--border);font-size:11.5px;color:var(--text2)}
+.mbsold{border-top:1px solid var(--border)}
+.mbsold>summary{padding:9px 13px;font-size:11.5px;color:var(--text2);cursor:pointer;list-style:none}
+.mbsold>summary::-webkit-details-marker{display:none}
+.mbsold>summary::after{content:" ▾"} .mbsold[open]>summary::after{content:" ▴"}
 .numcard{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:11px 13px}
 .numcard .nt{display:flex;align-items:baseline;gap:8px;font-size:16px;font-weight:800}
 .numcard .ns{font-size:13px;color:var(--text2);margin-top:2px;line-height:1.65}
@@ -448,7 +452,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.2';
+const APP_VERSION = '2026-08-30.3';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -663,7 +667,11 @@ async function loadMebiusDrafts(){
   try{ const r = await fetch(MBS_URL, {cache:'no-store'}); d = await r.json(); }
   catch(e){ el.innerHTML=''; return; }
   if(!d || !d.counts){ el.innerHTML=''; return; }
-  const dr = d.draft_ready || [];
+  const all = d.draft_ready || [];
+  // 🔴 1か月以内のものを古い順に主表示。それ以前は「時間があったら」として畳む
+  //    （2026-08-30 メグ方針。最古は117日放置だが、そこから始めると終わらない）
+  const dr  = all.filter(x=>x.days!=null && x.days<=30);
+  const old_ = all.filter(x=>x.days==null || x.days>30);
   const c  = d.counts, L = d.labels || {};
   // 今日動かないと止まるもの（草案以外）
   const waits = ['noto','payment_wait','schedule','surgery'].filter(k=>c[k]>0)
@@ -671,13 +679,20 @@ async function loadMebiusDrafts(){
   el.innerHTML = `
   <div class="section-title">✉️ メビウス <span class="sec-note">送信するのはメグ本人。ここは一覧だけ</span></div>
   <div class="mbs">
-    <div class="mbsh"><b>草案ができています</b><span class="mbsn">${dr.length}件</span></div>
-    ${dr.slice(0,5).map(x=>`<a class="mbsrow" href="${esc(x.url)}" target="_blank" rel="noopener">
+    <div class="mbsh"><b>草案ができています</b>
+      <span class="mbsn">${dr.length}${old_.length?` <span style="opacity:.6">+${old_.length}</span>`:''}件</span></div>
+    ${dr.length ? dr.slice(0,6).map(x=>`<a class="mbsrow" href="${esc(x.url)}" target="_blank" rel="noopener">
        <div class="mr1"><b>${esc(x.name||'（名前なし）')}</b>
          <span class="mtag">${esc(x.magic||'術 未定')}</span></div>
        <div class="mr2">${x.days!=null?x.days+'日 動きなし':''}<span class="mopen">ひらく →</span></div>
-     </a>`).join('')}
-    ${dr.length>5?`<div class="mbsmore">ほか ${dr.length-5} 件</div>`:''}
+     </a>`).join('') : `<div class="mbsmore">1か月以内のものはありません</div>`}
+    ${dr.length>6?`<div class="mbsmore">1か月以内であと ${dr.length-6} 件</div>`:''}
+    ${old_.length?`<details class="mbsold"><summary>1か月より前のもの ${old_.length}件（時間があったら）</summary>
+      ${old_.map(x=>`<a class="mbsrow" href="${esc(x.url)}" target="_blank" rel="noopener">
+        <div class="mr1"><b>${esc(x.name||'（名前なし）')}</b>
+          <span class="mtag">${esc(x.magic||'術 未定')}</span></div>
+        <div class="mr2">${x.days}日 動きなし<span class="mopen">ひらく →</span></div>
+      </a>`).join('')}</details>`:''}
     ${waits?`<div class="mbswait">待ちの案件: ${waits}</div>`:''}
   </div>`;
 }
