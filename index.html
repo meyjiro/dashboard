@@ -153,6 +153,8 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
   padding:8px 0;border-top:1px solid var(--tt-line);text-decoration:none;color:inherit;font-size:13.5px}
 #tab-today .tsrow:first-of-type{border-top:none}
 #tab-today .tsm{font-size:11px;color:var(--fg3);flex:none;font-variant-numeric:tabular-nums}
+#tab-today .tset.ask{margin-top:-8px;background:var(--tt-soft)}
+#tab-today .tsask{font-size:13.5px;margin:2px 0 0}
 #tab-today .tsdone{font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;font-size:15px;color:var(--tt2)}
 #tab-today .tsmeta{font-size:11.5px;color:var(--fg3);margin-top:5px}
 #tab-today .mbsq{font-size:12px;color:var(--fg2);margin:0 0 9px}
@@ -194,6 +196,13 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .mbsrow2 a b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #tab-today .gbtn.gmini{padding:4px 9px;font-size:11px;flex:none}
 /* ── 通報カード: 読ませるのではなく押させる（2026-08-30 メグ指示） ── */
+#tab-today .glzflow{font-size:11px;color:var(--fg3);margin:0 0 7px;font-variant-numeric:tabular-nums}
+#tab-today .glzauto.ok{color:var(--fg3);background:transparent;padding:6px 0}
+#tab-today .glzpend{margin:0 0 10px}
+#tab-today .glzpendh{font-size:11.5px;color:var(--tt);margin:0 0 5px}
+#tab-today .glzprow{display:flex;justify-content:space-between;gap:9px;padding:8px 11px;
+  border:1px solid var(--tt-line);border-radius:8px;margin:0 0 5px;text-decoration:none;color:inherit;font-size:12.5px}
+#tab-today .glzprow span{color:var(--fg3);font-size:11px;flex:none}
 #tab-today .glzauto{font-size:11.5px;color:var(--tt2);background:var(--tt-soft);
   border-radius:8px;padding:8px 11px;margin:0 0 9px;line-height:1.7}
 #tab-today .glzauto .glzautow{display:block;color:var(--fg3);font-size:11px;margin-top:2px}
@@ -638,7 +647,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.17';
+const APP_VERSION = '2026-08-30.18';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -944,10 +953,42 @@ async function mbsToggle(id){
       <div class="mbsdb">${br(d.draft||'（草案がありません）')}</div>
     </div>
     <div class="mbsacts">
-      <a class="gbtn gmain" href="${esc(x.url||'#')}" target="_blank" rel="noopener" onclick="mbsSkip(${id},true)">管理画面で直して送る →</a>
+      <a class="gbtn gmain" href="${esc((x.url||'#') + (x.url?'&draft=1#reply-form':''))}" target="_blank" rel="noopener"
+         onclick="mbsOpened(${id})">草案入りで開く →</a>
       <button class="gbtn gsub" onclick="mbsNoReply(${id})">返信は要らない</button>
       <button class="gbtn gsub" onclick="mbsSkip(${id})">今日はとばす</button>
     </div>`;
+}
+
+// 🔴 「開いた」は「送った」ではない。開いたまま送っていないものが新しい滞留にならないよう、
+//    戻ってきたときに1回だけ聞く（2026-08-30）。
+function mbsOpened(id){
+  const o = JSON.parse(localStorage.getItem('mbsOpened')||'{}');
+  o[id] = Date.now(); localStorage.setItem('mbsOpened', JSON.stringify(o));
+}
+function askOpened(){
+  const o = JSON.parse(localStorage.getItem('mbsOpened')||'{}');
+  const ids = Object.keys(o).filter(k => Date.now()-o[k] > 60000);
+  if(!ids.length) return;
+  const id = ids[0];
+  const x = (window.__mbsAll||[]).find(v=>String(v.id)===String(id));
+  const el = $('today-set'); if(!el) return;
+  const box = document.createElement('div');
+  box.className = 'tset ask';
+  box.innerHTML = `<div class="tsh">さっき開いたもの</div>
+    <div class="tsask">${esc(x?x.name:'メビウスの案件')} は送りましたか？</div>
+    <div class="mbsacts">
+      <button class="gbtn gmain" onclick="mbsAnswered('${id}',true)">送った</button>
+      <button class="gbtn gsub" onclick="mbsAnswered('${id}',false)">まだ</button>
+    </div>`;
+  el.appendChild(box);
+}
+function mbsAnswered(id, sent){
+  const o = JSON.parse(localStorage.getItem('mbsOpened')||'{}');
+  delete o[id]; localStorage.setItem('mbsOpened', JSON.stringify(o));
+  if(sent) mbsSkip(Number(id), true);
+  renderTodaySet(); setTimeout(askOpened, 100);
+  toast(sent ? '片づきました' : 'また出します');
 }
 
 function mbsSkip(id, quiet){
@@ -1011,6 +1052,7 @@ function renderTodaySet(){
       <div class="tsdone">今日の分は終わりました</div>
       <div class="tsmeta">${new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}
         ${st.streak>1?`　${st.streak}日つづけて終わっています`:''}</div></div>`;
+    setTimeout(askOpened, 60);
     return;
   }
   el.innerHTML = `<div class="tset">
@@ -1019,6 +1061,7 @@ function renderTodaySet(){
       <span class="tsn">${esc(i.label)}</span>
       <span class="tsm">${esc(i.mins||'')}</span></a>`).join('')}
   </div>`;
+  setTimeout(askOpened, 60);
 }
 function jumpSet(a){
   const el = document.getElementById(a);
@@ -1126,7 +1169,7 @@ async function loadNewStuff(){
         ${r.detail?`<div class="gd">${esc(r.detail)}</div>`:''}
         ${r.target?`<div class="g2">${esc(r.target)}</div>`:''}
         ${pushed ? `<div class="gdone">✓ ${esc(pushed)}　次の巡回で反映されます</div>` : `
-        <div class="gwhy">${esc(sg.why||'')}</div>
+        <div class="gwhy">${sg.from_precedent?'📖 ':''}${esc(sg.why||'')}</div>
         <div class="gact">
           ${sg.do==='judge'
             ? `<a class="gbtn gopen" href="${esc(r.url||'#')}" target="_blank" rel="noopener">中身を見る →</a>
@@ -1137,6 +1180,12 @@ async function loadNewStuff(){
         </div>`}
       </div>`}).join('')}</div>`
        : `<div class="nsl2">${esc(g.note||'新しい通報はありません')}</div>`}
+      ${(g.pending||[]).length ? `<div class="glzpend">
+        <div class="glzpendh">承認待ちで、なぜ止まったか記録がないもの ${g.pending.length}件</div>
+        ${g.pending.map(x=>`<a class="glzprow" href="${esc(x.url||'#')}" target="_blank" rel="noopener">
+          <b>${esc(x.title||'')}</b><span>${esc((x.at||'').slice(0,10))} ${esc(x.site)}</span></a>`).join('')}
+      </div>` : (g.pending_note?`<div class="glzauto ok">✓ 承認待ち ${esc(g.pending_note)}</div>`:'')}
+      ${g.flow?`<div class="glzflow">前回（${esc(g.flow.since)}）から　通報 ${esc(g.flow.reports)}　承認待ち ${esc(g.flow.pending)}</div>`:''}
       <div class="glzgrid">${Object.entries(cs).map(([site,v])=>`<div class="gc">
         <div class="gcn">${esc(site)}</div>
         <div class="gcv">${Object.entries(v).map(([k,n])=>`<span${n>0&&k==='通報'?' class="hot"':''}>${esc(k)} ${n}</span>`).join('')}</div>
