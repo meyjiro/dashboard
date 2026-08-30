@@ -561,7 +561,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.11';
+const APP_VERSION = '2026-08-30.12';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -837,9 +837,11 @@ async function loadNewStuff(){
               .filter(k=>P[k]).map(k=>`<div class="pl"><div class="plk">${LB[k]}</div>
                 <p>${esc(P[k])}</p></div>`).join('')}</div>`
           : pl.length ? `<div class="plainbox">${pl.map(x=>`<p>${esc(x)}</p>`).join('')}</div>`
-                      : `<div class="nsl2">説明がまだありません</div>`}
-      ${c.flag?`<div class="nsflag">${esc(c.flag)}</div>`:''}
-      ${(c.from||c.why||c.pitch)?`<details class="cmore"><summary>もとの記録</summary>
+                      : `<div class="nsl2">やさしい説明は明日の朝から出ます</div>`}
+      ${/* 🔴 専門用語だらけの元データは、やさしい説明の有無に関わらず必ず畳む
+             （2026-08-30 メグ「すげえわかりづらい情報が下に書いてある。読む気にもならない」）*/''}
+      ${(c.from||c.why||c.pitch||c.flag)?`<details class="cmore"><summary>専門的な記録を見る</summary>
+        ${c.flag?`<div class="nsl"><span>留意</span>${esc(c.flag)}</div>`:''}
         ${c.from?`<div class="nsl"><span>どこから</span>${esc(c.from)}</div>`:''}
         ${c.why?`<div class="nsl"><span>なぜ今日これか</span>${esc(c.why)}</div>`:''}
         ${c.pitch?`<div class="nsl"><span>買い論拠</span>${esc(c.pitch)}</div>`:''}
