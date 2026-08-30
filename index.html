@@ -143,6 +143,15 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 @media (prefers-color-scheme:dark){#tab-today{--tt:#e0a860;--tt2:#7fb99a;--tt-soft:#2b2317;--tt-line:#3a3325}}
 /* 名言＝朝いちばんに目に入るもの。畳まない */
 /* 名言: 小さく、でも枠に入れて美しく（2026-08-30 メグ指示）。明朝で頭に入りやすく */
+#tab-today .mbstop{border:1px solid var(--tt-line);border-radius:10px;padding:13px 14px;background:var(--tt-soft)}
+#tab-today .mbstl{font-size:11px;color:var(--tt);letter-spacing:.06em;margin:0 0 6px}
+#tab-today .mbstn{font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#tab-today .mbstd{font-size:12px;color:var(--fg2);margin:6px 0 0}
+#tab-today .mbstb{display:flex;flex-wrap:wrap;gap:6px;margin:11px 0 0}
+#tab-today .mbsrow2{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--tt-line)}
+#tab-today .mbsrow2 a{flex:1;display:flex;align-items:center;gap:7px;text-decoration:none;color:inherit;font-size:12.5px;min-width:0}
+#tab-today .mbsrow2 a b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#tab-today .gbtn.gmini{padding:4px 9px;font-size:11px;flex:none}
 /* ── 通報カード: 読ませるのではなく押させる（2026-08-30 メグ指示） ── */
 #tab-today .glzrow{display:block;padding:11px 12px;border:1px solid var(--tt-line);border-radius:10px;
   background:var(--card);margin:0 0 8px;text-decoration:none;color:inherit}
@@ -581,7 +590,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.14';
+const APP_VERSION = '2026-08-30.15';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -790,11 +799,14 @@ async function loadNums(){
 // 🔴 ここから送信は絶対にしない。表示と、管理画面へのリンクだけ。
 //    送信は必ずメグ本人（mebius/CLAUDE.md・memory: mebius-send-needs-megu）。
 //    エンドポイント mbs_status.php も読み取り専用で、書き込み系のコードを持たない。
-const MBS_URL = 'https://mebiusmagic.com/mebius_admin/mbs_status.php?k=mbs_status_9d4f7a2e6c81b350';
+// 🔴 鍵をこのページに書かない。ここは GitHub Pages（サインイン不要の公開ページ）で、
+//    顧客の名前が出るデータの鍵をソースに置くわけにいかない。
+//    Macが取った privateリポの inbox/mbs_snapshot.json を読む（2026-08-30に切替）。
 async function loadMebiusDrafts(){
   const el = $('today-mebius'); if(!el) return;
   let d;
-  try{ const r = await fetch(MBS_URL, {cache:'no-store'}); d = await r.json(); }
+  try{ const t = await repoFile('meyjiro/claude-context','inbox/mbs_snapshot.json');
+       d = t ? JSON.parse(t) : null; }
   catch(e){ el.innerHTML=''; return; }
   if(!d || !d.counts){ el.innerHTML=''; return; }
   const all = d.draft_ready || [];
@@ -806,25 +818,65 @@ async function loadMebiusDrafts(){
   // 今日動かないと止まるもの（草案以外）
   const waits = ['noto','payment_wait','schedule','surgery'].filter(k=>c[k]>0)
     .map(k=>`${L[k]||k} ${c[k]}`).join(' ／ ');
+  // 🔴 全部並べると「読み物」になって手が止まる。今日やる1件だけを大きく出し、
+  //    残りは畳む（2026-08-30 メグ指示「これやっときますか的な感じで届いてほしい」）。
+  //    古い順＝止まっている時間が長いものから。
+  const q = [...dr, ...old_].sort((a,b)=>(b.days||0)-(a.days||0));
+  window.__mbsQueue = q;
+  const done = JSON.parse(localStorage.getItem('mbsDone')||'{}');
+  const top = q.find(x=>!done[x.id]);
+  const rest = q.filter(x=>x!==top && !done[x.id]);
+
   el.innerHTML = `
   <div class="blk-sub">✉️ メビウス <span class="sec-note">送るのはメグ本人</span></div>
   <div class="mbs">
-    <div class="mbsh"><b>草案ができています</b>
-      <span class="mbsn">${dr.length}${old_.length?` <span style="opacity:.6">+${old_.length}</span>`:''}件</span></div>
-    ${dr.length ? dr.slice(0,6).map(x=>`<a class="mbsrow" href="${esc(x.url)}" target="_blank" rel="noopener">
-       <div class="mr1"><b>${esc(x.name||'（名前なし）')}</b>
-         <span class="mtag">${esc(x.magic||'術 未定')}</span></div>
-       <div class="mr2">${x.days!=null?x.days+'日 動きなし':''}<span class="mopen">ひらく →</span></div>
-     </a>`).join('') : `<div class="mbsmore">1か月以内のものはありません</div>`}
-    ${dr.length>6?`<div class="mbsmore">1か月以内であと ${dr.length-6} 件</div>`:''}
-    ${old_.length?`<details class="mbsold"><summary>1か月より前のもの ${old_.length}件（時間があったら）</summary>
-      ${old_.map(x=>`<a class="mbsrow" href="${esc(x.url)}" target="_blank" rel="noopener">
-        <div class="mr1"><b>${esc(x.name||'（名前なし）')}</b>
-          <span class="mtag">${esc(x.magic||'術 未定')}</span></div>
-        <div class="mr2">${x.days}日 動きなし<span class="mopen">ひらく →</span></div>
-      </a>`).join('')}</details>`:''}
+    ${top ? `<div class="mbstop">
+      <div class="mbstl">今日はこの1件から</div>
+      <div class="mbstn"><b>${esc(top.name||'（名前なし）')}</b>
+        <span class="mtag">${esc(top.magic||'術 未定')}</span></div>
+      <div class="mbstd">${top.days!=null?`${top.days}日 動きがありません`:''}　草案はもうできています</div>
+      <div class="mbstb">
+        <a class="gbtn gmain" href="${esc(top.url)}" target="_blank" rel="noopener"
+           onclick="mbsSeen(${top.id})">開いて読む →</a>
+        <button class="gbtn gsub" onclick="mbsNoReply(${top.id})">返信は要らない</button>
+        <button class="gbtn gsub" onclick="mbsSkip(${top.id})">今日はとばす</button>
+      </div>
+    </div>` : `<div class="mbsmore">草案の順番待ちは今ありません 🎉</div>`}
+    ${rest.length?`<details class="mbsold"><summary>残り ${rest.length}件</summary>
+      ${rest.map(x=>`<div class="mbsrow2">
+        <a href="${esc(x.url)}" target="_blank" rel="noopener" onclick="mbsSeen(${x.id})">
+          <b>${esc(x.name||'（名前なし）')}</b>
+          <span class="mtag">${esc(x.magic||'術 未定')}</span>
+          <span class="mr2">${x.days!=null?x.days+'日':''}</span></a>
+        <button class="gbtn gsub gmini" onclick="mbsNoReply(${x.id})">不要</button>
+      </div>`).join('')}</details>`:''}
     ${waits?`<div class="mbswait">待ちの案件: ${waits}</div>`:''}
   </div>`;
+}
+
+// ── メビウス: ボタン ──
+// 🔴 送信につながる操作は一切ない。開く／返信不要にする／今日はとばす の3つだけ。
+function mbsSeen(id){ /* 開いたら今日は出さない */ mbsSkip(id, true); }
+function mbsSkip(id, quiet){
+  const d = JSON.parse(localStorage.getItem('mbsDone')||'{}');
+  d[id] = new Date().toLocaleDateString('sv-SE');
+  localStorage.setItem('mbsDone', JSON.stringify(d));
+  if(!quiet){ loadMebiusDrafts(); toast('次の1件を出します'); }
+  else setTimeout(loadMebiusDrafts, 400);
+}
+async function mbsNoReply(id){
+  const x = (window.__mbsQueue||[]).find(v=>v.id===id);
+  if(!confirm(`${x?x.name:'この案件'}を「返信不要」にします。\n草案は残るので、管理画面からいつでも戻せます。`)) return;
+  try{
+    const path = 'inbox/mbs_actions.jsonl';
+    const ex = await getFileWithSha(path);
+    const row = {at:new Date().toISOString(), do:'no_reply', id, name:(x&&x.name)||''};
+    await api(`/repos/${REPO}/contents/${path}`, 'PUT',
+      Object.assign({message:`メビウス: ${row.name} を返信不要に`, content:enc(((ex&&ex.text)||'')+JSON.stringify(row)+'\n'), branch:BRANCH},
+                    (ex&&ex.sha)?{sha:ex.sha}:{}));
+    mbsSkip(id, true);
+    toast('返信不要にしました（次の巡回で反映）');
+  }catch(e){ alert('積めませんでした: '+e.message); }
 }
 
 
