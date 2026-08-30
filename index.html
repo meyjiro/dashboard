@@ -712,7 +712,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.25';
+const APP_VERSION = '2026-08-30.26';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1073,15 +1073,20 @@ async function mbsNoReply(id){
   const x = (window.__mbsAll||[]).find(v=>v.id===id);
   if(!confirm(`${x?x.name:'この案件'}を「返信不要」にします。\n草案は残るので、管理画面からいつでも戻せます。`)) return;
   try{
-    const path = 'inbox/mbs_actions.jsonl';
+    // 🔴 ガチレズと同じ理由で1操作1ファイル（追記は409になる）
+    const path = `inbox/mbs_actions/${id}-no_reply.json`;
     const ex = await getFileWithSha(path);
     const row = {at:new Date().toISOString(), do:'no_reply', id, name:(x&&x.name)||''};
     await api(`/repos/${REPO}/contents/${path}`, 'PUT',
-      Object.assign({message:`メビウス: ${row.name} を返信不要に`, content:enc(((ex&&ex.text)||'')+JSON.stringify(row)+'\n'), branch:BRANCH},
+      Object.assign({message:`メビウス: ${row.name} を返信不要に`,
+                     content:enc(JSON.stringify(row, null, 1)), branch:BRANCH},
                     (ex&&ex.sha)?{sha:ex.sha}:{}));
     mbsSkip(id, true);
     toast('返信不要にしました（次の巡回で反映）');
-  }catch(e){ alert('積めませんでした: '+e.message); }
+  }catch(e){
+    if(String(e.message).includes('409')) toast('もう積んであります');
+    else alert('積めませんでした: '+e.message);
+  }
 }
 
 
@@ -1312,12 +1317,17 @@ async function glzDo(i, op){
   const row = {at:new Date().toISOString(), site:r.site, do:op, report_id:r.id,
                post_id:r.post_id, did:r.did||null, days:7,
                reason:(r.reason_ja||r.reason||''), memo:(r.detail||'').slice(0,60)};
+  // 🔴 1つのファイルに追記していくと、続けて押したときに sha が合わず 409 になる
+  //    （2026-08-30 メグ報告）。投げ込み箱と同じく1操作1ファイルにして衝突をなくす。
+  //    同じ通報を2回押しても同じファイル名になるので、上書きされるだけで害がない。
+  const btns = document.querySelectorAll('#tab-today .gact button, #tab-today .gact a');
+  btns.forEach(b=>b.style.pointerEvents='none');
   try{
-    const path = 'inbox/glz_actions.jsonl';
-    const ex = await getFileWithSha(path);          // 無ければ {content:null, sha:null}
-    const body = (ex && ex.text ? ex.text : '') + JSON.stringify(row) + '\n';
+    const path = `inbox/glz_actions/${r.site}-${r.id}-${op}.json`;
+    const ex = await getFileWithSha(path);
     await api(`/repos/${REPO}/contents/${path}`, 'PUT',
-      Object.assign({ message:`ガチレズ操作: ${r.site} ${label}`, content: enc(body), branch: BRANCH },
+      Object.assign({ message:`ガチレズ操作: ${r.site} ${label}`,
+                      content: enc(JSON.stringify(row, null, 1)), branch: BRANCH },
                     (ex && ex.sha) ? { sha: ex.sha } : {}));
     window.__glzPushed[glzKey(r)] = label;
     { const rest = (window.__glzReports||[]).filter(v=>!(window.__glzPushed||{})[glzKey(v)]);
@@ -1325,7 +1335,11 @@ async function glzDo(i, op){
     localStorage.setItem('glzPushed', JSON.stringify(window.__glzPushed));
     loadNewStuff();
     toast(`${label}。次の巡回（8:20/14:20/20:20）で反映されます`);
-  }catch(e){ alert('積めませんでした: ' + e.message); }
+  }catch(e){
+    // 409 は「もう積んである」というだけなので、押した人にはそう伝える
+    if(String(e.message).includes('409')) toast('もう積んであります');
+    else alert('積めませんでした: ' + e.message);
+  }finally{ btns.forEach(b=>b.style.pointerEvents=''); }
 }
 
 async function loadBriefing() {
