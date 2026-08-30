@@ -143,6 +143,18 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 @media (prefers-color-scheme:dark){#tab-today{--tt:#e0a860;--tt2:#7fb99a;--tt-soft:#2b2317;--tt-line:#3a3325}}
 /* 名言＝朝いちばんに目に入るもの。畳まない */
 /* 名言: 小さく、でも枠に入れて美しく（2026-08-30 メグ指示）。明朝で頭に入りやすく */
+#tab-today .tset{border:1px solid var(--tt-line);border-radius:11px;background:var(--card);
+  padding:12px 14px;margin:0 0 16px}
+#tab-today .tset.done{background:var(--tt-soft);border-color:var(--tt-line);text-align:center;padding:18px 14px}
+#tab-today .tsh{font-size:11px;letter-spacing:.08em;color:var(--fg3);display:flex;
+  justify-content:space-between;align-items:baseline;margin:0 0 7px}
+#tab-today .tsh span{color:var(--tt);font-size:12.5px;font-weight:600}
+#tab-today .tsrow{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:8px 0;border-top:1px solid var(--tt-line);text-decoration:none;color:inherit;font-size:13.5px}
+#tab-today .tsrow:first-of-type{border-top:none}
+#tab-today .tsm{font-size:11px;color:var(--fg3);flex:none;font-variant-numeric:tabular-nums}
+#tab-today .tsdone{font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;font-size:15px;color:var(--tt2)}
+#tab-today .tsmeta{font-size:11.5px;color:var(--fg3);margin-top:5px}
 #tab-today .mbsq{font-size:12px;color:var(--fg2);margin:0 0 9px}
 #tab-today .mbsq b{color:var(--tt);font-size:14px}
 #tab-today .mbsqs{color:var(--fg3);font-size:11.5px}
@@ -182,6 +194,9 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .mbsrow2 a b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #tab-today .gbtn.gmini{padding:4px 9px;font-size:11px;flex:none}
 /* ── 通報カード: 読ませるのではなく押させる（2026-08-30 メグ指示） ── */
+#tab-today .glzauto{font-size:11.5px;color:var(--tt2);background:var(--tt-soft);
+  border-radius:8px;padding:8px 11px;margin:0 0 9px;line-height:1.7}
+#tab-today .glzauto .glzautow{display:block;color:var(--fg3);font-size:11px;margin-top:2px}
 #tab-today .glzrow{display:block;padding:11px 12px;border:1px solid var(--tt-line);border-radius:10px;
   background:var(--card);margin:0 0 8px;text-decoration:none;color:inherit}
 #tab-today .glzrow.pushed{opacity:.55}
@@ -452,6 +467,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
     <div id="tab-today" class="tab-panel active">
       <div id="brief-stale"></div>
       <div id="brief-quote"></div>
+      <div id="today-set"></div>
       <div id="today-nums"></div>
 
       <div class="blk-h">きょう やること</div>
@@ -622,7 +638,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.16';
+const APP_VERSION = '2026-08-30.17';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -873,6 +889,11 @@ async function loadMebiusDrafts(){
       <div class="mbscb"></div>
     </div>`;
 
+  window.__setParts = Object.assign(window.__setParts||{}, {mbs:
+    {id:'mbs', n:q.length, label:`メビウスの相談 ${q.length}件`, mins:'1件5分', anchor:'today-mebius'}});
+  if(!q.length) markSetDone('mbs');
+  tryBuildSet();
+
   el.innerHTML = `
   <div class="blk-sub">✉️ メビウス <span class="sec-note">送るのはメグ本人</span></div>
   <div class="mbs">
@@ -933,6 +954,11 @@ function mbsSkip(id, quiet){
   const d = JSON.parse(localStorage.getItem('mbsDone')||'{}');
   d[id] = new Date().toLocaleDateString('sv-SE');
   localStorage.setItem('mbsDone', JSON.stringify(d));
+  // 🔴 セットの残数は「今日ぶんの在庫」なので、1件減るたびに数え直す
+  { const st = setState();
+    if(st.items){ const it = st.items.find(v=>v.id==='mbs');
+      if(it){ const n = Math.max(0, (parseInt((it.label.match(/(\d+)件/)||[])[1]||'0',10))-1);
+        it.label = `メビウスの相談 ${n}件`; if(!n) st.doneIds.push('mbs'); saveSet(st); renderTodaySet(); } } }
   if(quiet){ setTimeout(loadMebiusDrafts, 600); return; }
   loadMebiusDrafts(); toast('今日はとばしました');
 }
@@ -952,6 +978,70 @@ async function mbsNoReply(id){
   }catch(e){ alert('積めませんでした: '+e.message); }
 }
 
+
+// ══ ✅ 今日のセット（2026-08-30）══
+// 🔴 これが無いと「終わりが見えない画面」になり、続けるかどうかを毎日やる気で決めることになる。
+//    今日の分がゼロになったら画面が空になる。その空白が「終わった」の合図。
+//    日中に増えたものは今日のセットに足さない（境界が動くと終わりが消える）。
+const SETKEY = 'todaySet';
+function setState(){
+  const t = new Date().toLocaleDateString('sv-SE');
+  let st;
+  try{ st = JSON.parse(localStorage.getItem(SETKEY)||'{}'); }catch(e){ st = {}; }
+  if(st.date !== t) st = {date:t, items:null, doneIds:[], streak:st.streak||0, lastDone:st.lastDone||null};
+  return st;
+}
+function saveSet(st){ localStorage.setItem(SETKEY, JSON.stringify(st)); }
+
+function renderTodaySet(){
+  const el = $('today-set'); if(!el) return;
+  const st = setState();
+  if(!st.items){ el.innerHTML=''; return; }
+  const left = st.items.filter(i=>!st.doneIds.includes(i.id));
+  const t = new Date().toLocaleDateString('sv-SE');
+
+  if(!left.length){
+    // 連続記録は「終わった日」を数える。途切れても責めない表示にする。
+    if(st.lastDone !== t){
+      const y = new Date(Date.now()-86400000).toLocaleDateString('sv-SE');
+      st.streak = (st.lastDone === y) ? (st.streak||0)+1 : 1;
+      st.lastDone = t; saveSet(st);
+    }
+    el.innerHTML = `<div class="tset done">
+      <div class="tsdone">今日の分は終わりました</div>
+      <div class="tsmeta">${new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}
+        ${st.streak>1?`　${st.streak}日つづけて終わっています`:''}</div></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="tset">
+    <div class="tsh">今日やること <span>あと ${left.length}</span></div>
+    ${left.map(i=>`<a class="tsrow" href="#${esc(i.anchor||'')}" onclick="jumpSet('${esc(i.anchor||'')}');return false">
+      <span class="tsn">${esc(i.label)}</span>
+      <span class="tsm">${esc(i.mins||'')}</span></a>`).join('')}
+  </div>`;
+}
+function jumpSet(a){
+  const el = document.getElementById(a);
+  if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+}
+// 各ブロックが読み込み終わったら、今日のセットを組み立てる（朝いちばんの1回だけ確定する）
+function buildSet(parts){
+  const st = setState();
+  if(st.items) { renderTodaySet(); return; }   // 🔴 今日ぶんは一度決めたら動かさない
+  st.items = parts.filter(p=>p && p.n>0).map(p=>({id:p.id, label:p.label, mins:p.mins, anchor:p.anchor}));
+  saveSet(st); renderTodaySet();
+}
+// 主要ブロックが出そろってから1回だけ組む
+function tryBuildSet(){
+  const p = window.__setParts||{};
+  if(!('mbs' in p) || !('glz' in p)) return;    // 両方そろうまで待つ
+  buildSet([p.due, p.mbs, p.glz].filter(Boolean));
+}
+function markSetDone(id){
+  const st = setState(); if(!st.items) return;
+  if(!st.doneIds.includes(id)) st.doneIds.push(id);
+  saveSet(st); renderTodaySet();
+}
 
 // ══ 🆕 新しく入ってきたもの（朝のメニュー【3】・2026-08-30）══
 // クラウドroutine「☕ 朝のメニュー: 新しいもの」が毎朝9時に inbox/morning.json を作る。
@@ -1020,8 +1110,13 @@ async function loadNewStuff(){
     const rp = (g.reports||[]);
     const ev = g.events||{}, us = g.users||{};
     window.__glzReports = rp;   // 🔴 onclickには番号だけ渡す（文字列を埋めると引用符で壊れる）
+    window.__setParts = Object.assign(window.__setParts||{}, {glz:
+      {id:'glz', n:rp.length, label:`通報を裁く ${rp.length}件`, mins:'30秒', anchor:'today-new'}});
+    if(!rp.length) markSetDone('glz');
     parts.push(`<div class="nsbox">
       <div class="nsh">🌸 ガチレズ 3サイト</div>
+      ${g.auto && g.auto.closed ? `<div class="glzauto">✓ ${g.auto.closed}件は昨夜のうちに片づけました
+        <span class="glzautow">${esc((g.auto.what||[]).join('・'))}</span></div>` : ''}
       ${rp.length ? `<div class="glzrep">${rp.map((r,i)=>{
         const sg = r.suggest||{do:'judge',label:'中身を見て決める',why:''};
         const pushed = (window.__glzPushed||{})[glzKey(r)];
@@ -1052,6 +1147,8 @@ async function loadNewStuff(){
       </div>`:''}
     </div>`);
   }
+
+  tryBuildSet();
 
   // タイ・チェンマイ
   const th = m.thai||[];
@@ -1093,6 +1190,8 @@ async function glzDo(i, op){
       Object.assign({ message:`ガチレズ操作: ${r.site} ${label}`, content: enc(body), branch: BRANCH },
                     (ex && ex.sha) ? { sha: ex.sha } : {}));
     window.__glzPushed[glzKey(r)] = label;
+    { const rest = (window.__glzReports||[]).filter(v=>!(window.__glzPushed||{})[glzKey(v)]);
+      if(!rest.length) markSetDone('glz'); }
     localStorage.setItem('glzPushed', JSON.stringify(window.__glzPushed));
     loadNewStuff();
     toast(`${label}。次の巡回（8:20/14:20/20:20）で反映されます`);
@@ -1122,6 +1221,9 @@ function renderBriefing() {
   const dayLeft = d => { const m=String(d.date||d.due||'').match(/(\d{4})-(\d\d)-(\d\d)/);
     if(!m) return 0; return Math.ceil((new Date(m[0]+'T12:00:00+09:00')-Date.now())/86400000); };
   const dues = allDues.filter(d=>dayLeft(d)<=3);
+  window.__setParts = Object.assign(window.__setParts||{}, {due:
+    {id:'due', n:dues.length, label:`期日が近い ${dues.length}件`, mins:'', anchor:'brief-due'}});
+  if(!dues.length) markSetDone('due');
   const laterDues = allDues.filter(d=>dayLeft(d)>3);
   const doneKeys = getDoneDues();
   $('brief-due').innerHTML = dues.length
