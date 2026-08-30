@@ -469,7 +469,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.4';
+const APP_VERSION = '2026-08-30.5';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -572,6 +572,9 @@ const OPS = [
   { name:'投資の新候補', why:'注目企業台帳に毎日1社',
     repo:'meyjiro/claude-context', path:'projects/B7_投資/注目企業台帳.md', limit:2,
     read:t=>{ const m=[...t.matchAll(/^## (\d{4}-\d\d-\d\d)/gm)]; return m.length?m[m.length-1][1]:null; } },
+  { name:'朝のメニュー', why:'クラウドが毎朝9時に新しいものを集める',
+    repo:'meyjiro/claude-context', path:'inbox/morning.json', limit:1.2,
+    read:t=>JSON.parse(t).generated_at },
   { name:'判例',         why:'クラウドが毎朝10時に1件裁く',
     repo:'meyjiro/claude-context', path:'projects/B7_投資/判例/data/_index.json', limit:3,
     read:t=>JSON.parse(t).updated },
