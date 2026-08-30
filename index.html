@@ -143,6 +143,35 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 @media (prefers-color-scheme:dark){#tab-today{--tt:#e0a860;--tt2:#7fb99a;--tt-soft:#2b2317;--tt-line:#3a3325}}
 /* 名言＝朝いちばんに目に入るもの。畳まない */
 /* 名言: 小さく、でも枠に入れて美しく（2026-08-30 メグ指示）。明朝で頭に入りやすく */
+#tab-today .mbsq{font-size:12px;color:var(--fg2);margin:0 0 9px}
+#tab-today .mbsq b{color:var(--tt);font-size:14px}
+#tab-today .mbsqs{color:var(--fg3);font-size:11.5px}
+#tab-today .mbscard{border:1px solid var(--tt-line);border-radius:10px;background:var(--card);margin:0 0 7px;overflow:hidden}
+#tab-today .mbscard.open{border-color:var(--tt);box-shadow:0 1px 8px rgba(0,0,0,.05)}
+#tab-today .mbsch{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:11px 13px;cursor:pointer;user-select:none}
+#tab-today .mbsch:active{background:var(--tt-soft)}
+#tab-today .mbschl{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0}
+#tab-today .mbschl b{font-size:13.5px}
+#tab-today .mbschx{font-size:11.5px;color:var(--tt);white-space:nowrap;flex:none}
+#tab-today .mdays{font-size:11px;color:var(--fg3);font-variant-numeric:tabular-nums}
+#tab-today .mdays.warm{color:var(--tt)}
+#tab-today .mdays.cold{color:var(--fg3);opacity:.7}
+#tab-today .mbscb:empty{display:none}
+#tab-today .mbscb{padding:0 13px 13px;border-top:1px solid var(--tt-line)}
+#tab-today .mbsload,#tab-today .mbsneed{font-size:12px;color:var(--fg3);padding:11px 0}
+#tab-today .mbsmsg{margin:11px 0 0;font-size:12.5px;line-height:1.8}
+#tab-today .mbsmw{font-size:10.5px;color:var(--fg3);margin:0 0 3px;letter-spacing:.03em}
+#tab-today .mbsmw span{margin-left:7px;opacity:.75}
+#tab-today .mbsmb{padding:9px 11px;border-radius:9px;background:var(--tt-soft);
+  max-height:210px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#tab-today .mbsmsg.me .mbsmb{background:var(--soft2,#f4f4f5)}
+#tab-today .mbsdraft{margin:13px 0 0}
+#tab-today .mbsdh{font-size:10.5px;color:var(--tt2);letter-spacing:.08em;margin:0 0 5px}
+#tab-today .mbsdb{font-size:12.5px;line-height:1.85;padding:11px 12px;border-radius:9px;
+  border:1px solid var(--tt-line);background:var(--card);
+  max-height:280px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#tab-today .mbsacts{display:flex;flex-wrap:wrap;gap:6px;margin:13px 0 0}
 #tab-today .mbstop{border:1px solid var(--tt-line);border-radius:10px;padding:13px 14px;background:var(--tt-soft)}
 #tab-today .mbstl{font-size:11px;color:var(--tt);letter-spacing:.06em;margin:0 0 6px}
 #tab-today .mbstn{font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -580,6 +609,9 @@ details.ops.ok[open]>summary::after{content:" ▴"}
     <p>メビウスの完了予定を表示するトークン（端末に記憶されます）:</p>
     <input type="password" id="mebius-token-input" placeholder="mbs_cal_...">
     <button class="btn btn-primary" id="mebius-token-save" style="width:100%;margin-bottom:14px">保存</button>
+    <p>メビウスの相談・草案の中身を読む鍵（端末に記憶されます）:</p>
+    <input type="password" id="mbs-read-input" placeholder="mbs_read_...">
+    <button class="btn btn-primary" id="mbs-read-save" style="width:100%;margin-bottom:14px">保存</button>
     <p>GitHubトークンを入れ直す: <a href="#" id="reauth-link">再入力</a></p>
     <p>旧タスク（アーカイブ）: <a href="https://github.com/meyjiro/claude-context/issues/1" target="_blank" rel="noopener">Issue #1</a> ／ 巡回routineの管理: <a href="https://claude.ai/code/routines" target="_blank" rel="noopener">routines</a></p>
     <button class="btn btn-ghost" id="settings-close" style="width:100%">閉じる</button>
@@ -590,7 +622,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.15';
+const APP_VERSION = '2026-08-30.16';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -625,6 +657,9 @@ const MEBIUS_API = 'https://mebiusmagic.com/mebius_admin/api_calendar.php';
 // ── State ──
 let pat = localStorage.getItem('gh_pat') || '';
 let mebiusToken = localStorage.getItem('mebius_token') || '';
+// 🔴 相談・草案の本文を読む鍵。ソースに書かない（このページは公開URLで開ける）。
+//    メグが設定画面で入れたものだけがこの端末に入る。
+let mbsReadKey = localStorage.getItem('mbs_read_key') || '';
 let briefing = null;
 let pendingPhoto = null; // {b64}
 let pendingAudio = null; // {b64, ext}
@@ -818,54 +853,92 @@ async function loadMebiusDrafts(){
   // 今日動かないと止まるもの（草案以外）
   const waits = ['noto','payment_wait','schedule','surgery'].filter(k=>c[k]>0)
     .map(k=>`${L[k]||k} ${c[k]}`).join(' ／ ');
-  // 🔴 全部並べると「読み物」になって手が止まる。今日やる1件だけを大きく出し、
-  //    残りは畳む（2026-08-30 メグ指示「これやっときますか的な感じで届いてほしい」）。
-  //    古い順＝止まっている時間が長いものから。
-  const q = [...dr, ...old_].sort((a,b)=>(b.days||0)-(a.days||0));
-  window.__mbsQueue = q;
+  // 🔴 古いものから始めない。117日放置のものは「時間があったら」の優先度で、
+  //    そこから始めると毎朝いちばん重い1件に当たって手が止まる（2026-08-30 メグ指摘）。
+  //    主表示は1か月以内の相談だけ。その中で古い順。
+  const fresh = dr.slice().sort((a,b)=>(b.days||0)-(a.days||0));
+  const olds  = old_.slice().sort((a,b)=>(b.days||0)-(a.days||0));
+  window.__mbsAll = [...fresh, ...olds];
   const done = JSON.parse(localStorage.getItem('mbsDone')||'{}');
-  const top = q.find(x=>!done[x.id]);
-  const rest = q.filter(x=>x!==top && !done[x.id]);
+  const today = new Date().toLocaleDateString('sv-SE');
+  const q = fresh.filter(x=>done[x.id]!==today);
+
+  const rowHtml = (x, cold) => `<div class="mbscard" id="mbsc-${x.id}">
+      <div class="mbsch" onclick="mbsToggle(${x.id})">
+        <div class="mbschl"><b>${esc(x.name||'（名前なし）')}</b>
+          <span class="mtag">${esc(x.magic||'術 未定')}</span>
+          ${x.days!=null?`<span class="mdays${cold?' cold':(x.days>14?' warm':'')}">${x.days}日</span>`:''}</div>
+        <span class="mbschx">中身を読む ▾</span>
+      </div>
+      <div class="mbscb"></div>
+    </div>`;
 
   el.innerHTML = `
   <div class="blk-sub">✉️ メビウス <span class="sec-note">送るのはメグ本人</span></div>
   <div class="mbs">
-    ${top ? `<div class="mbstop">
-      <div class="mbstl">今日はこの1件から</div>
-      <div class="mbstn"><b>${esc(top.name||'（名前なし）')}</b>
-        <span class="mtag">${esc(top.magic||'術 未定')}</span></div>
-      <div class="mbstd">${top.days!=null?`${top.days}日 動きがありません`:''}　草案はもうできています</div>
-      <div class="mbstb">
-        <a class="gbtn gmain" href="${esc(top.url)}" target="_blank" rel="noopener"
-           onclick="mbsSeen(${top.id})">開いて読む →</a>
-        <button class="gbtn gsub" onclick="mbsNoReply(${top.id})">返信は要らない</button>
-        <button class="gbtn gsub" onclick="mbsSkip(${top.id})">今日はとばす</button>
-      </div>
-    </div>` : `<div class="mbsmore">草案の順番待ちは今ありません 🎉</div>`}
-    ${rest.length?`<details class="mbsold"><summary>残り ${rest.length}件</summary>
-      ${rest.map(x=>`<div class="mbsrow2">
-        <a href="${esc(x.url)}" target="_blank" rel="noopener" onclick="mbsSeen(${x.id})">
-          <b>${esc(x.name||'（名前なし）')}</b>
-          <span class="mtag">${esc(x.magic||'術 未定')}</span>
-          <span class="mr2">${x.days!=null?x.days+'日':''}</span></a>
-        <button class="gbtn gsub gmini" onclick="mbsNoReply(${x.id})">不要</button>
-      </div>`).join('')}</details>`:''}
+    ${q.length ? `<div class="mbsq">1か月以内の相談が <b>${q.length}</b> 件
+        <span class="mbsqs">読んで決めるところまでここでできます</span></div>
+      ${q.map(x=>rowHtml(x,false)).join('')}`
+    : `<div class="mbsmore">1か月以内の相談は片づきました 🎉${
+        olds.length?`　<span class="mbsqs">古いもの ${olds.length}件は下にあります</span>`:''}</div>`}
+    ${olds.length?`<details class="mbsold"><summary>1か月より前のもの ${olds.length}件（時間があったら）</summary>
+      ${olds.map(x=>rowHtml(x,true)).join('')}</details>`:''}
     ${waits?`<div class="mbswait">待ちの案件: ${waits}</div>`:''}
   </div>`;
 }
 
-// ── メビウス: ボタン ──
-// 🔴 送信につながる操作は一切ない。開く／返信不要にする／今日はとばす の3つだけ。
-function mbsSeen(id){ /* 開いたら今日は出さない */ mbsSkip(id, true); }
+// ── メビウス: 1件を開いて中身を読む ──
+// 🔴 中身を見ないと「返信不要」かどうか決められない（2026-08-30 メグ指摘）。
+//    畳んだ行を開くとその場で相談本文と草案が出る。開くまでは取りに行かない。
+//    鍵はソースに書かない。メグが設定画面で入れたものだけがこの端末に入る。
+async function mbsToggle(id){
+  const card = document.getElementById('mbsc-'+id); if(!card) return;
+  const body = card.querySelector('.mbscb');
+  const head = card.querySelector('.mbschx');
+  if(card.classList.contains('open')){
+    card.classList.remove('open'); body.innerHTML=''; head.textContent='中身を読む ▾'; return;
+  }
+  card.classList.add('open'); head.textContent='閉じる ▴';
+  if(!mbsReadKey){
+    body.innerHTML = `<div class="mbsneed">中身を読むには鍵が要ります。<a href="#" onclick="document.getElementById('settings-btn').click();return false">⚙ 設定</a>で「中身を読む鍵」を入れてください</div>`;
+    return;
+  }
+  body.innerHTML = '<div class="mbsload">読み込み中…</div>';
+  let d;
+  try{
+    const r = await fetch(`https://mebiusmagic.com/mebius_admin/mbs_detail.php?k=${encodeURIComponent(mbsReadKey)}&id=${id}`, {cache:'no-store'});
+    d = await r.json();
+    if(d.error) throw new Error(d.error);
+  }catch(e){
+    body.innerHTML = `<div class="mbsneed">読めませんでした（${esc(e.message)}）。鍵が違うかもしれません</div>`; return;
+  }
+  const x = (window.__mbsAll||[]).find(v=>v.id===id) || {};
+  const br = t => esc(t).replace(/\n/g,'<br>');
+  body.innerHTML = `
+    ${(d.history||[]).map(h=>`<div class="mbsmsg ${h.who==='メグ'?'me':'you'}">
+      <div class="mbsmw">${esc(h.who)}<span>${esc((h.at||'').slice(5,16))}</span></div>
+      <div class="mbsmb">${br(h.body||'')}</div></div>`).join('')}
+    <div class="mbsdraft">
+      <div class="mbsdh">できている草案</div>
+      <div class="mbsdb">${br(d.draft||'（草案がありません）')}</div>
+    </div>
+    <div class="mbsacts">
+      <a class="gbtn gmain" href="${esc(x.url||'#')}" target="_blank" rel="noopener" onclick="mbsSkip(${id},true)">管理画面で直して送る →</a>
+      <button class="gbtn gsub" onclick="mbsNoReply(${id})">返信は要らない</button>
+      <button class="gbtn gsub" onclick="mbsSkip(${id})">今日はとばす</button>
+    </div>`;
+}
+
 function mbsSkip(id, quiet){
   const d = JSON.parse(localStorage.getItem('mbsDone')||'{}');
   d[id] = new Date().toLocaleDateString('sv-SE');
   localStorage.setItem('mbsDone', JSON.stringify(d));
-  if(!quiet){ loadMebiusDrafts(); toast('次の1件を出します'); }
-  else setTimeout(loadMebiusDrafts, 400);
+  if(quiet){ setTimeout(loadMebiusDrafts, 600); return; }
+  loadMebiusDrafts(); toast('今日はとばしました');
 }
+
 async function mbsNoReply(id){
-  const x = (window.__mbsQueue||[]).find(v=>v.id===id);
+  const x = (window.__mbsAll||[]).find(v=>v.id===id);
   if(!confirm(`${x?x.name:'この案件'}を「返信不要」にします。\n草案は残るので、管理画面からいつでも戻せます。`)) return;
   try{
     const path = 'inbox/mbs_actions.jsonl';
@@ -2188,6 +2261,12 @@ function setupEvents() {
   $('settings-btn').addEventListener('click', () => {
     $('mebius-token-input').value = mebiusToken;
     $('settings-modal').classList.remove('hidden');
+  });
+  if ($('mbs-read-input')) $('mbs-read-input').value = mbsReadKey;
+  if ($('mbs-read-save')) $('mbs-read-save').addEventListener('click', () => {
+    mbsReadKey = $('mbs-read-input').value.trim();
+    localStorage.setItem('mbs_read_key', mbsReadKey);
+    toast('保存しました'); loadMebiusDrafts();
   });
   $('mebius-token-save').addEventListener('click', () => {
     mebiusToken = $('mebius-token-input').value.trim();
