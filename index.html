@@ -232,6 +232,13 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .mbsrow2 a b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #tab-today .gbtn.gmini{padding:4px 9px;font-size:11px;flex:none}
 /* ── 通報カード: 読ませるのではなく押させる（2026-08-30 メグ指示） ── */
+#tab-today .wtitle{display:block;font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;
+  font-size:15px;line-height:1.7;color:var(--text);text-decoration:none;margin:0 0 8px;
+  text-underline-offset:3px}
+#tab-today .wtitle:active{text-decoration:underline}
+#tab-today .wnote{font-size:13px;line-height:1.95;color:var(--text2)}
+#tab-today .wwhy{font-size:12px;line-height:1.8;color:var(--ok);margin:9px 0 0;
+  padding:8px 11px;background:var(--ok-light);border-radius:8px}
 #tab-today .glzflow{font-size:11px;color:var(--text3);margin:0 0 7px;font-variant-numeric:tabular-nums}
 #tab-today .glzauto.ok{color:var(--text3);background:transparent;padding:6px 0}
 #tab-today .glzpend{margin:0 0 10px}
@@ -694,7 +701,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-30.22';
+const APP_VERSION = '2026-08-30.23';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1249,6 +1256,18 @@ async function loadNewStuff(){
   }
 
   tryBuildSet();
+
+  // 🌍 世界のニュース1本（2026-08-30 追加）
+  // 分野は問わない。「読んだあとに誰かに話したくなるか」だけで選んだものが1日1本入る。
+  const w = m.world;
+  if(w && w.title){
+    parts.push(`<div class="nsbox">
+      <div class="nsh">🌍 今日の1本</div>
+      <a class="wtitle" href="${esc(w.url||'#')}" target="_blank" rel="noopener">${esc(w.title)}</a>
+      ${w.note?`<div class="wnote">${esc(w.note)}</div>`:''}
+      ${w.why?`<div class="wwhy">${esc(w.why)}</div>`:''}
+    </div>`);
+  }
 
   // タイ・チェンマイ
   const th = m.thai||[];
