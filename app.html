@@ -277,6 +277,41 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .glzrow .gsite{font-size:10.5px;padding:1px 7px;border-radius:99px;
   background:var(--tt-soft);color:var(--tt);border:1px solid var(--tt-line);flex:none}
 #tab-today .glzrow .g1 b{font-weight:600}
+/* ── 読んで仕分けた結果（2026-08-31）── */
+#tab-today .tgnote{font-size:12.5px;color:var(--text2);margin:0 0 13px;line-height:1.8}
+#tab-today .tgsec{margin:0 0 16px}
+#tab-today .tgsech{font-size:12.5px;font-weight:700;color:var(--accent);margin:0 0 9px;
+  padding:0 0 0 10px;border-left:3px solid var(--accent)}
+#tab-today .tgsech b{font-size:15px}
+#tab-today .tgsech.ask{color:var(--warn);border-color:var(--warn)}
+#tab-today details.tgsec>summary.tgsech{cursor:pointer;list-style:none;color:var(--text2);
+  border-left-color:var(--border);font-weight:600}
+#tab-today details.tgsec>summary::-webkit-details-marker{display:none}
+#tab-today details.tgsec>summary.tgsech::after{content:" ▾"}
+#tab-today details.tgsec[open]>summary.tgsech::after{content:" ▴"}
+#tab-today .tg{border:1px solid var(--border);border-radius:11px;background:var(--card);
+  padding:14px 15px;margin:0 0 10px}
+#tab-today .tgh{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 3px}
+#tab-today .tgt{font-size:10.5px;padding:1px 8px;border-radius:99px;background:var(--bg3);color:var(--text2)}
+#tab-today .tgw{font-size:11px;color:var(--text3);margin-left:auto}
+#tab-today .tgs{font-size:10.5px;color:var(--text3);letter-spacing:.08em;margin:13px 0 5px;
+  padding:0 0 4px;border-bottom:1px solid var(--border2)}
+#tab-today .tgpt{font-size:13.5px;font-weight:600;line-height:1.65;margin:0 0 5px}
+#tab-today .tgpb{font-size:12.5px;line-height:1.9;color:var(--text2);padding:10px 12px;
+  background:var(--bg3);border-radius:9px;max-height:260px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#tab-today .tgmeta{font-size:11px;color:var(--text3);margin:5px 0 0;font-variant-numeric:tabular-nums}
+#tab-today .tglab{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 6px}
+#tab-today .tglab span{font-size:10.5px;padding:2px 8px;border-radius:99px;
+  border:1px solid var(--border);color:var(--text2)}
+#tab-today .tgq{font-size:12.5px;line-height:1.9;color:var(--text2);padding:9px 12px;
+  border-left:2px solid var(--border);margin:0 0 5px;max-height:180px;overflow-y:auto}
+#tab-today .tgq.empty{color:var(--text3);border-left-style:dashed}
+#tab-today .tgck{font-size:12.5px;line-height:1.95;color:var(--text);padding:10px 12px;
+  background:var(--accent-light);border-radius:9px}
+#tab-today .tgvd{font-size:13px;line-height:1.85;font-weight:500}
+#tab-today .tgcv{font-size:12px;line-height:1.8;color:var(--warn);margin:7px 0 0;
+  padding:8px 11px;background:var(--warn-light);border-radius:8px}
+#tab-today .tgall{width:100%;margin:4px 0 0;padding:13px}
 #tab-today .gcount{font-size:10.5px;padding:1px 7px;border-radius:99px;
   background:var(--accent);color:#fff;flex:none}
 #tab-today .gblk{margin:9px 0 0}
@@ -742,7 +777,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-31.8';
+const APP_VERSION = '2026-08-31.9';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1289,6 +1324,14 @@ async function loadNewStuff(){
   }
 
   // ガチレズ3サイト
+  // 🔴 巡回（glz_snapshot）は数字を取ってくるだけ。読んで仕分けるのは Macで動く
+  //    Claude（glz-triage.sh）で、結果は inbox/glz_triage.json にある。
+  //    仕分けがあればそれを出す。無ければ従来のカードに落ちる。
+  try{
+    const tt = await repoFile('meyjiro/claude-context','inbox/glz_triage.json');
+    if(tt){ const tj = JSON.parse(tt); if((tj.cases||[]).length || tj.note) renderTriage(parts, tj); }
+  }catch(e){}
+  // ガチレズ3サイト
   // 🔴 クラウドからは3サイトに接続できない（プロキシが403）ので、Macが取った
   //    inbox/glz_snapshot.json を読む。morning.json 側にあればそちらを優先。
   let g = m.gachirezu;
@@ -1393,6 +1436,121 @@ async function loadNewStuff(){
   if(!parts.length){ el.innerHTML=''; return; }
   el.innerHTML = `<div class="blk-h">🆕 新しく入ってきたもの
     ${age>30?`<span class="sec-note">🔴 ${Math.floor(age/24)}日前の内容です</span>`:''}</div>${parts.join('')}`;
+}
+
+// ── ガチレズ: 読んで仕分けた結果を出す（2026-08-31）──
+// 🔴 メグの指示: 「何に対してどういうアレなのかが分かりづらい。いきなり対処する理由が
+//    書かれてたり、事前にどういうものがどういう対象になったかが分かりづらい。
+//    端折らず説明を入れてほしい」
+//    → 順番を固定する: 何が投稿されていたか → 誰が何と言って通報したか →
+//      規約のどこに照らしたか → だからどうするか
+function renderTriage(parts, tj){
+  window.__triage = tj.cases||[];
+  const done = JSON.parse(localStorage.getItem('triageDone')||'{}');
+  const alive = (tj.cases||[]).filter(c=>!done[c.post_id]);
+  const B = k => alive.filter(c=>c.bucket===k);
+  const age = tj.generated_at ? (Date.now()-new Date(tj.generated_at).getTime())/3600000 : 99;
+  const br = t => esc(t||'').replace(/\n/g,'<br>');
+
+  const card = (c, i) => `<div class="tg">
+    <div class="tgh"><span class="gsite">${esc(c.site)}</span>
+      <span class="tgt">${esc({job_listing:'募集投稿',reply:'雑談のレス',topic:'スレッド',
+        'dwqa-question':'なんでも相談','dwqa-answer':'相談への回答'}[c.post_type]||c.post_type||'')}</span>
+      ${c.what_reported?.count>1?`<span class="gcount">通報${c.what_reported.count}件</span>`:''}
+      ${c.what_posted?.when?`<span class="tgw">${esc(c.what_posted.when)}</span>`:''}</div>
+
+    <div class="tgs">① 投稿されていたもの</div>
+    ${c.what_posted?.title?`<div class="tgpt">${esc(c.what_posted.title)}</div>`:''}
+    <div class="tgpb">${br(c.what_posted?.body)}</div>
+    <div class="tgmeta">${esc(c.what_posted?.who||'（名前なし）')}　
+      端末ID: ${c.did?esc(c.did.slice(0,12)):'記録なし'}</div>
+
+    <div class="tgs">② 通報した人が書いたこと</div>
+    ${(c.what_reported?.labels||[]).length?`<div class="tglab">${(c.what_reported.labels).map(x=>`<span>${esc(x)}</span>`).join('')}</div>`:''}
+    ${(c.what_reported?.texts||[]).length
+      ? (c.what_reported.texts).map(t=>`<div class="tgq">${br(t)}</div>`).join('')
+      : `<div class="tgq empty">（通報の文は書かれていません。理由だけ選ばれています）</div>`}
+
+    <div class="tgs">③ 規約と照らすと</div>
+    <div class="tgck">${br(c.checked)}</div>
+
+    <div class="tgs">④ だからどうするか</div>
+    <div class="tgvd">${br(c.verdict)}</div>
+    ${c.caveat?`<div class="tgcv">⚠︎ ${esc(c.caveat)}</div>`:''}
+
+    <div class="gact">
+      <a class="gbtn gopen" href="${esc(c.url||'#')}" target="_blank" rel="noopener">サイトで見る →</a>
+      ${c.action?.do && c.action.do!=='none'
+        ? `<button class="gbtn ${c.bucket==='ask'?'gsub':'gmain'}" onclick="triageDo(${i})">${esc(c.action.label||'実行する')}</button>`:''}
+      ${c.bucket==='ask'?`<button class="gbtn gsub" onclick="triageDo(${i},'close')">対応不要にする</button>`:''}
+      <button class="gbtn gsub" onclick="triageSkip(${i})">あとで</button>
+    </div>
+  </div>`;
+
+  const idx = c => (tj.cases||[]).indexOf(c);
+  const act = B('act'), ask = B('ask'), leave = B('leave');
+
+  parts.push(`<div class="nsbox">
+    <div class="nsh">🌸 ガチレズ　読んで仕分けました
+      ${age>14?`<span class="nstag">🔴 ${Math.floor(age)}時間前</span>`:''}</div>
+    <div class="tgnote">${esc(tj.note||'')}</div>
+
+    ${act.length?`<div class="tgsec">
+      <div class="tgsech">これやっときますか <b>${act.length}</b>件</div>
+      ${act.map(c=>card(c, idx(c))).join('')}
+      ${act.length>1?`<button class="gbtn gmain tgall" onclick="triageAll()">この${act.length}件を全部やる</button>`:''}
+    </div>`:''}
+
+    ${ask.length?`<div class="tgsec">
+      <div class="tgsech ask">メグにしか決められません <b>${ask.length}</b>件</div>
+      ${ask.map(c=>card(c, idx(c))).join('')}
+    </div>`:''}
+
+    ${leave.length?`<details class="tgsec"><summary class="tgsech leave">そのままでいいもの ${leave.length}件（読んだ結果）</summary>
+      ${leave.map(c=>card(c, idx(c))).join('')}</details>`:''}
+
+    ${(!alive.length)?`<div class="nsl2">今日の通報はぜんぶ片づきました 🎉</div>`:''}
+  </div>`);
+}
+
+async function triageDo(i, override){
+  const c = (window.__triage||[])[i]; if(!c) return;
+  const op = override || c.action?.do; if(!op || op==='none') return;
+  const w = op==='close' ? '通報を閉じます（投稿には触りません）'
+          : `${c.action?.label||op}\n\n${(c.what_posted?.title||'')}`;
+  if(op!=='close' && !confirm(`${w}\n\n${c.caveat||''}`)) return;
+  try{
+    const path = `inbox/glz_actions/${c.site}-${(c.report_ids||[0])[0]}-${op}.json`;
+    const ex = await getFileWithSha(path);
+    const row = {at:new Date().toISOString(), site:c.site, do:op,
+                 report_id:(c.report_ids||[])[0], also_ids:(c.report_ids||[]).slice(1),
+                 post_id:c.post_id, did:c.did||null, days:7,
+                 scope:c.action?.scope||'this', reason:(c.verdict||'').slice(0,80)};
+    await api(`/repos/${REPO}/contents/${path}`, 'PUT',
+      Object.assign({message:`ガチレズ: ${c.site} ${op}`, content:enc(JSON.stringify(row,null,1)), branch:BRANCH},
+                    (ex&&ex.sha)?{sha:ex.sha}:{}));
+    triageSkip(i, true);
+    toast('積みました。次の巡回（8:20/14:20/20:20）で反映されます');
+  }catch(e){
+    if(String(e.message).includes('409')) toast('もう積んであります');
+    else alert('積めませんでした: '+e.message);
+  }
+}
+function triageSkip(i, quiet){
+  const c = (window.__triage||[])[i]; if(!c) return;
+  const d = JSON.parse(localStorage.getItem('triageDone')||'{}');
+  d[c.post_id] = new Date().toISOString();
+  localStorage.setItem('triageDone', JSON.stringify(d));
+  loadNewStuff(); if(!quiet) toast('あとでにしました');
+}
+async function triageAll(){
+  const done = JSON.parse(localStorage.getItem('triageDone')||'{}');
+  const list = (window.__triage||[]).map((c,i)=>[c,i]).filter(([c])=>c.bucket==='act'&&!done[c.post_id]);
+  if(!list.length) return;
+  if(!confirm(`${list.length}件をまとめて実行します。\n\n`+
+      list.map(([c])=>`・${c.site} ${c.action?.label||''}\n   ${(c.what_posted?.title||'').slice(0,30)}`).join('\n'))) return;
+  for(const [,i] of list) await triageDo(i, undefined);
+  toast(`${list.length}件を積みました`);
 }
 
 // ── ガチレズ: ボタンを押したら操作をキューに積む（Macが次の巡回で実行する） ──
