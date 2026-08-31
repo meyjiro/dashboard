@@ -271,6 +271,17 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .glzrow .gsite{font-size:10.5px;padding:1px 7px;border-radius:99px;
   background:var(--tt-soft);color:var(--tt);border:1px solid var(--tt-line);flex:none}
 #tab-today .glzrow .g1 b{font-weight:600}
+#tab-today .gcount{font-size:10.5px;padding:1px 7px;border-radius:99px;
+  background:var(--accent);color:#fff;flex:none}
+#tab-today .gblk{margin:9px 0 0}
+#tab-today .gblkh{font-size:10.5px;color:var(--text3);letter-spacing:.06em;margin:0 0 4px}
+#tab-today .gq{font-size:12.5px;line-height:1.85;color:var(--text2);padding:8px 11px;
+  background:var(--bg3);border-radius:9px;margin:0 0 5px;
+  max-height:150px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#tab-today .gpt{font-size:13px;font-weight:600;margin:0 0 4px;line-height:1.6}
+#tab-today .gpb{font-size:12.5px;line-height:1.85;color:var(--text2);padding:9px 11px;
+  border-left:2px solid var(--border);
+  max-height:220px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 #tab-today .glzrow .gd{font-size:12px;color:var(--text2);margin:5px 0 0;line-height:1.6}
 #tab-today .glzrow .g2{font-size:11.5px;color:var(--text3);margin:4px 0 0;
   padding-left:8px;border-left:2px solid var(--tt-line)}
@@ -724,7 +735,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-31.3';
+const APP_VERSION = '2026-08-31.4';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1282,11 +1293,25 @@ async function loadNewStuff(){
       ${rp.length ? `<div class="glzrep">${rp.map((r,i)=>{
         const sg = r.suggest||{do:'judge',label:'中身を見て決める',why:''};
         const pushed = (window.__glzPushed||{})[glzKey(r)];
+        // 🔴 投稿の中身と通報文の両方が見えないと判断できない（2026-08-31 メグ指摘）。
+        //    どちらも全文を出す。長いものだけスクロールさせる。
+        const dets = (r.details && r.details.length) ? r.details : (r.detail?[r.detail]:[]);
+        const brk = t => esc(t).replace(/\n/g,'<br>');
         return `<div class="glzrow${pushed?' pushed':''}">
         <div class="g1"><span class="gsite">${esc(r.site||'')}</span>
-          <b>${esc(r.reason_ja||r.reason||'')}</b></div>
-        ${r.detail?`<div class="gd">${esc(r.detail)}</div>`:''}
-        ${r.target?`<div class="g2">${esc(r.target)}</div>`:''}
+          <b>${esc(r.reason_ja||r.reason||'')}</b>
+          ${r.count>1?`<span class="gcount">通報${r.count}件</span>`:''}</div>
+
+        ${dets.length?`<div class="gblk">
+          <div class="gblkh">通報した人の言い分</div>
+          ${dets.map(x=>`<div class="gq">${brk(x)}</div>`).join('')}
+        </div>`:''}
+
+        ${(r.title||r.target)?`<div class="gblk">
+          <div class="gblkh">通報された投稿</div>
+          ${r.title?`<div class="gpt">${esc(r.title)}</div>`:''}
+          ${r.target?`<div class="gpb">${brk(r.target)}</div>`:''}
+        </div>`:''}
         ${pushed ? `<div class="gdone">✓ ${esc(pushed)}　次の巡回で反映されます</div>` : `
         <div class="gwhy">${sg.from_precedent?'📖 ':''}${esc(sg.why||'')}</div>
         <div class="gact">
@@ -1370,6 +1395,7 @@ async function glzDo(i, op){
   const extra = op==='trash_ban' ? `\n・書いた端末を7日間ブロックします` : '';
   if(op!=='close' && !confirm(`${what}\n\n${r.target||''}\n\n${after}${extra}`)) return;
   const row = {at:new Date().toISOString(), site:r.site, do:op, report_id:r.id,
+               also_ids:r.also_ids||[],          // 同じ投稿への他の通報もまとめて閉じる
                post_id:r.post_id, did:r.did||null, days:7,
                reason:(r.reason_ja||r.reason||''), memo:(r.detail||'').slice(0,60)};
   // 🔴 1つのファイルに追記していくと、続けて押したときに sha が合わず 409 になる
