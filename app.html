@@ -234,6 +234,14 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .mbsdb{font-size:12.5px;line-height:1.85;padding:11px 12px;border-radius:9px;
   border:1px solid var(--tt-line);background:var(--card);
   max-height:280px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+/* メビウスのボタン（通報側を外したあとも使う） */
+#tab-today .gbtn{font-size:12.5px;padding:9px 15px;border-radius:9px;border:1px solid var(--border);
+  background:var(--card);color:var(--text2);cursor:pointer;text-decoration:none;display:inline-block;
+  font-family:inherit;font-weight:500;line-height:1.4;transition:transform .08s}
+#tab-today .gbtn.gmain{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+#tab-today .gbtn.gsub{background:var(--card)}
+#tab-today .gbtn:active{transform:translateY(1px)}
+#tab-today .gbtn.gmini{padding:4px 9px;font-size:11px;flex:none}
 #tab-today .mbsacts{display:flex;flex-wrap:wrap;gap:6px;margin:13px 0 0}
 #tab-today .mbstop{border:1px solid var(--tt-line);border-radius:10px;padding:13px 14px;background:var(--tt-soft)}
 #tab-today .mbstl{font-size:11px;color:var(--tt);letter-spacing:.06em;margin:0 0 6px}
@@ -243,7 +251,6 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .mbsrow2{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--tt-line)}
 #tab-today .mbsrow2 a{flex:1;display:flex;align-items:center;gap:7px;text-decoration:none;color:inherit;font-size:12.5px;min-width:0}
 #tab-today .mbsrow2 a b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#tab-today .gbtn.gmini{padding:4px 9px;font-size:11px;flex:none}
 /* ── 通報カード: 読ませるのではなく押させる（2026-08-30 メグ指示） ── */
 #tab-today .vprev{margin:0 0 9px}
 #tab-today .vprev>summary{padding:11px 14px;font-size:12.5px;color:var(--text2);cursor:pointer;
@@ -260,81 +267,12 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .wnote{font-size:13px;line-height:1.95;color:var(--text2)}
 #tab-today .wwhy{font-size:12px;line-height:1.8;color:var(--ok);margin:9px 0 0;
   padding:8px 11px;background:var(--ok-light);border-radius:8px}
-#tab-today .glzflow{font-size:11px;color:var(--text3);margin:0 0 7px;font-variant-numeric:tabular-nums}
-#tab-today .glzauto.ok{color:var(--text3);background:transparent;padding:6px 0}
-#tab-today .glzpend{margin:0 0 10px}
-#tab-today .glzpendh{font-size:11.5px;color:var(--tt);margin:0 0 5px}
-#tab-today .glzprow{display:flex;justify-content:space-between;gap:9px;padding:8px 11px;
-  border:1px solid var(--tt-line);border-radius:8px;margin:0 0 5px;text-decoration:none;color:inherit;font-size:12.5px}
-#tab-today .glzprow span{color:var(--text3);font-size:11px;flex:none}
-#tab-today .glzauto{font-size:11.5px;color:var(--tt2);background:var(--tt-soft);
-  border-radius:8px;padding:8px 11px;margin:0 0 9px;line-height:1.7}
-#tab-today .glzauto .glzautow{display:block;color:var(--text3);font-size:11px;margin-top:2px}
-#tab-today .glzrow{display:block;padding:11px 12px;border:1px solid var(--tt-line);border-radius:10px;
-  background:var(--card);margin:0 0 8px;text-decoration:none;color:inherit}
-#tab-today .glzrow.pushed{opacity:.55}
-#tab-today .glzrow .g1{display:flex;align-items:center;gap:7px;font-size:12.5px}
-#tab-today .glzrow .gsite{font-size:10.5px;padding:1px 7px;border-radius:99px;
-  background:var(--tt-soft);color:var(--tt);border:1px solid var(--tt-line);flex:none}
-#tab-today .glzrow .g1 b{font-weight:600}
 /* ── 読んで仕分けた結果（2026-08-31）── */
-#tab-today .tgnote{font-size:12.5px;color:var(--text2);margin:0 0 13px;line-height:1.8}
-#tab-today .tgsec{margin:0 0 16px}
-#tab-today .tgsech{font-size:12.5px;font-weight:700;color:var(--accent);margin:0 0 9px;
-  padding:0 0 0 10px;border-left:3px solid var(--accent)}
-#tab-today .tgsech b{font-size:15px}
-#tab-today .tgsech.ask{color:var(--warn);border-color:var(--warn)}
 #tab-today details.tgsec>summary.tgsech{cursor:pointer;list-style:none;color:var(--text2);
   border-left-color:var(--border);font-weight:600}
 #tab-today details.tgsec>summary::-webkit-details-marker{display:none}
 #tab-today details.tgsec>summary.tgsech::after{content:" ▾"}
 #tab-today details.tgsec[open]>summary.tgsech::after{content:" ▴"}
-#tab-today .tg{border:1px solid var(--border);border-radius:11px;background:var(--card);
-  padding:14px 15px;margin:0 0 10px}
-#tab-today .tgh{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 3px}
-#tab-today .tgt{font-size:10.5px;padding:1px 8px;border-radius:99px;background:var(--bg3);color:var(--text2)}
-#tab-today .tgw{font-size:11px;color:var(--text3);margin-left:auto}
-#tab-today .tgs{font-size:10.5px;color:var(--text3);letter-spacing:.08em;margin:13px 0 5px;
-  padding:0 0 4px;border-bottom:1px solid var(--border2)}
-#tab-today .tgpt{font-size:13.5px;font-weight:600;line-height:1.65;margin:0 0 5px}
-#tab-today .tgpb{font-size:12.5px;line-height:1.9;color:var(--text2);padding:10px 12px;
-  background:var(--bg3);border-radius:9px;max-height:260px;overflow-y:auto;-webkit-overflow-scrolling:touch}
-#tab-today .tgmeta{font-size:11px;color:var(--text3);margin:5px 0 0;font-variant-numeric:tabular-nums}
-#tab-today .tglab{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 6px}
-#tab-today .tglab span{font-size:10.5px;padding:2px 8px;border-radius:99px;
-  border:1px solid var(--border);color:var(--text2)}
-#tab-today .tgq{font-size:12.5px;line-height:1.9;color:var(--text2);padding:9px 12px;
-  border-left:2px solid var(--border);margin:0 0 5px;max-height:180px;overflow-y:auto}
-#tab-today .tgq.empty{color:var(--text3);border-left-style:dashed}
-#tab-today .tgck{font-size:12.5px;line-height:1.95;color:var(--text);padding:10px 12px;
-  background:var(--accent-light);border-radius:9px}
-#tab-today .tgvd{font-size:13px;line-height:1.85;font-weight:500}
-#tab-today .tgcv{font-size:12px;line-height:1.8;color:var(--warn);margin:7px 0 0;
-  padding:8px 11px;background:var(--warn-light);border-radius:8px}
-#tab-today .tgall{width:100%;margin:4px 0 0;padding:13px}
-#tab-today .gcount{font-size:10.5px;padding:1px 7px;border-radius:99px;
-  background:var(--accent);color:#fff;flex:none}
-#tab-today .gblk{margin:9px 0 0}
-#tab-today .gblkh{font-size:10.5px;color:var(--text3);letter-spacing:.06em;margin:0 0 4px}
-#tab-today .gq{font-size:12.5px;line-height:1.85;color:var(--text2);padding:8px 11px;
-  background:var(--bg3);border-radius:9px;margin:0 0 5px;
-  max-height:150px;overflow-y:auto;-webkit-overflow-scrolling:touch}
-#tab-today .gpt{font-size:13px;font-weight:600;margin:0 0 4px;line-height:1.6}
-#tab-today .gpb{font-size:12.5px;line-height:1.85;color:var(--text2);padding:9px 11px;
-  border-left:2px solid var(--border);
-  max-height:220px;overflow-y:auto;-webkit-overflow-scrolling:touch}
-#tab-today .glzrow .gd{font-size:12px;color:var(--text2);margin:5px 0 0;line-height:1.6}
-#tab-today .glzrow .g2{font-size:11.5px;color:var(--text3);margin:4px 0 0;
-  padding-left:8px;border-left:2px solid var(--tt-line)}
-#tab-today .glzrow .gwhy{font-size:11.5px;color:var(--tt2);margin:7px 0 0}
-#tab-today .glzrow .gact{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 0}
-#tab-today .gbtn{font-size:12.5px;padding:9px 15px;border-radius:9px;border:1px solid var(--border);
-  background:var(--card);color:var(--text2);cursor:pointer;text-decoration:none;display:inline-block;
-  font-family:inherit;font-weight:500;line-height:1.4;transition:transform .08s}
-#tab-today .gbtn.gmain{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
-#tab-today .gbtn.gopen{background:var(--tt-soft);border-color:var(--tt-line);color:var(--tt);font-weight:600}
-#tab-today .gbtn:active{transform:translateY(1px)}
-#tab-today .glzrow .gdone{font-size:11.5px;color:var(--tt2);margin:8px 0 0}
 #tab-today .quote-card{background:var(--card);border:1px solid var(--tt-line);
   border-radius:12px;padding:14px 16px 12px;margin:4px 0 14px;position:relative;overflow:hidden}
 #tab-today .quote-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
@@ -430,19 +368,8 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 .cmore>summary::after{content:" ▾"} .cmore[open]>summary::after{content:" ▴"}
 .nsflag{background:var(--warn-light);color:var(--warn);border-radius:9px;padding:7px 10px;
   font-size:12px;line-height:1.7;margin-top:8px;font-weight:600}
-.glzrep{margin-top:7px}
-.glzrow{display:block;padding:7px 0;border-top:1px solid var(--border);text-decoration:none;color:var(--text)}
-.glzrow .g1{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;font-size:13px}
-.glzrow .gsite{font-size:10px;background:var(--bg3);border-radius:5px;padding:1px 6px;color:var(--text2)}
-.glzrow .gd{font-size:11.5px;color:var(--text2)}
-.glzrow .g2{font-size:11.5px;color:var(--text3,#9ca3af);margin-top:1px;overflow:hidden;
-  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
-.glzgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}
-.gc{background:var(--bg3);border-radius:10px;padding:9px 10px}
-.gc .gcn{font-size:10px;font-weight:800;color:var(--text2)}
 .gc .gcv{font-size:10.5px;color:var(--text2);line-height:1.6;display:flex;flex-direction:column}
 .gc .gcv .hot{color:var(--red);font-weight:800}
-.glzfoot{font-size:10.5px;color:var(--text3,#9ca3af);margin-top:8px;line-height:1.7}
 .nsnews{display:block;padding:8px 0;border-top:1px solid var(--border);text-decoration:none;color:var(--text);font-size:13.5px;line-height:1.7}
 .nsnews span{display:block;font-size:11.5px;color:var(--text2)}
 .mbsold{margin-top:10px}
@@ -777,7 +704,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-31.9';
+const APP_VERSION = '2026-09-01.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1247,6 +1174,22 @@ function buildSet(parts){
   saveSet(st); renderTodaySet();
 }
 // 主要ブロックが出そろってから1回だけ組む
+async function loadGlzCount(){
+  // 通報が来ているかだけ見る。中身はターミナルで読む
+  try{
+    const t = await repoFile('meyjiro/claude-context','inbox/glz_snapshot.json');
+    const g = t ? JSON.parse(t) : null;
+    const n = g ? (g.reports||[]).length : 0;
+    window.__setParts = Object.assign(window.__setParts||{}, {glz:
+      {id:'glz', n, label:`ガチレズの通報 ${n}件`, mins:'ターミナルで', anchor:''}});
+    if(!n) markSetDone('glz');
+  }catch(e){
+    window.__setParts = Object.assign(window.__setParts||{}, {glz:{id:'glz', n:0}});
+    markSetDone('glz');
+  }
+  tryBuildSet();
+}
+
 function tryBuildSet(){
   const p = window.__setParts||{};
   if(!('mbs' in p) || !('glz' in p)) return;    // 両方そろうまで待つ
@@ -1323,92 +1266,11 @@ async function loadNewStuff(){
       ${vp.map(vidCard).join('')}</details>`);
   }
 
-  // ガチレズ3サイト
-  // 🔴 巡回（glz_snapshot）は数字を取ってくるだけ。読んで仕分けるのは Macで動く
-  //    Claude（glz-triage.sh）で、結果は inbox/glz_triage.json にある。
-  //    仕分けがあればそれを出す。無ければ従来のカードに落ちる。
-  try{
-    const tt = await repoFile('meyjiro/claude-context','inbox/glz_triage.json');
-    if(tt){ const tj = JSON.parse(tt); if((tj.cases||[]).length || tj.note) renderTriage(parts, tj); }
-  }catch(e){}
-  // ガチレズ3サイト
-  // 🔴 クラウドからは3サイトに接続できない（プロキシが403）ので、Macが取った
-  //    inbox/glz_snapshot.json を読む。morning.json 側にあればそちらを優先。
-  let g = m.gachirezu;
-  if(!g || !(g.reports||[]).length && !Object.keys(g.counts||{}).length){
-    try{ const t = await repoFile('meyjiro/claude-context','inbox/glz_snapshot.json');
-         if(t) g = JSON.parse(t); }catch(e){}
-  }
-  if(g){
-    const cs = g.counts||{};
-    const rp = (g.reports||[]);
-    const ev = g.events||{}, us = g.users||{};
-    window.__glzReports = rp;   // 🔴 onclickには番号だけ渡す（文字列を埋めると引用符で壊れる）
-    window.__setParts = Object.assign(window.__setParts||{}, {glz:
-      {id:'glz', n:rp.length, label:`通報を裁く ${rp.length}件`, mins:'30秒', anchor:'today-new'}});
-    if(!rp.length) markSetDone('glz');
-    parts.push(`<div class="nsbox">
-      <div class="nsh">🌸 ガチレズ 3サイト</div>
-      ${g.auto && g.auto.closed ? `<div class="glzauto">✓ ${g.auto.closed}件は昨夜のうちに片づけました
-        <span class="glzautow">${esc((g.auto.what||[]).join('・'))}</span></div>` : ''}
-      ${rp.length ? `<div class="glzrep">${rp.map((r,i)=>{
-        const sg = r.suggest||{do:'judge',label:'中身を見て決める',why:''};
-        const pushed = (window.__glzPushed||{})[glzKey(r)];
-        // 🔴 投稿の中身と通報文の両方が見えないと判断できない（2026-08-31 メグ指摘）。
-        //    どちらも全文を出す。長いものだけスクロールさせる。
-        const dets = (r.details && r.details.length) ? r.details : (r.detail?[r.detail]:[]);
-        const brk = t => esc(t).replace(/\n/g,'<br>');
-        return `<div class="glzrow${pushed?' pushed':''}">
-        <div class="g1"><span class="gsite">${esc(r.site||'')}</span>
-          <b>${esc(r.reason_ja||r.reason||'')}</b>
-          ${r.count>1?`<span class="gcount">通報${r.count}件</span>`:''}</div>
-
-        ${dets.length?`<div class="gblk">
-          <div class="gblkh">通報した人の言い分</div>
-          ${dets.map(x=>`<div class="gq">${brk(x)}</div>`).join('')}
-        </div>`:''}
-
-        ${(r.title||r.target)?`<div class="gblk">
-          <div class="gblkh">通報された投稿</div>
-          ${r.title?`<div class="gpt">${esc(r.title)}</div>`:''}
-          ${r.target?`<div class="gpb">${brk(r.target)}</div>`:''}
-        </div>`:''}
-        ${pushed ? `<div class="gdone">✓ ${esc(pushed)}　次の巡回で反映されます</div>` : `
-        <div class="gwhy">${sg.from_precedent?'📖 ':''}${esc(sg.why||'')}</div>
-        <div class="gact">
-          <a class="gbtn gopen" href="${esc(r.url||'#')}" target="_blank" rel="noopener">サイトで見る →</a>
-          ${sg.do==='judge'
-            // 🔴 「中身を見て決める」でも、決めたあとに押すものが要る（2026-08-31 メグ指摘）。
-            //    推し（gmain）は付けず、どれも同じ重さで並べる
-            ? `<button class="gbtn gsub" onclick="glzDo(${i},'trash')">${esc(delLabel(r))}</button>
-               ${r.did?`<button class="gbtn gsub" onclick="glzDo(${i},'trash_ban')">＋7日ブロック</button>`:''}
-               ${(r.did && sg.peer)?`<button class="gbtn gsub" onclick="glzDo(${i},'trash_ban','both')">＋${esc(sg.peer)}にも</button>`:''}
-               <button class="gbtn gsub" onclick="glzDo(${i},'close')">対応不要にする</button>`
-            : `<button class="gbtn gmain" onclick="glzDo(${i},'${sg.do}')">${esc(sg.label)}</button>
-               ${(sg.do==='trash_ban' && sg.peer)?`<button class="gbtn gsub" onclick="glzDo(${i},'trash_ban','both')">${esc(sg.peer)}にも広げる</button>`:''}
-               ${sg.do==='close'?'':`<button class="gbtn gsub" onclick="glzDo(${i},'close')">対応不要</button>`}
-               ${(sg.do==='trash' && r.did)?`<button class="gbtn gsub" onclick="glzDo(${i},'trash_ban')">＋7日ブロック</button>`:''}`}
-        </div>`}
-      </div>`}).join('')}</div>`
-       : `<div class="nsl2">${esc(g.note||'新しい通報はありません')}</div>`}
-      ${(g.pending||[]).length ? `<div class="glzpend">
-        <div class="glzpendh">承認待ちで、なぜ止まったか記録がないもの ${g.pending.length}件</div>
-        ${g.pending.map(x=>`<a class="glzprow" href="${esc(x.url||'#')}" target="_blank" rel="noopener">
-          <b>${esc(x.title||'')}</b><span>${esc((x.at||'').slice(0,10))} ${esc(x.site)}</span></a>`).join('')}
-      </div>` : (g.pending_note?`<div class="glzauto ok">✓ 承認待ち ${esc(g.pending_note)}</div>`:'')}
-      ${g.flow?`<div class="glzflow">前回（${esc(g.flow.since)}）から　通報 ${esc(g.flow.reports)}　承認待ち ${esc(g.flow.pending)}</div>`:''}
-      <div class="glzgrid">${Object.entries(cs).map(([site,v])=>`<div class="gc">
-        <div class="gcn">${esc(site)}</div>
-        <div class="gcv">${Object.entries(v).map(([k,n])=>`<span${n>0&&k==='通報'?' class="hot"':''}>${esc(k)} ${n}</span>`).join('')}</div>
-      </div>`).join('')}</div>
-      ${((ev.publish??ev.by_status?.publish)!=null||us.total!=null)?`<div class="glzfoot">
-        ${(ev.publish??ev.by_status?.publish)!=null?`イベント 公開${ev.publish??ev.by_status.publish}${(ev.new??ev.new_since)?`・新規${ev.new??ev.new_since}`:''} ／ 主催者${ev.organizers}人${(ev.bookings??ev.bookings_since)?`・予約${ev.bookings??ev.bookings_since}`:''}`:''}
-        ${us.total!=null?`　会員${us.total}人${us.new_7d?`（7日で+${us.new_7d}）`:''}`:''}
-      </div>`:''}
-    </div>`);
-  }
-
-  tryBuildSet();
+  // ガチレズ3サイト — 2026-09-01にダッシュボードから外した
+  // 🔴 メグの判断: 「ダッシュボードのガチレズ無くしてOK。あなたに直接追わせる方が効率良さそう」
+  //    通報は読んで判断する仕事で、カードを並べても結局メグが読むことになる。
+  //    ターミナルで「通報周り確認して」と言えば、Claudeが全部読んで仕分けて提案する。
+  //    ここに残すのは「今日は聞くべき日かどうか」が分かる1行だけ（今日のセットに出す）。
 
   // 🌍 世界のニュース1本（2026-08-30 追加）
   // 分野は問わない。「読んだあとに誰かに話したくなるか」だけで選んだものが1日1本入る。
@@ -1444,173 +1306,14 @@ async function loadNewStuff(){
 //    端折らず説明を入れてほしい」
 //    → 順番を固定する: 何が投稿されていたか → 誰が何と言って通報したか →
 //      規約のどこに照らしたか → だからどうするか
-function renderTriage(parts, tj){
-  window.__triage = tj.cases||[];
-  const done = JSON.parse(localStorage.getItem('triageDone')||'{}');
-  const alive = (tj.cases||[]).filter(c=>!done[c.post_id]);
-  const B = k => alive.filter(c=>c.bucket===k);
-  const age = tj.generated_at ? (Date.now()-new Date(tj.generated_at).getTime())/3600000 : 99;
-  const br = t => esc(t||'').replace(/\n/g,'<br>');
 
-  const card = (c, i) => `<div class="tg">
-    <div class="tgh"><span class="gsite">${esc(c.site)}</span>
-      <span class="tgt">${esc({job_listing:'募集投稿',reply:'雑談のレス',topic:'スレッド',
-        'dwqa-question':'なんでも相談','dwqa-answer':'相談への回答'}[c.post_type]||c.post_type||'')}</span>
-      ${c.what_reported?.count>1?`<span class="gcount">通報${c.what_reported.count}件</span>`:''}
-      ${c.what_posted?.when?`<span class="tgw">${esc(c.what_posted.when)}</span>`:''}</div>
-
-    <div class="tgs">① 投稿されていたもの</div>
-    ${c.what_posted?.title?`<div class="tgpt">${esc(c.what_posted.title)}</div>`:''}
-    <div class="tgpb">${br(c.what_posted?.body)}</div>
-    <div class="tgmeta">${esc(c.what_posted?.who||'（名前なし）')}　
-      端末ID: ${c.did?esc(c.did.slice(0,12)):'記録なし'}</div>
-
-    <div class="tgs">② 通報した人が書いたこと</div>
-    ${(c.what_reported?.labels||[]).length?`<div class="tglab">${(c.what_reported.labels).map(x=>`<span>${esc(x)}</span>`).join('')}</div>`:''}
-    ${(c.what_reported?.texts||[]).length
-      ? (c.what_reported.texts).map(t=>`<div class="tgq">${br(t)}</div>`).join('')
-      : `<div class="tgq empty">（通報の文は書かれていません。理由だけ選ばれています）</div>`}
-
-    <div class="tgs">③ 規約と照らすと</div>
-    <div class="tgck">${br(c.checked)}</div>
-
-    <div class="tgs">④ だからどうするか</div>
-    <div class="tgvd">${br(c.verdict)}</div>
-    ${c.caveat?`<div class="tgcv">⚠︎ ${esc(c.caveat)}</div>`:''}
-
-    <div class="gact">
-      <a class="gbtn gopen" href="${esc(c.url||'#')}" target="_blank" rel="noopener">サイトで見る →</a>
-      ${c.action?.do && c.action.do!=='none'
-        ? `<button class="gbtn ${c.bucket==='ask'?'gsub':'gmain'}" onclick="triageDo(${i})">${esc(c.action.label||'実行する')}</button>`:''}
-      ${c.bucket==='ask'?`<button class="gbtn gsub" onclick="triageDo(${i},'close')">対応不要にする</button>`:''}
-      <button class="gbtn gsub" onclick="triageSkip(${i})">あとで</button>
-    </div>
-  </div>`;
-
-  const idx = c => (tj.cases||[]).indexOf(c);
-  const act = B('act'), ask = B('ask'), leave = B('leave');
-
-  parts.push(`<div class="nsbox">
-    <div class="nsh">🌸 ガチレズ　読んで仕分けました
-      ${age>14?`<span class="nstag">🔴 ${Math.floor(age)}時間前</span>`:''}</div>
-    <div class="tgnote">${esc(tj.note||'')}</div>
-
-    ${act.length?`<div class="tgsec">
-      <div class="tgsech">これやっときますか <b>${act.length}</b>件</div>
-      ${act.map(c=>card(c, idx(c))).join('')}
-      ${act.length>1?`<button class="gbtn gmain tgall" onclick="triageAll()">この${act.length}件を全部やる</button>`:''}
-    </div>`:''}
-
-    ${ask.length?`<div class="tgsec">
-      <div class="tgsech ask">メグにしか決められません <b>${ask.length}</b>件</div>
-      ${ask.map(c=>card(c, idx(c))).join('')}
-    </div>`:''}
-
-    ${leave.length?`<details class="tgsec"><summary class="tgsech leave">そのままでいいもの ${leave.length}件（読んだ結果）</summary>
-      ${leave.map(c=>card(c, idx(c))).join('')}</details>`:''}
-
-    ${(!alive.length)?`<div class="nsl2">今日の通報はぜんぶ片づきました 🎉</div>`:''}
-  </div>`);
-}
-
-async function triageDo(i, override){
-  const c = (window.__triage||[])[i]; if(!c) return;
-  const op = override || c.action?.do; if(!op || op==='none') return;
-  const w = op==='close' ? '通報を閉じます（投稿には触りません）'
-          : `${c.action?.label||op}\n\n${(c.what_posted?.title||'')}`;
-  if(op!=='close' && !confirm(`${w}\n\n${c.caveat||''}`)) return;
-  try{
-    const path = `inbox/glz_actions/${c.site}-${(c.report_ids||[0])[0]}-${op}.json`;
-    const ex = await getFileWithSha(path);
-    const row = {at:new Date().toISOString(), site:c.site, do:op,
-                 report_id:(c.report_ids||[])[0], also_ids:(c.report_ids||[]).slice(1),
-                 post_id:c.post_id, did:c.did||null, days:7,
-                 scope:c.action?.scope||'this', reason:(c.verdict||'').slice(0,80)};
-    await api(`/repos/${REPO}/contents/${path}`, 'PUT',
-      Object.assign({message:`ガチレズ: ${c.site} ${op}`, content:enc(JSON.stringify(row,null,1)), branch:BRANCH},
-                    (ex&&ex.sha)?{sha:ex.sha}:{}));
-    triageSkip(i, true);
-    toast('積みました。次の巡回（8:20/14:20/20:20）で反映されます');
-  }catch(e){
-    if(String(e.message).includes('409')) toast('もう積んであります');
-    else alert('積めませんでした: '+e.message);
-  }
-}
-function triageSkip(i, quiet){
-  const c = (window.__triage||[])[i]; if(!c) return;
-  const d = JSON.parse(localStorage.getItem('triageDone')||'{}');
-  d[c.post_id] = new Date().toISOString();
-  localStorage.setItem('triageDone', JSON.stringify(d));
-  loadNewStuff(); if(!quiet) toast('あとでにしました');
-}
-async function triageAll(){
-  const done = JSON.parse(localStorage.getItem('triageDone')||'{}');
-  const list = (window.__triage||[]).map((c,i)=>[c,i]).filter(([c])=>c.bucket==='act'&&!done[c.post_id]);
-  if(!list.length) return;
-  if(!confirm(`${list.length}件をまとめて実行します。\n\n`+
-      list.map(([c])=>`・${c.site} ${c.action?.label||''}\n   ${(c.what_posted?.title||'').slice(0,30)}`).join('\n'))) return;
-  for(const [,i] of list) await triageDo(i, undefined);
-  toast(`${list.length}件を積みました`);
-}
 
 // ── ガチレズ: ボタンを押したら操作をキューに積む（Macが次の巡回で実行する） ──
 // 🔴 サイトの操作キーは絶対にここに書かない。このページは公開されている。
 //    ボタンは claude-context（private）に1行足すだけ。実行はMacがやる。
-function glzKey(r){ return `${r.site}#${r.id}`; }
 // 雑談のレスは消さず本文を「-」にする。ボタンの文字もそれに合わせる
-function delLabel(r){ return r.post_type==='reply' ? '本文を「-」にする' : 'ゴミ箱に入れる'; }
 window.__glzPushed = JSON.parse(localStorage.getItem('glzPushed')||'{}');
 
-async function glzDo(i, op, scope){
-  const r = (window.__glzReports||[])[i];
-  if(!r) return;
-  // 🔴 雑談のレスは消さない。消すとレス番号とページ番号が全部ずれるので、
-  //    運営は昔から本文と名前を「-」に置き換えてきた（2026-08-31 メグ指摘で修正）。
-  const isReply = r.post_type === 'reply';
-  const label = op==='close' ? '対応不要にした'
-              : isReply ? '本文を「-」にした'
-              : op==='trash' ? 'ゴミ箱に入れた'
-              : `ゴミ箱に入れて7日ブロックした${scope==='both'?'（両サイト）':''}`;
-  const what = isReply
-    ? `このレスの本文と名前を「-」にします。\n（消すとレス番号がずれるので、投稿自体は残します）`
-    : `この投稿をゴミ箱に入れます。`;
-  const after = isReply
-    ? `・レス番号とページ番号はずれません\n・元の本文は管理者だけが後から確認できます`
-    : `・サイトからは見えなくなります\n・完全には消えないので、管理画面からいつでも戻せます`;
-  // 🔴 端末ブロックの効き方はサイトで違う。Lとも・真夜中は連携があり、本家は単独
-  const extra = op==='trash_ban'
-    ? `\n・書いた端末を7日間ブロックします${scope==='both'?`（${r.suggest.peer}にも広げます）`:''}`
-      + (r.did ? '' : '\n🔴 この投稿に端末IDが記録されていないので、ブロックは効きません')
-    : '';
-  if(op!=='close' && !confirm(`${what}\n\n${r.target||''}\n\n${after}${extra}`)) return;
-  const row = {at:new Date().toISOString(), site:r.site, do:op, report_id:r.id,
-               also_ids:r.also_ids||[],          // 同じ投稿への他の通報もまとめて閉じる
-               post_id:r.post_id, did:r.did||null, days:7, scope:scope||'this',
-               reason:(r.reason_ja||r.reason||''), memo:(r.detail||'').slice(0,60)};
-  // 🔴 1つのファイルに追記していくと、続けて押したときに sha が合わず 409 になる
-  //    （2026-08-30 メグ報告）。投げ込み箱と同じく1操作1ファイルにして衝突をなくす。
-  //    同じ通報を2回押しても同じファイル名になるので、上書きされるだけで害がない。
-  const btns = document.querySelectorAll('#tab-today .gact button, #tab-today .gact a');
-  btns.forEach(b=>b.style.pointerEvents='none');
-  try{
-    const path = `inbox/glz_actions/${r.site}-${r.id}-${op}.json`;
-    const ex = await getFileWithSha(path);
-    await api(`/repos/${REPO}/contents/${path}`, 'PUT',
-      Object.assign({ message:`ガチレズ操作: ${r.site} ${label}`,
-                      content: enc(JSON.stringify(row, null, 1)), branch: BRANCH },
-                    (ex && ex.sha) ? { sha: ex.sha } : {}));
-    window.__glzPushed[glzKey(r)] = label;
-    { const rest = (window.__glzReports||[]).filter(v=>!(window.__glzPushed||{})[glzKey(v)]);
-      if(!rest.length) markSetDone('glz'); }
-    localStorage.setItem('glzPushed', JSON.stringify(window.__glzPushed));
-    loadNewStuff();
-    toast(`${label}。次の巡回（8:20/14:20/20:20）で反映されます`);
-  }catch(e){
-    // 409 は「もう積んである」というだけなので、押した人にはそう伝える
-    if(String(e.message).includes('409')) toast('もう積んであります');
-    else alert('積めませんでした: ' + e.message);
-  }finally{ btns.forEach(b=>b.style.pointerEvents=''); }
-}
 
 async function loadBriefing() {
   try {
@@ -2794,7 +2497,7 @@ let isLoading = false;
 async function loadAll() {
   if (isLoading || !pat) return;
   isLoading = true; $('refresh-btn').classList.add('spinning');
-  await Promise.all([loadOps(), loadMebiusDrafts(), loadNums(), loadNewStuff(), loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadIbkr(), loadVerdicts(), loadDocket(), loadScout(), loadMebius(), loadHealth()]);
+  await Promise.all([loadOps(), loadMebiusDrafts(), loadGlzCount(), loadNums(), loadNewStuff(), loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadIbkr(), loadVerdicts(), loadDocket(), loadScout(), loadMebius(), loadHealth()]);
   await loadSchedule(); // メビウス予定をカレンダーに重ねるため後で描画
   isLoading = false; $('refresh-btn').classList.remove('spinning');
 }
