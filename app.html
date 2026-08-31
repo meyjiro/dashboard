@@ -1,0 +1,2705 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Dashboard">
+<meta name="theme-color" content="#f6f4f0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#191817" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&display=swap">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-512.png">
+<title>Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  /* 地と紙 — 白ではなく生成り。長時間見るものなので彩度と輝度を落とす */
+  --bg:#f6f4f0;--bg2:#fffdfa;--bg3:#efebe4;
+  /* 字 — 純黒は避ける。紙に乗ったインクの色 */
+  --text:#232323;--text2:#6a6560;--text3:#78736d;
+  /* 意味を持つ色は2つだけ。琥珀＝これから手を動かす、深緑＝もう済んだ */
+  --accent:#986327;--accent-light:#fbf3e8;
+  --ok:#3f6b52;--ok-light:#edf3ef;
+  --warn:#a8721c;--warn-light:#fbf4e6;--red:#a8443a;--red-light:#f9eeec;
+  --card:#fffdfa;--border:#e6e0d6;--border2:#f0ebe3;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#191817;--bg2:#232120;--bg3:#2c2a28;
+    --text:#eae6df;--text2:#a9a29a;--text3:#7d766e;
+    --accent:#e0a860;--accent-light:#2e2519;
+    --ok:#7fb99a;--ok-light:#1e2722;
+    --warn:#d7b95e;--warn-light:#2b2617;--red:#e08b80;--red-light:#2c1e1c;
+    --card:#232120;--border:#38342f;--border2:#2e2b28;
+  }
+}
+html,body{height:100%;
+  font-family:"Zen Kaku Gothic New",-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;
+  font-size:16px;line-height:1.8;background:var(--bg);color:var(--text);
+  overflow:hidden;-webkit-tap-highlight-color:transparent;
+  font-feature-settings:"palt" 1;                 /* 日本語の字送りを詰める */
+  -webkit-font-smoothing:antialiased}
+/* 数字が並ぶところは桁を揃える */
+.num,.big,td.num,.tsm,.gcv,.glzflow,.mdays{font-variant-numeric:tabular-nums}
+input,textarea,button,select{font-size:16px;font-family:inherit}
+
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.top-bar h1{font-size:16px;font-weight:700;letter-spacing:.02em}
+.top-bar .sub{font-size:12px;color:var(--text2);font-weight:400;margin-left:8px}
+.icon-btn{background:none;border:none;cursor:pointer;padding:8px;color:var(--text2);display:flex;align-items:center}
+.icon-btn svg{width:22px;height:22px;fill:currentColor;transition:transform .3s}
+.icon-btn.spinning svg{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.tab-content{flex:1;overflow-y:auto;overflow-x:hidden;padding:12px 14px calc(70px + var(--safe-bottom) + 16px);-webkit-overflow-scrolling:touch}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--bg2);border-top:1px solid var(--border);padding-bottom:var(--safe-bottom);z-index:50}
+.nav-btn{flex:1;padding:12px 0 8px;text-align:center;color:var(--text2);background:none;border:none;cursor:pointer;min-height:54px}
+.nav-btn{position:relative;transition:color .15s}
+.nav-btn.active{color:var(--accent);font-weight:700}
+.nav-btn.active::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:26px;height:2px;border-radius:0 0 2px 2px;background:var(--accent)}
+.nav-btn .em{display:block;font-size:20px;line-height:1;margin-bottom:3px}
+.nav-btn span{font-size:10.5px;font-weight:600;letter-spacing:.02em}
+
+.section-title{font-size:13px;font-weight:700;color:var(--text2);margin:22px 4px 10px;display:flex;align-items:center;gap:6px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:14px 16px;margin-bottom:8px}
+.card .t{font-weight:600;line-height:1.65;font-size:14.5px}
+.card .s{font-size:13px;color:var(--text2);margin-top:4px;line-height:1.85;
+  white-space:pre-wrap;word-break:break-word}
+/* 返事待ち: 完了ボタン */
+.card.pend .pendb{display:flex;gap:6px;align-items:center;margin-top:9px}
+.penddone{background:transparent;color:var(--text3);border:1px solid var(--border);
+  border-radius:9px;padding:7px 13px;font-size:12px;font-family:inherit;cursor:pointer}
+.penddone:active{background:var(--bg3)}
+.empty{color:var(--text2);font-size:14px;padding:16px 6px;text-align:center}
+
+/* 投資タブ: 資産カード・保有 */
+.section-title .sec-note{margin-left:auto;font-weight:600;color:var(--text2);font-size:11px}
+.navcard{background:linear-gradient(140deg,var(--accent-light),transparent);border:1px solid var(--accent-light);
+  border-radius:16px;padding:16px 18px;margin-bottom:10px}
+.navcard .lbl{font-size:11px;color:var(--text2);display:flex;align-items:center;gap:6px}
+.navcard .main{font-size:29px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.navline{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;min-width:0}
+.navcard .lbl{flex-wrap:wrap}
+.hcard .r1{flex-wrap:wrap}
+.hcard .r2{flex-wrap:wrap}
+#tab-invest .card,#tab-invest .hcard,#tab-invest .navcard,#tab-invest .vcard{max-width:100%;overflow-wrap:anywhere}
+.navcard .sub{font-size:14px;color:var(--text2);font-variant-numeric:tabular-nums;font-weight:600}
+.navcard .swap{margin-left:auto;font-size:11px;color:var(--accent);font-weight:700;background:none;border:0;cursor:pointer;padding:2px 6px}
+.mixbar{display:flex;height:7px;border-radius:4px;overflow:hidden;margin-top:11px;background:var(--bg3);gap:2px}
+.mixbar i{display:block;height:100%}
+.mixleg{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--text2);margin-top:6px}
+.mixleg span{display:flex;align-items:center;gap:4px}
+.mixleg i{width:9px;height:9px;border-radius:3px;display:inline-block}
+.hcard{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:12px 14px;margin-bottom:8px}
+.hcard .r1{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.hcard .sym{font-weight:700;font-size:14.5px}
+.hcard .nm{font-size:11.5px;color:var(--text2)}
+.hcard .pnl{margin-left:auto;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hcard .r2{display:flex;align-items:center;gap:7px;margin-top:5px;font-size:11.5px;color:var(--text2);flex-variant:wrap}
+.hcard .r2 .val{font-variant-numeric:tabular-nums}
+.up{color:#0f9d58} .down{color:var(--red)}
+.flag{font-size:12px}
+.borrow{display:flex;align-items:center;gap:6px;margin-top:9px;padding:7px 10px;border-radius:9px;
+  background:var(--warn-light);color:var(--warn);font-size:11.5px;font-weight:600}
+
+/* 投資タブ: 判決カード */
+.section-title .sec-link{margin-left:auto;font-weight:600;color:var(--accent);text-decoration:none;font-size:12px}
+.vcard{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:9px;border-left:4px solid var(--border)}
+.vcard.lv-reject{border-left-color:var(--red)}
+.vcard.lv-conditional{border-left-color:var(--warn)}
+.vcard.lv-approve{border-left-color:var(--accent)}
+.vcard .vhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.vcard .vname{font-weight:700;font-size:15px;line-height:1.4}
+.vcard .vno{font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums}
+.vcard .vdate{margin-left:auto;font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums}
+.vcard .vone{font-size:12.5px;color:var(--text2);line-height:1.6;margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vcard .vmeta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.b-reject{background:var(--red-light);color:var(--red)}
+.b-conditional{background:var(--warn-light);color:var(--warn)}
+.b-approve{background:var(--accent-light);color:var(--accent)}
+.b-mini{background:var(--bg3);color:var(--text2);font-weight:600}
+.fold{margin:22px 4px 10px;border-top:1px solid var(--border);padding-top:12px}
+.fold>summary{font-size:13px;font-weight:700;color:var(--text2);cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px}
+.fold>summary::before{content:"▸";display:inline-block;transition:transform .15s}
+.fold[open]>summary::before{transform:rotate(90deg)}
+.fold>summary::-webkit-details-marker{display:none}
+
+/* 今日タブ */
+.quote-card{background:linear-gradient(135deg,#0bb7ae10,#0bb7ae04);border:1px solid var(--accent-light);border-radius:14px;padding:16px 18px;margin-bottom:12px}
+.quote-card .q{font-size:15px;line-height:1.75;font-weight:600}
+.quote-card .a{font-size:12px;color:var(--text2);margin-top:6px;text-align:right}
+.due{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--card);border:1px solid var(--border);margin-bottom:8px}
+.due .d{font-size:12px;font-weight:700;white-space:nowrap;padding:3px 8px;border-radius:8px;background:var(--bg3);color:var(--text2)}
+.due.warn .d{background:var(--warn-light);color:var(--warn)}
+.due.overdue .d{background:var(--red-light);color:var(--red)}
+.due .l{font-size:14px;line-height:1.55;flex:1}
+.due{flex-wrap:wrap}
+.due.done{opacity:.5}
+.due.done .l{text-decoration:line-through}
+.due-btn{flex:0 0 auto;border:1px solid var(--border);background:var(--bg3);color:var(--text2);
+  border-radius:9px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.due-btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.due-rep{flex-basis:100%;margin-top:8px;display:none}
+.due-rep.open{display:block}
+.due-rep textarea{width:100%;border:1px solid var(--border);border-radius:10px;padding:9px 11px;
+  font-size:14px;font-family:inherit;line-height:1.6;min-height:64px;resize:none;
+  background:var(--bg2);color:var(--text);outline:none}
+.due-rep textarea:focus{border-color:var(--accent)}
+.due-rep .row2{display:flex;gap:8px;margin-top:7px}
+.due-rep .hint2{font-size:11px;color:var(--text2);margin-top:5px;line-height:1.5}
+.stale{background:var(--warn-light);color:var(--warn);border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:12px}
+.loglist{font-size:13px;color:var(--text2);line-height:1.9;padding:2px 6px}
+details.fold{margin-bottom:10px}
+details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8px 4px;cursor:pointer;user-select:none}
+
+/* タイル */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* 自動処理の見張り（2026-08-30） */
+/* 今日タブだけ配色を変える（2026-08-30 メグ「見る気がしない雰囲気」）
+   ── 全体のティール(#0bb7ae)は事務的なので、この画面だけ朝の光に寄せる。
+      地は白のまま、差し色を琥珀＋深緑にして、名言を主役に置く。 */
+/* 今日タブ専用だった色は、全体のトークンを指すだけにした（2026-08-30） */
+#tab-today{--tt:var(--accent);--tt2:var(--ok);--tt-soft:var(--accent-light);--tt-line:var(--border)}
+/* 名言＝朝いちばんに目に入るもの。畳まない */
+/* 名言: 小さく、でも枠に入れて美しく（2026-08-30 メグ指示）。明朝で頭に入りやすく */
+.verbar{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  font-size:11px;color:var(--text3);padding:5px 2px 9px;font-variant-numeric:tabular-nums}
+.verbar button{background:transparent;border:1px solid var(--border);border-radius:7px;
+  padding:4px 10px;font-size:11px;color:var(--text3);font-family:inherit;cursor:pointer}
+.verbar.stale{color:var(--accent);font-weight:600}
+.verbar.stale button{border-color:var(--accent);color:#fff;background:var(--accent);font-weight:700}
+#tab-today .tset{border:1px solid var(--tt-line);border-radius:11px;background:var(--card);
+  padding:12px 14px;margin:0 0 16px}
+#tab-today .tset.done{background:var(--tt-soft);border-color:var(--tt-line);text-align:center;padding:18px 14px}
+#tab-today .tsh{font-size:11px;letter-spacing:.08em;color:var(--text3);display:flex;
+  justify-content:space-between;align-items:baseline;margin:0 0 7px}
+#tab-today .tsh span{color:var(--tt);font-size:12.5px;font-weight:600}
+#tab-today .tsrow{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:8px 0;border-top:1px solid var(--tt-line);text-decoration:none;color:inherit;font-size:13.5px}
+#tab-today .tsrow:first-of-type{border-top:none}
+#tab-today .tsdoneb{flex:none;background:var(--card);border:1px solid var(--border);
+  border-radius:8px;padding:5px 12px;font-size:11.5px;color:var(--text2);
+  font-family:inherit;cursor:pointer}
+#tab-today .tsdoneb:active{background:var(--bg3)}
+#tab-today .tsm{font-size:11px;color:var(--text3);flex:none;font-variant-numeric:tabular-nums}
+#tab-today .tset.ask{margin-top:-8px;background:var(--tt-soft)}
+#tab-today .tsask{font-size:13.5px;margin:2px 0 0}
+#tab-today .tsdone{font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;font-size:15px;color:var(--tt2)}
+#tab-today .tsmeta{font-size:11.5px;color:var(--text3);margin-top:5px}
+#tab-today .mbsq{font-size:13.5px;color:var(--text);margin:0 0 11px;line-height:1.7}
+#tab-today .mbsq b{color:var(--accent);font-size:17px;margin:0 2px;
+  font-variant-numeric:tabular-nums}
+#tab-today .mbsqs{display:block;color:var(--text2);font-size:12px;margin-top:2px}
+#tab-today .mbscard{border:1px solid var(--border);border-radius:11px;background:var(--card);
+  margin:0 0 8px;overflow:hidden}
+#tab-today .mbscard.open{border-color:var(--tt);box-shadow:0 1px 8px rgba(0,0,0,.05)}
+#tab-today .mbsch{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 15px;cursor:pointer;user-select:none}
+#tab-today .mbsch:active{background:var(--tt-soft)}
+#tab-today .mbschl{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0}
+#tab-today .mbschl b{font-size:14.5px;font-weight:700}
+#tab-today .mbschx{font-size:11.5px;color:var(--tt);white-space:nowrap;flex:none}
+#tab-today .mdays{font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums;
+  padding:2px 7px;border-radius:99px;border:1px solid var(--border)}
+#tab-today .mdays.warm{color:var(--tt)}
+#tab-today .mdays.cold{color:var(--text3);opacity:.7}
+#tab-today .mbscb:empty{display:none}
+#tab-today .mbscb{padding:2px 15px 15px;border-top:1px solid var(--border2)}
+#tab-today .mbsload,#tab-today .mbsneed{font-size:12px;color:var(--text3);padding:11px 0}
+#tab-today .mbsmsg{margin:11px 0 0;font-size:12.5px;line-height:1.8}
+#tab-today .mbsmw{font-size:10.5px;color:var(--text3);margin:0 0 3px;letter-spacing:.03em}
+#tab-today .mbsmw span{margin-left:7px;opacity:.75}
+#tab-today .mbsmb{padding:9px 11px;border-radius:9px;background:var(--tt-soft);
+  max-height:210px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#tab-today .mbsmsg.me .mbsmb{background:var(--bg3)}
+#tab-today .mbsdraft{margin:13px 0 0}
+#tab-today .mbsdh{font-size:10.5px;color:var(--tt2);letter-spacing:.08em;margin:0 0 5px}
+#tab-today .mbsdb{font-size:12.5px;line-height:1.85;padding:11px 12px;border-radius:9px;
+  border:1px solid var(--tt-line);background:var(--card);
+  max-height:280px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#tab-today .mbsacts{display:flex;flex-wrap:wrap;gap:6px;margin:13px 0 0}
+#tab-today .mbstop{border:1px solid var(--tt-line);border-radius:10px;padding:13px 14px;background:var(--tt-soft)}
+#tab-today .mbstl{font-size:11px;color:var(--tt);letter-spacing:.06em;margin:0 0 6px}
+#tab-today .mbstn{font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#tab-today .mbstd{font-size:12px;color:var(--text2);margin:6px 0 0}
+#tab-today .mbstb{display:flex;flex-wrap:wrap;gap:6px;margin:11px 0 0}
+#tab-today .mbsrow2{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--tt-line)}
+#tab-today .mbsrow2 a{flex:1;display:flex;align-items:center;gap:7px;text-decoration:none;color:inherit;font-size:12.5px;min-width:0}
+#tab-today .mbsrow2 a b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#tab-today .gbtn.gmini{padding:4px 9px;font-size:11px;flex:none}
+/* ── 通報カード: 読ませるのではなく押させる（2026-08-30 メグ指示） ── */
+#tab-today .vprev{margin:0 0 9px}
+#tab-today .vprev>summary{padding:11px 14px;font-size:12.5px;color:var(--text2);cursor:pointer;
+  list-style:none;border:1px solid var(--border);border-radius:11px;background:var(--card)}
+#tab-today .vprev>summary::-webkit-details-marker{display:none}
+#tab-today .vprev>summary::after{content:" ▾"}
+#tab-today .vprev[open]>summary{margin-bottom:8px}
+#tab-today .vprev[open]>summary::after{content:" ▴"}
+#tab-today .vprev .nsbox{opacity:.86}
+#tab-today .wtitle{display:block;font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;
+  font-size:15px;line-height:1.7;color:var(--text);text-decoration:none;margin:0 0 8px;
+  text-underline-offset:3px}
+#tab-today .wtitle:active{text-decoration:underline}
+#tab-today .wnote{font-size:13px;line-height:1.95;color:var(--text2)}
+#tab-today .wwhy{font-size:12px;line-height:1.8;color:var(--ok);margin:9px 0 0;
+  padding:8px 11px;background:var(--ok-light);border-radius:8px}
+#tab-today .glzflow{font-size:11px;color:var(--text3);margin:0 0 7px;font-variant-numeric:tabular-nums}
+#tab-today .glzauto.ok{color:var(--text3);background:transparent;padding:6px 0}
+#tab-today .glzpend{margin:0 0 10px}
+#tab-today .glzpendh{font-size:11.5px;color:var(--tt);margin:0 0 5px}
+#tab-today .glzprow{display:flex;justify-content:space-between;gap:9px;padding:8px 11px;
+  border:1px solid var(--tt-line);border-radius:8px;margin:0 0 5px;text-decoration:none;color:inherit;font-size:12.5px}
+#tab-today .glzprow span{color:var(--text3);font-size:11px;flex:none}
+#tab-today .glzauto{font-size:11.5px;color:var(--tt2);background:var(--tt-soft);
+  border-radius:8px;padding:8px 11px;margin:0 0 9px;line-height:1.7}
+#tab-today .glzauto .glzautow{display:block;color:var(--text3);font-size:11px;margin-top:2px}
+#tab-today .glzrow{display:block;padding:11px 12px;border:1px solid var(--tt-line);border-radius:10px;
+  background:var(--card);margin:0 0 8px;text-decoration:none;color:inherit}
+#tab-today .glzrow.pushed{opacity:.55}
+#tab-today .glzrow .g1{display:flex;align-items:center;gap:7px;font-size:12.5px}
+#tab-today .glzrow .gsite{font-size:10.5px;padding:1px 7px;border-radius:99px;
+  background:var(--tt-soft);color:var(--tt);border:1px solid var(--tt-line);flex:none}
+#tab-today .glzrow .g1 b{font-weight:600}
+#tab-today .gcount{font-size:10.5px;padding:1px 7px;border-radius:99px;
+  background:var(--accent);color:#fff;flex:none}
+#tab-today .gblk{margin:9px 0 0}
+#tab-today .gblkh{font-size:10.5px;color:var(--text3);letter-spacing:.06em;margin:0 0 4px}
+#tab-today .gq{font-size:12.5px;line-height:1.85;color:var(--text2);padding:8px 11px;
+  background:var(--bg3);border-radius:9px;margin:0 0 5px;
+  max-height:150px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#tab-today .gpt{font-size:13px;font-weight:600;margin:0 0 4px;line-height:1.6}
+#tab-today .gpb{font-size:12.5px;line-height:1.85;color:var(--text2);padding:9px 11px;
+  border-left:2px solid var(--border);
+  max-height:220px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#tab-today .glzrow .gd{font-size:12px;color:var(--text2);margin:5px 0 0;line-height:1.6}
+#tab-today .glzrow .g2{font-size:11.5px;color:var(--text3);margin:4px 0 0;
+  padding-left:8px;border-left:2px solid var(--tt-line)}
+#tab-today .glzrow .gwhy{font-size:11.5px;color:var(--tt2);margin:7px 0 0}
+#tab-today .glzrow .gact{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 0}
+#tab-today .gbtn{font-size:12.5px;padding:9px 15px;border-radius:9px;border:1px solid var(--border);
+  background:var(--card);color:var(--text2);cursor:pointer;text-decoration:none;display:inline-block;
+  font-family:inherit;font-weight:500;line-height:1.4;transition:transform .08s}
+#tab-today .gbtn.gmain{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+#tab-today .gbtn.gopen{background:var(--tt-soft);border-color:var(--tt-line);color:var(--tt);font-weight:600}
+#tab-today .gbtn:active{transform:translateY(1px)}
+#tab-today .glzrow .gdone{font-size:11.5px;color:var(--tt2);margin:8px 0 0}
+#tab-today .quote-card{background:var(--card);border:1px solid var(--tt-line);
+  border-radius:12px;padding:14px 16px 12px;margin:4px 0 14px;position:relative;overflow:hidden}
+#tab-today .quote-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,var(--tt),var(--tt2))}
+#tab-today .quote-card .q{font-family:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  font-feature-settings:"palt" 0;
+  font-size:14.5px;line-height:1.95;font-weight:500;color:var(--text);padding-left:4px;letter-spacing:.02em}
+#tab-today .quote-card .a{font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;
+  font-size:11px;color:var(--tt);margin-top:8px;text-align:right;font-weight:600;letter-spacing:.04em}
+/* 見出しは琥珀の小さな帯 */
+#tab-today .blk-h{color:var(--text2);font-size:12.5px;letter-spacing:.04em;font-weight:700;
+  margin:26px 2px 9px;display:flex;align-items:center;gap:9px}
+#tab-today .blk-h::after{content:"";flex:1;height:1px;background:var(--border2)}
+#tab-today .blk-sub{color:var(--text2);font-size:12px;font-weight:700;letter-spacing:.02em;
+  margin:16px 2px 7px;display:flex;align-items:center;gap:8px}
+/* 数字のストリップは琥珀の下線 */
+#tab-today .sc{border-bottom:2px solid var(--tt-line)}
+/* 期日カードの左線を琥珀に */
+#tab-today .due .d{background:var(--tt-soft);color:var(--tt)}
+#tab-today .mbsh .mbsn{background:var(--tt-soft);color:var(--tt)}
+#tab-today .mbsrow .mopen{color:var(--tt2)}
+#tab-today .nsh{color:var(--tt2)}
+#tab-today .nstitle{color:var(--text)}
+.toinbox{margin-top:8px;background:var(--tt-soft);color:var(--tt);border:0;border-radius:9px;
+  padding:7px 12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer}
+.laterd{margin:6px 0 2px}
+.laterd>summary{font-size:11.5px;color:var(--text3,#9ca3af);cursor:pointer;list-style:none;padding:6px 2px}
+.laterd>summary::-webkit-details-marker{display:none}
+.laterd>summary::after{content:" ▾"} .laterd[open]>summary::after{content:" ▴"}
+.ldrow{display:flex;gap:9px;font-size:12.5px;padding:5px 4px;color:var(--text2);line-height:1.7}
+.ldrow b{flex:none;font-family:"Roboto Mono",ui-monospace,monospace;color:var(--text)}
+
+/* 今日タブ 2026-08-30 再構成: 1画面に収める */
+.blk-h{font-size:12.5px;font-weight:700;letter-spacing:.04em;color:var(--text2);margin:22px 2px 8px}
+.blk-sub{font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--text2);margin:15px 2px 6px}
+/* 数字は1行のストリップに */
+.strip{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px;margin-bottom:2px;scrollbar-width:none}
+.strip::-webkit-scrollbar{display:none}
+.sc{flex:0 0 auto;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:8px 11px;min-width:0}
+.sc .s1{font-size:14px;font-weight:800;white-space:nowrap}
+.sc .s2{font-size:10.5px;color:var(--text2);white-space:nowrap;margin-top:1px}
+/* 自動処理は畳んだ1行 */
+details.ops.ok{background:none;border:0;padding:0;margin:0 0 8px}
+details.ops.ok>summary{font-size:11px;color:var(--text3,#9ca3af);cursor:pointer;list-style:none;padding:2px}
+details.ops.ok>summary::-webkit-details-marker{display:none}
+details.ops.ok>summary::after{content:" ▾"}
+details.ops.ok[open]>summary::after{content:" ▴"}
+/* そのほか（畳み） */
+.more2{margin-top:18px;border-top:1px solid var(--border);padding-top:4px}
+.more2>summary{font-size:12px;color:var(--text2);font-weight:700;cursor:pointer;list-style:none;padding:9px 2px}
+.more2>summary::-webkit-details-marker{display:none}
+.more2>summary::after{content:" ▾"} .more2[open]>summary::after{content:" ▴"}
+.numgrid{display:grid;gap:8px;margin-bottom:12px}
+.sec-note{font-weight:400;font-size:10.5px;color:var(--text3,#9ca3af);margin-left:6px;letter-spacing:0}
+.mbs{margin-bottom:14px}
+.mbsh{display:flex;align-items:baseline;gap:8px;padding:10px 12px 7px;font-size:13.5px}
+.mbsh .mbsn{margin-left:auto;font-family:"Roboto Mono",ui-monospace,monospace;font-size:13px;
+  background:var(--accent-light);color:var(--accent);border-radius:8px;padding:2px 9px;font-weight:700}
+.mbsrow{display:block;padding:9px 13px;border-top:1px solid var(--border);text-decoration:none;color:var(--text)}
+.mbsrow .mr1{display:flex;align-items:baseline;gap:7px;font-size:14.5px}
+.mtag{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--bg3);
+  color:var(--text2);flex:none;font-weight:500;line-height:1.6}
+.mbsrow .mr2{display:flex;font-size:11px;color:var(--text3,#9ca3af);margin-top:1px}
+.mbsrow .mopen{margin-left:auto;color:var(--accent);font-weight:700}
+.mbsmore{padding:14px 15px;border:1px solid var(--border);border-radius:11px;
+  background:var(--card);font-size:13px;color:var(--text2);line-height:1.8}
+.mbswait{margin-top:10px;padding:9px 12px;background:var(--bg3);border-radius:9px;
+  font-size:11.5px;color:var(--text2);line-height:1.7}
+.nsbox{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:15px 16px;margin-bottom:9px}
+.nsbox.dim{color:var(--text2);font-size:13px}
+.nsh{display:flex;align-items:baseline;gap:8px;font-size:12.5px;font-weight:700;
+  color:var(--text2);letter-spacing:.02em;margin-bottom:10px}
+.nsh .nstag{margin-left:auto;font-weight:500;font-size:10.5px;color:var(--text3,#9ca3af)}
+.nsname{font-size:18px;font-weight:800;margin-top:3px}
+.nsname .nscode{font-size:12px;color:var(--text2);font-family:"Roboto Mono",ui-monospace,monospace}
+.nstitle{display:block;font-size:15px;font-weight:700;line-height:1.6;margin-top:4px;text-decoration:none;color:var(--text)}
+.nsul{margin:7px 0 0;padding-left:17px;font-size:13px;line-height:1.85;color:var(--text2)}
+.nsul li{margin:2px 0}
+.nsl{font-size:12.5px;line-height:1.8;margin-top:6px;color:var(--text2)}
+.nsl span{display:block;font-size:10px;color:var(--text3,#9ca3af);font-weight:700;letter-spacing:.05em}
+.nsl2{font-size:12.5px;color:var(--text2);margin-top:4px}
+#tab-today .nsbox.cand{border-color:var(--tt-line);background:linear-gradient(170deg,var(--tt-soft),transparent 55%)}
+.plainbox{margin-top:8px}
+.plainbox p{margin:0;font-size:14.5px;line-height:1.95}
+.pl{margin-bottom:11px}
+.pl:last-child{margin-bottom:0}
+.plk{font-size:11px;font-weight:800;color:var(--tt2);letter-spacing:.04em;margin-bottom:2px}
+.plainbox p:last-child{margin-bottom:0}
+.cmore{margin-top:9px}
+.cmore>summary{font-size:11px;color:var(--text3,#9ca3af);cursor:pointer;list-style:none;padding:3px 0}
+.cmore>summary::-webkit-details-marker{display:none}
+.cmore>summary::after{content:" ▾"} .cmore[open]>summary::after{content:" ▴"}
+.nsflag{background:var(--warn-light);color:var(--warn);border-radius:9px;padding:7px 10px;
+  font-size:12px;line-height:1.7;margin-top:8px;font-weight:600}
+.glzrep{margin-top:7px}
+.glzrow{display:block;padding:7px 0;border-top:1px solid var(--border);text-decoration:none;color:var(--text)}
+.glzrow .g1{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;font-size:13px}
+.glzrow .gsite{font-size:10px;background:var(--bg3);border-radius:5px;padding:1px 6px;color:var(--text2)}
+.glzrow .gd{font-size:11.5px;color:var(--text2)}
+.glzrow .g2{font-size:11.5px;color:var(--text3,#9ca3af);margin-top:1px;overflow:hidden;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
+.glzgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}
+.gc{background:var(--bg3);border-radius:10px;padding:9px 10px}
+.gc .gcn{font-size:10px;font-weight:800;color:var(--text2)}
+.gc .gcv{font-size:10.5px;color:var(--text2);line-height:1.6;display:flex;flex-direction:column}
+.gc .gcv .hot{color:var(--red);font-weight:800}
+.glzfoot{font-size:10.5px;color:var(--text3,#9ca3af);margin-top:8px;line-height:1.7}
+.nsnews{display:block;padding:8px 0;border-top:1px solid var(--border);text-decoration:none;color:var(--text);font-size:13.5px;line-height:1.7}
+.nsnews span{display:block;font-size:11.5px;color:var(--text2)}
+.mbsold{margin-top:10px}
+.mbsold>summary{padding:10px 13px;font-size:12px;color:var(--text2);cursor:pointer;list-style:none;
+  border:1px solid var(--border);border-radius:10px;background:var(--card)}
+.mbsold[open]>summary{margin-bottom:8px}
+.mbsold>summary::-webkit-details-marker{display:none}
+.mbsold>summary::after{content:" ▾"} .mbsold[open]>summary::after{content:" ▴"}
+.numcard{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:11px 13px}
+.numcard .nt{display:flex;align-items:baseline;gap:8px;font-size:16px;font-weight:800}
+.numcard .ns{font-size:13px;color:var(--text2);margin-top:2px;line-height:1.65}
+.numcard .nm{font-size:10.5px;color:var(--text3,#9ca3af);margin-top:2px}
+.ops{border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:13px;line-height:1.7}
+.ops.ok{background:var(--card);border:1px solid var(--border);color:var(--text2);
+  display:flex;gap:9px;align-items:flex-start}
+.ops.bad{background:var(--red-light);border:1px solid var(--red)}
+.opsh{font-weight:800;color:var(--red);font-size:13.5px;margin-bottom:6px}
+.opsrow{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;padding:4px 0}
+.opsrow b{font-size:13.5px}
+.opsmini{font-size:10.5px;color:var(--text3,#9ca3af);display:block;width:100%;line-height:1.6}
+.fxmeta{font-size:10px;color:var(--text3,#9ca3af);font-variant-numeric:tabular-nums;margin-left:4px}
+.fxbtn{background:none;border:0;cursor:pointer;font-size:13px;padding:2px 4px;line-height:1;
+  margin-left:auto;opacity:.65}
+.fxbtn:active{opacity:1}
+.fxbtn:disabled{opacity:.35}
+/* 健康タブ: コンディション（2026-08-28） */
+.hero{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 15px;margin-bottom:12px}
+.hero-top{display:flex;align-items:center;gap:15px}
+.ring{flex:none;position:relative;width:100px;height:100px}
+.ring .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.ring .num b{font-size:31px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.ring .num span{font-size:9px;color:var(--text2);margin-top:3px;letter-spacing:.02em}
+.hero-txt{flex:1;min-width:0}
+.hero-txt .st{font-size:19px;font-weight:800;line-height:1.3}
+.hero-txt .msg{font-size:12.5px;color:var(--text2);margin-top:5px;line-height:1.65}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:13px}
+.badge{font-size:11.5px;font-weight:700;border-radius:999px;padding:4px 10px;line-height:1.5}
+.badge.good{background:var(--accent-light);color:var(--accent)}
+.badge.warn{background:var(--warn-light);color:var(--warn)}
+.badge.bad{background:var(--red-light);color:var(--red)}
+.spark7{display:flex;align-items:flex-end;gap:3px;height:34px;margin-top:14px}
+.spark7 i{flex:1;border-radius:2px 2px 0 0;min-height:3px}
+.sparkcap{font-size:10px;color:var(--text2);margin-top:5px}
+.mgroup{margin-bottom:14px}
+.mgroup h4{font-size:11.5px;font-weight:700;color:var(--text2);letter-spacing:.06em;margin:0 4px 6px}
+.mrows{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.mrow{display:grid;grid-template-columns:66px minmax(64px,auto) 1fr 42px;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid var(--border)}
+.mrow:last-child{border-bottom:0}
+.mrow.ok{background:var(--ok-light)}
+.mrow.wn{background:var(--warn-light)}
+.mrow.bd{background:var(--red-light)}
+.mrow .mname{font-size:12.5px;color:var(--text2);font-weight:600;white-space:nowrap}
+.mrow .mval{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.mrow .mval u{text-decoration:none;font-size:10px;color:var(--text2);font-weight:500;margin-left:2px}
+.mrow .mdiff{font-size:11px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.mbar{position:relative;height:6px;border-radius:3px;background:var(--bg3)}
+.mbar::before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--border)}
+.mbar i{position:absolute;top:0;height:6px;border-radius:3px}
+.mnote{font-size:10.5px;color:var(--text2);line-height:1.7;margin:6px 5px 0}
+.tile{border-radius:14px;padding:14px;border:1px solid var(--border);text-decoration:none;color:var(--text);display:block;background:var(--card)}
+.tile .em{font-size:20px}
+.tile .l{font-weight:700;font-size:14px;margin-top:4px}
+.tile .s{font-size:11px;color:var(--text2);margin-top:2px}
+.countdown{background:#e0f7fa;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:600;margin-bottom:10px}
+
+/* カレンダー */
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 10px}
+.cal-head .ym{font-weight:700;font-size:16px}
+.cal-head button{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:6px 14px;cursor:pointer;color:var(--text)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:8px}
+.cal-dow{font-size:10px;color:var(--text2);text-align:center;padding:4px 0;font-weight:700}
+.cal-cell{min-height:44px;border-radius:8px;padding:3px 2px;text-align:center;font-size:13px;cursor:pointer;position:relative}
+.cal-cell.dim{color:var(--text2);opacity:.35}
+.cal-cell.today{background:var(--accent-light);font-weight:700}
+.cal-cell.sel{outline:2px solid var(--accent)}
+.cal-cell .dots{display:flex;justify-content:center;gap:2px;margin-top:2px;flex-wrap:wrap}
+.cal-cell .dot{width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.cal-cell .dot.mb{background:#a78bfa}
+.cal-cell .dot.trip{background:#38bdf8}
+/* 分野別の色（2026-08-26: 何の予定か一目で分かるように。過去も同じ色で残す） */
+.dot.f-life{background:#4ade80}     /* 個人・生活＝緑 */
+.dot.f-glz{background:#f472b6}      /* ガチレズ＝ピンク */
+.dot.f-plan{background:#fbbf24}     /* 予定（プライベート）＝黄 */
+.dot.f-mbs,.dot.mb{background:#a78bfa}      /* メビウス＝紫 */
+.dot.f-law{background:#f87171}      /* 裁判・相続＝赤 */
+.dot.f-os{background:#2dd4bf}       /* 生活OS＝ティール */
+.dot.f-inv,.dot.trip{background:#38bdf8}    /* 投資・旅行＝水色 */
+.cal-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin:6px 4px 10px;font-size:11px;color:var(--text2)}
+.cal-legend span{display:inline-flex;align-items:center;gap:4px}
+.cal-legend i{width:7px;height:7px;border-radius:50%;display:inline-block}
+.cal-cell .mk{font-size:9px;line-height:1}
+.cal-cell .mk.heart{color:#e0649b}
+.cal-cell .mk.zone{color:var(--warn);opacity:.5}
+.cal-add{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.cal-add input[type=date]{flex:1 1 100%;min-width:0}
+.cal-add input[type=text]{flex:1 1 auto;min-width:0;padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text)}
+
+/* 投げ込みタブ */
+.inbox-form{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:14px}
+.inbox-form textarea{width:100%;border:none;outline:none;resize:none;min-height:88px;background:transparent;line-height:1.6}
+.inbox-actions{display:flex;gap:8px;align-items:center;margin-top:8px}
+.btn{border:none;border-radius:12px;padding:11px 16px;font-weight:700;cursor:pointer}
+.btn-primary{background:var(--accent);color:#fff;flex:1}
+.btn-primary:disabled{opacity:.5}
+.btn-ghost{background:var(--bg3);color:var(--text2)}
+.hint{font-size:12px;color:var(--text2);margin-top:8px;line-height:1.6}
+.qitem{border-left:3px solid var(--accent);padding-left:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.chip{background:var(--bg2);border:1px solid var(--border);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer}
+
+/* モーダル */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal-overlay.hidden{display:none}
+.modal{background:var(--bg2);border-radius:16px;padding:22px;max-width:340px;width:100%}
+.modal h2{font-size:16px;margin-bottom:8px}
+.modal p{font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6}
+.modal input{width:100%;padding:11px;border:1px solid var(--border);border-radius:10px;margin-bottom:12px}
+.modal a{color:var(--accent);font-size:13px}
+
+#stale-bar{position:fixed;left:12px;right:12px;bottom:calc(78px + var(--safe-bottom));
+  background:var(--accent);color:#fff;padding:11px 14px;border-radius:11px;font-size:12.5px;
+  line-height:1.6;z-index:150;display:flex;align-items:center;gap:10px;justify-content:space-between}
+#stale-bar button{flex:none;background:#fff;color:var(--accent);border:0;border-radius:8px;
+  padding:7px 13px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer}
+#toast{position:fixed;left:50%;bottom:calc(84px + var(--safe-bottom));transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:200;white-space:nowrap}
+#toast.show{opacity:.94}
+
+/* コピペ帳 */
+.qsec{margin-bottom:10px}
+.qsec summary{cursor:pointer;font-weight:700;padding:10px 12px;background:var(--card,#fff);border-radius:12px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+.qsec summary::-webkit-details-marker{display:none}
+.qsec[open] summary{border-radius:12px 12px 0 0}
+.qbody{background:var(--card,#fff);border-radius:0 0 12px 12px;padding:2px 0 6px}
+.qrow{display:flex;align-items:flex-start;gap:8px;padding:9px 12px;border-top:1px solid rgba(128,128,128,.15)}
+.qrow .qtxt{flex:1;min-width:0}
+.qrow .qlabel{font-size:11px;opacity:.65;margin-bottom:2px}
+.qrow .qval{font-size:13.5px;word-break:break-all;white-space:pre-wrap;line-height:1.45}
+.qrow .qnote{font-size:10.5px;opacity:.55;margin-top:2px}
+.qcopy{flex-shrink:0;border:none;border-radius:10px;padding:8px 12px;font-size:14px;background:rgba(128,128,128,.12);cursor:pointer}
+.qcopy.done{background:#22a06b;color:#fff}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top-bar">
+    <h1 id="page-title">今日<span class="sub" id="today-date"></span></h1>
+    <div style="display:flex">
+      <button class="icon-btn" id="settings-btn" aria-label="設定"><svg viewBox="0 0 24 24"><path d="M19.4 13a7.9 7.9 0 0 0 .1-1 7.9 7.9 0 0 0-.1-1l2.1-1.6a.5.5 0 0 0 .1-.7l-2-3.4a.5.5 0 0 0-.6-.2l-2.5 1a7.6 7.6 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0-.5.5l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.4a.5.5 0 0 0 .1.7L4.5 11a7.9 7.9 0 0 0-.1 1 7.9 7.9 0 0 0 .1 1l-2.1 1.6a.5.5 0 0 0-.1.7l2 3.4c.1.2.4.3.6.2l2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6c0 .3.2.5.5.5h4c.3 0 .5-.2.5-.5l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.4a.5.5 0 0 0-.1-.7L19.4 13zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg></button>
+      <button class="icon-btn" id="refresh-btn" aria-label="更新"><svg viewBox="0 0 24 24"><path d="M17.65 6.35A8 8 0 1 0 20 12h-2a6 6 0 1 1-1.76-4.24L13 11h7V4l-2.35 2.35z"/></svg></button>
+    </div>
+  </div>
+
+  <div class="tab-content">
+    <!-- 今日 -->
+    <div id="tab-today" class="tab-panel active">
+      <div id="brief-stale"></div>
+      <div id="ver-bar"></div>
+      <div id="brief-quote"></div>
+      <div id="today-set"></div>
+      <div id="today-nums"></div>
+
+      <div class="blk-h">きょう やること</div>
+      <div id="brief-due"></div>
+      <div id="brief-due-later"></div>
+      <div id="today-mebius"></div>
+      <div id="brief-pending-wrap" style="display:none">
+        <div class="blk-sub">🤔 メグの返事待ち</div>
+        <div id="brief-pending"></div>
+      </div>
+
+      <div id="today-new"></div>
+
+      <details class="more2"><summary>そのほか</summary>
+        <div id="ops-status"></div>
+        <div id="brief-attention-wrap" style="display:none">
+          <div class="blk-sub">👀 注目</div>
+          <div id="brief-attention"></div>
+        </div>
+        <div class="blk-sub">🔮 メビウス完了予定</div>
+        <div id="mebius-list"><p class="empty">読み込み中…</p></div>
+        <div class="blk-sub">🧹 最近の仕分け</div>
+        <div class="loglist" id="brief-log"></div>
+        <div class="blk-sub">🔗 リンク</div>
+        <div id="countdown"></div>
+        <div class="tiles" id="link-tiles"></div>
+      </details>
+    </div>
+
+    <!-- カレンダー -->
+    <div id="tab-cal" class="tab-panel">
+      <div class="cal-head">
+        <button id="cal-prev">‹</button>
+        <div class="ym" id="cal-ym"></div>
+        <button id="cal-next">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="cal-legend">
+        <span><i style="background:#fbbf24"></i>プライベート</span>
+        <span><i style="background:#4ade80"></i>個人・生活</span>
+        <span><i style="background:#f472b6"></i>ガチレズ</span>
+        <span><i style="background:#a78bfa"></i>メビウス</span>
+        <span><i style="background:#f87171"></i>裁判・相続</span>
+        <span><i style="background:#2dd4bf"></i>生活OS</span>
+        <span><i style="background:#38bdf8"></i>投資・旅行</span>
+      </div>
+      <div class="cal-add">
+        <input type="date" id="cal-date" style="padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text)">
+        <input type="text" id="cal-text" placeholder="予定を書く（例: 歯医者14時）">
+        <button class="btn btn-primary" id="cal-save" style="flex:0 0 auto">追加</button>
+      </div>
+      <div class="hint" style="margin:0 4px 10px">追加した予定はスケジュール表（正本）に直接入り、前日と当日の朝・夜の通知に自動で出ます。</div>
+      <div id="cal-day-list"></div>
+    </div>
+
+    <!-- 投げ込み -->
+    <div id="tab-inbox" class="tab-panel">
+      <div class="inbox-form">
+        <textarea id="inbox-text" placeholder="なんでもここに投げる。タスク・メモ・愚痴・体重・買った物・アイデア… 分類は考えなくていい"></textarea>
+        <div class="inbox-actions">
+          <button class="btn btn-ghost" id="photo-btn">📷</button>
+          <button class="btn btn-ghost" id="rec-btn">🎤</button>
+          <input type="file" id="photo-input" accept="image/*" style="display:none">
+          <input type="file" id="audio-input" accept="audio/*" style="display:none">
+          <button class="btn btn-primary" id="inbox-send">投げ込む</button>
+        </div>
+        <div class="hint" id="photo-hint"></div>
+      </div>
+      <div class="hint" style="margin:0 4px 14px">日時は自動で記録されます。🎤は録音（長押し不要・もう一度押すと停止）。音声はMacのローカルWhisperが30分以内に文字起こしして仕分けに乗ります。朝8:30と夜22:30にClaudeが仕分けし、夜は日記にも織り込まれます。</div>
+      <div class="section-title">⏳ 仕分け待ち</div>
+      <div id="queue-list"><p class="empty">読み込み中…</p></div>
+      <div class="section-title">✅ 最近の仕分け結果</div>
+      <div class="loglist" id="inbox-log"></div>
+    </div>
+
+    <!-- 投資 -->
+    <div id="tab-invest" class="tab-panel">
+      <div id="invest-nav"><p class="empty">読み込み中…</p></div>
+
+      <div class="section-title">💼 保有銘柄<span id="hold-count" class="sec-note"></span></div>
+      <div id="invest-holdings"><p class="empty">読み込み中…</p></div>
+
+      <div class="section-title">⚖️ 判決（新しい順）<a href="./court.html" class="sec-link" id="court-link">ぜんぶ見る →</a></div>
+      <div id="invest-verdicts"><p class="empty">読み込み中…</p></div>
+
+      <div class="section-title">⏳ 開廷待ち</div>
+      <div id="invest-docket"><p class="empty">読み込み中…</p></div>
+
+      <div class="section-title">📰 Yパパ・ものづくり太郎の新着</div>
+      <div id="invest-digest"><p class="empty">読み込み中…</p></div>
+
+      <div class="section-title">🔭 注目企業（Yパパ基準クリア・毎朝わき出る）</div>
+      <div id="invest-scout"><p class="empty">読み込み中…</p></div>
+      <div class="hint" style="margin:0 4px 14px">気になった企業は「⚖️ 裁判にかける」を押すと投げ込みに入ります。翌朝の7時に検察意見書、10時に判決が出ます。</div>
+
+      <div class="section-title">👁 ウォッチ銘柄（B7/portfolio.md）</div>
+      <div id="invest-watch"><p class="empty">読み込み中…</p></div>
+      <div class="hint" style="margin:8px 4px">銘柄の追加は投げ込み箱に「〇〇ウォッチして」でOK。保有の記帳も「〇〇を100株買った」でOK。</div>
+
+      <div class="hint" style="margin:18px 4px 4px">⚖️ 裁判の与件（生活防衛資金・入金時期・リスク許容度など全22問）は<b>2026-08-20に回答済み</b>で、判決の前提に使われています。変えたくなったら投げ込みで「与件を変えたい」と言えばOK。</div>
+    </div>
+
+    <!-- 健康 -->
+    <div id="tab-health" class="tab-panel">
+      <div id="health-hero"></div>
+      <div id="health-cycle"></div>
+      <div id="health-groups"></div>
+      <div class="section-title">✍️ きょうの記録（タップで投げ込みに入る）</div>
+      <div class="chips">
+        <button class="chip" data-tpl="体重 ">⚖️ 体重</button>
+        <button class="chip" data-tpl="睡眠 ">😴 睡眠</button>
+        <button class="chip" data-tpl="体調: ">🌡 体調</button>
+        <button class="chip" data-tpl="気分: ">🙂 気分</button>
+        <button class="chip" data-tpl="生理きた">🩸 生理きた</button>
+        <button class="chip" data-tpl="生理おわった">🩸 終わった</button>
+      </div>
+      <div class="section-title">🚶 歩数（14日）</div>
+      <div class="card" id="health-steps"><p class="empty">Apple Watchのデータ待ち</p></div>
+      <div class="section-title">❤️ 安静時心拍（30日）</div>
+      <div class="card" id="health-rhr"><p class="empty">Apple Watchのデータ待ち</p></div>
+      <div class="section-title">🏃 直近のワークアウト</div>
+      <div id="health-workouts"><p class="empty">—</p></div>
+      <div id="health-note"></div>
+    </div>
+
+    <!-- コピペ帳 -->
+    <div id="tab-quick" class="tab-panel">
+      <div class="hint" style="margin:2px 4px 10px">📋を押すとコピーされます。正本は personal リポ（変わったらClaudeが同期）</div>
+      <div id="quick-list"><p class="empty">読み込み中…</p></div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-btn active" data-tab="today"><span class="em">☀️</span><span>今日</span></button>
+    <button class="nav-btn" data-tab="cal"><span class="em">📅</span><span>予定</span></button>
+    <button class="nav-btn" data-tab="inbox"><span class="em">📥</span><span>投げ込み</span></button>
+    <button class="nav-btn" data-tab="invest"><span class="em">📈</span><span>投資</span></button>
+    <button class="nav-btn" data-tab="health"><span class="em">💪</span><span>健康</span></button>
+    <button class="nav-btn" data-tab="quick"><span class="em">📋</span><span>コピペ</span></button>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="auth-modal">
+  <div class="modal">
+    <h2>GitHub Token を入力</h2>
+    <p>投げ込み・ブリーフィングの読み書きに必要です。一度入力すれば記憶されます。</p>
+    <input type="password" id="pat-input" placeholder="ghp_ or gho_...">
+    <button class="btn btn-primary" id="pat-save" style="width:100%">保存</button>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="settings-modal">
+  <div class="modal">
+    <h2>設定</h2>
+    <p style="display:flex;justify-content:space-between;align-items:center;gap:10px;
+              padding:9px 11px;background:var(--bg3);border-radius:9px;margin-bottom:14px">
+      <span>今の版 <b id="ver-now" style="font-variant-numeric:tabular-nums"></b></span>
+      <button class="btn" id="force-update" style="padding:7px 12px;font-size:12.5px;flex:none">今すぐ最新にする</button>
+    </p>
+    <p>メビウスの完了予定を表示するトークン（端末に記憶されます）:</p>
+    <input type="password" id="mebius-token-input" placeholder="mbs_cal_...">
+    <button class="btn btn-primary" id="mebius-token-save" style="width:100%;margin-bottom:14px">保存</button>
+    <p>メビウスの相談・草案の中身を読む鍵（端末に記憶されます）:</p>
+    <input type="password" id="mbs-read-input" placeholder="mbs_read_...">
+    <button class="btn btn-primary" id="mbs-read-save" style="width:100%;margin-bottom:14px">保存</button>
+    <p>GitHubトークンを入れ直す: <a href="#" id="reauth-link">再入力</a></p>
+    <p>旧タスク（アーカイブ）: <a href="https://github.com/meyjiro/claude-context/issues/1" target="_blank" rel="noopener">Issue #1</a> ／ 巡回routineの管理: <a href="https://claude.ai/code/routines" target="_blank" rel="noopener">routines</a></p>
+    <button class="btn btn-ghost" id="settings-close" style="width:100%">閉じる</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
+const APP_VERSION = '2026-08-31.7';
+const REPO = 'meyjiro/claude-context';
+const BRANCH = 'main';
+
+// ── 旅行・リンク（trip.html の TRIPS と同じ内容を貼る）──
+const TRIP_BASE = 'https://mebiusmagic.com/mebius_admin/';
+const TRIPS = [
+  { start:'2026-07-12', end:'2026-07-26', title:'2026年7月 日本', url:'trip_202507.html' },
+];
+function tripTile() {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const d = s => new Date(s + 'T00:00:00');
+  const sorted = [...TRIPS].sort((a, b) => a.start.localeCompare(b.start));
+  const ongoing = sorted.find(t => d(t.start) <= today && today <= d(t.end));
+  const next = sorted.find(t => d(t.start) > today);
+  if (ongoing) return { em:'✈️', label:'旅行中', sub:ongoing.title, url:TRIP_BASE + ongoing.url };
+  if (next) {
+    const diff = Math.round((d(next.start) - today) / 86400000);
+    return { em:'✈️', label:'旅行', sub:`${next.title} あと${diff}日`, url:TRIP_BASE + 'trip.html' };
+  }
+  return { em:'✈️', label:'旅行', sub:'次の旅行・過去アーカイブ', url:TRIP_BASE + 'trip.html' };
+}
+const LINKS = [
+  { em:'🔮', label:'メビウス管理', sub:'相談・顧客対応', url:'https://mebiusmagic.com/mebius_admin/admin.php' },
+  tripTile(),
+  { em:'💰', label:'売上管理', sub:'revenue', url:'https://mebiusmagic.com/mebius_admin/revenue.php' },
+];
+const COUNTDOWNS = [ ...TRIPS.map(t => ({ emoji:'✈️', label:t.title, date:t.start, end:t.end })) ];
+
+const MEBIUS_API = 'https://mebiusmagic.com/mebius_admin/api_calendar.php';
+
+// ── State ──
+let pat = localStorage.getItem('gh_pat') || '';
+let mebiusToken = localStorage.getItem('mebius_token') || '';
+// 🔴 相談・草案の本文を読む鍵。ソースに書かない（このページは公開URLで開ける）。
+//    メグが設定画面で入れたものだけがこの端末に入る。
+let mbsReadKey = localStorage.getItem('mbs_read_key') || '';
+let briefing = null;
+let pendingPhoto = null; // {b64}
+let pendingAudio = null; // {b64, ext}
+let recorder = null, recChunks = [];
+
+// ── Utils ──
+const $ = id => document.getElementById(id);
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+function esc(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+const enc = s => btoa(unescape(encodeURIComponent(s)));
+const dec = s => decodeURIComponent(escape(atob(s.replace(/\n/g, ''))));
+function ts() {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+}
+
+// ── GitHub API ──
+async function api(path, method = 'GET', body = null) {
+  const opts = { method, cache: 'no-store',
+    headers: { 'Authorization': 'token ' + pat, 'Accept': 'application/vnd.github.v3+json' } };
+  if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  const res = await fetch('https://api.github.com' + path, opts);
+  if (res.status === 204) return null;
+  if (res.status === 404) return { __404: true };
+  if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
+  return res.json();
+}
+async function getFile(path, repo) {
+  const r = await api(`/repos/${repo || REPO}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}?ref=${BRANCH}`);
+  if (!r || r.__404) return null;
+  return dec(r.content);
+}
+async function putFile(path, content, message, isBase64 = false) {
+  return api(`/repos/${REPO}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}`, 'PUT',
+    { message, content: isBase64 ? content : enc(content), branch: BRANCH });
+}
+async function listDir(path) {
+  const r = await api(`/repos/${REPO}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}?ref=${BRANCH}`);
+  return (!r || r.__404 || !Array.isArray(r)) ? [] : r;
+}
+
+// ── 今日タブ ──
+
+// ══ ⚙️ 自動処理の見張り（朝のメニュー【5】・2026-08-30）══
+// 🔴 この仕組みの最大の弱点は「気づかないうちに止まること」。
+//    2026-08-29 だけで3件見つかった（健康データ1日／投資候補3日／repeat-guardのすり抜け）。
+//    だから毎朝ここを見れば、次からは1日で気づける。
+const OPS = [
+  { name:'健康データ',   why:'Apple Watch → iCloud → Mac',
+    repo:'meyjiro/personal', path:'health/data/daily.csv', limit:2,
+    read:t=>{ const r=t.trim().split('\n'); return r[r.length-1].split(',')[0]; } },
+  // 🔴 為替は土日に市場が閉まる。値が動かないとファイルを書かない仕様なので、
+  //    週末は「更新が無い＝正常」。月曜の朝までしきい値を伸ばす（2026-08-30の誤検知で判明）。
+  { name:'為替',         why:'Macが1時間ごとに取得（土日は市場が閉まる）',
+    repo:'meyjiro/personal', path:'money/fx.json', limit:0.5, weekend:3,
+    read:t=>JSON.parse(t).updated },
+  { name:'IBKR',         why:'毎朝9:05に保有と取引',
+    repo:'meyjiro/personal', path:'money/ibkr_summary.json', limit:2,
+    read:t=>{ const j=JSON.parse(t); return j.updated||j.asof||j.date||j.generated_at; } },
+  { name:'朝の巡回',     why:'クラウドが毎朝ブリーフィングを作る',
+    repo:'meyjiro/claude-context', path:'inbox/briefing.json', limit:1.2,
+    read:t=>JSON.parse(t).generated_at },
+  { name:'投資の新候補', why:'注目企業台帳に毎日1社',
+    repo:'meyjiro/claude-context', path:'projects/B7_投資/注目企業台帳.md', limit:2,
+    read:t=>{ const m=[...t.matchAll(/^## (\d{4}-\d\d-\d\d)/gm)]; return m.length?m[m.length-1][1]:null; } },
+  { name:'朝のメニュー', why:'クラウドが毎朝9時に新しいものを集める',
+    repo:'meyjiro/claude-context', path:'inbox/morning.json', limit:1.2,
+    read:t=>JSON.parse(t).generated_at },
+  { name:'判例',         why:'クラウドが毎朝10時に1件裁く',
+    repo:'meyjiro/claude-context', path:'projects/B7_投資/判例/data/_index.json', limit:3,
+    read:t=>JSON.parse(t).updated },
+];
+async function loadOps(){
+  const el = $('ops-status');
+  if(!el) return;
+  const now = Date.now();
+  const rows = await Promise.all(OPS.map(async o=>{
+    try{
+      const t = await repoFile(o.repo, o.path);
+      if(!t) return {...o, err:'ファイルが無い'};
+      const raw = o.read(t);
+      if(!raw) return {...o, err:'日付を読めない'};
+      const d = new Date(String(raw).length<=10 ? raw+'T12:00:00+09:00' : raw);
+      if(isNaN(d)) return {...o, err:'日付を読めない'};
+      const wd = new Date().getDay();               // 0=日 6=土
+      const lim = (o.weekend && (wd===0 || wd===6 || wd===1)) ? o.weekend : o.limit;
+      return {...o, at:d, days:(now-d.getTime())/86400000, limit:lim};
+    }catch(e){ return {...o, err:'読み込みに失敗'}; }
+  }));
+  const bad = rows.filter(r=>r.err || r.days>r.limit);
+  const fmt = d=>d.toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  const ago = n=> n<1 ? Math.round(n*24)+'時間前' : Math.floor(n)+'日前';
+  if(!bad.length){
+    el.innerHTML = `<details class="ops ok"><summary>⚙️ 自動処理 ${rows.length}件とも正常</summary>
+      <div class="opsmini" style="padding:0 2px 4px">${rows.map(r=>r.name+' '+ago(r.days)).join(' ／ ')}</div></details>`;
+    return;
+  }
+  el.innerHTML = `<div class="ops bad"><div class="opsh">🔴 止まっているものがあります</div>
+    ${bad.map(r=>`<div class="opsrow"><b>${r.name}</b>
+      <span>${r.err ? r.err : '最終 '+fmt(r.at)+'（'+ago(r.days)+'）'}</span>
+      <span class="opsmini">${r.why}</span></div>`).join('')}
+    ${rows.length-bad.length ? `<div class="opsmini" style="margin-top:6px">ほか${rows.length-bad.length}件は正常</div>`:''}
+  </div>`;
+}
+
+
+// ══ 📊 今日の数字（朝のメニュー【4】・2026-08-30）══
+// 各タブに散っている数字のうち、朝いちばんに見たいものだけを1行にまとめる。
+// 計算は各タブと同じロジックを使い、ここでは表示だけにする（二重管理にしない）。
+async function loadNums(){
+  const el = $('today-nums'); if(!el) return;
+  const cards = [];
+
+  // 💱 円転（Coinbaseのリアルタイム→無ければMacのfx.json）
+  try{
+    let rate=null, src='';
+    try{ const r=await fetch('https://api.coinbase.com/v2/exchange-rates?currency=USD',{cache:'no-store'});
+         const j=await r.json(); const v=j&&j.data&&j.data.rates&&+j.data.rates.JPY;
+         if(v){ rate=v; src='Coinbase'; } }catch(e){}
+    if(rate===null){ const t=await repoFile('meyjiro/personal','money/fx.json');
+      if(t){ const f=JSON.parse(t); rate=f.usdjpy; src='Wise/Yahoo'; } }
+    if(rate){
+      const usd=FX_LOTS.reduce((a,l)=>a+l.usd,0), jpy=FX_LOTS.reduce((a,l)=>a+l.jpy,0);
+      const gain=(usd-2)*rate - jpy, pct=gain/jpy*100;
+      cards.push({i:'💱', t:`¥${rate.toFixed(2)}/$`,
+        s:`今戻すと <b style="color:${gain>=0?'var(--ok)':'var(--red)'}">${gain>=0?'+':'−'}¥${Math.abs(Math.round(gain)).toLocaleString()}</b>（${pct>=0?'+':''}${pct.toFixed(1)}%）`,
+        m:src});
+    }
+  }catch(e){}
+
+  // 💪 コンディション（健康タブと同じ計算）
+  try{
+    const csv=await repoFile('meyjiro/personal','health/data/daily.csv');
+    if(csv){
+      const rows=parseCsv(csv).filter(r=>r.date);
+      const todayS=new Date().toLocaleDateString('sv-SE');
+      const done=rows.filter(r=>r.date!==todayS), cur=done[done.length-1];
+      const base=hStats(rows,todayS), sc=hScore(cur,base);
+      if(sc){
+        const n=sc.total;
+        const lv = n>=74?['🔥','絶好調']: n>=62?['🟢','好調']: n>=50?['⚪️','ふつう']: n>=40?['🟡','要注意']:['🔴','休養'];
+        let streak=0;
+        for(let i=done.length-1;i>=0;i--){ if(+done[i].exercise_min>=30) streak++; else break; }
+        cards.push({i:lv[0], t:`${n}点 ${lv[1]}`,
+          s:streak>=3?`運動<b>${streak}日連続</b>`:`歩数 ${(+cur.steps||0).toLocaleString()}歩`,
+          m:`${+cur.date.slice(5,7)}/${+cur.date.slice(8,10)}の記録`});
+      }
+    }
+  }catch(e){}
+
+  // ⚖️ 裁判の待ち
+  try{
+    const t=await repoFile('meyjiro/claude-context','inbox/watchlist.json');
+    if(t){
+      const es=JSON.parse(t).entries||[];
+      const wait=es.filter(e=>(e.status||'').includes('裁判送り') && !(e.status||'').includes('裁判済'));
+      if(wait.length) cards.push({i:'⚖️', t:`判決待ち ${wait.length}件`,
+        s:wait.map(e=>e.name).join('・'), m:'毎朝10時に1件ずつ'});
+    }
+  }catch(e){}
+
+  if(!cards.length){ el.innerHTML=''; return; }
+  el.innerHTML = `<div class="strip">${cards.map(c=>`<div class="sc">
+      <div class="s1">${c.i} <b>${c.t}</b></div><div class="s2">${c.s}</div></div>`).join('')}</div>`;
+}
+
+
+// ══ ✉️ メビウス：草案ができている案件（朝のメニュー【1】・2026-08-30）══
+// 🔴 ここから送信は絶対にしない。表示と、管理画面へのリンクだけ。
+//    送信は必ずメグ本人（mebius/CLAUDE.md・memory: mebius-send-needs-megu）。
+//    エンドポイント mbs_status.php も読み取り専用で、書き込み系のコードを持たない。
+// 🔴 鍵をこのページに書かない。ここは GitHub Pages（サインイン不要の公開ページ）で、
+//    顧客の名前が出るデータの鍵をソースに置くわけにいかない。
+//    Macが取った privateリポの inbox/mbs_snapshot.json を読む（2026-08-30に切替）。
+async function loadMebiusDrafts(){
+  const el = $('today-mebius'); if(!el) return;
+  let d;
+  try{ const t = await repoFile('meyjiro/claude-context','inbox/mbs_snapshot.json');
+       d = t ? JSON.parse(t) : null; }
+  catch(e){ el.innerHTML=''; return; }
+  if(!d || !d.counts){ el.innerHTML=''; return; }
+  const all = d.draft_ready || [];
+  // 🔴 1か月以内のものを古い順に主表示。それ以前は「時間があったら」として畳む
+  //    （2026-08-30 メグ方針。最古は117日放置だが、そこから始めると終わらない）
+  const dr  = all.filter(x=>x.days!=null && x.days<=30);
+  const old_ = all.filter(x=>x.days==null || x.days>30);
+  const c  = d.counts, L = d.labels || {};
+  // 今日動かないと止まるもの（草案以外）
+  const waits = ['noto','payment_wait','schedule','surgery'].filter(k=>c[k]>0)
+    .map(k=>`${L[k]||k} ${c[k]}`).join(' ／ ');
+  // 🔴 古いものから始めない。117日放置のものは「時間があったら」の優先度で、
+  //    そこから始めると毎朝いちばん重い1件に当たって手が止まる（2026-08-30 メグ指摘）。
+  //    主表示は1か月以内の相談だけ。その中で古い順。
+  const fresh = dr.slice().sort((a,b)=>(b.days||0)-(a.days||0));
+  const olds  = old_.slice().sort((a,b)=>(b.days||0)-(a.days||0));
+  window.__mbsAll = [...fresh, ...olds];
+  const done = JSON.parse(localStorage.getItem('mbsDone')||'{}');
+  const today = new Date().toLocaleDateString('sv-SE');
+  const q = fresh.filter(x=>done[x.id]!==today);
+
+  const rowHtml = (x, cold) => `<div class="mbscard" id="mbsc-${x.id}">
+      <div class="mbsch" onclick="mbsToggle(${x.id})">
+        <div class="mbschl"><b>${esc(x.name||'（名前なし）')}</b>
+          <span class="mtag">${esc(x.magic||'術 未定')}</span>
+          ${x.days!=null?`<span class="mdays${cold?' cold':(x.days>14?' warm':'')}">${x.days}日</span>`:''}</div>
+        <span class="mbschx">中身を読む ▾</span>
+      </div>
+      <div class="mbscb"></div>
+    </div>`;
+
+  window.__setParts = Object.assign(window.__setParts||{}, {mbs:
+    {id:'mbs', n:q.length, label:`メビウスの相談 ${q.length}件`, mins:'1件5分', anchor:'today-mebius'}});
+  if(!q.length) markSetDone('mbs');
+  tryBuildSet();
+
+  el.innerHTML = `
+  <div class="blk-sub">✉️ メビウス <span class="sec-note">送るのはメグ本人</span></div>
+  <div class="mbs">
+    ${q.length ? `<div class="mbsq">1か月以内の相談が <b>${q.length}</b> 件
+        <span class="mbsqs">タップすると中身が読めます。読んでから決められます</span></div>
+      ${q.map(x=>rowHtml(x,false)).join('')}`
+    : `<div class="mbsmore">1か月以内の相談は片づきました 🎉${
+        olds.length?`　<span class="mbsqs">古いもの ${olds.length}件は下にあります</span>`:''}</div>`}
+    ${olds.length?`<details class="mbsold"><summary>1か月より前のもの ${olds.length}件（時間があったら）</summary>
+      ${olds.map(x=>rowHtml(x,true)).join('')}</details>`:''}
+    ${waits?`<div class="mbswait">待ちの案件: ${waits}</div>`:''}
+  </div>`;
+}
+
+// ── メビウス: 1件を開いて中身を読む ──
+// 🔴 中身を見ないと「返信不要」かどうか決められない（2026-08-30 メグ指摘）。
+//    畳んだ行を開くとその場で相談本文と草案が出る。開くまでは取りに行かない。
+//    鍵はソースに書かない。メグが設定画面で入れたものだけがこの端末に入る。
+async function mbsToggle(id){
+  const card = document.getElementById('mbsc-'+id); if(!card) return;
+  const body = card.querySelector('.mbscb');
+  const head = card.querySelector('.mbschx');
+  if(card.classList.contains('open')){
+    card.classList.remove('open'); body.innerHTML=''; head.textContent='中身を読む ▾'; return;
+  }
+  card.classList.add('open'); head.textContent='閉じる ▴';
+  if(!mbsReadKey){
+    body.innerHTML = `<div class="mbsneed">中身を読むには鍵が要ります。<a href="#" onclick="document.getElementById('settings-btn').click();return false">⚙ 設定</a>で「中身を読む鍵」を入れてください</div>`;
+    return;
+  }
+  body.innerHTML = '<div class="mbsload">読み込み中…</div>';
+  let d;
+  try{
+    const r = await fetch(`https://mebiusmagic.com/mebius_admin/mbs_detail.php?k=${encodeURIComponent(mbsReadKey)}&id=${id}`, {cache:'no-store'});
+    d = await r.json();
+    if(d.error) throw new Error(d.error);
+  }catch(e){
+    body.innerHTML = `<div class="mbsneed">読めませんでした（${esc(e.message)}）。鍵が違うかもしれません</div>`; return;
+  }
+  const x = (window.__mbsAll||[]).find(v=>v.id===id) || {};
+  const br = t => esc(t).replace(/\n/g,'<br>');
+  body.innerHTML = `
+    ${(d.history||[]).map(h=>`<div class="mbsmsg ${h.who==='メグ'?'me':'you'}">
+      <div class="mbsmw">${esc(h.who)}<span>${esc((h.at||'').slice(5,16))}</span></div>
+      <div class="mbsmb">${br(h.body||'')}</div></div>`).join('')}
+    <div class="mbsdraft">
+      <div class="mbsdh">できている草案</div>
+      <div class="mbsdb">${br(d.draft||'（草案がありません）')}</div>
+    </div>
+    <div class="mbsacts">
+      <a class="gbtn gmain" href="${esc((x.url||'#') + (x.url?'&draft=1#reply-form':''))}" target="_blank" rel="noopener"
+         onclick="mbsOpened(${id})">草案入りで開く →</a>
+      <button class="gbtn gsub" onclick="mbsNoReply(${id})">返信は要らない</button>
+      <button class="gbtn gsub" onclick="mbsSkip(${id})">今日はとばす</button>
+    </div>`;
+}
+
+// 🔴 「開いた」は「送った」ではない。開いたまま送っていないものが新しい滞留にならないよう、
+//    戻ってきたときに1回だけ聞く（2026-08-30）。
+function mbsOpened(id){
+  const o = JSON.parse(localStorage.getItem('mbsOpened')||'{}');
+  o[id] = Date.now(); localStorage.setItem('mbsOpened', JSON.stringify(o));
+}
+function askOpened(){
+  const o = JSON.parse(localStorage.getItem('mbsOpened')||'{}');
+  const ids = Object.keys(o).filter(k => Date.now()-o[k] > 60000);
+  if(!ids.length) return;
+  const id = ids[0];
+  const x = (window.__mbsAll||[]).find(v=>String(v.id)===String(id));
+  const el = $('today-set'); if(!el) return;
+  const box = document.createElement('div');
+  box.className = 'tset ask';
+  box.innerHTML = `<div class="tsh">さっき開いたもの</div>
+    <div class="tsask">${esc(x?x.name:'メビウスの案件')} は送りましたか？</div>
+    <div class="mbsacts">
+      <button class="gbtn gmain" onclick="mbsAnswered('${id}',true)">送った</button>
+      <button class="gbtn gsub" onclick="mbsAnswered('${id}',false)">まだ</button>
+    </div>`;
+  el.appendChild(box);
+}
+function mbsAnswered(id, sent){
+  const o = JSON.parse(localStorage.getItem('mbsOpened')||'{}');
+  delete o[id]; localStorage.setItem('mbsOpened', JSON.stringify(o));
+  if(sent) mbsSkip(Number(id), true);
+  renderTodaySet(); setTimeout(askOpened, 100);
+  toast(sent ? '片づきました' : 'また出します');
+}
+
+function mbsSkip(id, quiet){
+  const d = JSON.parse(localStorage.getItem('mbsDone')||'{}');
+  d[id] = new Date().toLocaleDateString('sv-SE');
+  localStorage.setItem('mbsDone', JSON.stringify(d));
+  // 🔴 セットの残数は「今日ぶんの在庫」なので、1件減るたびに数え直す
+  { const st = setState();
+    if(st.items){ const it = st.items.find(v=>v.id==='mbs');
+      if(it){ const n = Math.max(0, (parseInt((it.label.match(/(\d+)件/)||[])[1]||'0',10))-1);
+        it.label = `メビウスの相談 ${n}件`; if(!n) st.doneIds.push('mbs'); saveSet(st); renderTodaySet(); } } }
+  if(quiet){ setTimeout(loadMebiusDrafts, 600); return; }
+  loadMebiusDrafts(); toast('今日はとばしました');
+}
+
+async function mbsNoReply(id){
+  const x = (window.__mbsAll||[]).find(v=>v.id===id);
+  if(!confirm(`${x?x.name:'この案件'}を「返信不要」にします。\n草案は残るので、管理画面からいつでも戻せます。`)) return;
+  try{
+    // 🔴 ガチレズと同じ理由で1操作1ファイル（追記は409になる）
+    const path = `inbox/mbs_actions/${id}-no_reply.json`;
+    const ex = await getFileWithSha(path);
+    const row = {at:new Date().toISOString(), do:'no_reply', id, name:(x&&x.name)||''};
+    await api(`/repos/${REPO}/contents/${path}`, 'PUT',
+      Object.assign({message:`メビウス: ${row.name} を返信不要に`,
+                     content:enc(JSON.stringify(row, null, 1)), branch:BRANCH},
+                    (ex&&ex.sha)?{sha:ex.sha}:{}));
+    mbsSkip(id, true);
+    toast('返信不要にしました（次の巡回で反映）');
+  }catch(e){
+    if(String(e.message).includes('409')) toast('もう積んであります');
+    else alert('積めませんでした: '+e.message);
+  }
+}
+
+
+// ══ ✅ 今日のセット（2026-08-30）══
+// 🔴 これが無いと「終わりが見えない画面」になり、続けるかどうかを毎日やる気で決めることになる。
+//    今日の分がゼロになったら画面が空になる。その空白が「終わった」の合図。
+//    日中に増えたものは今日のセットに足さない（境界が動くと終わりが消える）。
+const SETKEY = 'todaySet';
+// 曜日で決まっている家のこと。dow: 0=日 1=月 … 6=土
+// 増やすときはここに1行足すだけ。
+const WEEKLY = [
+  { dow:0, id:'niwa', label:'庭掃除', mins:'' },
+];
+function setState(){
+  const t = new Date().toLocaleDateString('sv-SE');
+  let st;
+  try{ st = JSON.parse(localStorage.getItem(SETKEY)||'{}'); }catch(e){ st = {}; }
+  if(st.date !== t) st = {date:t, items:null, doneIds:[], streak:st.streak||0, lastDone:st.lastDone||null};
+  return st;
+}
+function saveSet(st){ localStorage.setItem(SETKEY, JSON.stringify(st)); }
+
+// 画面の上に、今どの版を見ているかと再取得を常設する。
+// 古い版に取り残されたときでも、ここから必ず抜け出せるようにするため。
+function renderVerBar(){
+  const el = $('ver-bar'); if(!el) return;
+  const latest = localStorage.getItem('latest_seen') || '';
+  const stale = latest && latest !== APP_VERSION;
+  el.innerHTML = `<div class="verbar${stale?' stale':''}">
+    <span>版 ${esc(APP_VERSION)}${stale?` → 新しい版 ${esc(latest)} が出ています`:''}</span>
+    <button onclick="forceUpdate()">最新にする</button></div>`;
+}
+
+function renderTodaySet(){
+  const el = $('today-set'); if(!el) return;
+  const st = setState();
+  if(!st.items){ el.innerHTML=''; return; }
+  const left = st.items.filter(i=>!st.doneIds.includes(i.id));
+  const t = new Date().toLocaleDateString('sv-SE');
+
+  if(!left.length){
+    // 連続記録は「終わった日」を数える。途切れても責めない表示にする。
+    if(st.lastDone !== t){
+      const y = new Date(Date.now()-86400000).toLocaleDateString('sv-SE');
+      st.streak = (st.lastDone === y) ? (st.streak||0)+1 : 1;
+      st.lastDone = t; saveSet(st);
+    }
+    // 実測だけ返す。褒めも責めもしない（メグの流儀）
+    const mins = st.started ? Math.max(1, Math.round((Date.now()-st.started)/60000)) : null;
+    el.innerHTML = `<div class="tset done">
+      <div class="tsdone">今日の分は終わりました</div>
+      <div class="tsmeta">${new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}
+        ${mins?`　${st.total||0}件・${mins}分`:''}${st.streak>1?`　${st.streak}日つづけて終わっています`:''}</div></div>`;
+    setTimeout(askOpened, 60);
+    return;
+  }
+  el.innerHTML = `<div class="tset">
+    <div class="tsh">今日やること <span>あと ${left.length}</span></div>
+    ${left.map(i=> i.manual
+      ? `<div class="tsrow">
+           <span class="tsn">${esc(i.label)}</span>
+           <button class="tsdoneb" onclick="markSetDone('${esc(i.id)}')">済んだ</button></div>`
+      : `<a class="tsrow" href="#${esc(i.anchor||'')}" onclick="jumpSet('${esc(i.anchor||'')}');return false">
+           <span class="tsn">${esc(i.label)}</span>
+           <span class="tsm">${esc(i.mins||'')}</span></a>`).join('')}
+  </div>`;
+  setTimeout(askOpened, 60);
+}
+function jumpSet(a){
+  const el = document.getElementById(a);
+  if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+}
+// 各ブロックが読み込み終わったら、今日のセットを組み立てる（朝いちばんの1回だけ確定する）
+function buildSet(parts){
+  const st = setState();
+  if(st.items) {
+    // 🔴 今日ぶんは一度決めたら動かさない。ただし曜日で決まっている家のことだけは例外で、
+    //    朝の時点ですでに決まっているものなので、抜けていたら足す（日中に増えることはない）
+    let added = false;
+    for(const w of parts.filter(p=>p && p.manual)){
+      if(!st.items.some(i=>i.id===w.id) && !st.doneIds.includes(w.id)){
+        st.items.push({id:w.id, label:w.label, mins:w.mins, anchor:w.anchor, manual:true});
+        st.total = st.items.length; added = true;
+      }
+    }
+    if(added) saveSet(st);
+    renderTodaySet(); return;
+  }
+  st.items = parts.filter(p=>p && p.n>0).map(p=>({id:p.id, label:p.label, mins:p.mins,
+                                                  anchor:p.anchor, manual:p.manual||false}));
+  st.started = Date.now();
+  st.total = st.items.length;
+  saveSet(st); renderTodaySet();
+}
+// 主要ブロックが出そろってから1回だけ組む
+function tryBuildSet(){
+  const p = window.__setParts||{};
+  if(!('mbs' in p) || !('glz' in p)) return;    // 両方そろうまで待つ
+  const dow = new Date().getDay();
+  const week = WEEKLY.filter(w=>w.dow===dow).map(w=>({...w, n:1, manual:true}));
+  buildSet([p.due, p.mbs, p.glz, ...week].filter(Boolean));
+}
+function markSetDone(id){
+  const st = setState(); if(!st.items) return;
+  if(!st.doneIds.includes(id)) st.doneIds.push(id);
+  saveSet(st); renderTodaySet();
+}
+
+// ══ 🆕 新しく入ってきたもの（朝のメニュー【3】・2026-08-30）══
+// クラウドroutine「☕ 朝のメニュー: 新しいもの」が毎朝9時に inbox/morning.json を作る。
+// ここは表示するだけ。中身の作り方は workflows/朝のメニュー.md が正本。
+async function loadNewStuff(){
+  const el = $('today-new'); if(!el) return;
+  let m;
+  try{ const t = await repoFile('meyjiro/claude-context','inbox/morning.json');
+       if(!t){ el.innerHTML=''; return; } m = JSON.parse(t); }
+  catch(e){ el.innerHTML=''; return; }
+  const age = (Date.now() - new Date(m.generated_at).getTime())/3600000;
+  const parts = [];
+
+  // 今日の投資候補
+  const c = m.candidate;
+  if(c && !c.skipped && c.name){
+    // 🔴 平易な説明(plain)を主役に。専門用語入りの from/why/pitch は「詳しく」に畳む
+    //    （2026-08-30 メグ指示: どういう会社でなぜ挙がったかが5行で分かること）
+    // plain は5つの見出しつき。古い配列形式も一応受ける
+    const P = c.plain && !Array.isArray(c.plain) && typeof c.plain === 'object' ? c.plain : null;
+    const pl = Array.isArray(c.plain) ? c.plain : (typeof c.plain === 'string' ? [c.plain] : []);
+    const LB = {what:'どんな会社？', strong:'なぜ強いの？', money:'儲かってるの？',
+                why_today:'なんで今日これ？', watch:'気をつけること'};
+    parts.push(`<div class="nsbox cand">
+      <div class="nsh">🆕 今日の投資候補<span class="nstag">${esc(c.market||'')}</span></div>
+      <div class="nsname">${esc(c.name)}${c.code?` <span class="nscode">${esc(c.code)}</span>`:''}</div>
+      ${P ? `<div class="plainbox">${['what','strong','money','why_today','watch']
+              .filter(k=>P[k]).map(k=>`<div class="pl"><div class="plk">${LB[k]}</div>
+                <p>${esc(P[k])}</p></div>`).join('')}</div>`
+          : pl.length ? `<div class="plainbox">${pl.map(x=>`<p>${esc(x)}</p>`).join('')}</div>`
+                      : `<div class="nsl2">やさしい説明は明日の朝から出ます</div>`}
+      ${/* 🔴 専門用語だらけの元データは、やさしい説明の有無に関わらず必ず畳む
+             （2026-08-30 メグ「すげえわかりづらい情報が下に書いてある。読む気にもならない」）*/''}
+      ${(c.from||c.why||c.pitch||c.flag)?`<details class="cmore"><summary>専門的な記録を見る</summary>
+        ${c.flag?`<div class="nsl"><span>留意</span>${esc(c.flag)}</div>`:''}
+        ${c.from?`<div class="nsl"><span>どこから</span>${esc(c.from)}</div>`:''}
+        ${c.why?`<div class="nsl"><span>なぜ今日これか</span>${esc(c.why)}</div>`:''}
+        ${c.pitch?`<div class="nsl"><span>買い論拠</span>${esc(c.pitch)}</div>`:''}
+      </details>`:''}
+    </div>`);
+  } else if(c && c.skipped){
+    parts.push(`<div class="nsbox dim">🆕 今日の投資候補はなし${c.skip_reason?`<div class="nsl2">${esc(c.skip_reason)}</div>`:''}</div>`);
+  }
+
+  // 動画（保有と無関係に全部・URL付き）
+  // 🔴 見逃すので2日ぶん出す（2026-08-31 メグ指示）。昨日の分は畳んで、今日の分の下に置く。
+  const vidCard = v => `<div class="nsbox">
+      <div class="nsh">${v.who==='太郎'?'🔧':'📺'} ${esc(v.who||'')}<span class="nstag">${esc(v.date||'')}</span></div>
+      <a class="nstitle" href="${esc(v.url||'#')}" target="_blank" rel="noopener">${esc(v.title||'')} ▶</a>
+      <ul class="nsul">${(v.summary||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+      ${(v.names||[]).length?`<div class="nsl"><span>新しく出た銘柄</span>${v.names.map(esc).join('・')}</div>`:''}
+      ${v.conflict?`<div class="nsflag">⚠️ ${esc(v.conflict)}</div>`:''}
+    </div>`;
+  (m.videos||[]).forEach(v=>{ parts.push(vidCard(v)); });
+
+  // 昨日の分。今日の下に畳んで置く。開いたままにしたいときは覚えておく
+  const vp = m.videos_prev||[];
+  if(vp.length){
+    const open = localStorage.getItem('vprevOpen')==='1' ? ' open' : '';
+    parts.push(`<details class="vprev"${open} ontoggle="localStorage.setItem('vprevOpen', this.open?'1':'0')">
+      <summary>昨日の動画 ${vp.length}本（見逃していたら）</summary>
+      ${vp.map(vidCard).join('')}</details>`);
+  }
+
+  // ガチレズ3サイト
+  // 🔴 クラウドからは3サイトに接続できない（プロキシが403）ので、Macが取った
+  //    inbox/glz_snapshot.json を読む。morning.json 側にあればそちらを優先。
+  let g = m.gachirezu;
+  if(!g || !(g.reports||[]).length && !Object.keys(g.counts||{}).length){
+    try{ const t = await repoFile('meyjiro/claude-context','inbox/glz_snapshot.json');
+         if(t) g = JSON.parse(t); }catch(e){}
+  }
+  if(g){
+    const cs = g.counts||{};
+    const rp = (g.reports||[]);
+    const ev = g.events||{}, us = g.users||{};
+    window.__glzReports = rp;   // 🔴 onclickには番号だけ渡す（文字列を埋めると引用符で壊れる）
+    window.__setParts = Object.assign(window.__setParts||{}, {glz:
+      {id:'glz', n:rp.length, label:`通報を裁く ${rp.length}件`, mins:'30秒', anchor:'today-new'}});
+    if(!rp.length) markSetDone('glz');
+    parts.push(`<div class="nsbox">
+      <div class="nsh">🌸 ガチレズ 3サイト</div>
+      ${g.auto && g.auto.closed ? `<div class="glzauto">✓ ${g.auto.closed}件は昨夜のうちに片づけました
+        <span class="glzautow">${esc((g.auto.what||[]).join('・'))}</span></div>` : ''}
+      ${rp.length ? `<div class="glzrep">${rp.map((r,i)=>{
+        const sg = r.suggest||{do:'judge',label:'中身を見て決める',why:''};
+        const pushed = (window.__glzPushed||{})[glzKey(r)];
+        // 🔴 投稿の中身と通報文の両方が見えないと判断できない（2026-08-31 メグ指摘）。
+        //    どちらも全文を出す。長いものだけスクロールさせる。
+        const dets = (r.details && r.details.length) ? r.details : (r.detail?[r.detail]:[]);
+        const brk = t => esc(t).replace(/\n/g,'<br>');
+        return `<div class="glzrow${pushed?' pushed':''}">
+        <div class="g1"><span class="gsite">${esc(r.site||'')}</span>
+          <b>${esc(r.reason_ja||r.reason||'')}</b>
+          ${r.count>1?`<span class="gcount">通報${r.count}件</span>`:''}</div>
+
+        ${dets.length?`<div class="gblk">
+          <div class="gblkh">通報した人の言い分</div>
+          ${dets.map(x=>`<div class="gq">${brk(x)}</div>`).join('')}
+        </div>`:''}
+
+        ${(r.title||r.target)?`<div class="gblk">
+          <div class="gblkh">通報された投稿</div>
+          ${r.title?`<div class="gpt">${esc(r.title)}</div>`:''}
+          ${r.target?`<div class="gpb">${brk(r.target)}</div>`:''}
+        </div>`:''}
+        ${pushed ? `<div class="gdone">✓ ${esc(pushed)}　次の巡回で反映されます</div>` : `
+        <div class="gwhy">${sg.from_precedent?'📖 ':''}${esc(sg.why||'')}</div>
+        <div class="gact">
+          ${sg.do==='judge'
+            ? `<a class="gbtn gopen" href="${esc(r.url||'#')}" target="_blank" rel="noopener">中身を見る →</a>
+               <button class="gbtn gsub" onclick="glzDo(${i},'close')">対応不要にする</button>`
+            : `<button class="gbtn gmain" onclick="glzDo(${i},'${sg.do}')">${esc(sg.label)}</button>
+               ${(sg.do==='trash_ban' && sg.peer)?`<button class="gbtn gsub" onclick="glzDo(${i},'trash_ban','both')">${esc(sg.peer)}にも広げる</button>`:''}
+               <a class="gbtn gsub" href="${esc(r.url||'#')}" target="_blank" rel="noopener">先に中身を見る</a>
+               ${sg.do!=='close'?`<button class="gbtn gsub" onclick="glzDo(${i},'close')">対応不要</button>`:''}`}
+        </div>`}
+      </div>`}).join('')}</div>`
+       : `<div class="nsl2">${esc(g.note||'新しい通報はありません')}</div>`}
+      ${(g.pending||[]).length ? `<div class="glzpend">
+        <div class="glzpendh">承認待ちで、なぜ止まったか記録がないもの ${g.pending.length}件</div>
+        ${g.pending.map(x=>`<a class="glzprow" href="${esc(x.url||'#')}" target="_blank" rel="noopener">
+          <b>${esc(x.title||'')}</b><span>${esc((x.at||'').slice(0,10))} ${esc(x.site)}</span></a>`).join('')}
+      </div>` : (g.pending_note?`<div class="glzauto ok">✓ 承認待ち ${esc(g.pending_note)}</div>`:'')}
+      ${g.flow?`<div class="glzflow">前回（${esc(g.flow.since)}）から　通報 ${esc(g.flow.reports)}　承認待ち ${esc(g.flow.pending)}</div>`:''}
+      <div class="glzgrid">${Object.entries(cs).map(([site,v])=>`<div class="gc">
+        <div class="gcn">${esc(site)}</div>
+        <div class="gcv">${Object.entries(v).map(([k,n])=>`<span${n>0&&k==='通報'?' class="hot"':''}>${esc(k)} ${n}</span>`).join('')}</div>
+      </div>`).join('')}</div>
+      ${((ev.publish??ev.by_status?.publish)!=null||us.total!=null)?`<div class="glzfoot">
+        ${(ev.publish??ev.by_status?.publish)!=null?`イベント 公開${ev.publish??ev.by_status.publish}${(ev.new??ev.new_since)?`・新規${ev.new??ev.new_since}`:''} ／ 主催者${ev.organizers}人${(ev.bookings??ev.bookings_since)?`・予約${ev.bookings??ev.bookings_since}`:''}`:''}
+        ${us.total!=null?`　会員${us.total}人${us.new_7d?`（7日で+${us.new_7d}）`:''}`:''}
+      </div>`:''}
+    </div>`);
+  }
+
+  tryBuildSet();
+
+  // 🌍 世界のニュース1本（2026-08-30 追加）
+  // 分野は問わない。「読んだあとに誰かに話したくなるか」だけで選んだものが1日1本入る。
+  const w = m.world;
+  if(w && w.title){
+    parts.push(`<div class="nsbox">
+      <div class="nsh">🌍 今日の1本</div>
+      <a class="wtitle" href="${esc(w.url||'#')}" target="_blank" rel="noopener">${esc(w.title)}</a>
+      ${w.note?`<div class="wnote">${esc(w.note)}</div>`:''}
+      ${w.why?`<div class="wwhy">${esc(w.why)}</div>`:''}
+    </div>`);
+  }
+
+  // タイ・チェンマイ
+  const th = m.thai||[];
+  if(th.length || m.thai_none){
+    parts.push(`<div class="nsbox">
+      <div class="nsh">🇹🇭 タイ・チェンマイ${m.pm25?`<span class="nstag">PM2.5 ${m.pm25.value} ${esc(m.pm25.level||'')}</span>`:''}</div>
+      ${th.length ? th.map(t=>`<a class="nsnews" href="${esc(t.url||'#')}" target="_blank" rel="noopener">
+          <b>${esc(t.title||'')}</b>${t.note?`<span>${esc(t.note)}</span>`:''}</a>`).join('')
+        : `<div class="nsl2">今日は特になし</div>`}
+    </div>`);
+  }
+
+  if(!parts.length){ el.innerHTML=''; return; }
+  el.innerHTML = `<div class="blk-h">🆕 新しく入ってきたもの
+    ${age>30?`<span class="sec-note">🔴 ${Math.floor(age/24)}日前の内容です</span>`:''}</div>${parts.join('')}`;
+}
+
+// ── ガチレズ: ボタンを押したら操作をキューに積む（Macが次の巡回で実行する） ──
+// 🔴 サイトの操作キーは絶対にここに書かない。このページは公開されている。
+//    ボタンは claude-context（private）に1行足すだけ。実行はMacがやる。
+function glzKey(r){ return `${r.site}#${r.id}`; }
+window.__glzPushed = JSON.parse(localStorage.getItem('glzPushed')||'{}');
+
+async function glzDo(i, op, scope){
+  const r = (window.__glzReports||[])[i];
+  if(!r) return;
+  // 🔴 雑談のレスは消さない。消すとレス番号とページ番号が全部ずれるので、
+  //    運営は昔から本文と名前を「-」に置き換えてきた（2026-08-31 メグ指摘で修正）。
+  const isReply = r.post_type === 'reply';
+  const label = op==='close' ? '対応不要にした'
+              : isReply ? '本文を「-」にした'
+              : op==='trash' ? 'ゴミ箱に入れた'
+              : `ゴミ箱に入れて7日ブロックした${scope==='both'?'（両サイト）':''}`;
+  const what = isReply
+    ? `このレスの本文と名前を「-」にします。\n（消すとレス番号がずれるので、投稿自体は残します）`
+    : `この投稿をゴミ箱に入れます。`;
+  const after = isReply
+    ? `・レス番号とページ番号はずれません\n・元の本文は管理者だけが後から確認できます`
+    : `・サイトからは見えなくなります\n・完全には消えないので、管理画面からいつでも戻せます`;
+  // 🔴 端末ブロックの効き方はサイトで違う。Lとも・真夜中は連携があり、本家は単独
+  const extra = op==='trash_ban'
+    ? `\n・書いた端末を7日間ブロックします${scope==='both'?`（${r.suggest.peer}にも広げます）`:''}`
+      + (r.did ? '' : '\n🔴 この投稿に端末IDが記録されていないので、ブロックは効きません')
+    : '';
+  if(op!=='close' && !confirm(`${what}\n\n${r.target||''}\n\n${after}${extra}`)) return;
+  const row = {at:new Date().toISOString(), site:r.site, do:op, report_id:r.id,
+               also_ids:r.also_ids||[],          // 同じ投稿への他の通報もまとめて閉じる
+               post_id:r.post_id, did:r.did||null, days:7, scope:scope||'this',
+               reason:(r.reason_ja||r.reason||''), memo:(r.detail||'').slice(0,60)};
+  // 🔴 1つのファイルに追記していくと、続けて押したときに sha が合わず 409 になる
+  //    （2026-08-30 メグ報告）。投げ込み箱と同じく1操作1ファイルにして衝突をなくす。
+  //    同じ通報を2回押しても同じファイル名になるので、上書きされるだけで害がない。
+  const btns = document.querySelectorAll('#tab-today .gact button, #tab-today .gact a');
+  btns.forEach(b=>b.style.pointerEvents='none');
+  try{
+    const path = `inbox/glz_actions/${r.site}-${r.id}-${op}.json`;
+    const ex = await getFileWithSha(path);
+    await api(`/repos/${REPO}/contents/${path}`, 'PUT',
+      Object.assign({ message:`ガチレズ操作: ${r.site} ${label}`,
+                      content: enc(JSON.stringify(row, null, 1)), branch: BRANCH },
+                    (ex && ex.sha) ? { sha: ex.sha } : {}));
+    window.__glzPushed[glzKey(r)] = label;
+    { const rest = (window.__glzReports||[]).filter(v=>!(window.__glzPushed||{})[glzKey(v)]);
+      if(!rest.length) markSetDone('glz'); }
+    localStorage.setItem('glzPushed', JSON.stringify(window.__glzPushed));
+    loadNewStuff();
+    toast(`${label}。次の巡回（8:20/14:20/20:20）で反映されます`);
+  }catch(e){
+    // 409 は「もう積んである」というだけなので、押した人にはそう伝える
+    if(String(e.message).includes('409')) toast('もう積んであります');
+    else alert('積めませんでした: ' + e.message);
+  }finally{ btns.forEach(b=>b.style.pointerEvents=''); }
+}
+
+async function loadBriefing() {
+  try {
+    const raw = await getFile('inbox/briefing.json');
+    briefing = raw ? JSON.parse(raw) : null;
+  } catch (e) { briefing = null; }
+  renderBriefing();
+}
+function renderBriefing() {
+  const b = briefing;
+  $('brief-stale').innerHTML = '';
+  if (!b) {
+    $('brief-quote').innerHTML = '';
+    $('brief-due').innerHTML = '<p class="empty">まだ今日のブリーフィングがありません（毎朝8:30に届きます）</p>';
+    return;
+  }
+  const age = (Date.now() - new Date(b.generated_at).getTime()) / 3600000;
+  if (age > 26) $('brief-stale').innerHTML = `<div class="stale">⚠️ これは ${new Date(b.generated_at).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})} のブリーフィングです（今朝の分がまだ届いていません）</div>`;
+  $('brief-quote').innerHTML = b.quote ? `<div class="quote-card"><div class="q">${esc(b.quote.text)}</div><div class="a">— ${esc(b.quote.author || '')}</div></div>` : '';
+  // 🔴 近日（3日以内）だけ出して、それ以降は畳む（2026-08-30 メグ指示）
+  const allDues = (b.today || []);
+  const dayLeft = d => { const m=String(d.date||d.due||'').match(/(\d{4})-(\d\d)-(\d\d)/);
+    if(!m) return 0; return Math.ceil((new Date(m[0]+'T12:00:00+09:00')-Date.now())/86400000); };
+  const dues = allDues.filter(d=>dayLeft(d)<=3);
+  window.__setParts = Object.assign(window.__setParts||{}, {due:
+    {id:'due', n:dues.length, label:`期日が近い ${dues.length}件`, mins:'', anchor:'brief-due'}});
+  if(!dues.length) markSetDone('due');
+  const laterDues = allDues.filter(d=>dayLeft(d)>3);
+  const doneKeys = getDoneDues();
+  $('brief-due').innerHTML = dues.length
+    ? dues.map((d, i) => {
+        const key = d.date + '|' + d.label;
+  const ld = $('brief-due-later');
+  if (ld) ld.innerHTML = laterDues.length
+    ? `<details class="laterd"><summary>これから ${laterDues.length}件</summary>${laterDues.map(d=>
+        `<div class="ldrow"><b>${esc(String(d.date||d.due||'').slice(5).replace('-','/'))}</b>
+         <span>${esc(d.title||d.what||d.summary||'')}</span></div>`).join('')}</details>` : '';
+        const done = doneKeys.some(x => x.key === key);
+        return `<div class="due ${esc(d.urgency||'normal')} ${done?'done':''}" data-key="${esc(key)}">
+          <span class="d">${esc(d.date)}</span><span class="l">${esc(d.label)}</span>
+          <button class="due-btn ${done?'on':''}" data-i="${i}" ${done?'disabled':''}>${done?'✓ 報告済み':'✓ 完了'}</button>
+          <div class="due-rep" id="rep-${i}">
+            <textarea placeholder="どうやって終わった？ 気づいたこと・次にやること・結果など（空でもOK）"></textarea>
+            <div class="hint2">メモは投げ込みと同じように自動で仕分けされ、必要なら別の記録にも残ります。</div>
+            <div class="row2"><button class="btn btn-primary" data-send="${i}">報告する</button>
+            <button class="btn btn-ghost" data-cancel="${i}">やめる</button></div>
+          </div></div>`;
+      }).join('')
+    : '<p class="empty">14日以内の期日はありません 🎉</p>';
+  bindDueButtons(dues);
+  const att = (b.attention || []);
+  $('brief-attention-wrap').style.display = att.length ? '' : 'none';
+  $('brief-attention').innerHTML = att.map(a => `<div class="card"><div class="s" style="color:var(--text)">${esc(a)}</div></div>`).join('');
+  const pen = (b.pending || []);
+  // 🔴 文字列をonclickに直接埋めると引用符が衝突して属性が壊れる（2026-08-30に発生）。
+  //    配列に持たせて番号で渡す。
+  // 🔴 答えたあとも出続けるのが嫌、というメグの指摘（2026-08-30）。
+  //    完了は手動。押したものはこの端末で覚えておき、二度と出さない。
+  const pdone = JSON.parse(localStorage.getItem('pendingDone')||'{}');
+  const pshow = pen.filter(p => !pdone[pendKey(p)]);
+  $('brief-pending-wrap').style.display = pshow.length ? '' : 'none';
+  window.__pending = pshow;
+  $('brief-pending').innerHTML = pshow.map((p, i) => `<div class="card pend">
+    <div class="t" style="font-size:14px">${esc(p.summary)}</div>${p.ask?`<div class="s">${esc(p.ask)}</div>`:''}
+    <div class="pendb">
+      <button class="toinbox" onclick="answerPending(${i})">投げ込みで答える →</button>
+      <button class="penddone" onclick="pendingDone(${i})">完了</button>
+    </div></div>`).join('');
+  const log = (b.sorted_log || []).slice(0, 8);
+  briefLogFallback = log.length ? log.map(l => `・${esc(l.at||'')} ${esc(l.summary)}`).join('<br>') : '（まだなし）';
+  $('brief-log').innerHTML = briefLogFallback;
+  if (!ledgerLoaded) $('inbox-log').innerHTML = briefLogFallback;
+  if (b.health && b.health.note) $('health-note').innerHTML = `<div class="card"><div class="s" style="color:var(--text)">${esc(b.health.note)}</div></div>`;
+  const iv = b.invest || {};
+  const dg = iv.digest || [], notes = iv.watch_notes || [];
+  if (dg.length || notes.length) {
+    $('invest-digest').innerHTML =
+      dg.map(d => `<div class="card"><div class="t" style="font-size:14px">${esc(d.src||'')}</div><div class="s">${esc(d.point||'')}</div></div>`).join('')
+      + notes.map(n => `<div class="card" style="padding:12px 15px"><div class="s" style="margin-top:0">${esc(n)}</div></div>`).join('');
+  }
+}
+
+// ── メビウス完了予定 ──
+async function loadMebius() {
+  const el = $('mebius-list');
+  if (!mebiusToken) { el.innerHTML = '<p class="empty">⚙ 設定からトークンを入力すると表示されます</p>'; return; }
+  try {
+    const res = await fetch(MEBIUS_API, { headers: { 'X-Api-Token': mebiusToken }, cache: 'no-store' });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    window.__mebiusEvents = (data.events || data || []).filter(e => e.end && !e.completed);
+    const evs = window.__mebiusEvents
+      .sort((a, b) => (a.end || '').localeCompare(b.end || '')).slice(0, 6);
+    el.innerHTML = evs.length
+      ? evs.map(e => `<div class="due"><span class="d">${esc((e.end||'').slice(5).replace('-','/'))}</span><span class="l">${esc(e.name)} 様（${esc(String(e.nights||'?'))}夜）</span></div>`).join('')
+      : '<p class="empty">完了予定はありません</p>';
+  } catch (e) { el.innerHTML = '<p class="empty">メビウスAPIに接続できません</p>'; }
+}
+
+// ── 投げ込み ──
+function atNow() {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+// ── 期日の完了報告 ──
+function getDoneDues() {
+  let a = [];
+  try { a = JSON.parse(localStorage.getItem('done-dues') || '[]'); } catch (e) {}
+  // 30日より古い記録は捨てる（ブリーフィングから消えた分の掃除）
+  const lim = Date.now() - 30 * 86400000;
+  const keep = a.filter(x => (x.at || 0) > lim);
+  if (keep.length !== a.length) localStorage.setItem('done-dues', JSON.stringify(keep));
+  return keep;
+}
+function markDueDone(key) {
+  const a = getDoneDues();
+  a.push({ key, at: Date.now() });
+  localStorage.setItem('done-dues', JSON.stringify(a));
+}
+function bindDueButtons(dues) {
+  document.querySelectorAll('#brief-due .due-btn[data-i]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const rep = $('rep-' + btn.dataset.i);
+      const opening = !rep.classList.contains('open');
+      document.querySelectorAll('#brief-due .due-rep').forEach(r => r.classList.remove('open'));
+      if (opening) { rep.classList.add('open'); rep.querySelector('textarea').focus(); }
+    });
+  });
+  document.querySelectorAll('#brief-due [data-cancel]').forEach(b =>
+    b.addEventListener('click', () => $('rep-' + b.dataset.cancel).classList.remove('open')));
+  document.querySelectorAll('#brief-due [data-send]').forEach(b =>
+    b.addEventListener('click', () => sendDueDone(+b.dataset.send, dues[+b.dataset.send], b)));
+}
+async function sendDueDone(i, due, btn) {
+  const rep = $('rep-' + i);
+  const memo = rep.querySelector('textarea').value.trim();
+  btn.disabled = true; btn.textContent = '送信中…';
+  try {
+    const body = `at: ${atNow()}\nkind: 完了報告\ndue_date: ${due.date}\ndue_label: ${due.label}\n\n`
+      + (memo || '（メモなし・完了だけ報告）');
+    await putFile(`inbox/queue/${ts()}_done.md`, body, `完了報告 ${due.date}`);
+    markDueDone(due.date + '|' + due.label);
+    const row = rep.closest('.due');
+    row.classList.add('done');
+    rep.classList.remove('open');
+    const mainBtn = row.querySelector('.due-btn[data-i]');
+    mainBtn.textContent = '✓ 報告済み'; mainBtn.classList.add('on'); mainBtn.disabled = true;
+    toast(memo ? '報告した！ メモは仕分けに乗ります 📝' : '完了を報告した！ ✓');
+    loadQueue();
+  } catch (e) { toast('送信に失敗: ' + e.message); btn.disabled = false; btn.textContent = '報告する'; }
+}
+
+async function sendInbox() {
+  const text = $('inbox-text').value.trim();
+  if (!text && !pendingPhoto && !pendingAudio) { toast('なにか書くか、写真・録音をつけてね'); return; }
+  const btn = $('inbox-send'); btn.disabled = true; btn.textContent = '送信中…';
+  try {
+    const stamp = ts();
+    // 🔴 日時は必ず記録する（メグ指定・2026-08-15）。メタ行→空行→原文の順
+    let meta = `at: ${atNow()}`;
+    if (pendingPhoto) {
+      const imgPath = `inbox/img/${stamp}.jpg`;
+      await putFile(imgPath, pendingPhoto.b64, `投げ込み写真 ${stamp}`, true);
+      meta += `\nimg: ${imgPath}`;
+    }
+    if (pendingAudio) {
+      const audPath = `inbox/audio/${stamp}.${pendingAudio.ext}`;
+      await putFile(audPath, pendingAudio.b64, `投げ込み録音 ${stamp}`, true);
+      // 音声はMac側のWhisperが文字起こしして別の投げ込みmdを作るので、ここではmdを作らない
+      // （テキストも一緒に書いていた場合だけ、テキスト分のmdを作る）
+      if (!text) {
+        $('inbox-text').value = ''; pendingAudio = null; pendingPhoto = null; $('photo-hint').textContent = '';
+        toast('録音を投げ込んだ！ 文字起こしは30分以内 🎤');
+        btn.disabled = false; btn.textContent = '投げ込む';
+        return;
+      }
+      meta += `\naudio: ${audPath}`;
+    }
+    await putFile(`inbox/queue/${stamp}.md`, `${meta}\n\n${text}`, `投げ込み ${stamp}`);
+    $('inbox-text').value = ''; pendingPhoto = null; pendingAudio = null; $('photo-hint').textContent = '';
+    toast('投げ込んだ！ 🧺');
+    loadQueue();
+  } catch (e) { toast('送信に失敗: ' + e.message); }
+  btn.disabled = false; btn.textContent = '投げ込む';
+}
+async function pickAudio(file) {
+  if (!file) return;
+  if (file.size > 25 * 1024 * 1024) { toast('録音が大きすぎます（25MBまで・約20分）'); return; }
+  const ext = (file.name && file.name.includes('.')) ? file.name.split('.').pop().toLowerCase() : 'm4a';
+  const buf = await file.arrayBuffer();
+  let bin = ''; const bytes = new Uint8Array(buf);
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  pendingAudio = { b64: btoa(bin), ext };
+  $('photo-hint').textContent = `🎤 録音を添付済み（${Math.round(file.size/1024)}KB）。送信で投げ込みます`;
+}
+async function toggleRec() {
+  const btn = $('rec-btn');
+  if (recorder && recorder.state === 'recording') { recorder.stop(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mime = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : 'audio/webm';
+    recorder = new MediaRecorder(stream, { mimeType: mime });
+    recChunks = [];
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      btn.textContent = '🎤'; btn.style.background = '';
+      const blob = new Blob(recChunks, { type: recorder.mimeType });
+      const ext = recorder.mimeType.includes('mp4') ? 'm4a' : 'webm';
+      await pickAudio(new File([blob], `rec.${ext}`, { type: recorder.mimeType }));
+    };
+    recorder.start();
+    btn.textContent = '⏹'; btn.style.background = '#fdeaea';
+    toast('録音中… もう一度押すと停止');
+  } catch (e) {
+    // マイク不可（権限なし等）→ ボイスメモ等のファイル選択にフォールバック
+    $('audio-input').click();
+  }
+}
+async function pickPhoto(file) {
+  if (!file) return;
+  try {
+    const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }).catch(() => createImageBitmap(file));
+    const max = 1600, scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(bmp.width * scale); cv.height = Math.round(bmp.height * scale);
+    cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
+    const dataUrl = cv.toDataURL('image/jpeg', 0.8);
+    pendingPhoto = { b64: dataUrl.split(',')[1] };
+    $('photo-hint').textContent = `📷 写真を添付済み（${Math.round(dataUrl.length * 0.75 / 1024)}KB）。送信で一緒に投げ込みます`;
+  } catch (e) { toast('写真の読み込みに失敗'); }
+}
+async function loadQueue() {
+  const el = $('queue-list');
+  try {
+    const files = (await listDir('inbox/queue')).filter(f => f.name.endsWith('.md')).sort((a, b) => b.name.localeCompare(a.name));
+    if (!files.length) { el.innerHTML = '<p class="empty">仕分け待ちはありません</p>'; return; }
+    const items = await Promise.all(files.slice(0, 10).map(async f => {
+      let txt = '';
+      try { txt = dec((await api(`/repos/${REPO}/contents/inbox/queue/${f.name}?ref=${BRANCH}`)).content); } catch (e) {}
+      // メタ行（at:/img:/audio:）は本文プレビューから外し、日時表示に使う
+      const lines = txt.split('\n');
+      let when = '', badge = '';
+      while (lines.length && /^(at|img|audio):\s/.test(lines[0])) {
+        const l = lines.shift();
+        if (l.startsWith('at: ')) when = l.slice(4);
+        if (l.startsWith('img:')) badge += ' 📷';
+        if (l.startsWith('audio:')) badge += ' 🎤';
+      }
+      if (!when) {
+        const m = f.name.match(/^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})/);
+        when = m ? `${m[1]}-${m[2]}-${m[3]} ${m[4]}:${m[5]}` : f.name;
+      }
+      const body = lines.join('\n').trim();
+      return `<div class="card qitem"><div class="s" style="color:var(--text)">${esc(body.slice(0, 140)) || '（本文なし）'}</div><div class="s" style="margin-top:5px;font-size:11px">${esc(when)}${badge}</div></div>`;
+    }));
+    el.innerHTML = items.join('') + (files.length > 10 ? `<p class="empty">ほか${files.length - 10}件</p>` : '');
+  } catch (e) { el.innerHTML = '<p class="empty">読み込みに失敗</p>'; }
+}
+
+// ── 仕分け済み台帳（いつ何を言ったかの恒久記録・月次）──
+let briefLogFallback = '（まだなし）';
+let ledgerLoaded = false;
+async function loadLedger() {
+  try {
+    const d = new Date(), ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    let md = await getFile(`inbox/ledger/${ym}.md`);
+    if (!md) { // 月初は先月分も見る
+      const prev = new Date(d.getFullYear(), d.getMonth()-1, 1);
+      md = await getFile(`inbox/ledger/${prev.getFullYear()}-${String(prev.getMonth()+1).padStart(2,'0')}.md`);
+    }
+    if (!md) { ledgerLoaded = false; return; }
+    const entries = md.split(/\n(?=## )/).filter(s => s.startsWith('## ')).slice(-6).reverse();
+    $('inbox-log').innerHTML = entries.map(e => {
+      const ls = e.split('\n');
+      const when = ls[0].replace(/^## /, '');
+      const sorted = (ls.find(l => l.startsWith('→仕分け')) || '').replace(/^→仕分け[::]?\s*/, '');
+      const body = ls.slice(1).filter(l => !l.startsWith('→仕分け') && !/^(img|audio):\s/.test(l)).join(' ').trim();
+      return `<div class="card"><div class="s" style="color:var(--text)">${esc(body.slice(0, 110))}</div><div class="s" style="margin-top:4px;font-size:11px">${esc(when)}${sorted?` → ${esc(sorted.slice(0,60))}`:''}</div></div>`;
+    }).join('');
+    ledgerLoaded = true;
+  } catch (e) { ledgerLoaded = false; }
+}
+
+// ── カレンダー（スケジュール.md＝期日の正本を表示・直接追記）──
+let calY, calM, calSel = null, schedRows = []; // {date:'YYYY-MM-DD', field, label, src}
+let cyclePred = []; // {date, kind:'heart'|'zone'}（loadCycleが計算）
+async function getFileWithSha(path) {
+  const r = await api(`/repos/${REPO}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}?ref=${BRANCH}`);
+  if (!r || r.__404) return null;
+  return { text: dec(r.content), sha: r.sha };
+}
+async function loadSchedule() {
+  schedRows = [];
+  try {
+    const f = await getFileWithSha('スケジュール.md');
+    if (!f) return;
+    for (const line of f.text.split('\n')) {
+      // 完了済み(|~)も「過去の記録」としてカレンダーに残す（2026-08-26: ワクチン等を振り返れるように）
+      const done = /^\s*\|~/.test(line);
+      const m = line.match(/^\s*\|~?\s*(\d{4})-(\d{2})-(\d{2})\s*\|([^|]*)\|(.*?)\|?\s*$/);
+      if (m) schedRows.push({ date: `${m[1]}-${m[2]}-${m[3]}`, field: m[4].trim(),
+        label: m[5].trim().replace(/\s*\|/g, ' '), src: 'sched', done });
+    }
+  } catch (e) {}
+  renderCal();
+}
+function fieldClass(f) {
+  f = (f || '').trim();
+  if (f.includes('ガチレズ')) return 'f-glz';
+  if (f.includes('メビウス')) return 'f-mbs';
+  if (f.includes('裁判') || f.includes('相続')) return 'f-law';
+  if (f.includes('生活OS')) return 'f-os';
+  if (f.includes('投資')) return 'f-inv';
+  if (f.includes('個人') || f.includes('生活')) return 'f-life';
+  if (f.includes('予定')) return 'f-plan';
+  return 'f-plan';
+}
+function calEvents() {
+  const ev = {};
+  const add = (date, item) => { (ev[date] = ev[date] || []).push(item); };
+  schedRows.forEach(r => add(r.date, r));
+  (window.__mebiusEvents || []).forEach(e => { if (e.end) add(e.end, { label: `🔮 ${e.name} 様 完了`, src: 'mb' }); });
+  TRIPS.forEach(t => { add(t.start, { label: `✈️ ${t.title} 出発`, src: 'trip' }); add(t.end, { label: `✈️ ${t.title} 帰着`, src: 'trip' }); });
+  cyclePred.forEach(p => add(p.date, p.kind === 'heart'
+    ? { label: '♥ 次回生理予定（予測）', src: 'cyc-heart' }
+    : { label: '⚡ マキシマムザホルモンめぐちゃん開始予想', src: 'cyc-zone' }));
+  return ev;
+}
+function renderCal() {
+  if (calY === undefined) { const n = new Date(); calY = n.getFullYear(); calM = n.getMonth(); }
+  $('cal-ym').textContent = `${calY}年${calM + 1}月`;
+  const ev = calEvents();
+  const first = new Date(calY, calM, 1), start = new Date(first); start.setDate(1 - first.getDay());
+  const todayS = new Date().toLocaleDateString('sv-SE');
+  let html = ['日','月','火','水','木','金','土'].map(d => `<div class="cal-dow">${d}</div>`).join('');
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    const ds = d.toLocaleDateString('sv-SE');
+    const inMonth = d.getMonth() === calM;
+    const items = ev[ds] || [];
+    const dots = items.slice(0, 4).map(it => {
+      if (it.src === 'cyc-heart') return '<span class="mk heart">♥</span>';
+      if (it.src === 'cyc-zone') return '<span class="mk zone">⚠︎</span>';
+      if (it.src === 'mb') return '<span class="dot mb"></span>';
+      if (it.src === 'trip') return '<span class="dot trip"></span>';
+      return `<span class="dot ${fieldClass(it.field)}"></span>`;
+    }).join('');
+    html += `<div class="cal-cell${inMonth ? '' : ' dim'}${ds === todayS ? ' today' : ''}${ds === calSel ? ' sel' : ''}" data-d="${ds}">${d.getDate()}<div class="dots">${dots}</div></div>`;
+  }
+  $('cal-grid').innerHTML = html;
+  document.querySelectorAll('.cal-cell').forEach(c => c.addEventListener('click', () => {
+    calSel = c.dataset.d; $('cal-date').value = calSel; renderCal();
+  }));
+  renderDayList(ev);
+}
+function renderDayList(ev) {
+  const el = $('cal-day-list');
+  if (!calSel) { el.innerHTML = '<p class="empty">日付をタップすると予定が出ます</p>'; return; }
+  const items = (ev || calEvents())[calSel] || [];
+  const [y, mo, dd] = calSel.split('-');
+  el.innerHTML = `<div class="section-title">📌 ${+mo}/${+dd} の予定</div>` + (items.length
+    ? items.map(it => {
+        const cls = it.src === 'mb' ? 'mb' : it.src === 'trip' ? 'trip' : fieldClass(it.field);
+        return `<div class="card"><div class="s" style="color:var(--text)"><span class="dot ${cls}" style="display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px" data-f></span>${it.done ? '✅ ' : ''}${it.field ? `[${esc(it.field)}] ` : ''}${esc(it.label)}</div></div>`;
+      }).join('')
+    : '<p class="empty">予定なし。下のフォームから追加できます</p>');
+}
+async function addCalEvent() {
+  const date = $('cal-date').value, text = $('cal-text').value.trim();
+  if (!date || !text) { toast('日付と内容を入れてね'); return; }
+  const btn = $('cal-save'); btn.disabled = true;
+  const row = `| ${date} | 予定 | ${text.replace(/\|/g, '／')} |`;
+  try {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const f = await getFileWithSha('スケジュール.md');
+      if (!f) throw new Error('スケジュール.mdが見つかりません');
+      // 「## 期日つき」表の末尾（最後の表の行）の直後に挿入する
+      const lines = f.text.split('\n');
+      let last = -1;
+      lines.forEach((l, i) => { if (/^\s*\|~?\s*\d{4}-\d{2}-\d{2}\s*\|/.test(l)) last = i; });
+      if (last < 0) throw new Error('表が見つかりません');
+      lines.splice(last + 1, 0, row);
+      try {
+        await api(`/repos/${REPO}/contents/${encodeURIComponent('スケジュール.md')}`, 'PUT',
+          { message: `予定追加: ${date} ${text}（ダッシュボード）`, content: enc(lines.join('\n')), sha: f.sha, branch: BRANCH });
+        break;
+      } catch (e) { if (attempt === 1) throw e; } // sha競合は1回だけ再取得して再試行
+    }
+    $('cal-text').value = ''; calSel = date;
+    toast('予定を入れた！前日と当日の朝に通知が来ます 📅');
+    await loadSchedule();
+  } catch (e) { toast('追加に失敗: ' + e.message); }
+  btn.disabled = false;
+}
+
+// ── 健康タブ（personal/health/data/ のCSVから）──
+async function repoFile(repo, path) {
+  const r = await api(`/repos/${repo}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}`);
+  if (!r || r.__404) return null;
+  return dec(r.content);
+}
+function parseCsv(text) {
+  const [head, ...rows] = text.trim().split('\n');
+  const cols = head.split(',');
+  return rows.map(r => { const v = r.split(','); const o = {}; cols.forEach((c, i) => o[c] = v[i] ?? ''); return o; });
+}
+function sparkBars(el, data, unit) { // data: [{label, v}]（単系列・直接ラベルは最新とピークのみ）
+  const max = Math.max(...data.map(d => d.v), 1);
+  const W = 320, H = 74, bw = W / data.length;
+  const peak = data.reduce((a, b) => (b.v > a.v ? b : a), data[0]);
+  let s = `<svg viewBox="0 0 ${W} ${H + 16}" style="width:100%;height:auto;font-variant-numeric:tabular-nums">`;
+  data.forEach((d, i) => {
+    const h = Math.max(2, d.v / max * H);
+    const x = i * bw + bw * 0.18, y = H - h;
+    const last = i === data.length - 1;
+    s += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${(bw * 0.64).toFixed(1)}" height="${h.toFixed(1)}" rx="2.5" fill="var(--accent)"${last ? '' : ' opacity="0.45"'}/>`;
+    if (last || d === peak) s += `<text x="${(x + bw * 0.32).toFixed(1)}" y="${Math.max(y - 4, 9).toFixed(1)}" text-anchor="middle" font-size="9.5" fill="var(--text2)">${Math.round(d.v).toLocaleString()}</text>`;
+  });
+  s += `<text x="0" y="${H + 13}" font-size="9.5" fill="var(--text2)">${esc(data[0].label)}</text>`;
+  s += `<text x="${W}" y="${H + 13}" text-anchor="end" font-size="9.5" fill="var(--text2)">${esc(data[data.length - 1].label)}（${unit}）</text></svg>`;
+  el.innerHTML = s;
+}
+function sparkLine(el, data, unit) {
+  const vs = data.map(d => d.v);
+  const lo = Math.min(...vs), hi = Math.max(...vs), span = Math.max(hi - lo, 1);
+  const W = 320, H = 70, P = 6;
+  const pt = (d, i) => `${(i / (data.length - 1) * W).toFixed(1)},${(P + (1 - (d.v - lo) / span) * (H - P * 2)).toFixed(1)}`;
+  const lastP = pt(data[data.length - 1], data.length - 1).split(',');
+  let s = `<svg viewBox="0 0 ${W} ${H + 16}" style="width:100%;height:auto;font-variant-numeric:tabular-nums">`;
+  s += `<polyline points="${data.map(pt).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>`;
+  s += `<circle cx="${lastP[0]}" cy="${lastP[1]}" r="3.5" fill="var(--accent)"/>`;
+  s += `<text x="${Math.min(+lastP[0], W - 24)}" y="${Math.max(+lastP[1] - 7, 9)}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--text)">${data[data.length - 1].v}</text>`;
+  s += `<text x="0" y="${H + 13}" font-size="9.5" fill="var(--text2)">${esc(data[0].label)}　低${lo}〜高${hi}${unit}</text>`;
+  s += `<text x="${W}" y="${H + 13}" text-anchor="end" font-size="9.5" fill="var(--text2)">${esc(data[data.length - 1].label)}</text></svg>`;
+  el.innerHTML = s;
+}
+async function loadCycle() {
+  try {
+    const csv = await repoFile('meyjiro/personal', 'health/cycle.csv');
+    const el = $('health-cycle');
+    if (!csv) return;
+    const rows = parseCsv(csv).filter(r => r.start_date).sort((a, b) => a.start_date.localeCompare(b.start_date));
+    if (!rows.length) { el.innerHTML = `<div class="card"><div class="s">🩸 周期データはまだありません。「生理きた」ボタンで記録が始まります（過去の開始日を投げ込みで教えてもらえれば予測も出ます）</div></div>`; return; }
+    const d0 = s => new Date(s + 'T00:00:00');
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const last = rows[rows.length - 1];
+    const dayN = Math.round((today - d0(last.start_date)) / 86400000) + 1;
+    // 平均周期: 直近の開始日どうしの間隔（最大6周期）
+    const gaps = [];
+    for (let i = Math.max(1, rows.length - 6); i < rows.length; i++)
+      gaps.push((d0(rows[i].start_date) - d0(rows[i - 1].start_date)) / 86400000);
+    const avg = gaps.length ? Math.round(gaps.reduce((a, b) => a + b) / gaps.length) : 28;
+    const next = new Date(d0(last.start_date)); next.setDate(next.getDate() + avg);
+    const toNext = Math.round((next - today) / 86400000);
+    // カレンダー用: 今後3周期分の ♥（開始予測）と ⚡（ホルモン期入り=予測7日前）
+    cyclePred = [];
+    for (let c = 0; c < 3; c++) {
+      const p = new Date(d0(last.start_date)); p.setDate(p.getDate() + avg * (c + 1));
+      const z = new Date(p); z.setDate(z.getDate() - 7);
+      cyclePred.push({ date: p.toLocaleDateString('sv-SE'), kind: 'heart' });
+      cyclePred.push({ date: z.toLocaleDateString('sv-SE'), kind: 'zone' });
+    }
+    const md = d => `${d.getMonth() + 1}/${d.getDate()}`;
+    // ホルモン期ゾーン: 次回予測の7日前〜予測日（生理前 = 審理延期ゾーン）
+    const inZone = toNext <= 7 && toNext >= -2;
+    window.__hormoneZone = inZone;  // 健康アドバイスが参照（HRV低下の誤警報を防ぐ）
+    el.innerHTML = `<div class="card" style="${inZone ? 'border-color:var(--warn);background:var(--warn-light)' : ''}">
+      <div class="t" style="font-size:14px">🩸 周期 ${dayN}日目 <span style="font-weight:400;color:var(--text2)">（前回 ${md(d0(last.start_date))}開始・平均${avg}日）</span></div>
+      <div class="s">次回予測 ${md(next)}${toNext >= 0 ? `（あと${toNext}日）` : `（${-toNext}日超過）`}${gaps.length ? '' : '　※予測は仮の28日周期。過去の開始日が入ると精度が出ます'}</div>
+      ${inZone ? '<div class="s" style="color:var(--warn);font-weight:700;margin-top:4px">⚠️ ホルモン期ゾーン — 大きな判断・判定は審理延期の期間</div>' : ''}
+    </div>`;
+  } catch (e) {}
+}
+// ══ 健康タブ（2026-08-28 全面刷新）══
+// メグの要件: ①今の状態が一目でわかる ②注意が要る時がわかる ③絶好調なら褒められる
+// 🔴 判定は必ず「メグ自身の過去との差分」。HRV 40msが良いかは一般論では決まらない。
+//    ベースライン = 直近60日（今日を除く）の中央値。ばらつきは標準偏差。
+// 列, 表示名, 単位, 小数桁, 向き(1=高いほど良い / -1=低いほど良い / 0=表示のみ), グループ
+const H_METRICS = [
+  ['hrv_ms',             'HRV',        'ms',    1,  1, 'recover'],
+  ['resting_hr',         '安静時心拍',  'bpm',   0, -1, 'recover'],
+  ['walk_hr',            '歩行時心拍',  'bpm',   0,  0, 'recover'],
+  ['steps',              '歩数',        '歩',    0,  1, 'active'],
+  ['exercise_min',       '運動',        '分',    0,  1, 'active'],
+  ['distance_km',        '距離',        'km',    1,  0, 'active'],
+  ['basal_kcal',         '基礎代謝',    'kcal',  0,  0, 'active'],
+  ['walking_speed_kmh',  '歩行速度',    'km/h',  2,  1, 'gait'],
+  ['step_length_cm',     '歩幅',        'cm',    0,  1, 'gait'],
+  ['double_support_pct', '両脚支持',    '%',     1, -1, 'gait'],
+  ['asymmetry_pct',      '左右差',      '%',     1, -1, 'gait'],
+];
+const H_GROUPS = [
+  ['recover', '回復',     0.40, '寝ている間にどれだけ体が戻ったか。HRVは高いほど・安静時心拍は低いほど良好です。'],
+  ['active',  '活動',     0.35, 'どれだけ動いたか。基礎代謝はじっとしていても燃える分なので、増減より安定しているかを見ます。'],
+  ['gait',    '歩き方',   0.25, '疲れると速度が落ち歩幅が縮み、両脚が地面についている時間が伸びます。左右差は3%以下が正常です。'],
+];
+
+function hStats(rows, todayS) {
+  const base = {};
+  for (const [col] of H_METRICS) {
+    const v = rows.filter(r => r.date !== todayS && r[col] !== '' && r[col] != null && !isNaN(+r[col])).map(r => +r[col]);
+    if (v.length < 8) continue;
+    const win = v.slice(-60);
+    const sorted = [...win].sort((a, b) => a - b);
+    const m = sorted[sorted.length >> 1];
+    const sd = Math.sqrt(win.reduce((s, x) => s + (x - m) ** 2, 0) / win.length) || 1;
+    base[col] = { med: m, sd, n: v.length, all: v };
+  }
+  return base;
+}
+// 1日ぶんのスコア（0〜100）。ベースラインは共通、日ごとの値だけ差し替える
+function hScore(row, base) {
+  const g = {};
+  for (const [col, , , , dir, grp] of H_METRICS) {
+    if (!dir || !base[col] || !row || !row[col]) continue;
+    const z = Math.max(-2.5, Math.min(2.5, (+row[col] - base[col].med) / base[col].sd * dir));
+    (g[grp] = g[grp] || []).push(Math.max(5, Math.min(100, 50 + z * 22)));
+  }
+  // 🔴 指標が1本しかないグループを満額の重みで扱うと、その1本のブレが総合を支配する。
+  //    （歩き方が歩行速度だけだった時、全指標が良い日でも総合が伸びなかった）
+  let sum = 0, w = 0;
+  const per = {};
+  for (const [key, , weight] of H_GROUPS) {
+    if (!g[key] || !g[key].length) continue;
+    per[key] = g[key].reduce((a, b) => a + b, 0) / g[key].length;
+    const wt = weight * Math.min(1, g[key].length / 2);
+    sum += per[key] * wt; w += wt;
+  }
+  return w ? { total: Math.round(sum / w), per } : null;
+}
+
+function renderHealthHero(rows, todayS) {
+  const done = rows.filter(r => r.date !== todayS);
+  const cur = done[done.length - 1];
+  if (!cur) return;
+  const base = hStats(rows, todayS);
+  const sc = hScore(cur, base);
+  if (!sc) return;
+  const n = sc.total;
+
+  // ── 状態と一言 ──
+  // 50点 = ふだん通り。実データの分布（直近10日で47〜72点）に合わせた閾値
+  const LV = n >= 74 ? { i: '🔥', c: 'var(--ok)',     t: '絶好調', m: 'ここまで整うのは珍しいです。今日は何をやっても大丈夫。' }
+          : n >= 62 ? { i: '🟢', c: 'var(--accent)', t: '好調',   m: 'ふだんより良い状態です。このまま進めて問題ありません。' }
+          : n >= 50 ? { i: '⚪️', c: 'var(--text2)',  t: 'ふつう', m: 'いつも通りです。特に気にすることはありません。' }
+          : n >= 40 ? { i: '🟡', c: 'var(--warn)',   t: '要注意', m: '少し落ちています。無理をしなければ2〜3日で戻ります。' }
+                    : { i: '🔴', c: 'var(--red)',    t: '休養',   m: '回復を優先してください。重い判断は明日に回すのが安全です。' };
+
+  // ── 褒めるところ（具体的な事実だけ。無理に褒めない）──
+  const good = [], warn = [];
+  const tail = (col, k) => (base[col] ? base[col].all.slice(-k) : []);
+  const best = (col, k, hi) => {
+    const v = tail(col, k); if (v.length < Math.min(k, 7)) return false;
+    const x = v[v.length - 1];
+    return hi ? x >= Math.max(...v) : x <= Math.min(...v);
+  };
+  // 運動の連続日数
+  const dayDiff = (a, b) => Math.round((new Date(a) - new Date(b)) / 86400000);
+  let streak = 0;
+  for (let i = done.length - 1; i >= 0; i--) {
+    if (i < done.length - 1 && dayDiff(done[i + 1].date, done[i].date) !== 1) break;  // 日が飛んだら打ち切り
+    if (+done[i].exercise_min >= 30) streak++; else break;
+  }
+  if (streak >= 3) good.push(['🔥', `運動${streak}日連続`]);
+  if (best('hrv_ms', 14, true))     good.push(['📈', 'HRVが2週間で最高']);
+  if (best('resting_hr', 30, false))good.push(['❤️', '心拍が1か月で最も低い']);
+  if (best('steps', 30, true))      good.push(['🚶', '今月いちばん歩いた']);
+  if (best('walking_speed_kmh', 14, true)) good.push(['🚀', '歩くのが2週間で一番速い']);
+  const st7 = tail('steps', 7);
+  if (st7.length === 7 && st7.every(v => v >= 8000)) good.push(['🎯', '7日連続で8,000歩超え']);
+  // 7日ぶんのスコアを出して自己ベスト判定にも使う
+  const hist = done.slice(-14).map(r => ({ d: r.date, s: (hScore(r, base) || {}).total })).filter(x => x.s != null);
+  if (hist.length >= 7 && hist[hist.length - 1].s >= Math.max(...hist.map(x => x.s))) good.push(['⭐️', '2週間で最高のコンディション']);
+
+  // 何も褒めるところが無い日でも、ふだんより良い指標が1つは拾う（毎日ここを見る動機になる）
+  if (!good.length) {
+    let bestOne = null;
+    for (const [col, name, , , dir] of H_METRICS) {
+      if (!dir || !base[col] || !cur[col]) continue;
+      const z = (+cur[col] - base[col].med) / base[col].sd * dir;
+      if (z > 0.35 && (!bestOne || z > bestOne.z)) bestOne = { z, name, dir };
+    }
+    if (bestOne) good.push(['👍', `${bestOne.name}はふだんより${bestOne.dir > 0 ? '良い' : '低い'}`]);
+  }
+
+  // ── 注意するところ ──
+  const dv = (col) => base[col] && cur[col] ? +cur[col] - base[col].med : null;
+  const hd = base.hrv_ms && cur.hrv_ms ? (+cur.hrv_ms - base.hrv_ms.med) / base.hrv_ms.med * 100 : null;
+  if (hd != null && hd <= -12) warn.push(['bad',  `HRVが基準より${Math.abs(Math.round(hd))}%低い`]);
+  const rd = dv('resting_hr');
+  if (rd != null && rd >= 4) warn.push(['bad', `安静時心拍が${Math.round(rd)}bpm高い`]);
+  let zero = 0;
+  for (let i = done.length - 1; i >= 0; i--) {
+    if (i < done.length - 1 && dayDiff(done[i + 1].date, done[i].date) !== 1) break;
+    if (!(+done[i].exercise_min >= 15)) zero++; else break;
+  }
+  if (zero >= 3) warn.push(['warn', `${zero}日ほとんど動けていない`]);
+  const az = tail('asymmetry_pct', 3);
+  if (az.length === 3 && az.every(v => v > 3)) warn.push(['warn', '左右差が3日続いている']);
+  const dd = dv('double_support_pct');
+  if (dd != null && dd >= 1.5) warn.push(['warn', '両脚支持が伸びている（かばい歩き）']);
+  if (window.__hormoneZone && n < 50) warn.push(['warn', 'ホルモン期と重なる時期です']);
+
+  // ── リング ──
+  const C = 2 * Math.PI * 42;
+  const ring = `<div class="ring">
+    <svg viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="コンディション ${n}点">
+      <circle cx="50" cy="50" r="42" fill="none" stroke="var(--bg3)" stroke-width="9"/>
+      <circle cx="50" cy="50" r="42" fill="none" stroke="${LV.c}" stroke-width="9" stroke-linecap="round"
+              stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C * (1 - n / 100)).toFixed(1)}"
+              transform="rotate(-90 50 50)"/>
+    </svg>
+    <div class="num"><b style="color:${LV.c}">${n}</b><span>コンディション</span></div>
+  </div>`;
+
+  const dl = `${+cur.date.slice(5, 7)}/${+cur.date.slice(8, 10)}`;
+  $('health-hero').innerHTML = `<div class="hero">
+    <div class="hero-top">${ring}
+      <div class="hero-txt">
+        <div class="st">${LV.i} ${LV.t}<span style="font-size:11px;color:var(--text2);font-weight:400;margin-left:7px">${dl}の記録</span></div>
+        <div class="msg">${LV.m}</div>
+      </div>
+    </div>
+    ${(good.length || warn.length) ? `<div class="badges">
+      ${warn.map(([k, t]) => `<span class="badge ${k}">${k === 'bad' ? '🔴' : '⚠️'} ${t}</span>`).join('')}
+      ${good.map(([i, t]) => `<span class="badge good">${i} ${t}</span>`).join('')}
+    </div>` : ''}
+    ${hist.length >= 3 ? `<div class="spark7">
+      ${hist.slice(-14).map(x => {
+        const c = x.s >= 74 ? 'var(--ok)' : x.s >= 62 ? 'var(--accent)' : x.s >= 50 ? 'var(--text2)' : x.s >= 40 ? 'var(--warn)' : 'var(--red)';
+        return `<i title="${x.d} ${x.s}点" style="height:${Math.max(8, x.s)}%;background:${c};opacity:${x.d === cur.date ? 1 : .42}"></i>`;
+      }).join('')}
+    </div><div class="sparkcap">直近${hist.length}日のコンディション（右が最新）</div>` : ''}
+  </div>`;
+}
+
+function renderHealthRows(rows, todayS) {
+  const done = rows.filter(r => r.date !== todayS);
+  const cur = done[done.length - 1];
+  if (!cur) return;
+  const base = hStats(rows, todayS);
+  const out = [];
+  for (const [key, title, , note] of H_GROUPS) {
+    const list = H_METRICS.filter(([col, , , , , g]) => g === key && base[col] && cur[col]);
+    if (!list.length) continue;
+    const rowsHtml = list.map(([col, name, unit, nd, dir]) => {
+      const v = +cur[col], b = base[col].med;
+      const diff = v - b, pct = b ? diff / b * 100 : 0;
+      // 🔴 判定は「ふだんの差」の何個ぶん離れたか（z）で行う。符号だけだと
+      //    誤差レベルのブレまで色がついてしまい、毎日ちらついて読めなくなる。
+      const z = base[col].sd ? diff / base[col].sd * dir : 0;
+      const cls = !dir ? '' : z >= -0.4 ? ' ok' : z >= -1.2 ? ' wn' : ' bd';
+      const c = !dir ? 'var(--text2)' : z >= -0.4 ? 'var(--accent)' : z >= -1.2 ? 'var(--warn)' : 'var(--red)';
+      const w = Math.min(46, Math.abs(base[col].sd ? diff / base[col].sd : 0) * 20);
+      const left = diff >= 0 ? 50 : 50 - w;
+      return `<div class="mrow${cls}">
+        <div class="mname">${name}</div>
+        <div class="mval">${v.toFixed(nd) * 1 === v ? v.toLocaleString(undefined, { minimumFractionDigits: nd, maximumFractionDigits: nd }) : v.toFixed(nd)}<u>${unit}</u></div>
+        <div class="mbar"><i style="left:${left}%;width:${Math.max(2, w)}%;background:${c}"></i></div>
+        <div class="mdiff" style="color:${c}">${!dir ? '' : (pct >= 0 ? '+' : '') + pct.toFixed(0) + '%'}</div>
+      </div>`;
+    }).join('');
+    out.push(`<div class="mgroup"><h4>${title}<span style="font-weight:500;letter-spacing:0;text-transform:none"> ・ふだんとの差</span></h4>
+      <div class="mrows">${rowsHtml}</div>
+      <div class="mnote">${note}</div></div>`);
+  }
+  $('health-groups').innerHTML = out.join('');
+}
+
+async function loadHealth() {
+  await loadCycle();
+  try {
+    const csv = await repoFile('meyjiro/personal', 'health/data/daily.csv');
+    if (!csv) return;
+    const rows = parseCsv(csv).filter(r => r.date);
+    const md = s => `${+s.slice(5, 7)}/${+s.slice(8, 10)}`;
+    const todayS = new Date().toLocaleDateString('sv-SE');
+    renderHealthHero(rows, todayS);
+    renderHealthRows(rows, todayS);
+
+    const steps = rows.slice(-14).filter(r => r.steps).map(r => ({ label: md(r.date), v: +r.steps }));
+    if (steps.length > 1) { sparkBars($('health-steps'), steps, '歩'); $('health-steps').setAttribute('title', `歩数の推移（直近${steps.length}日）`); }
+    const rhr = rows.slice(-30).filter(r => r.resting_hr).map(r => ({ label: md(r.date), v: +r.resting_hr }));
+    if (rhr.length > 1) { sparkLine($('health-rhr'), rhr, 'bpm'); $('health-rhr').setAttribute('title', `安静時心拍の推移（直近${rhr.length}日）`); }
+
+    const wcsv = await repoFile('meyjiro/personal', 'health/data/workouts.csv');
+    if (wcsv) {
+      const ws = parseCsv(wcsv).slice(-3).reverse();
+      $('health-workouts').innerHTML = ws.map(w =>
+        `<div class="card"><div class="t" style="font-size:14px">${esc(w.name)} ${w.duration_min}分${+w.distance_km ? `・${w.distance_km}km` : ''}</div><div class="s">${esc(w.start)}　平均${w.avg_hr || '—'}bpm・${w.kcal}kcal</div></div>`).join('');
+    }
+  } catch (e) {}
+}
+
+// ── 投資タブ（ウォッチ表を portfolio.md から）──
+async function loadWatch() {
+  const el = $('invest-watch');
+  try {
+    const md = await getFile('projects/B7_投資/portfolio.md');
+    if (!md) { el.innerHTML = '<p class="empty">portfolio.md が見つかりません</p>'; return; }
+    const sec = md.split(/## ウォッチ/)[1] || '';
+    const rows = sec.split('\n').filter(l => /^\|/.test(l)).slice(2)
+      .map(l => l.split('|').map(c => c.trim())).filter(c => c.length > 2 && c[1]);
+    el.innerHTML = rows.length
+      ? rows.map(c => `<div class="card"><div class="t" style="font-size:14px">${esc(c[1])}</div>${c[3]?`<div class="s">${esc(c[3])}</div>`:''}${c[4]?`<div class="s" style="font-size:11px">裁判: ${esc(c[4])}</div>`:''}</div>`).join('')
+      : '<p class="empty">ウォッチ銘柄はまだありません</p>';
+  } catch (e) { el.innerHTML = '<p class="empty">読み込みに失敗</p>'; }
+}
+
+// ── 投資タブ: IBKR 資産・保有（personal/money・毎朝9:05に自動更新）──
+const JP_RE = /\.(T|JP)$/i;                       // 日本株の判定（513A.T など）
+let ibkrData = null;
+function money(v, cur) {
+  const s = Math.abs(v) >= 1000 ? Math.round(v).toLocaleString('ja-JP')
+          : (Math.round(v * 100) / 100).toLocaleString('ja-JP');
+  return (cur === 'JPY' ? '¥' : '$') + s;
+}
+function signed(v, cur) { return (v >= 0 ? '+' : '−') + money(Math.abs(v), cur); }
+
+// ── 💱 円転タイミング（Wiseで円→ドルにした時の実効レートを基準線に、今戻すと得か損か）──
+// 円転の判断基準は 2026年7〜8月に円→ドルにした分だけ（2026-08-27 メグ指定）。
+// それ以前の分（2025年春・2026-05）は米国株の買い付けに充てる想定なので基準から外す。
+// 🔴 Wiseの両替は「送金型」(/v1/transfers)と「残高間両替」(INTERBALANCE・activities API)の
+//    2系統あり、後者は送金履歴に出ない。以下はactivities APIまで見た完全版（2026-08-27棚卸し）。
+const FX_LOTS = [
+  // jpy = 実際に払った円（Wise手数料込みの実額）。rate = Wise画面の表示レート（ミッド・参考）。
+  // 2026-08-27 メグのWise画面と照合済み。損得はミッドではなく実額で判定する。
+  { date: '2026-07-30', jpy: 715100,  usd: 4479.59, rate: 159.635 },
+  { date: '2026-07-30', jpy: 1000000, usd: 6219.71, rate: 159.725 },
+  { date: '2026-08-01', jpy: 250000,  usd: 1576.04, rate: 157.585 },
+  { date: '2026-08-03', jpy: 500000,  usd: 3175.26, rate: 156.435 },
+];
+const FX_BASE = (() => {
+  const usd = FX_LOTS.reduce((a, l) => a + l.usd, 0);
+  const jpy = FX_LOTS.reduce((a, l) => a + l.jpy, 0);   // 実際に払った円（手数料込み）
+  return { jpy, usd, rate: jpy / usd };
+})();
+let FX_ARGS = [null, 0];
+async function loadFx(ibkrRate, jpyDebt) {
+  const el = $('fx-card');
+  if (!el) return;
+  FX_ARGS = [ibkrRate, jpyDebt];
+  // 🔴 レートの取り方（2026-08-29 メグ指摘「更新されない」への対応）
+  //    無料の為替APIはCORSが通るものが軒並み「1日1回更新」で、朝に見ると前日の値のままだった
+  //    （実測で0.7円ずれていた）。Coinbaseだけはブラウザから直接叩けてリアルタイムなので主にする。
+  //    Wiseのミッドレート（実際に円転する相手）はMacが1時間ごとに fx.json へ置いている。
+  let live = null, liveAt = null, liveSrc = '', wiseRate = null;
+  try {                                            // ① Coinbase（リアルタイム・CORS可）
+    const r = await fetch('https://api.coinbase.com/v2/exchange-rates?currency=USD', { cache: 'no-store' });
+    const j = await r.json();
+    const v = j && j.data && j.data.rates && +j.data.rates.JPY;
+    if (v) { live = v; liveAt = new Date().toISOString(); liveSrc = 'Coinbase'; }
+  } catch (e) {}
+  try {                                            // ② Wiseの参考値（Macが1時間ごとに更新）
+    const t = await repoFile('meyjiro/personal', 'money/fx.json');
+    if (t) {
+      const f = JSON.parse(t);
+      if (f.wise) wiseRate = f.wise;
+      if (live === null && f.usdjpy && (Date.now() - new Date(f.updated).getTime()) / 3600000 < 6) {
+        live = f.usdjpy; liveAt = f.updated; liveSrc = 'Wise/Yahoo';
+      }
+    }
+  } catch (e) {}
+  if (live === null) {                             // ③ 最後の砦（1日1回更新）
+    try {
+      const r = await fetch('https://open.er-api.com/v6/latest/USD');
+      const j = await r.json();
+      if (j && j.rates && j.rates.JPY) { live = j.rates.JPY; liveSrc = 'er-api(1日1回)'; }
+    } catch (e) {}
+  }
+  const rate = live || ibkrRate;                     // API不通ならIBKR逆算レートで代用
+  const IBKR_FEE_USD = 2;                            // IBKR内でUSD→JPYに両替する場合の手数料
+  const backJpy = (FX_BASE.usd - IBKR_FEE_USD) * rate;   // 今全部円に戻したら手に入る円（実額）
+  const gain = backJpy - FX_BASE.jpy;                    // 払った円と比べた真水の損益
+  const gainPct = gain / FX_BASE.jpy * 100;
+  const debt = Math.abs(jpyDebt || 0);
+  const needUsdNow = debt / rate;
+  const good = gain >= 0;
+  const verdict = gainPct >= 1 ? '🟢 手数料を全部払っても黒字。戻しどき圏内'
+                : gainPct >= 0 ? '🟡 かろうじて黒字（ほぼトントン）'
+                : gainPct >= -1 ? '🟡 わずかに赤字（ほぼトントン）'
+                : '🔴 今戻すと赤字。待ち';
+  const lots = FX_LOTS.map(l =>
+    `<tr><td>${l.date}</td><td style="text-align:right">¥${l.jpy.toLocaleString()}</td><td style="text-align:right">$${l.usd.toLocaleString()}</td><td style="text-align:right">${l.rate.toFixed(3)}</td></tr>`).join('');
+  el.innerHTML = `
+    <div class="lbl">💱 円転タイミング
+      <span style="color:var(--text2)">今 ¥${rate.toFixed(2)}/$${live ? '' : '（IBKR時点値）'}</span>
+      <span class="fxmeta">${liveAt ? new Date(liveAt).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}) : ''}${liveSrc ? ' ' + liveSrc : ''}${wiseRate ? ` ／ Wise ${wiseRate.toFixed(2)}` : ''}</span>
+      <button class="fxbtn" id="fx-reload" title="レートを取り直す">🔄</button></div>
+    <div style="font-size:13px;line-height:2">
+      <div>${verdict}</div>
+      <div style="font-size:15px;margin:2px 0">今 $${Math.round(FX_BASE.usd).toLocaleString()} を全部戻すと
+        <b>¥${Math.round(backJpy).toLocaleString()}</b> →
+        <b style="font-size:17px;color:${good ? 'var(--ok)' : 'var(--red,#dc2626)'}">${gain >= 0 ? '+' : '−'}¥${Math.abs(Math.round(gain)).toLocaleString()}</b>
+        <span style="color:var(--text2)">(${gainPct >= 0 ? '+' : ''}${gainPct.toFixed(2)}%)</span></div>
+      <div style="color:var(--text2)">払った円 ¥${FX_BASE.jpy.toLocaleString()}（Wise手数料込みの実額）／ 戻しはIBKR内両替（手数料$2）で計算。Wise経由で戻すなら別途約0.6%かかる</div>
+      ${debt ? `<div>円借入 ¥${debt.toLocaleString()} の返済に必要な$: <b>$${needUsdNow.toFixed(0)}</b></div>` : ''}
+      <details style="margin-top:2px"><summary style="cursor:pointer;color:var(--text2);font-size:12px">仕入れの内訳（4回）</summary>
+        <table style="font-size:12px;margin-top:4px;border-collapse:collapse;font-variant-numeric:tabular-nums"><tr style="color:var(--text2)"><th style="text-align:left">日付</th><th style="text-align:right;padding-left:10px">払った円</th><th style="text-align:right;padding-left:10px">得た$</th><th style="text-align:right;padding-left:10px">Wise画面レート</th></tr>${lots}</table>
+      </details>
+      <div style="color:var(--text2);font-size:11.5px;margin-top:2px">レートは🔄を押すと取り直せます（Coinbaseのリアルタイム値）。円借入には金利が月約¥1,330かかり続ける</div>
+    </div>`;
+  const rb = $('fx-reload');
+  if (rb) rb.onclick = async () => {
+    rb.textContent = '⏳'; rb.disabled = true;
+    await loadFx(FX_ARGS[0], FX_ARGS[1]);
+    toast('レートを取り直しました');
+  };
+}
+
+async function loadIbkr() {
+  const navEl = $('invest-nav'), hEl = $('invest-holdings');
+  try {
+    const raw = await getFile('money/ibkr_summary.json', 'meyjiro/personal');
+    if (!raw) { navEl.innerHTML = ''; hEl.innerHTML = '<p class="empty">IBKRデータなし</p>'; return; }
+    const d = JSON.parse(raw); ibkrData = d;
+    const c = d.cash || {};
+    // 為替は外部に取りに行かず、基軸通貨サマリーから逆算する（base = USD + JPY/rate）
+    const rate = (c.BASE_SUMMARY != null && c.USD != null && c.JPY != null && (c.BASE_SUMMARY - c.USD) !== 0)
+      ? c.JPY / (c.BASE_SUMMARY - c.USD) : 150;
+    const toUsd = (v, cur) => cur === 'JPY' ? v / rate : v;
+    const pos = d.positions || [];
+    let jpStock = 0, usStock = 0, pnlUsd = 0;
+    pos.forEach(p => {
+      const u = toUsd(p.value, p.currency);
+      (p.currency === 'JPY' || JP_RE.test(p.symbol)) ? jpStock += u : usStock += u;
+      pnlUsd += toUsd(p.unrealized_pnl || 0, p.currency);
+    });
+    const stock = jpStock + usStock, cashUsd = c.BASE_SUMMARY || 0, navUsd = d.nav_end || (stock + cashUsd);
+    const navJpy = navUsd * rate;
+    // 円建てとドル建ての主従は端末に記憶（どちらでも見たい人向け）
+    const yenFirst = localStorage.getItem('nav-cur') !== 'usd';
+    const [mainTxt, subTxt] = yenFirst
+      ? [money(navJpy, 'JPY'), money(navUsd, 'USD')] : [money(navUsd, 'USD'), money(navJpy, 'JPY')];
+    const pct = t => stock + cashUsd > 0 ? (t / (stock + cashUsd) * 100) : 0;
+    navEl.innerHTML = `<div class="navcard">
+      <div class="lbl">総資産（IBKR）<span style="color:var(--text2)">・${esc(d.updated || '')}時点</span>
+        <button class="swap" id="nav-swap">${yenFirst ? '$で見る' : '¥で見る'}</button></div>
+      <div class="navline"><span class="main">${mainTxt}</span><span class="sub">${subTxt}</span></div>
+      <div style="margin-top:5px"><span class="badge ${pnlUsd >= 0 ? 'b-approve' : 'b-reject'}">含み損益 ${signed(yenFirst ? pnlUsd * rate : pnlUsd, yenFirst ? 'JPY' : 'USD')}</span></div>
+      <div class="mixbar">
+        <i style="width:${pct(jpStock)}%;background:#0bb7ae" title="日本株"></i>
+        <i style="width:${pct(usStock)}%;background:#6366f1" title="米国株"></i>
+        <i style="width:${pct(cashUsd)}%;background:var(--border)" title="現金"></i>
+      </div>
+      <div class="mixleg">
+        <span><i style="background:#0bb7ae"></i>🇯🇵 日本株 ${pct(jpStock).toFixed(0)}%</span>
+        <span><i style="background:#6366f1"></i>🇺🇸 米国株 ${pct(usStock).toFixed(0)}%</span>
+        <span><i style="background:var(--border)"></i>現金 ${pct(cashUsd).toFixed(0)}%</span>
+        <span style="margin-left:auto">¥${rate.toFixed(2)}/$</span>
+      </div>
+      ${c.JPY < 0 ? `<div class="borrow">⚠️ 円建て借入 ${money(c.JPY, 'JPY')}（第29条: 借入は条件が書き換わる日で管理）</div>` : ''}
+    </div>`;
+    navEl.insertAdjacentHTML('beforeend', '<div class="navcard" id="fx-card" style="margin-top:8px"><div class="lbl">💱 円転タイミング 読み込み中…</div></div>');
+    loadFx(rate, c.JPY);
+    $('nav-swap').addEventListener('click', () => {
+      localStorage.setItem('nav-cur', yenFirst ? 'usd' : 'jpy'); loadIbkr();
+    });
+
+    // 判決の有無をひも付ける
+    let judged = {};
+    try {
+      const ix = await getFile('projects/B7_投資/判例/data/_index.json');
+      (JSON.parse(ix || '{}').verdicts || []).forEach(v => { if (v.code) judged[String(v.code).toUpperCase()] = v; });
+    } catch (e) {}
+    $('hold-count').textContent = `${pos.length}件`;
+    hEl.innerHTML = pos.slice().sort((a, b) => toUsd(b.value, b.currency) - toUsd(a.value, a.currency)).map(p => {
+      const isJp = p.currency === 'JPY' || JP_RE.test(p.symbol);
+      const pnl = p.unrealized_pnl || 0, cur = p.currency;
+      const alt = money(toUsd(p.value, cur) * (isJp ? 1 : rate), isJp ? 'USD' : 'JPY'); // 反対通貨での併記
+      const code = String(p.symbol).replace(/\.(T|JP)$/i, '').toUpperCase();
+      const v = judged[code];
+      const badge = v
+        ? `<span class="badge ${(LV[v.level] || ['b-mini'])[0]}">判決${esc(v.id)} ${esc(v.ruling || '')}</span>`
+        : `<span class="badge b-mini">法廷未通過</span>`;
+      return `<div class="hcard">
+        <div class="r1"><span class="flag">${isJp ? '🇯🇵' : '🇺🇸'}</span><span class="sym">${esc(p.symbol)}</span>
+          <span class="nm">${p.qty ? Math.round(p.qty).toLocaleString('ja-JP') + (isJp ? '株' : '') : ''}</span>
+          <span class="pnl ${pnl >= 0 ? 'up' : 'down'}">${signed(pnl, cur)}</span></div>
+        <div class="r2"><span class="val">${money(p.value, cur)}</span>
+          <span style="opacity:.6">≈ ${alt}</span>${badge}</div>
+      </div>`;
+    }).join('') + `<div class="hint" style="margin:2px 4px">評価額の大きい順。<b>「法廷未通過」＝裁判にかけずに買った銘柄</b>です。</div>`;
+  } catch (e) {
+    navEl.innerHTML = ''; hEl.innerHTML = '<p class="empty">読み込みに失敗（personalリポの権限を確認）</p>';
+  }
+}
+
+// ── 投資タブ: 判決一覧（判例/data/_index.json）──
+const LV = { reject:['b-reject','lv-reject'], conditional:['b-conditional','lv-conditional'], approve:['b-approve','lv-approve'] };
+async function loadVerdicts() {
+  const el = $('invest-verdicts');
+  try {
+    const raw = await getFile('projects/B7_投資/判例/data/_index.json');
+    const v = raw ? (JSON.parse(raw).verdicts || []) : [];
+    if (!v.length) { el.innerHTML = '<p class="empty">まだ判決がありません</p>'; return; }
+    const rows = v.slice().sort((a, b) => String(b.id).localeCompare(String(a.id))).slice(0, 5);
+    el.innerHTML = rows.map(x => {
+      const [bcls, lcls] = LV[x.level] || ['b-mini', ''];
+      const meta = [];
+      if (x.cond_total) meta.push(`条件 ${x.cond_done ?? 0}/${x.cond_total}`);
+      if (x.survived) meta.push(`未決の反論 ${x.survived}`);
+      if (x.unverified) meta.push(`裏取り不能 ${x.unverified}`);
+      if (x.gclass) meta.push(x.gclass);
+      if (x.status) meta.push(x.status);
+      return `<a class="vcard ${lcls}" href="./court.html?v=${APP_VERSION}">
+        <div class="vhead">
+          <span class="vno">${esc(x.id)}</span>
+          <span class="vname">${esc(x.name)}${x.code ? `<span class="vno"> ${esc(x.code)}</span>` : ''}</span>
+          <span class="badge ${bcls}">${esc(x.ruling || '—')}</span>
+          <span class="vdate">${esc((x.date || '').slice(5))}</span>
+        </div>
+        ${x.oneliner ? `<div class="vone">${esc(x.oneliner)}</div>` : ''}
+        <div class="vmeta">${meta.map(m => `<span class="badge b-mini">${esc(m)}</span>`).join('')}</div>
+      </a>`;
+    }).join('') + (v.length > rows.length
+      ? `<div class="hint" style="margin:2px 4px">ほか${v.length - rows.length}件 — 「ぜんぶ見る」から検索・絞り込みできます</div>` : '');
+  } catch (e) { el.innerHTML = '<p class="empty">読み込みに失敗</p>'; }
+}
+
+// ── 投資タブ: 開廷待ち（watchlist の「裁判送り」）──
+async function loadDocket() {
+  const el = $('invest-docket');
+  try {
+    const raw = await getFile('inbox/watchlist.json');
+    const list = raw ? (JSON.parse(raw).entries || []) : [];
+    const waiting = list.filter(e => (e.status || '').includes('裁判送り') && !(e.status || '').includes('裁判済み'));
+    if (!waiting.length) {
+      el.innerHTML = '<p class="empty">開廷待ちはありません ⚖️</p>'; return;
+    }
+    el.innerHTML = waiting.map(e => `<div class="card" style="padding:11px 15px">
+        <div class="t" style="font-size:14px">${esc(e.name)}${e.code ? `（${esc(e.code)}）` : ''}</div>
+        <div class="s" style="font-size:12px;margin-top:2px">${esc((e.status || '').replace(/^裁判送り[（(]?/, '').replace(/[）)]$/, ''))}</div>
+      </div>`).join('')
+      + `<div class="hint" style="margin:2px 4px">毎朝7時に検察意見書、<b>10時に1件ずつ判決</b>が出ます（${waiting.length}件なら${waiting.length}日で消化）。</div>`;
+  } catch (e) { el.innerHTML = '<p class="empty">読み込みに失敗</p>'; }
+}
+
+// ── 投資タブ: 注目企業（inbox/watchlist.json・蓄積表示）──
+async function loadScout() {
+  const el = $('invest-scout');
+  try {
+    const raw = await getFile('inbox/watchlist.json');
+    const list = raw ? (JSON.parse(raw).entries || []) : [];
+    if (!list.length) { el.innerHTML = '<p class="empty">明日の朝から毎日1社わき出ます 🔭</p>'; return; }
+    const sent = JSON.parse(localStorage.getItem('scout-sent') || '[]');
+    el.innerHTML = list.slice().reverse().map((e, i) => {
+      const key = `${e.date}_${e.code || e.name}`;
+      const st = e.status || '';
+      const judged = st.includes('裁判済み');
+      const done = judged || st.includes('裁判送り') || sent.includes(key);
+      return `<div class="card"><div class="t" style="font-size:14px">${esc(e.name)}${e.code ? `（${esc(e.code)}）` : ''}<span class="s" style="float:right">${esc(e.date)}</span></div>
+        <div class="s">${esc(e.reason)}</div>
+        ${e.articles && e.articles.length ? `<div class="s" style="font-size:11px;margin-top:4px">Yパパ基準: ${e.articles.map(esc).join('・')}</div>` : ''}
+        <div style="margin-top:8px"><button class="btn ${done ? '' : 'btn-primary'}" data-scout="${esc(key)}" data-name="${esc(e.name)}" data-code="${esc(e.code || '')}" ${done ? 'disabled' : ''}>${judged ? '⚖️ 判決ずみ' : done ? '⚖️ 裁判送り済み' : '⚖️ 裁判にかける'}</button></div></div>`;
+    }).join('');
+    el.querySelectorAll('[data-scout]').forEach(btn => btn.addEventListener('click', async () => {
+      btn.disabled = true; btn.textContent = '送信中…';
+      try {
+        await putFile(`inbox/queue/${ts()}.md`, `at: ${atNow()}\nkind: 裁判依頼\n\n注目企業「${btn.dataset.name}${btn.dataset.code ? '（' + btn.dataset.code + '）' : ''}」を裁判にかけてください（注目企業ウォッチからピックアップ）`, `裁判依頼 ${btn.dataset.name}`);
+        const s = JSON.parse(localStorage.getItem('scout-sent') || '[]');
+        s.push(btn.dataset.scout); localStorage.setItem('scout-sent', JSON.stringify(s));
+        btn.textContent = '⚖️ 裁判送り済み'; btn.classList.remove('btn-primary');
+        toast('裁判にかけた！ 資料ができたら報告します ⚖️');
+      } catch (e) { btn.disabled = false; btn.textContent = '⚖️ 裁判にかける'; toast('送信に失敗: ' + e.message); }
+    }));
+  } catch (e) { el.innerHTML = '<p class="empty">読み込みに失敗</p>'; }
+}
+
+// ── 投資タブ: 裁判の与件ヒアリング ──
+const YOKEN_Q = [
+  ['守りの現金', '投資と完全に分けて現金で持つ生活防衛資金は？（第2条: 守りは意思力でなく構造）', ['生活費6ヶ月分', '1年分', '2年分'], 0],
+  ['投入の仕方', 'マンション売却金（約8千万円）はどう投入する？（第20条・第21条）', ['計画を決めて数ヶ月〜1年かけて段階投入', '裁判で買いが決まるたび都度投入（期限を切らない）', '早めに一括投入', '未定・裁判で決めたい'], 0],
+  ['入金時期', '売却金が手元に入る時期の想定は？', ['2026年内', '2027年前半', '未定（買い手次第）'], 0],
+  ['売り急ぎ防止', '希望価格を下回る買付けしか来なかったら？（第12条: 選択肢の有無が力関係）', ['待てる（売り急がない）', '時期を優先して多少の値下げは受ける', 'ケースバイケース'], 0],
+  ['手取りの把握', '売却の税金・費用を引いた手取り額は把握してる？（第4条: 分解するまで情報ではない）', ['だいたい把握してる', 'まだ計算してない（裁判の前に一緒に計算したい）'], 0],
+  ['全体の退場ライン', '総資産が高値から何%減ったら計画全体を見直す臨時裁判を開く？（第11条: 一発退場の回避が最優先）', ['-20%', '-30%', '-40%', '決めない（銘柄ごとに判断）'], 0],
+  ['1銘柄の上限', '1つの銘柄に張れる上限は総資産の？（第19条: 値段でなくサイズで閉じる）', ['10%まで', '20%まで', '30%まで', '上限を決めず裁判都度'], 0],
+  ['レバレッジ', '信用取引・借入での投資は？（第29条: 借入は条件が書き換わる日で管理）', ['一切使わない（現物のみ）', '為替などの実務上の借入のみ（今の円借入のような）', '機会があれば信用も検討'], 0],
+  ['フェーズ認定', '今の自分は「作るフェーズ」？「守るフェーズ」？（第16条🔴: 適用前にフェーズ認定）', ['作る（集中もあり・稼ぐ力で取り返せる）', '半々（8千万投入後は守り寄りに移行）', '守る（減らさないのが最優先）'], 0],
+  ['集中か分散か', 'ポートフォリオの形は？（第16条: 分散とは壊れ方の違うものを持つこと）', ['5銘柄以内に厚く', '10銘柄前後', 'コア（指数・大型）＋サテライト個別', '裁判都度'], 0],
+  ['主戦場', '主戦場はどこ？（第8条: 堀のない場所に長期の利益は残らない）※複数選択', ['日本個別株（防衛・重工・半導体・エネルギー等Yパパの土俵）', '米国個別株', '日米インデックス', '高配当・インカム', '新興・小型（上振れ枠）'], 1],
+  ['エンジン', '10億へのエンジンは値上がり？配当？（第26条: 最大の変数は時間）', ['値上がり重視', '値上がり＋配当も並行', '将来は配当収入へ移行（5〜10年後）'], 0],
+  ['打席枠', '上振れ狙い（新興・小型）に許す枠は総資産の？（第35条: 青天井の領域は打席数が決める）', ['0%（やらない）', '5%まで', '10%まで', '20%まで'], 0],
+  ['通貨配分', '円:ドルの目標比率は？（第18条: どこに置いてあるか）', ['ドル多め（3:7）', '半々', '円多め（7:3）', '決めない・機会次第'], 0],
+  ['口座の置き場', '口座はIBKR集中でいい？（第18条・第31条: 備えは発動実績で測る）', ['IBKR集中でよい', '日本の証券口座も併用したい', '裁判で精査'], 0],
+  ['金の位置づけ', '金（インゴット2枚＋IBKR分）の扱いは？', ['守り枠として一定割合を維持', '現状維持（買い増さない）', '裁判で精査'], 0],
+  ['暗号通貨', '暗号通貨（Bitkub）の位置づけは？（第10条: スイッチを誰が握るか）', ['入れない', 'ごく少額（総資産1%以下）の実験枠', '裁判で精査（現状の方針）'], 0],
+  ['使える時間', '投資の調査・裁判に使える時間は？（第27条: 判断だけは渡さない）', ['月1回のマネーデー15分＋気になったとき', '週に1時間くらい', 'ほぼ毎日ちょっと見る'], 0],
+  ['Claudeの役割', 'Claudeにどこまでやらせる？（第27条: AIがそう言ったからは免責にならない）', ['資料作成と執行だけ（判断は全部メグ）', '推奨まで出す（最終判断はメグ）', 'ルール化した範囲は自動執行も可'], 0],
+  ['暴落時の自分', '-30%の暴落が来たら自分は何をしそう？（第5条・第34条: 自己認識）', ['売りたくなると思う', '買いたくなると思う', '見ないふりをしそう', 'わからない'], 0],
+  ['暴落時のルール', '暴落が来たときのルールは？（第26条: 複利は続けた者にしか効かない）', ['保有は売らない、と先に決めておく', '暴落時こそ臨時裁判を開く（売買はそこで）', '裁判都度'], 0],
+  ['10億の扱い', '「10億」はどう扱う？（第14条: 答えの出る問いに立て替える）', ['方角として掲げ、5年ごとの中間目標を裁判で決める', '期限付きの目標にしたい（下のメモに年数を）', '金額より配当収入◯◯円/年のほうがしっくりくる（メモに）'], 0],
+];
+function renderYoken() {
+  const saved = JSON.parse(localStorage.getItem('yoken-draft') || '{}');
+  $('yoken-form').innerHTML = YOKEN_Q.map(([label, q, opts, multi], i) =>
+    `<div class="card"><div class="t" style="font-size:13px">Q${i+1}. ${esc(label)}</div><div class="s" style="margin:4px 0 8px">${esc(q)}</div>` +
+    opts.map((o, j) => {
+      const checked = multi ? (saved[i] || []).includes(j) : saved[i] === j;
+      return `<label style="display:block;padding:6px 4px;font-size:13px"><input type="${multi ? 'checkbox' : 'radio'}" name="yq${i}" value="${j}" ${checked ? 'checked' : ''}> ${esc(o)}</label>`;
+    }).join('') + '</div>'
+  ).join('') +
+  `<div class="card"><div class="t" style="font-size:13px">自由メモ（補足・迷った点・ここに書いてないこと）</div><textarea id="yoken-memo" style="width:100%;border:none;outline:none;resize:none;min-height:70px;background:transparent;line-height:1.6">${esc(saved.memo || '')}</textarea></div>` +
+  `<button class="btn btn-primary" id="yoken-send" style="width:100%;margin:4px 0 20px">回答を送信する</button>`;
+  $('yoken-form').querySelectorAll('input').forEach(inp => inp.addEventListener('change', saveYokenDraft));
+  $('yoken-memo').addEventListener('input', saveYokenDraft);
+  $('yoken-send').addEventListener('click', sendYoken);
+}
+function collectYoken() {
+  const d = {};
+  YOKEN_Q.forEach(([,, opts, multi], i) => {
+    const els = [...document.querySelectorAll(`input[name="yq${i}"]:checked`)].map(e => +e.value);
+    if (multi) d[i] = els; else if (els.length) d[i] = els[0];
+  });
+  d.memo = $('yoken-memo') ? $('yoken-memo').value : '';
+  return d;
+}
+function saveYokenDraft() { localStorage.setItem('yoken-draft', JSON.stringify(collectYoken())); }
+async function sendYoken() {
+  const d = collectYoken();
+  const unanswered = YOKEN_Q.map((q, i) => (d[i] === undefined || (Array.isArray(d[i]) && !d[i].length)) ? i + 1 : null).filter(Boolean);
+  if (unanswered.length && !confirm(`未回答: Q${unanswered.join(', Q')}\nこのまま送信する？（未回答は「裁判で精査」扱いになります）`)) return;
+  const btn = $('yoken-send'); btn.disabled = true; btn.textContent = '送信中…';
+  const lines = YOKEN_Q.map(([label, q, opts, multi], i) => {
+    const a = d[i];
+    const ans = a === undefined || (Array.isArray(a) && !a.length) ? '（未回答）'
+      : multi ? a.map(j => opts[j]).join('／') : opts[a];
+    return `Q${i+1} ${label}: ${ans}`;
+  });
+  const body = `at: ${atNow()}\nkind: 裁判与件回答\n\n【裁判の与件ヒアリング回答（全${YOKEN_Q.length}問）】\n前提: 長期5〜10年／マンション売却約8千万円を再投資／目標10億円（志・運も理解）\n\n${lines.join('\n')}\n\n【自由メモ】\n${d.memo || '（なし）'}`;
+  try {
+    await putFile(`inbox/queue/${ts()}_yoken.md`, body, '裁判与件回答');
+    toast('回答を送信した！ B7に反映します ⚖️');
+    $('yoken-card').innerHTML = '<div class="s">✅ 回答済み（送り直したいときはもう一度開いて送信すれば上書きで届きます）</div><button class="btn" id="yoken-open">もう一度開く</button>';
+    $('yoken-open').addEventListener('click', () => { $('yoken-form').style.display = ''; renderYoken(); });
+    $('yoken-form').style.display = 'none';
+  } catch (e) { toast('送信に失敗: ' + e.message); }
+  btn.disabled = false; btn.textContent = '回答を送信する';
+}
+
+// ── 共通描画 ──
+function renderLinks() {
+  $('link-tiles').innerHTML = LINKS.map(l =>
+    `<a class="tile" href="${l.url}" target="_blank" rel="noopener"><span class="em">${l.em}</span><div class="l">${esc(l.label)}</div><div class="s">${esc(l.sub)}</div></a>`).join('');
+}
+function renderCountdown() {
+  const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const items = COUNTDOWNS.map(c => {
+    const s = new Date(c.date + 'T00:00:00'), e = new Date((c.end || c.date) + 'T00:00:00');
+    if (today > e) return null;
+    const diff = Math.round((s - today) / 86400000);
+    return diff > 0 ? `${c.emoji} ${c.label} まであと${diff}日` : `${c.emoji} ${c.label} 開催中`;
+  }).filter(Boolean);
+  $('countdown').innerHTML = items.length ? `<div class="countdown">${items.map(esc).join('　')}</div>` : '';
+}
+let quickLoaded = false;
+async function loadQuick() {
+  if (quickLoaded) return;
+  const el = $('quick-list');
+  try {
+    const raw = await repoFile('meyjiro/personal', 'quick.json');
+    const d = JSON.parse(raw);
+    el.innerHTML = d.sections.map((sec, si) => `
+      <details class="qsec"${si === 0 ? ' open' : ''}>
+        <summary>${esc(sec.title)}<span style="font-size:11px;opacity:.5">${sec.items.length}件</span></summary>
+        <div class="qbody">${sec.items.map((it, ii) => `
+          <div class="qrow">
+            <div class="qtxt">
+              <div class="qlabel">${esc(it.label)}</div>
+              <div class="qval">${esc(it.value)}</div>
+              ${it.note ? `<div class="qnote">${esc(it.note)}</div>` : ''}
+            </div>
+            <button class="qcopy" data-copy="${si}-${ii}">📋</button>
+          </div>`).join('')}</div>
+      </details>`).join('');
+    el.querySelectorAll('.qcopy').forEach(btn => btn.addEventListener('click', async () => {
+      const [si, ii] = btn.dataset.copy.split('-').map(Number);
+      const val = d.sections[si].items[ii].value;
+      try { await navigator.clipboard.writeText(val); }
+      catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = val; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); ta.remove();
+      }
+      btn.textContent = '✓'; btn.classList.add('done');
+      setTimeout(() => { btn.textContent = '📋'; btn.classList.remove('done'); }, 1200);
+    }));
+    quickLoaded = true;
+  } catch (e) { el.innerHTML = `<p class="empty">読み込み失敗: ${esc(String(e.message || e))}</p>`; }
+}
+// 「投げ込みで答える」— 何についての返事かを本文に入れておく（2026-08-30 メグ指示）
+function pendKey(p){ return (p.summary||'') + '|' + (p.at||''); }
+function pendingDone(i){
+  const p = (window.__pending||[])[i]; if(!p) return;
+  const d = JSON.parse(localStorage.getItem('pendingDone')||'{}');
+  d[pendKey(p)] = new Date().toISOString();
+  localStorage.setItem('pendingDone', JSON.stringify(d));
+  renderBriefing(); toast('完了にしました');
+}
+function answerPending(i){
+  const p = (window.__pending || [])[i];
+  if(!p) return;
+  switchTab('inbox');
+  setTimeout(()=>{
+    const t = document.getElementById('inbox-text');
+    if(!t) return;
+    const head = `【${p.summary}】について\n`;
+    if(!t.value.startsWith(head)) t.value = head + t.value;
+    t.focus();
+    t.setSelectionRange(t.value.length, t.value.length);
+  }, 80);
+}
+function switchTab(tab) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  $('tab-' + tab).classList.add('active');
+  $('page-title').innerHTML = { today:`今日<span class="sub" id="today-date"></span>`, cal:'予定', inbox:'投げ込み', invest:'投資', health:'健康', quick:'コピペ帳' }[tab];
+  if (tab === 'today') setToday();
+  if (tab === 'quick') loadQuick();
+  if (tab === 'cal' && !$('cal-date').value) $('cal-date').value = new Date().toLocaleDateString('sv-SE');
+}
+function setToday() {
+  const el = $('today-date'); if (!el) return;
+  el.textContent = new Date().toLocaleDateString('ja-JP', { month:'numeric', day:'numeric', weekday:'short' });
+}
+
+// ── バージョン自動リロード ──
+async function checkVersion() {
+  try {
+    // 🔴 no-store だけでは足りない。iOSのホーム画面アプリはURLごと覚えているので、
+    //    毎回ちがうURLで取りに行かせる（2026-08-30 スマホで更新されない件）。
+    const res = await fetch(location.pathname + '?_=' + Date.now(),
+                            { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
+    if (!res.ok) return;
+    const html = await res.text();
+    const m = html.match(/const APP_VERSION = '([^']+)'/);
+    if (!m) return;
+    localStorage.setItem('latest_seen', m[1]);
+    renderVerBar();
+    if (m[1] === APP_VERSION) return;
+    // 🔴 同じ版で何度もリロードし続ける事故を防ぐ。ただし版が変われば必ず1回は動く
+    if (localStorage.getItem('reloaded_for') === m[1]) {
+      // すでにリロードしたはずなのにまだ古い＝キャッシュから読まれている。手で直せるよう伝える
+      showStaleBar(m[1]);
+      return;
+    }
+    localStorage.setItem('reloaded_for', m[1]);
+    toast('新しいバージョンに更新します…');
+    setTimeout(() => location.replace(location.pathname + '?v=' + m[1] + '.' + Date.now()), 800);
+  } catch (e) {}
+}
+
+// リロードしても古いままのときだけ出る帯。押せばキャッシュごと捨てて取り直す
+function showStaleBar(newer){
+  if (document.getElementById('stale-bar')) return;
+  const b = document.createElement('div');
+  b.id = 'stale-bar';
+  b.innerHTML = `新しい版 (${newer}) が出ていますが、古いものが表示されています
+    <button onclick="forceUpdate()">最新にする</button>`;
+  document.body.appendChild(b);
+}
+
+// ── 手で最新にする ──
+// 🔴 自動更新は版番号の比較で動くが、スマホでは効かないことがある（2026-08-30 メグ報告）。
+//    確実な逃げ道として、キャッシュを全部捨てて取り直すボタンを設定に置く。
+async function forceUpdate(){
+  try{
+    if (window.caches) { for (const k of await caches.keys()) await caches.delete(k); }
+    if (navigator.serviceWorker) {
+      for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
+    }
+  }catch(e){}
+  localStorage.removeItem('reloaded_for');
+  location.replace(location.pathname + '?v=' + Date.now());
+}
+
+// ── Load all ──
+let isLoading = false;
+async function loadAll() {
+  if (isLoading || !pat) return;
+  isLoading = true; $('refresh-btn').classList.add('spinning');
+  await Promise.all([loadOps(), loadMebiusDrafts(), loadNums(), loadNewStuff(), loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadIbkr(), loadVerdicts(), loadDocket(), loadScout(), loadMebius(), loadHealth()]);
+  await loadSchedule(); // メビウス予定をカレンダーに重ねるため後で描画
+  isLoading = false; $('refresh-btn').classList.remove('spinning');
+}
+
+// ── Init ──
+function setupEvents() {
+  document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+  $('refresh-btn').addEventListener('click', loadAll);
+  $('inbox-send').addEventListener('click', sendInbox);
+  if ($('yoken-open')) $('yoken-open').addEventListener('click', () => { $('yoken-form').style.display = ''; renderYoken(); $('yoken-form').scrollIntoView({behavior:'smooth'}); });
+  $('photo-btn').addEventListener('click', () => $('photo-input').click());
+  $('photo-input').addEventListener('change', e => pickPhoto(e.target.files[0]));
+  $('rec-btn').addEventListener('click', toggleRec);
+  $('audio-input').addEventListener('change', e => pickAudio(e.target.files[0]));
+  $('cal-prev').addEventListener('click', () => { calM--; if (calM < 0) { calM = 11; calY--; } renderCal(); });
+  $('cal-next').addEventListener('click', () => { calM++; if (calM > 11) { calM = 0; calY++; } renderCal(); });
+  $('cal-save').addEventListener('click', addCalEvent);
+  document.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
+    switchTab('inbox');
+    const ta = $('inbox-text');
+    ta.value = ch.dataset.tpl; ta.focus();
+    try { ta.setSelectionRange(ta.value.length, ta.value.length); } catch (e) {}
+  }));
+  $('pat-save').addEventListener('click', () => {
+    pat = $('pat-input').value.trim();
+    if (!pat) return;
+    localStorage.setItem('gh_pat', pat);
+    $('auth-modal').classList.add('hidden');
+    loadAll();
+  });
+  if ($('ver-now')) $('ver-now').textContent = APP_VERSION;
+  if ($('force-update')) $('force-update').addEventListener('click', forceUpdate);
+  $('settings-btn').addEventListener('click', () => {
+    $('mebius-token-input').value = mebiusToken;
+    $('settings-modal').classList.remove('hidden');
+  });
+  if ($('mbs-read-input')) $('mbs-read-input').value = mbsReadKey;
+  if ($('mbs-read-save')) $('mbs-read-save').addEventListener('click', () => {
+    mbsReadKey = $('mbs-read-input').value.trim();
+    localStorage.setItem('mbs_read_key', mbsReadKey);
+    toast('保存しました'); loadMebiusDrafts();
+  });
+  $('mebius-token-save').addEventListener('click', () => {
+    mebiusToken = $('mebius-token-input').value.trim();
+    localStorage.setItem('mebius_token', mebiusToken);
+    $('settings-modal').classList.add('hidden');
+    loadMebius();
+  });
+  $('reauth-link').addEventListener('click', e => {
+    e.preventDefault();
+    $('settings-modal').classList.add('hidden');
+    $('auth-modal').classList.remove('hidden');
+  });
+  $('settings-close').addEventListener('click', () => $('settings-modal').classList.add('hidden'));
+  $('settings-modal').addEventListener('click', e => { if (e.target.id === 'settings-modal') e.currentTarget.classList.add('hidden'); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkVersion(); loadAll(); } });
+}
+
+setToday();
+renderCal();
+renderLinks();
+renderCountdown();
+setupEvents();
+checkVersion();
+renderVerBar();
+// 圏外でも前回の画面が出るように、読めた中身を控えておく（index.html が使う）
+try{ fetch('./app.html?v='+Date.now(),{cache:'no-store'}).then(r=>r.text())
+       .then(t=>{ try{ localStorage.setItem('app_html_backup', t); }catch(e){} }); }catch(e){}
+document.querySelectorAll('a[href^="./court.html"]').forEach(a => a.href = './court.html?v=' + APP_VERSION);
+if (!pat) $('auth-modal').classList.remove('hidden'); else loadAll();
+</script>
+</body>
+</html>
