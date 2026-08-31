@@ -179,6 +179,12 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today{--tt:var(--accent);--tt2:var(--ok);--tt-soft:var(--accent-light);--tt-line:var(--border)}
 /* 名言＝朝いちばんに目に入るもの。畳まない */
 /* 名言: 小さく、でも枠に入れて美しく（2026-08-30 メグ指示）。明朝で頭に入りやすく */
+.verbar{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  font-size:11px;color:var(--text3);padding:5px 2px 9px;font-variant-numeric:tabular-nums}
+.verbar button{background:transparent;border:1px solid var(--border);border-radius:7px;
+  padding:4px 10px;font-size:11px;color:var(--text3);font-family:inherit;cursor:pointer}
+.verbar.stale{color:var(--accent);font-weight:600}
+.verbar.stale button{border-color:var(--accent);color:#fff;background:var(--accent);font-weight:700}
 #tab-today .tset{border:1px solid var(--tt-line);border-radius:11px;background:var(--card);
   padding:12px 14px;margin:0 0 16px}
 #tab-today .tset.done{background:var(--tt-soft);border-color:var(--tt-line);text-align:center;padding:18px 14px}
@@ -558,6 +564,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
     <!-- 今日 -->
     <div id="tab-today" class="tab-panel active">
       <div id="brief-stale"></div>
+      <div id="ver-bar"></div>
       <div id="brief-quote"></div>
       <div id="today-set"></div>
       <div id="today-nums"></div>
@@ -735,7 +742,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-31.5';
+const APP_VERSION = '2026-08-31.6';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1131,6 +1138,17 @@ function setState(){
   return st;
 }
 function saveSet(st){ localStorage.setItem(SETKEY, JSON.stringify(st)); }
+
+// 画面の上に、今どの版を見ているかと再取得を常設する。
+// 古い版に取り残されたときでも、ここから必ず抜け出せるようにするため。
+function renderVerBar(){
+  const el = $('ver-bar'); if(!el) return;
+  const latest = localStorage.getItem('latest_seen') || '';
+  const stale = latest && latest !== APP_VERSION;
+  el.innerHTML = `<div class="verbar${stale?' stale':''}">
+    <span>版 ${esc(APP_VERSION)}${stale?` → 新しい版 ${esc(latest)} が出ています`:''}</span>
+    <button onclick="forceUpdate()">最新にする</button></div>`;
+}
 
 function renderTodaySet(){
   const el = $('today-set'); if(!el) return;
@@ -2566,7 +2584,10 @@ async function checkVersion() {
     if (!res.ok) return;
     const html = await res.text();
     const m = html.match(/const APP_VERSION = '([^']+)'/);
-    if (!m || m[1] === APP_VERSION) return;
+    if (!m) return;
+    localStorage.setItem('latest_seen', m[1]);
+    renderVerBar();
+    if (m[1] === APP_VERSION) return;
     // 🔴 同じ版で何度もリロードし続ける事故を防ぐ。ただし版が変われば必ず1回は動く
     if (localStorage.getItem('reloaded_for') === m[1]) {
       // すでにリロードしたはずなのにまだ古い＝キャッシュから読まれている。手で直せるよう伝える
@@ -2673,6 +2694,7 @@ renderLinks();
 renderCountdown();
 setupEvents();
 checkVersion();
+renderVerBar();
 document.querySelectorAll('a[href^="./court.html"]').forEach(a => a.href = './court.html?v=' + APP_VERSION);
 if (!pat) $('auth-modal').classList.remove('hidden'); else loadAll();
 </script>
