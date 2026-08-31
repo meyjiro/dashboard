@@ -742,7 +742,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-31.7';
+const APP_VERSION = '2026-08-31.8';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1333,13 +1333,18 @@ async function loadNewStuff(){
         ${pushed ? `<div class="gdone">✓ ${esc(pushed)}　次の巡回で反映されます</div>` : `
         <div class="gwhy">${sg.from_precedent?'📖 ':''}${esc(sg.why||'')}</div>
         <div class="gact">
+          <a class="gbtn gopen" href="${esc(r.url||'#')}" target="_blank" rel="noopener">サイトで見る →</a>
           ${sg.do==='judge'
-            ? `<a class="gbtn gopen" href="${esc(r.url||'#')}" target="_blank" rel="noopener">中身を見る →</a>
+            // 🔴 「中身を見て決める」でも、決めたあとに押すものが要る（2026-08-31 メグ指摘）。
+            //    推し（gmain）は付けず、どれも同じ重さで並べる
+            ? `<button class="gbtn gsub" onclick="glzDo(${i},'trash')">${esc(delLabel(r))}</button>
+               ${r.did?`<button class="gbtn gsub" onclick="glzDo(${i},'trash_ban')">＋7日ブロック</button>`:''}
+               ${(r.did && sg.peer)?`<button class="gbtn gsub" onclick="glzDo(${i},'trash_ban','both')">＋${esc(sg.peer)}にも</button>`:''}
                <button class="gbtn gsub" onclick="glzDo(${i},'close')">対応不要にする</button>`
             : `<button class="gbtn gmain" onclick="glzDo(${i},'${sg.do}')">${esc(sg.label)}</button>
                ${(sg.do==='trash_ban' && sg.peer)?`<button class="gbtn gsub" onclick="glzDo(${i},'trash_ban','both')">${esc(sg.peer)}にも広げる</button>`:''}
-               <a class="gbtn gsub" href="${esc(r.url||'#')}" target="_blank" rel="noopener">先に中身を見る</a>
-               ${sg.do!=='close'?`<button class="gbtn gsub" onclick="glzDo(${i},'close')">対応不要</button>`:''}`}
+               ${sg.do==='close'?'':`<button class="gbtn gsub" onclick="glzDo(${i},'close')">対応不要</button>`}
+               ${(sg.do==='trash' && r.did)?`<button class="gbtn gsub" onclick="glzDo(${i},'trash_ban')">＋7日ブロック</button>`:''}`}
         </div>`}
       </div>`}).join('')}</div>`
        : `<div class="nsl2">${esc(g.note||'新しい通報はありません')}</div>`}
@@ -1394,6 +1399,8 @@ async function loadNewStuff(){
 // 🔴 サイトの操作キーは絶対にここに書かない。このページは公開されている。
 //    ボタンは claude-context（private）に1行足すだけ。実行はMacがやる。
 function glzKey(r){ return `${r.site}#${r.id}`; }
+// 雑談のレスは消さず本文を「-」にする。ボタンの文字もそれに合わせる
+function delLabel(r){ return r.post_type==='reply' ? '本文を「-」にする' : 'ゴミ箱に入れる'; }
 window.__glzPushed = JSON.parse(localStorage.getItem('glzPushed')||'{}');
 
 async function glzDo(i, op, scope){
