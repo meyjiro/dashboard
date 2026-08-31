@@ -724,7 +724,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-31.2';
+const APP_VERSION = '2026-08-31.3';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1355,14 +1355,20 @@ window.__glzPushed = JSON.parse(localStorage.getItem('glzPushed')||'{}');
 async function glzDo(i, op){
   const r = (window.__glzReports||[])[i];
   if(!r) return;
+  // 🔴 雑談のレスは消さない。消すとレス番号とページ番号が全部ずれるので、
+  //    運営は昔から本文と名前を「-」に置き換えてきた（2026-08-31 メグ指摘で修正）。
+  const isReply = r.post_type === 'reply';
   const label = op==='close' ? '対応不要にした'
-              : op==='trash' ? 'ゴミ箱に入れた'
-              : op==='trash_ban' ? 'ゴミ箱に入れて7日ブロックした' : op;
-  const what = op==='trash_ban'
-    ? `この投稿をゴミ箱に入れて、書いた端末を7日間ブロックします。`
+              : isReply ? '本文を「-」にした'
+              : op==='trash' ? 'ゴミ箱に入れた' : 'ゴミ箱に入れて7日ブロックした';
+  const what = isReply
+    ? `このレスの本文と名前を「-」にします。\n（消すとレス番号がずれるので、投稿自体は残します）`
     : `この投稿をゴミ箱に入れます。`;
-  if(op!=='close' && !confirm(
-      `${what}\n\n${r.target||''}\n\n・サイトからは見えなくなります\n・完全には消えないので、管理画面からいつでも戻せます`)) return;
+  const after = isReply
+    ? `・レス番号とページ番号はずれません\n・元の本文は管理者だけが後から確認できます`
+    : `・サイトからは見えなくなります\n・完全には消えないので、管理画面からいつでも戻せます`;
+  const extra = op==='trash_ban' ? `\n・書いた端末を7日間ブロックします` : '';
+  if(op!=='close' && !confirm(`${what}\n\n${r.target||''}\n\n${after}${extra}`)) return;
   const row = {at:new Date().toISOString(), site:r.site, do:op, report_id:r.id,
                post_id:r.post_id, did:r.did||null, days:7,
                reason:(r.reason_ja||r.reason||''), memo:(r.detail||'').slice(0,60)};
