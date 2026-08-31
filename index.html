@@ -239,6 +239,14 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .mbsrow2 a b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #tab-today .gbtn.gmini{padding:4px 9px;font-size:11px;flex:none}
 /* ── 通報カード: 読ませるのではなく押させる（2026-08-30 メグ指示） ── */
+#tab-today .vprev{margin:0 0 9px}
+#tab-today .vprev>summary{padding:11px 14px;font-size:12.5px;color:var(--text2);cursor:pointer;
+  list-style:none;border:1px solid var(--border);border-radius:11px;background:var(--card)}
+#tab-today .vprev>summary::-webkit-details-marker{display:none}
+#tab-today .vprev>summary::after{content:" ▾"}
+#tab-today .vprev[open]>summary{margin-bottom:8px}
+#tab-today .vprev[open]>summary::after{content:" ▴"}
+#tab-today .vprev .nsbox{opacity:.86}
 #tab-today .wtitle{display:block;font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;
   font-size:15px;line-height:1.7;color:var(--text);text-decoration:none;margin:0 0 8px;
   text-underline-offset:3px}
@@ -716,7 +724,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-31.1';
+const APP_VERSION = '2026-08-31.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1232,15 +1240,24 @@ async function loadNewStuff(){
   }
 
   // 動画（保有と無関係に全部・URL付き）
-  (m.videos||[]).forEach(v=>{
-    parts.push(`<div class="nsbox">
+  // 🔴 見逃すので2日ぶん出す（2026-08-31 メグ指示）。昨日の分は畳んで、今日の分の下に置く。
+  const vidCard = v => `<div class="nsbox">
       <div class="nsh">${v.who==='太郎'?'🔧':'📺'} ${esc(v.who||'')}<span class="nstag">${esc(v.date||'')}</span></div>
       <a class="nstitle" href="${esc(v.url||'#')}" target="_blank" rel="noopener">${esc(v.title||'')} ▶</a>
       <ul class="nsul">${(v.summary||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
       ${(v.names||[]).length?`<div class="nsl"><span>新しく出た銘柄</span>${v.names.map(esc).join('・')}</div>`:''}
       ${v.conflict?`<div class="nsflag">⚠️ ${esc(v.conflict)}</div>`:''}
-    </div>`);
-  });
+    </div>`;
+  (m.videos||[]).forEach(v=>{ parts.push(vidCard(v)); });
+
+  // 昨日の分。今日の下に畳んで置く。開いたままにしたいときは覚えておく
+  const vp = m.videos_prev||[];
+  if(vp.length){
+    const open = localStorage.getItem('vprevOpen')==='1' ? ' open' : '';
+    parts.push(`<details class="vprev"${open} ontoggle="localStorage.setItem('vprevOpen', this.open?'1':'0')">
+      <summary>昨日の動画 ${vp.length}本（見逃していたら）</summary>
+      ${vp.map(vidCard).join('')}</details>`);
+  }
 
   // ガチレズ3サイト
   // 🔴 クラウドからは3サイトに接続できない（プロキシが403）ので、Macが取った
