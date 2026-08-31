@@ -42,6 +42,32 @@
  */
 (function () {
   var box = document.getElementById('boot');
+
+  /* 取ってきたHTMLを、この文書に展開する。
+   * 🔴 document.write は使わない。app.html の中の文字列に script の終了タグが入っており
+   *    （JSのソースを扱う箇所がある）、書き出しの途中でスクリプトが切れてしまう。
+   *    head と body を入れ替えてから、script だけ作り直して実行する。 */
+  function render(html) {
+    var doc = new DOMParser().parseFromString(html, 'text/html');
+    // <head> の中身（style / link / meta / title）を移す
+    var frag = document.createDocumentFragment();
+    Array.prototype.forEach.call(doc.head.children, function (n) {
+      if (n.tagName === 'SCRIPT') return;
+      frag.appendChild(document.importNode(n, true));
+    });
+    document.head.appendChild(frag);
+    // <body> を差し替える
+    document.body.innerHTML = doc.body.innerHTML;
+    // script は innerHTML では走らないので、作り直して順に実行する
+    var scripts = doc.body.querySelectorAll('script');
+    Array.prototype.forEach.call(scripts, function (old) {
+      var el = document.createElement('script');
+      Array.prototype.forEach.call(old.attributes, function (a) { el.setAttribute(a.name, a.value); });
+      el.textContent = old.textContent;
+      document.body.appendChild(el);
+    });
+  }
+
   function fail(msg) {
     box.innerHTML = '読み込めませんでした<br><span style="opacity:.7;font-size:12px">' + msg + '</span>' +
       '<button onclick="location.reload()">もう一度</button>';
@@ -51,17 +77,13 @@
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.text();
     })
-    .then(function (html) {
-      document.open();
-      document.write(html);
-      document.close();
-    })
+    .then(function (html) { render(html); })
     .catch(function (e) {
       // オフラインでも前回のものが見られるように、最後に読めた中身を残しておく
       var last = null;
       try { last = localStorage.getItem('app_html_backup'); } catch (x) {}
       if (last) {
-        document.open(); document.write(last); document.close();
+        render(last);
       } else {
         fail(e.message);
       }
