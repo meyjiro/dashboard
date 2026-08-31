@@ -735,7 +735,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-08-31.4';
+const APP_VERSION = '2026-08-31.5';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1319,6 +1319,7 @@ async function loadNewStuff(){
             ? `<a class="gbtn gopen" href="${esc(r.url||'#')}" target="_blank" rel="noopener">中身を見る →</a>
                <button class="gbtn gsub" onclick="glzDo(${i},'close')">対応不要にする</button>`
             : `<button class="gbtn gmain" onclick="glzDo(${i},'${sg.do}')">${esc(sg.label)}</button>
+               ${(sg.do==='trash_ban' && sg.peer)?`<button class="gbtn gsub" onclick="glzDo(${i},'trash_ban','both')">${esc(sg.peer)}にも広げる</button>`:''}
                <a class="gbtn gsub" href="${esc(r.url||'#')}" target="_blank" rel="noopener">先に中身を見る</a>
                ${sg.do!=='close'?`<button class="gbtn gsub" onclick="glzDo(${i},'close')">対応不要</button>`:''}`}
         </div>`}
@@ -1377,7 +1378,7 @@ async function loadNewStuff(){
 function glzKey(r){ return `${r.site}#${r.id}`; }
 window.__glzPushed = JSON.parse(localStorage.getItem('glzPushed')||'{}');
 
-async function glzDo(i, op){
+async function glzDo(i, op, scope){
   const r = (window.__glzReports||[])[i];
   if(!r) return;
   // 🔴 雑談のレスは消さない。消すとレス番号とページ番号が全部ずれるので、
@@ -1385,18 +1386,23 @@ async function glzDo(i, op){
   const isReply = r.post_type === 'reply';
   const label = op==='close' ? '対応不要にした'
               : isReply ? '本文を「-」にした'
-              : op==='trash' ? 'ゴミ箱に入れた' : 'ゴミ箱に入れて7日ブロックした';
+              : op==='trash' ? 'ゴミ箱に入れた'
+              : `ゴミ箱に入れて7日ブロックした${scope==='both'?'（両サイト）':''}`;
   const what = isReply
     ? `このレスの本文と名前を「-」にします。\n（消すとレス番号がずれるので、投稿自体は残します）`
     : `この投稿をゴミ箱に入れます。`;
   const after = isReply
     ? `・レス番号とページ番号はずれません\n・元の本文は管理者だけが後から確認できます`
     : `・サイトからは見えなくなります\n・完全には消えないので、管理画面からいつでも戻せます`;
-  const extra = op==='trash_ban' ? `\n・書いた端末を7日間ブロックします` : '';
+  // 🔴 端末ブロックの効き方はサイトで違う。Lとも・真夜中は連携があり、本家は単独
+  const extra = op==='trash_ban'
+    ? `\n・書いた端末を7日間ブロックします${scope==='both'?`（${r.suggest.peer}にも広げます）`:''}`
+      + (r.did ? '' : '\n🔴 この投稿に端末IDが記録されていないので、ブロックは効きません')
+    : '';
   if(op!=='close' && !confirm(`${what}\n\n${r.target||''}\n\n${after}${extra}`)) return;
   const row = {at:new Date().toISOString(), site:r.site, do:op, report_id:r.id,
                also_ids:r.also_ids||[],          // 同じ投稿への他の通報もまとめて閉じる
-               post_id:r.post_id, did:r.did||null, days:7,
+               post_id:r.post_id, did:r.did||null, days:7, scope:scope||'this',
                reason:(r.reason_ja||r.reason||''), memo:(r.detail||'').slice(0,60)};
   // 🔴 1つのファイルに追記していくと、続けて押したときに sha が合わず 409 になる
   //    （2026-08-30 メグ報告）。投げ込み箱と同じく1操作1ファイルにして衝突をなくす。
