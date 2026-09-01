@@ -498,6 +498,11 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 #cal-day-list .dbtn:active{background:var(--bg3)}
 .calnote{font-size:11.5px;line-height:1.75;color:var(--text3);margin:8px 0 0;
   padding:9px 11px;background:var(--bg3);border-radius:9px}
+.calm-adv{margin:12px 0 0}
+.calm-adv>summary{font-size:12px;color:var(--text3);cursor:pointer;list-style:none;padding:8px 0}
+.calm-adv>summary::-webkit-details-marker{display:none}
+.calm-adv>summary::after{content:" ▾"}
+.calm-adv[open]>summary::after{content:" ▴"}
 .calm-btns{display:flex;gap:8px;margin:20px 0 0}
 .calm-btns .btn{flex:1}
 /* 予定リストをカレンダーの真下に */
@@ -732,37 +737,43 @@ details.ops.ok[open]>summary::after{content:" ▴"}
       <option value="毎年">毎年（同じ日）</option>
     </select>
     <label class="cl">iPhoneに通知</label>
-    <select id="calm-notify">
-      <option value="">しない</option>
-      <option value="当日朝">当日の朝（タイ8時）</option>
-      <option value="前日夜">前日の夜（タイ20時）</option>
-      <option value="3日前">3日前の朝</option>
-      <option value="7日前">1週間前の朝</option>
-    </select>
-    <div id="calm-pri-wrap" style="display:none">
-      <label class="cl">鳴らし方</label>
-      <select id="calm-pri">
-        <option value="default" selected>ふつう（マナーモードでは鳴らない）</option>
-        <option value="high">マナーモードでも鳴らす</option>
-        <option value="max">マナーモードでも鳴らす＋3回しつこく</option>
-      </select>
-
-      <label class="cl">音<span>（押すと鳴ります）</span></label>
-      <div class="calm-sounds" id="calm-sounds"></div>
-
-      <label class="cl">音量<span>（端末の音量とは別）</span></label>
-      <div class="calm-vol">
-        <input type="range" id="calm-vol" min="0" max="10" value="5">
-        <b id="calm-vol-n">5</b>
-      </div>
-
-      <label class="calm-chk"><input type="checkbox" id="calm-call">
-        <span>30秒鳴らし続ける<i>（寝ていても気づく。アラームに近い）</i></span></label>
-
-      <p class="calnote">「マナーモードでも鳴らす」はiPhoneの緊急アラートを使います。
-        集中モード中でも鳴ります。<b>絶対に見逃したくない予定だけ</b>に使ってください。</p>
-      <button class="btn calm-try" id="calm-try">この設定で今すぐ鳴らす</button>
+    <div class="calm-fields" id="calm-ntog">
+      <button data-v="" class="on">しない</button>
+      <button data-v="on">する 🔔</button>
     </div>
+    <div id="calm-nwrap" style="display:none">
+      <label class="cl">いつ</label>
+      <div class="calm-fields" id="calm-when">
+        <button data-v="当日朝" class="on">当日の朝</button>
+        <button data-v="前日夜">前日の夜</button>
+        <button data-v="3日前">3日前</button>
+        <button data-v="7日前">1週間前</button>
+      </div>
+      <p class="calnote">🎵 メグの音（通知音01）で、<b>マナーモードでも鳴ります</b>。ここまでで完了です。</p>
+      <details class="calm-adv">
+        <summary>細かく変える（鳴らし方・音・音量）</summary>
+        <label class="cl">鳴らし方</label>
+        <select id="calm-pri">
+          <option value="default">ふつう（マナーモードでは鳴らない）</option>
+          <option value="high" selected>マナーモードでも鳴らす</option>
+          <option value="max">マナーモードでも鳴らす＋3回しつこく</option>
+        </select>
+        <label class="cl">音<span>（押すと鳴ります）</span></label>
+        <div class="calm-sounds" id="calm-sounds"></div>
+        <label class="cl">音量<span>（端末の音量とは別）</span></label>
+        <div class="calm-vol">
+          <input type="range" id="calm-vol" min="0" max="10" value="6">
+          <b id="calm-vol-n">6</b>
+        </div>
+        <label class="calm-chk"><input type="checkbox" id="calm-call">
+          <span>30秒鳴らし続ける<i>（寝ていても気づく。アラームに近い）</i></span></label>
+        <button class="btn calm-try" id="calm-try">この設定で今すぐ鳴らす</button>
+      </details>
+    </div>
+    <select id="calm-notify" style="display:none">
+      <option value=""></option><option value="当日朝"></option><option value="前日夜"></option>
+      <option value="3日前"></option><option value="7日前"></option>
+    </select>
     <div class="calm-btns">
       <button class="btn" id="calm-cancel">やめる</button>
       <button class="btn btn-primary" id="calm-save">追加する</button>
@@ -797,7 +808,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-01.8';
+const APP_VERSION = '2026-09-01.9';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1840,17 +1851,31 @@ function markFor(text, field){
 function openCalModal(){
   const d = calSel || new Date().toLocaleDateString('sv-SE');
   $('calm-date').value = d; $('calm-text').value = '';
-  $('calm-repeat').value = ''; $('calm-notify').value = '';
-  $('calm-pri').value = 'default'; $('calm-pri-wrap').style.display = 'none';
+  $('calm-repeat').value = '';
+  $('calm-pri').value = 'high';
   window.__calMark = ''; window.__calField = '個人';
   $('calm-marks').innerHTML = ['','🐕','🏍','🌸','🔮','💰','🏥','🛒','✈️','📄','📈','🎉','📞','🍽']
     .map(m => `<button data-m="${m}" class="${m===''?'on':''}">${m || 'ー'}</button>`).join('');
   $('calm-fields').innerHTML = ['個人','ガチレズ','メビウス','投資','裁判・相続']
     .map(f => `<button data-f="${f}" class="${f==='個人'?'on':''}">${f}</button>`).join('');
+  // 🔴 メグの使い方は「通知あり／なし」の2択（2026-09-01）。
+  //    「する」を押した時点で 当日朝＋マナーモード貫通＋メグの音 が既定。細部は畳んである。
+  $('calm-notify').value = ''; $('calm-nwrap').style.display = 'none';
+  $('calm-ntog').querySelectorAll('button').forEach(b => b.onclick = () => {
+    $('calm-ntog').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    const on = b.dataset.v === 'on';
+    $('calm-nwrap').style.display = on ? '' : 'none';
+    $('calm-notify').value = on ? ($('calm-when').querySelector('.on')?.dataset.v || '当日朝') : '';
+  });
+  $('calm-when').querySelectorAll('button').forEach(b => b.onclick = () => {
+    $('calm-when').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    $('calm-notify').value = b.dataset.v;
+  });
+
   // 音の一覧。押すと選択＋その場で鳴る
-  window.__calSound = '';
+  window.__calSound = '通知音01';
   $('calm-sounds').innerHTML = BARK_SOUNDS
-    .map(([v,l]) => `<button data-s="${v}" class="${v===''?'on':''}">${l}</button>`).join('');
+    .map(([v,l]) => `<button data-s="${v}" class="${v==='通知音01'?'on':''}">${l}</button>`).join('');
   $('calm-sounds').querySelectorAll('button').forEach(b => b.onclick = () => {
     window.__calSound = b.dataset.s;
     $('calm-sounds').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
@@ -1946,13 +1971,9 @@ async function editNotify(idx){
   let meta = '';
   if(when.trim() !== '0'){
     if(!W){ toast('1〜4か0を入れてね'); return; }
-    const how = prompt(`鳴らし方\n\n1 = ふつう（マナーモードでは鳴らない）\n` +
-                       `2 = マナーモードでも鳴らす\n3 = マナーモードでも鳴らす＋3回しつこく`,
-                       cur && cur[2] ? {'default':'1','high':'2','max':'3'}[cur[2]] || '1' : '2');
-    if(how === null) return;
-    const P = {'1':'default','2':'high','3':'max'}[how.trim()];
-    if(!P){ toast('1〜3を入れてね'); return; }
-    meta = `通知:${W}/${P}`;
+    // 🔴 鳴らし方は聞かない。既定＝マナーモードでも鳴る＋メグの音（2026-09-01）。
+    //    変えたいときはポップアップの「細かく変える」から
+    meta = `通知:${W}/high`;
   }
   try{
     for(let a=0; a<2; a++){
@@ -1988,7 +2009,7 @@ async function saveCalEvent(){
   let meta = '';
   if (nt) {
     meta = `通知:${nt}/${$('calm-pri').value}`;
-    if (window.__calSound) meta += ` 音:${window.__calSound}`;
+    if (window.__calSound && window.__calSound !== '通知音01') meta += ` 音:${window.__calSound}`;
     const v = $('calm-vol').value;
     if (v !== '5') meta += ` 音量:${v}`;
     if ($('calm-call').checked) meta += ' 鳴らし続ける';
@@ -2828,9 +2849,7 @@ function setupEvents() {
   $('calm-save').addEventListener('click', saveCalEvent);
   $('calm-cancel').addEventListener('click', () => $('cal-modal').classList.add('hidden'));
   $('calm-try').addEventListener('click', barkTest);
-  $('calm-notify').addEventListener('change', e => {
-    $('calm-pri-wrap').style.display = e.target.value ? '' : 'none';
-  });
+
   $('cal-modal').addEventListener('click', e => {
     if (e.target.id === 'cal-modal') $('cal-modal').classList.add('hidden');
   });
