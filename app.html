@@ -480,6 +480,10 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 .calm-fields button{font-size:12px;padding:7px 12px;border:1px solid var(--border);border-radius:99px;
   background:var(--bg2);color:var(--text2);cursor:pointer;font-family:inherit}
 .calm-fields button.on{border-color:var(--accent);background:var(--accent);color:#fff;font-weight:600}
+.calm-try{width:100%;margin:10px 0 0;padding:11px;font-size:12.5px}
+#cal-day-list .dbtn{flex:none;align-self:center;background:transparent;border:1px solid var(--border);
+  border-radius:8px;padding:6px 11px;font-size:11px;color:var(--text2);font-family:inherit;cursor:pointer}
+#cal-day-list .dbtn:active{background:var(--bg3)}
 .calnote{font-size:11.5px;line-height:1.75;color:var(--text3);margin:8px 0 0;
   padding:9px 11px;background:var(--bg3);border-radius:9px}
 .calm-btns{display:flex;gap:8px;margin:20px 0 0}
@@ -732,6 +736,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
       </select>
       <p class="calnote">「マナーモードでも鳴らす」はiPhoneの緊急アラートを使います。
         集中モード中でも鳴ります。<b>絶対に見逃したくない予定だけ</b>に使ってください。</p>
+      <button class="btn calm-try" id="calm-try">この鳴らし方で今すぐ試す</button>
     </div>
     <div class="calm-btns">
       <button class="btn" id="calm-cancel">やめる</button>
@@ -764,7 +769,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-01.4';
+const APP_VERSION = '2026-09-01.5';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1766,12 +1771,15 @@ function renderDayList(ev) {
     ? items.map(it => {
         const m = (it.label.match(/^([\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]+)/u) || [])[1] || markFor(it.label, it.field);
         const body = it.label.replace(/^([\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]+)/u, '');
+        const idx = schedRows.indexOf(it);
         return `<div class="dayrow">
           <div class="dm">${it.done ? '✅' : (m || '・')}</div>
           <div class="dt">${esc(body)}
             ${it.repeat ? `<span class="drep">${esc(it.repeat)}</span>` : ''}
-            ${it.notify ? `<span class="dbell">🔔 ${esc(it.notify)}</span>` : ''}
+            ${it.notify ? `<span class="dbell">🔔 ${esc(it.notify)}${/critical|high|max/.test(it.meta||'') ? '（鳴る）' : ''}</span>` : ''}
             <div class="df">${esc(it.field || '')}</div></div>
+          ${(it.src === 'sched' && !it.done && !it.repeated && idx >= 0)
+            ? `<button class="dbtn" onclick="editNotify(${idx})">${it.notify ? '通知を変える' : '🔔 通知を付ける'}</button>` : ''}
         </div>`;
       }).join('')
     : '<p class="empty">この日は予定なし</p>');
@@ -1817,6 +1825,72 @@ function openCalModal(){
   });
   $('cal-modal').classList.remove('hidden');
   setTimeout(() => $('calm-text').focus(), 80);
+}
+
+// 🔴 Barkの鍵はこのページに書かない（GitHub Pagesは誰でも開ける）。
+//    「試す」も「あとから通知を付ける」も、Macに頼む形にする。
+//    inbox/bark_test.json に置くと、Macの巡回（毎時17分）が拾って送る。
+async function barkTest(){
+  const pri = $('calm-pri').value;
+  const btn = $('calm-try'); btn.disabled = true;
+  try{
+    const path = 'inbox/bark_test.json';
+    const ex = await getFileWithSha(path);
+    const row = {at:new Date().toISOString(), pri,
+                 title:'🔔 鳴らし方のテスト',
+                 body:{default:'ふつうです。マナーモードなら鳴りません',
+                       high:'これがマナーモードでも鳴れば成功です',
+                       max:'最優先です。実際の予定では3回届きます'}[pri]};
+    await api(`/repos/${REPO}/contents/${path}`, 'PUT',
+      Object.assign({message:'通知のテスト', content:enc(JSON.stringify(row,null,1)), branch:BRANCH},
+                    (ex&&ex.sha)?{sha:ex.sha}:{}));
+    toast('Macが次に動くときに送ります（毎時17分）');
+  }catch(e){ alert('頼めませんでした: '+e.message); }
+  finally{ btn.disabled = false; }
+}
+
+// あとから通知を付ける・変える
+async function editNotify(idx){
+  const r = schedRows[idx]; if(!r) return;
+  const cur = (r.meta||'').match(/通知:([^/\s|]+)(?:\/(\w+))?/);
+  const when = prompt(
+    `「${r.label.slice(0,24)}」の通知\n\n` +
+    `1 = 当日の朝（タイ8時）\n2 = 前日の夜（タイ20時）\n3 = 3日前の朝\n4 = 1週間前の朝\n0 = 通知をやめる`,
+    cur ? {'当日朝':'1','前日夜':'2','3日前':'3','7日前':'4'}[cur[1]] || '1' : '2');
+  if(when === null) return;
+  const W = {'1':'当日朝','2':'前日夜','3':'3日前','4':'7日前'}[when.trim()];
+  let meta = '';
+  if(when.trim() !== '0'){
+    if(!W){ toast('1〜4か0を入れてね'); return; }
+    const how = prompt(`鳴らし方\n\n1 = ふつう（マナーモードでは鳴らない）\n` +
+                       `2 = マナーモードでも鳴らす\n3 = マナーモードでも鳴らす＋3回しつこく`,
+                       cur && cur[2] ? {'default':'1','high':'2','max':'3'}[cur[2]] || '1' : '2');
+    if(how === null) return;
+    const P = {'1':'default','2':'high','3':'max'}[how.trim()];
+    if(!P){ toast('1〜3を入れてね'); return; }
+    meta = `通知:${W}/${P}`;
+  }
+  try{
+    for(let a=0; a<2; a++){
+      const f = await getFileWithSha('スケジュール.md');
+      const lines = f.text.split('\n');
+      const i = lines.findIndex(l => l.startsWith('| ' + r.date + ' |') && l.includes(r.label.slice(0,16)));
+      if(i < 0) throw new Error('その行が見つかりません');
+      // | 日付 | 分野 | やること | 繰り返し | 通知 |
+      const c = lines[i].replace(/^\s*\|/, '').split('|').map(x => x.trim());
+      while(c.length < 5) c.push('');
+      c[4] = meta;
+      lines[i] = '| ' + c.slice(0,5).join(' | ').replace(/\s+\|\s*$/, '') + ' |';
+      try{
+        await api(`/repos/${REPO}/contents/${encodeURIComponent('スケジュール.md')}`, 'PUT',
+          {message:`通知を${meta?'設定':'解除'}: ${r.date} ${r.label.slice(0,20)}`,
+           content:enc(lines.join('\n')), sha:f.sha, branch:BRANCH});
+        break;
+      }catch(e){ if(a===1 || !String(e.message).includes('409')) throw e; }
+    }
+    toast(meta ? '通知を付けました' : '通知をやめました');
+    await loadSchedule();
+  }catch(e){ alert('変えられませんでした: '+e.message); }
 }
 
 async function saveCalEvent(){
@@ -2662,6 +2736,7 @@ function setupEvents() {
   $('cal-new').addEventListener('click', openCalModal);
   $('calm-save').addEventListener('click', saveCalEvent);
   $('calm-cancel').addEventListener('click', () => $('cal-modal').classList.add('hidden'));
+  $('calm-try').addEventListener('click', barkTest);
   $('calm-notify').addEventListener('change', e => {
     $('calm-pri-wrap').style.display = e.target.value ? '' : 'none';
   });
