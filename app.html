@@ -480,6 +480,18 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 .calm-fields button{font-size:12px;padding:7px 12px;border:1px solid var(--border);border-radius:99px;
   background:var(--bg2);color:var(--text2);cursor:pointer;font-family:inherit}
 .calm-fields button.on{border-color:var(--accent);background:var(--accent);color:#fff;font-weight:600}
+.calm-sounds{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:5px;
+  max-height:220px;overflow-y:auto;padding:2px}
+.calm-sounds button{font-size:11.5px;padding:8px 4px;border:1px solid var(--border);border-radius:8px;
+  background:var(--bg2);color:var(--text2);font-family:inherit;cursor:pointer;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.calm-sounds button.on{border-color:var(--accent);background:var(--accent);color:#fff;font-weight:700}
+.calm-vol{display:flex;align-items:center;gap:12px}
+.calm-vol input{flex:1}
+.calm-vol b{font-variant-numeric:tabular-nums;font-size:15px;color:var(--accent);min-width:22px;text-align:right}
+.calm-chk{display:flex;align-items:flex-start;gap:9px;margin:14px 0 0;font-size:13px;cursor:pointer}
+.calm-chk input{width:auto;flex:none;margin-top:2px}
+.calm-chk i{display:block;font-style:normal;font-size:11.5px;color:var(--text3);margin-top:2px}
 .calm-try{width:100%;margin:10px 0 0;padding:11px;font-size:12.5px}
 #cal-day-list .dbtn{flex:none;align-self:center;background:transparent;border:1px solid var(--border);
   border-radius:8px;padding:6px 11px;font-size:11px;color:var(--text2);font-family:inherit;cursor:pointer}
@@ -734,9 +746,22 @@ details.ops.ok[open]>summary::after{content:" ▴"}
         <option value="high">マナーモードでも鳴らす</option>
         <option value="max">マナーモードでも鳴らす＋3回しつこく</option>
       </select>
+
+      <label class="cl">音<span>（押すと鳴ります）</span></label>
+      <div class="calm-sounds" id="calm-sounds"></div>
+
+      <label class="cl">音量<span>（端末の音量とは別）</span></label>
+      <div class="calm-vol">
+        <input type="range" id="calm-vol" min="0" max="10" value="5">
+        <b id="calm-vol-n">5</b>
+      </div>
+
+      <label class="calm-chk"><input type="checkbox" id="calm-call">
+        <span>30秒鳴らし続ける<i>（寝ていても気づく。アラームに近い）</i></span></label>
+
       <p class="calnote">「マナーモードでも鳴らす」はiPhoneの緊急アラートを使います。
         集中モード中でも鳴ります。<b>絶対に見逃したくない予定だけ</b>に使ってください。</p>
-      <button class="btn calm-try" id="calm-try">この鳴らし方で今すぐ試す</button>
+      <button class="btn calm-try" id="calm-try">この設定で今すぐ鳴らす</button>
     </div>
     <div class="calm-btns">
       <button class="btn" id="calm-cancel">やめる</button>
@@ -769,7 +794,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-01.5';
+const APP_VERSION = '2026-09-01.6';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1815,6 +1840,16 @@ function openCalModal(){
     .map(m => `<button data-m="${m}" class="${m===''?'on':''}">${m || 'ー'}</button>`).join('');
   $('calm-fields').innerHTML = ['個人','ガチレズ','メビウス','投資','裁判・相続']
     .map(f => `<button data-f="${f}" class="${f==='個人'?'on':''}">${f}</button>`).join('');
+  // 音の一覧。押すと選択＋その場で鳴る
+  window.__calSound = '';
+  $('calm-sounds').innerHTML = BARK_SOUNDS
+    .map(([v,l]) => `<button data-s="${v}" class="${v===''?'on':''}">${l}</button>`).join('');
+  $('calm-sounds').querySelectorAll('button').forEach(b => b.onclick = () => {
+    window.__calSound = b.dataset.s;
+    $('calm-sounds').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    barkTry(b.dataset.s, b.textContent);
+  });
+  $('calm-vol').oninput = e => { $('calm-vol-n').textContent = e.target.value; };
   $('calm-marks').querySelectorAll('button').forEach(b => b.onclick = () => {
     window.__calMark = b.dataset.m;
     $('calm-marks').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
@@ -1827,27 +1862,45 @@ function openCalModal(){
   setTimeout(() => $('calm-text').focus(), 80);
 }
 
+// Barkで使える音（32種類）。名前だけだと分からないので短い説明を添える
+const BARK_SOUNDS = [
+  ['', '既定'], ['alarm','アラーム'], ['bell','ベル'], ['birdsong','小鳥'],
+  ['bloom','やわらか'], ['calypso','カリプソ'], ['chime','チャイム'], ['choo','汽車'],
+  ['descent','下降音'], ['electronic','電子音'], ['fanfare','ファンファーレ'], ['glass','ガラス'],
+  ['gotosleep','おやすみ'], ['healthnotification','ヘルス'], ['horn','ホーン'], ['ladder','はしご'],
+  ['mailsent','送信音'], ['minuet','メヌエット'], ['multiwayinvitation','呼び出し'], ['newmail','新着'],
+  ['newsflash','ニュース速報'], ['noir','ノワール'], ['paymentsuccess','決済音'], ['shake','シェイク'],
+  ['sherwoodforest','森'], ['silence','無音'], ['spell','呪文'], ['suspense','サスペンス'],
+  ['telegraph','電報'], ['tiptoes','忍び足'], ['typewriters','タイプライター'], ['update','更新音'],
+];
+
 // 🔴 Barkの鍵はこのページに書かない（GitHub Pagesは誰でも開ける）。
 //    「試す」も「あとから通知を付ける」も、Macに頼む形にする。
 //    inbox/bark_test.json に置くと、Macの巡回（毎時17分）が拾って送る。
-async function barkTest(){
-  const pri = $('calm-pri').value;
-  const btn = $('calm-try'); btn.disabled = true;
+// 音を押すたびに1本送る（Macが20秒以内に拾って鳴らす）
+async function barkTry(sound, label){
+  const row = {at:new Date().toISOString(),
+               pri: $('calm-pri').value,
+               sound: sound || undefined,
+               volume: String($('calm-vol').value),
+               call: $('calm-call').checked ? 1 : 0,
+               group: '音のテスト',
+               title: sound ? `🔊 ${label}` : '🔊 既定の音',
+               body: `${sound || '（指定なし）'}　音量${$('calm-vol').value}` +
+                     ($('calm-call').checked ? '　30秒鳴らし続ける' : '')};
   try{
     const path = 'inbox/bark_test.json';
     const ex = await getFileWithSha(path);
-    const row = {at:new Date().toISOString(), pri,
-                 title:'🔔 鳴らし方のテスト',
-                 body:{default:'ふつうです。マナーモードなら鳴りません',
-                       high:'これがマナーモードでも鳴れば成功です',
-                       max:'最優先です。実際の予定では3回届きます'}[pri]};
     await api(`/repos/${REPO}/contents/${path}`, 'PUT',
-      Object.assign({message:'通知のテスト', content:enc(JSON.stringify(row,null,1)), branch:BRANCH},
+      Object.assign({message:`音を試す: ${sound||'既定'}`, content:enc(JSON.stringify(row,null,1)), branch:BRANCH},
                     (ex&&ex.sha)?{sha:ex.sha}:{}));
-    toast('Macが次に動くときに送ります（毎時17分）');
-  }catch(e){ alert('頼めませんでした: '+e.message); }
-  finally{ btn.disabled = false; }
+    toast(`${label} を鳴らします`);
+  }catch(e){
+    if(String(e.message).includes('409')) toast('少し待ってからもう一度');
+    else alert('頼めませんでした: '+e.message);
+  }
 }
+async function barkTest(){ await barkTry(window.__calSound || '', '今の設定'); }
 
 // あとから通知を付ける・変える
 async function editNotify(idx){
@@ -1901,7 +1954,14 @@ async function saveCalEvent(){
   const field = window.__calField || '個人';
   const rep = $('calm-repeat').value;
   const nt = $('calm-notify').value;
-  const meta = nt ? `通知:${nt}/${$('calm-pri').value}` : '';
+  let meta = '';
+  if (nt) {
+    meta = `通知:${nt}/${$('calm-pri').value}`;
+    if (window.__calSound) meta += ` 音:${window.__calSound}`;
+    const v = $('calm-vol').value;
+    if (v !== '5') meta += ` 音量:${v}`;
+    if ($('calm-call').checked) meta += ' 鳴らし続ける';
+  }
   // | 日付 | 分野 | 記号+やること | 繰り返し | 通知 |
   let row = `| ${date} | ${field} | ${mark}${text.replace(/\|/g,'／')} |`;
   if (rep || meta) row += ` ${rep} |`;
