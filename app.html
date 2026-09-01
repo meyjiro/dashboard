@@ -724,15 +724,14 @@ details.ops.ok[open]>summary::after{content:" ▴"}
       <option value="7日前">1週間前の朝</option>
     </select>
     <div id="calm-pri-wrap" style="display:none">
-      <label class="cl">通知の強さ</label>
+      <label class="cl">鳴らし方</label>
       <select id="calm-pri">
-        <option value="min">静かに（音なし・バッジだけ）</option>
-        <option value="default" selected>ふつう（1回）</option>
-        <option value="high">しっかり（前日夜＋当日朝の2回）</option>
-        <option value="max">最優先（前日夜＋当日朝＋当日昼の3回）</option>
+        <option value="default" selected>ふつう（マナーモードでは鳴らない）</option>
+        <option value="high">マナーモードでも鳴らす</option>
+        <option value="max">マナーモードでも鳴らす＋3回しつこく</option>
       </select>
-      <p class="calnote">🔴 iPhoneでは通知音を強さで変えられません（iOSの仕様）。
-        代わりに<b>回数</b>で差を付けます。3回来れば見逃しません。</p>
+      <p class="calnote">「マナーモードでも鳴らす」はiPhoneの緊急アラートを使います。
+        集中モード中でも鳴ります。<b>絶対に見逃したくない予定だけ</b>に使ってください。</p>
     </div>
     <div class="calm-btns">
       <button class="btn" id="calm-cancel">やめる</button>
@@ -765,7 +764,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-01.3';
+const APP_VERSION = '2026-09-01.4';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
