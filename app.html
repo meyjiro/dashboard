@@ -463,6 +463,34 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 .cal-cell .mk{font-size:9px;line-height:1}
 .cal-cell .mk.heart{color:#e0649b}
 .cal-cell .mk.zone{color:var(--warn);opacity:.5}
+.cal-newbtn{width:100%;margin:14px 0 0;padding:14px;border:1px dashed var(--border);
+  border-radius:12px;background:transparent;color:var(--text2);font-size:13.5px;
+  font-family:inherit;cursor:pointer}
+.cal-newbtn:active{background:var(--bg3)}
+.calmodal{max-width:380px;max-height:86vh;overflow-y:auto}
+.calmodal .cl{display:block;font-size:11px;color:var(--text3);letter-spacing:.05em;margin:14px 0 5px}
+.calmodal .cl span{letter-spacing:0;margin-left:5px}
+.calmodal input,.calmodal select{width:100%;padding:11px;border:1px solid var(--border);
+  border-radius:10px;background:var(--bg2);color:var(--text);font-size:15px;font-family:inherit}
+.calm-marks{display:flex;flex-wrap:wrap;gap:6px}
+.calm-marks button{font-size:19px;padding:6px 10px;border:1px solid var(--border);border-radius:9px;
+  background:var(--bg2);cursor:pointer;line-height:1}
+.calm-marks button.on{border-color:var(--accent);background:var(--accent-light)}
+.calm-fields{display:flex;flex-wrap:wrap;gap:6px}
+.calm-fields button{font-size:12px;padding:7px 12px;border:1px solid var(--border);border-radius:99px;
+  background:var(--bg2);color:var(--text2);cursor:pointer;font-family:inherit}
+.calm-fields button.on{border-color:var(--accent);background:var(--accent);color:#fff;font-weight:600}
+.calm-btns{display:flex;gap:8px;margin:20px 0 0}
+.calm-btns .btn{flex:1}
+/* 予定リストをカレンダーの真下に */
+#cal-day-list{margin:14px 0 0}
+#cal-day-list .dayrow{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;
+  border:1px solid var(--border);border-radius:11px;background:var(--card);margin:0 0 7px}
+#cal-day-list .dm{font-size:17px;flex:none;line-height:1.5}
+#cal-day-list .dt{flex:1;font-size:13px;line-height:1.8;min-width:0;word-break:break-word}
+#cal-day-list .df{font-size:10.5px;color:var(--text3);margin-top:3px}
+#cal-day-list .drep{font-size:10.5px;color:var(--accent);margin-left:6px}
+#cal-day-list .dbell{font-size:11px;color:var(--text3);margin-left:5px}
 .cal-add{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
 .cal-add input[type=date]{flex:1 1 100%;min-width:0}
 .cal-add input[type=text]{flex:1 1 auto;min-width:0;padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text)}
@@ -566,22 +594,9 @@ details.ops.ok[open]>summary::after{content:" ▴"}
         <button id="cal-next">›</button>
       </div>
       <div class="cal-grid" id="cal-grid"></div>
-      <div class="cal-legend">
-        <span><i style="background:#fbbf24"></i>プライベート</span>
-        <span><i style="background:#4ade80"></i>個人・生活</span>
-        <span><i style="background:#f472b6"></i>ガチレズ</span>
-        <span><i style="background:#a78bfa"></i>メビウス</span>
-        <span><i style="background:#f87171"></i>裁判・相続</span>
-        <span><i style="background:#2dd4bf"></i>生活OS</span>
-        <span><i style="background:#38bdf8"></i>投資・旅行</span>
-      </div>
-      <div class="cal-add">
-        <input type="date" id="cal-date" style="padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text)">
-        <input type="text" id="cal-text" placeholder="予定を書く（例: 歯医者14時）">
-        <button class="btn btn-primary" id="cal-save" style="flex:0 0 auto">追加</button>
-      </div>
-      <div class="hint" style="margin:0 4px 10px">追加した予定はスケジュール表（正本）に直接入り、前日と当日の朝・夜の通知に自動で出ます。</div>
       <div id="cal-day-list"></div>
+      <button class="cal-newbtn" id="cal-new">＋ 予定を追加</button>
+      <div class="hint" style="margin:0 4px 10px">追加した予定はスケジュール表（正本）に直接入り、前日と当日の朝・夜の通知に自動で出ます。</div>
     </div>
 
     <!-- 投げ込み -->
@@ -680,6 +695,48 @@ details.ops.ok[open]>summary::after{content:" ▴"}
   </div>
 </div>
 
+<div class="modal-overlay hidden" id="cal-modal">
+  <div class="modal calmodal">
+    <h2 id="calm-title">予定を追加</h2>
+    <label class="cl">いつ</label>
+    <input type="date" id="calm-date">
+    <label class="cl">なにを</label>
+    <input type="text" id="calm-text" placeholder="例: 歯医者 14時">
+    <label class="cl">記号<span>（空なら内容から自動で付きます）</span></label>
+    <div class="calm-marks" id="calm-marks"></div>
+    <label class="cl">分野</label>
+    <div class="calm-fields" id="calm-fields"></div>
+    <label class="cl">繰り返し</label>
+    <select id="calm-repeat">
+      <option value="">繰り返さない</option>
+      <option value="毎週">毎週</option>
+      <option value="毎月">毎月（同じ日）</option>
+      <option value="毎年">毎年（同じ日）</option>
+    </select>
+    <label class="cl">iPhoneに通知</label>
+    <select id="calm-notify">
+      <option value="">しない</option>
+      <option value="当日朝">当日の朝（タイ8時）</option>
+      <option value="前日夜">前日の夜（タイ20時）</option>
+      <option value="3日前">3日前の朝</option>
+      <option value="7日前">1週間前の朝</option>
+    </select>
+    <div id="calm-pri-wrap" style="display:none">
+      <label class="cl">通知の強さ</label>
+      <select id="calm-pri">
+        <option value="min">静かに（バッジだけ）</option>
+        <option value="default" selected>ふつう</option>
+        <option value="high">しっかり鳴らす</option>
+        <option value="max">最優先（マナーモードでも鳴る）</option>
+      </select>
+    </div>
+    <div class="calm-btns">
+      <button class="btn" id="calm-cancel">やめる</button>
+      <button class="btn btn-primary" id="calm-save">追加する</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay hidden" id="settings-modal">
   <div class="modal">
     <h2>設定</h2>
@@ -704,7 +761,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-01.1';
+const APP_VERSION = '2026-09-01.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1615,8 +1672,15 @@ async function loadSchedule() {
       // 完了済み(|~)も「過去の記録」としてカレンダーに残す（2026-08-26: ワクチン等を振り返れるように）
       const done = /^\s*\|~/.test(line);
       const m = line.match(/^\s*\|~?\s*(\d{4})-(\d{2})-(\d{2})\s*\|([^|]*)\|(.*?)\|?\s*$/);
-      if (m) schedRows.push({ date: `${m[1]}-${m[2]}-${m[3]}`, field: m[4].trim(),
-        label: m[5].trim().replace(/\s*\|/g, ' '), src: 'sched', done });
+      if (!m) continue;
+      // 🔴 4列目=繰り返し / 5列目=済んだ日と通知（2026-09-01 追加。3列の旧い行も動く）
+      const cells = line.replace(/^\s*\|~?/, '').split('|').map(c => c.trim());
+      const rep  = cells[3] || '';
+      const meta = cells[4] || '';
+      const nt = (meta.match(/通知:([^/\s|]+)/) || [])[1] || '';
+      schedRows.push({ date: `${m[1]}-${m[2]}-${m[3]}`, field: cells[1] || m[4].trim(),
+        label: (cells[2] || m[5]).trim(), src: 'sched', done,
+        repeat: /毎[週月年]/.test(rep) ? rep : '', notify: nt, meta });
     }
   } catch (e) {}
   renderCal();
@@ -1635,7 +1699,26 @@ function fieldClass(f) {
 function calEvents() {
   const ev = {};
   const add = (date, item) => { (ev[date] = ev[date] || []).push(item); };
-  schedRows.forEach(r => add(r.date, r));
+  // 🔴 繰り返しの予定は実体が1行だけ（A案・2026-09-01 メグ選択）。
+  //    表示のときに、今見ている月の分まで展開する。ファイルは増やさない。
+  const y0 = calY !== undefined ? calY : new Date().getFullYear();
+  const m0 = calM !== undefined ? calM : new Date().getMonth();
+  const viewEnd = new Date(y0, m0 + 2, 0);   // 表示中の月＋1か月先まで
+  schedRows.forEach(r => {
+    add(r.date, r);
+    if (!r.repeat) return;
+    let d = new Date(r.date + 'T12:00:00');
+    const day0 = d.getDate();
+    for (let i = 0; i < 200; i++) {
+      if (r.repeat.includes('毎週'))      d = new Date(d.getTime() + 7 * 86400000);
+      else if (r.repeat.includes('毎月')) { d = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+                                            d.setDate(Math.min(day0, new Date(d.getFullYear(), d.getMonth()+1, 0).getDate())); }
+      else if (r.repeat.includes('毎年')) d = new Date(d.getFullYear() + 1, d.getMonth(), day0);
+      else break;
+      if (d > viewEnd) break;
+      add(d.toLocaleDateString('sv-SE'), Object.assign({}, r, { repeated: true, done: false }));
+    }
+  });
   (window.__mebiusEvents || []).forEach(e => { if (e.end) add(e.end, { label: `🔮 ${e.name} 様 完了`, src: 'mb' }); });
   TRIPS.forEach(t => { add(t.start, { label: `✈️ ${t.title} 出発`, src: 'trip' }); add(t.end, { label: `✈️ ${t.title} 帰着`, src: 'trip' }); });
   cyclePred.forEach(p => add(p.date, p.kind === 'heart'
@@ -1672,26 +1755,84 @@ function renderCal() {
 }
 function renderDayList(ev) {
   const el = $('cal-day-list');
-  if (!calSel) { el.innerHTML = '<p class="empty">日付をタップすると予定が出ます</p>'; return; }
+  if (!calSel) { el.innerHTML = '<p class="empty">日付をタップすると、ここに予定が出ます</p>'; return; }
   const items = (ev || calEvents())[calSel] || [];
   const [y, mo, dd] = calSel.split('-');
-  el.innerHTML = `<div class="section-title">📌 ${+mo}/${+dd} の予定</div>` + (items.length
+  const w = ['日','月','火','水','木','金','土'][new Date(calSel + 'T12:00:00').getDay()];
+  el.innerHTML = `<div class="section-title">${+mo}/${+dd}（${w}）の予定</div>` + (items.length
     ? items.map(it => {
-        const cls = it.src === 'mb' ? 'mb' : it.src === 'trip' ? 'trip' : fieldClass(it.field);
-        return `<div class="card"><div class="s" style="color:var(--text)"><span class="dot ${cls}" style="display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px" data-f></span>${it.done ? '✅ ' : ''}${it.field ? `[${esc(it.field)}] ` : ''}${esc(it.label)}</div></div>`;
+        const m = (it.label.match(/^([\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]+)/u) || [])[1] || markFor(it.label, it.field);
+        const body = it.label.replace(/^([\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]+)/u, '');
+        return `<div class="dayrow">
+          <div class="dm">${it.done ? '✅' : (m || '・')}</div>
+          <div class="dt">${esc(body)}
+            ${it.repeat ? `<span class="drep">${esc(it.repeat)}</span>` : ''}
+            ${it.notify ? `<span class="dbell">🔔 ${esc(it.notify)}</span>` : ''}
+            <div class="df">${esc(it.field || '')}</div></div>
+        </div>`;
       }).join('')
-    : '<p class="empty">予定なし。下のフォームから追加できます</p>');
+    : '<p class="empty">この日は予定なし</p>');
 }
-async function addCalEvent() {
-  const date = $('cal-date').value, text = $('cal-text').value.trim();
+
+// 🔴 記号は内容から決める。色分けより分かりやすいというメグの判断（2026-09-01）。
+//    schedule-notify.py の MARKS と同じ並びにしてある。片方だけ直さないこと。
+const CAL_MARKS = [
+  ['🐕', ['小太郎','こたろう','トム','とむ','犬','ワクチン','ノミダニ','動物病院','フィラリア']],
+  ['🏍', ['バイク','自賠責','陸運局','車検','オイル交換','整備','タイヤ']],
+  ['🌸', ['ガチレズ','掲示板','通報','セーフサーチ','SEO','イベント','L友','真夜中']],
+  ['🔮', ['メビウス','相談','草案','施術','奉納','術']],
+  ['💰', ['入金','家賃','支払','振込','請求','税金','確定申告','マネーデー']],
+  ['🏥', ['病院','検診','健康診断','歯医者','予約','薬']],
+  ['🛒', ['買い物','Shopee','ショッピー','Lazada','ラザダ','注文','購入','セール']],
+  ['✈️', ['飛行機','帰国','日本行','旅行','ホテル','ビザ']],
+  ['📄', ['書類','申請','更新','手続','契約','提出']],
+  ['📈', ['投資','銘柄','裁判','判決','IBKR','配当']],
+];
+function markFor(text, field){
+  for (const [m, words] of CAL_MARKS) if (words.some(w => text.includes(w))) return m;
+  return {'ガチレズ':'🌸','メビウス':'🔮','投資':'📈','裁判・相続':'📄'}[field] || '';
+}
+
+// ── 予定の追加（ポップアップ・2026-09-01）──
+function openCalModal(){
+  const d = calSel || new Date().toLocaleDateString('sv-SE');
+  $('calm-date').value = d; $('calm-text').value = '';
+  $('calm-repeat').value = ''; $('calm-notify').value = '';
+  $('calm-pri').value = 'default'; $('calm-pri-wrap').style.display = 'none';
+  window.__calMark = ''; window.__calField = '個人';
+  $('calm-marks').innerHTML = ['','🐕','🏍','🌸','🔮','💰','🏥','🛒','✈️','📄','📈','🎉','📞','🍽']
+    .map(m => `<button data-m="${m}" class="${m===''?'on':''}">${m || 'ー'}</button>`).join('');
+  $('calm-fields').innerHTML = ['個人','ガチレズ','メビウス','投資','裁判・相続']
+    .map(f => `<button data-f="${f}" class="${f==='個人'?'on':''}">${f}</button>`).join('');
+  $('calm-marks').querySelectorAll('button').forEach(b => b.onclick = () => {
+    window.__calMark = b.dataset.m;
+    $('calm-marks').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+  });
+  $('calm-fields').querySelectorAll('button').forEach(b => b.onclick = () => {
+    window.__calField = b.dataset.f;
+    $('calm-fields').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+  });
+  $('cal-modal').classList.remove('hidden');
+  setTimeout(() => $('calm-text').focus(), 80);
+}
+
+async function saveCalEvent(){
+  const date = $('calm-date').value, text = $('calm-text').value.trim();
   if (!date || !text) { toast('日付と内容を入れてね'); return; }
-  const btn = $('cal-save'); btn.disabled = true;
-  const row = `| ${date} | 予定 | ${text.replace(/\|/g, '／')} |`;
+  const btn = $('calm-save'); btn.disabled = true;
+  const mark = window.__calMark || markFor(text, window.__calField);
+  const field = window.__calField || '個人';
+  const rep = $('calm-repeat').value;
+  const nt = $('calm-notify').value;
+  const meta = nt ? `通知:${nt}/${$('calm-pri').value}` : '';
+  // | 日付 | 分野 | 記号+やること | 繰り返し | 通知 |
+  let row = `| ${date} | ${field} | ${mark}${text.replace(/\|/g,'／')} |`;
+  if (rep || meta) row += ` ${rep} |`;
+  if (meta) row += ` ${meta} |`;
   try {
     for (let attempt = 0; attempt < 2; attempt++) {
       const f = await getFileWithSha('スケジュール.md');
       if (!f) throw new Error('スケジュール.mdが見つかりません');
-      // 「## 期日つき」表の末尾（最後の表の行）の直後に挿入する
       const lines = f.text.split('\n');
       let last = -1;
       lines.forEach((l, i) => { if (/^\s*\|~?\s*\d{4}-\d{2}-\d{2}\s*\|/.test(l)) last = i; });
@@ -1699,15 +1840,16 @@ async function addCalEvent() {
       lines.splice(last + 1, 0, row);
       try {
         await api(`/repos/${REPO}/contents/${encodeURIComponent('スケジュール.md')}`, 'PUT',
-          { message: `予定追加: ${date} ${text}（ダッシュボード）`, content: enc(lines.join('\n')), sha: f.sha, branch: BRANCH });
+          { message: `予定追加: ${date} ${text}（ダッシュボード）`,
+            content: enc(lines.join('\n')), sha: f.sha, branch: BRANCH });
         break;
-      } catch (e) { if (attempt === 1) throw e; } // sha競合は1回だけ再取得して再試行
+      } catch (e) { if (attempt === 1 || !String(e.message).includes('409')) throw e; }
     }
-    $('cal-text').value = ''; calSel = date;
-    toast('予定を入れた！前日と当日の朝に通知が来ます 📅');
+    $('cal-modal').classList.add('hidden');
+    toast(nt ? '追加しました（通知はMacの巡回で予約されます）' : '追加しました');
     await loadSchedule();
-  } catch (e) { toast('追加に失敗: ' + e.message); }
-  btn.disabled = false;
+  } catch (e) { alert('追加できませんでした: ' + e.message); }
+  finally { btn.disabled = false; }
 }
 
 // ── 健康タブ（personal/health/data/ のCSVから）──
@@ -2514,7 +2656,15 @@ function setupEvents() {
   $('audio-input').addEventListener('change', e => pickAudio(e.target.files[0]));
   $('cal-prev').addEventListener('click', () => { calM--; if (calM < 0) { calM = 11; calY--; } renderCal(); });
   $('cal-next').addEventListener('click', () => { calM++; if (calM > 11) { calM = 0; calY++; } renderCal(); });
-  $('cal-save').addEventListener('click', addCalEvent);
+  $('cal-new').addEventListener('click', openCalModal);
+  $('calm-save').addEventListener('click', saveCalEvent);
+  $('calm-cancel').addEventListener('click', () => $('cal-modal').classList.add('hidden'));
+  $('calm-notify').addEventListener('change', e => {
+    $('calm-pri-wrap').style.display = e.target.value ? '' : 'none';
+  });
+  $('cal-modal').addEventListener('click', e => {
+    if (e.target.id === 'cal-modal') $('cal-modal').classList.add('hidden');
+  });
   document.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
     switchTab('inbox');
     const ta = $('inbox-text');
