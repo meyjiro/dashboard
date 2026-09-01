@@ -784,6 +784,9 @@ details.ops.ok[open]>summary::after{content:" ▴"}
     <p>メビウスの相談・草案の中身を読む鍵（端末に記憶されます）:</p>
     <input type="password" id="mbs-read-input" placeholder="mbs_read_...">
     <button class="btn btn-primary" id="mbs-read-save" style="width:100%;margin-bottom:14px">保存</button>
+    <p>iPhoneに通知を送る鍵（Barkアプリの上に出ているURLの、最後の部分）:</p>
+    <input type="password" id="bark-key-input" placeholder="GAWuGw...">
+    <button class="btn btn-primary" id="bark-key-save" style="width:100%;margin-bottom:14px">保存</button>
     <p>GitHubトークンを入れ直す: <a href="#" id="reauth-link">再入力</a></p>
     <p>旧タスク（アーカイブ）: <a href="https://github.com/meyjiro/claude-context/issues/1" target="_blank" rel="noopener">Issue #1</a> ／ 巡回routineの管理: <a href="https://claude.ai/code/routines" target="_blank" rel="noopener">routines</a></p>
     <button class="btn btn-ghost" id="settings-close" style="width:100%">閉じる</button>
@@ -794,7 +797,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-01.6';
+const APP_VERSION = '2026-09-01.7';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -832,6 +835,10 @@ let mebiusToken = localStorage.getItem('mebius_token') || '';
 // 🔴 相談・草案の本文を読む鍵。ソースに書かない（このページは公開URLで開ける）。
 //    メグが設定画面で入れたものだけがこの端末に入る。
 let mbsReadKey = localStorage.getItem('mbs_read_key') || '';
+// 🔴 Barkの鍵。ソースには書かない（このページは誰でも開ける）。
+//    メグが設定画面で入れたものだけがこの端末に入る。
+//    入れておくと、音を押した瞬間に鳴らせる（Macを待たなくていい）。
+let barkKey = localStorage.getItem('bark_key') || '';
 let briefing = null;
 let pendingPhoto = null; // {b64}
 let pendingAudio = null; // {b64, ext}
@@ -1879,6 +1886,30 @@ const BARK_SOUNDS = [
 //    inbox/bark_test.json に置くと、Macの巡回（毎時17分）が拾って送る。
 // 音を押すたびに1本送る（Macが20秒以内に拾って鳴らす）
 async function barkTry(sound, label){
+  // 鍵が入っていれば直接鳴らす（待たない）
+  if (barkKey) {
+    const pri = $('calm-pri').value;
+    const p = { device_key: barkKey, group: '音のテスト',
+                title: sound ? `🔊 ${label}` : '🔊 既定の音',
+                body: `${sound || '（指定なし）'}　音量${$('calm-vol').value}` +
+                      ($('calm-call').checked ? '　30秒鳴らし続ける' : ''),
+                level: pri === 'default' ? 'timeSensitive' : 'critical',
+                volume: String($('calm-vol').value) };
+    if (sound) p.sound = sound;
+    if ($('calm-call').checked) p.call = '1';
+    try {
+      await fetch('https://api.day.app/push', { method:'POST',
+        headers:{'Content-Type':'application/json; charset=utf-8'}, body: JSON.stringify(p) });
+      toast(`${label} を鳴らしました`);
+    } catch(e) { toast('鳴らせませんでした'); }
+    return;
+  }
+  // 鍵が無ければMac経由（設定で鍵を入れると速くなる）
+  toast('⚙設定で通知の鍵を入れると、押した瞬間に鳴ります');
+  return barkTryViaMac(sound, label);
+}
+
+async function barkTryViaMac(sound, label){
   const row = {at:new Date().toISOString(),
                pri: $('calm-pri').value,
                sound: sound || undefined,
@@ -2821,6 +2852,12 @@ function setupEvents() {
   $('settings-btn').addEventListener('click', () => {
     $('mebius-token-input').value = mebiusToken;
     $('settings-modal').classList.remove('hidden');
+  });
+  if ($('bark-key-input')) $('bark-key-input').value = barkKey;
+  if ($('bark-key-save')) $('bark-key-save').addEventListener('click', () => {
+    barkKey = $('bark-key-input').value.trim().replace(/^https?:\/\/api\.day\.app\//,'').replace(/\/.*$/,'');
+    localStorage.setItem('bark_key', barkKey);
+    toast(barkKey ? '保存しました' : '消しました');
   });
   if ($('mbs-read-input')) $('mbs-read-input').value = mbsReadKey;
   if ($('mbs-read-save')) $('mbs-read-save').addEventListener('click', () => {
