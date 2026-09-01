@@ -445,6 +445,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 .cal-cell.dim{color:var(--text2);opacity:.35}
 .cal-cell.today{background:var(--accent-light);font-weight:700}
 .cal-cell.sel{outline:2px solid var(--accent)}
+.cal-cell .mk{font-size:9px;line-height:1}
 .cal-cell .dots{display:flex;justify-content:center;gap:2px;margin-top:2px;flex-wrap:wrap}
 .cal-cell .dot{width:5px;height:5px;border-radius:50%;background:var(--accent)}
 .cal-cell .dot.mb{background:#a78bfa}
@@ -808,7 +809,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-01.9';
+const APP_VERSION = '2026-09-01.10';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1789,18 +1790,22 @@ function renderCal() {
     const ds = d.toLocaleDateString('sv-SE');
     const inMonth = d.getMonth() === calM;
     const items = ev[ds] || [];
-    const dots = items.slice(0, 4).map(it => {
+    // 🔴 色の点はやめて記号を出す（2026-09-01 メグ指示「色分けじゃなくて記号がいい」。
+    //    予定リスト側だけ記号にして、マス目に反映し忘れていた）
+    const dots = items.slice(0, 3).map(it => {
       if (it.src === 'cyc-heart') return '<span class="mk heart">♥</span>';
       if (it.src === 'cyc-zone') return '<span class="mk zone">⚠︎</span>';
-      if (it.src === 'mb') return '<span class="dot mb"></span>';
-      if (it.src === 'trip') return '<span class="dot trip"></span>';
-      return `<span class="dot ${fieldClass(it.field)}"></span>`;
+      if (it.src === 'mb') return '<span class="mk">🔮</span>';
+      if (it.src === 'trip') return '<span class="mk">✈️</span>';
+      const m = (it.label.match(/^([\u{1F300}-\u{1FAFF}\u2600-\u27BF]\uFE0F?)/u) || [])[1]
+                || markFor(it.label, it.field);
+      return m ? `<span class="mk">${m}</span>` : `<span class="dot ${fieldClass(it.field)}"></span>`;
     }).join('');
     html += `<div class="cal-cell${inMonth ? '' : ' dim'}${ds === todayS ? ' today' : ''}${ds === calSel ? ' sel' : ''}" data-d="${ds}">${d.getDate()}<div class="dots">${dots}</div></div>`;
   }
   $('cal-grid').innerHTML = html;
   document.querySelectorAll('.cal-cell').forEach(c => c.addEventListener('click', () => {
-    calSel = c.dataset.d; $('cal-date').value = calSel; renderCal();
+    calSel = c.dataset.d; renderCal();
   }));
   renderDayList(ev);
 }
@@ -2766,7 +2771,7 @@ function switchTab(tab) {
   $('page-title').innerHTML = { today:`今日<span class="sub" id="today-date"></span>`, cal:'予定', inbox:'投げ込み', invest:'投資', health:'健康', quick:'コピペ帳' }[tab];
   if (tab === 'today') setToday();
   if (tab === 'quick') loadQuick();
-  if (tab === 'cal' && !$('cal-date').value) $('cal-date').value = new Date().toLocaleDateString('sv-SE');
+  if (tab === 'cal' && !calSel) { calSel = new Date().toLocaleDateString('sv-SE'); renderCal(); }
 }
 function setToday() {
   const el = $('today-date'); if (!el) return;
