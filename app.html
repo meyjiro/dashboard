@@ -480,6 +480,8 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 .calm-fields button{font-size:12px;padding:7px 12px;border:1px solid var(--border);border-radius:99px;
   background:var(--bg2);color:var(--text2);cursor:pointer;font-family:inherit}
 .calm-fields button.on{border-color:var(--accent);background:var(--accent);color:#fff;font-weight:600}
+.calnote{font-size:11.5px;line-height:1.75;color:var(--text3);margin:8px 0 0;
+  padding:9px 11px;background:var(--bg3);border-radius:9px}
 .calm-btns{display:flex;gap:8px;margin:20px 0 0}
 .calm-btns .btn{flex:1}
 /* 予定リストをカレンダーの真下に */
@@ -724,11 +726,13 @@ details.ops.ok[open]>summary::after{content:" ▴"}
     <div id="calm-pri-wrap" style="display:none">
       <label class="cl">通知の強さ</label>
       <select id="calm-pri">
-        <option value="min">静かに（バッジだけ）</option>
-        <option value="default" selected>ふつう</option>
-        <option value="high">しっかり鳴らす</option>
-        <option value="max">最優先（マナーモードでも鳴る）</option>
+        <option value="min">静かに（音なし・バッジだけ）</option>
+        <option value="default" selected>ふつう（1回）</option>
+        <option value="high">しっかり（前日夜＋当日朝の2回）</option>
+        <option value="max">最優先（前日夜＋当日朝＋当日昼の3回）</option>
       </select>
+      <p class="calnote">🔴 iPhoneでは通知音を強さで変えられません（iOSの仕様）。
+        代わりに<b>回数</b>で差を付けます。3回来れば見逃しません。</p>
     </div>
     <div class="calm-btns">
       <button class="btn" id="calm-cancel">やめる</button>
@@ -761,7 +765,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-01.2';
+const APP_VERSION = '2026-09-01.3';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
