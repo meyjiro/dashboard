@@ -515,6 +515,19 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 #cal-day-list .df{font-size:10.5px;color:var(--text3);margin-top:3px}
 #cal-day-list .drep{font-size:10.5px;color:var(--accent);margin-left:6px}
 #cal-day-list .dbell{font-size:11px;color:var(--text3);margin-left:5px}
+/* 通知の状態は一目で分かるピルにする（2026-09-03 メグ指摘: 付いているか分かりづらい） */
+#cal-day-list .npill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;margin-top:5px;border:1px solid var(--border);color:var(--text3);background:transparent}
+#cal-day-list .npill.on{color:#fff;background:var(--accent);border-color:var(--accent)}
+#cal-day-list .dbtn.nb{white-space:nowrap}
+#cal-day-list .dbtn.nb.on{border-color:var(--accent);color:var(--accent)}
+/* 通知を選ぶシート（番号入力の prompt をやめた） */
+#nsheet .modal{max-width:360px}
+#nsheet .nwhen{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 6px}
+#nsheet .nwhen button{flex:1 1 45%;padding:13px 10px;border:1px solid var(--border);border-radius:12px;background:var(--bg3);font-size:14px}
+#nsheet .nwhen button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+#nsheet .noff{width:100%;margin-top:6px;padding:12px;border:1px solid var(--border);border-radius:12px;background:transparent;font-size:14px;color:var(--text2)}
+#nsheet .noff.on{border-color:var(--text2);color:var(--text)}
+#nsheet .ncancel{width:100%;margin-top:10px;padding:10px;border:0;background:transparent;color:var(--text3);font-size:13px}
 .cal-add{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
 .cal-add input[type=date]{flex:1 1 100%;min-width:0}
 .cal-add input[type=text]{flex:1 1 auto;min-width:0;padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text)}
@@ -809,7 +822,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-01.10';
+const APP_VERSION = '2026-09-03.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1824,10 +1837,14 @@ function renderDayList(ev) {
           <div class="dm">${it.done ? '✅' : (m || '・')}</div>
           <div class="dt">${esc(body)}
             ${it.repeat ? `<span class="drep">${esc(it.repeat)}</span>` : ''}
-            ${it.notify ? `<span class="dbell">🔔 ${esc(it.notify)}${/critical|high|max/.test(it.meta||'') ? '（鳴る）' : ''}</span>` : ''}
-            <div class="df">${esc(it.field || '')}</div></div>
+            <div class="df">${esc(it.field || '')}</div>
+            ${(it.src === 'sched' && !it.done)
+              ? (it.notify
+                  ? `<span class="npill on">🔔 ${esc(NOTIFY_LABEL[it.notify] || it.notify)}に通知</span>`
+                  : `<span class="npill">🔕 通知なし</span>`)
+              : ''}</div>
           ${(it.src === 'sched' && !it.done && !it.repeated && idx >= 0)
-            ? `<button class="dbtn" onclick="editNotify(${idx})">${it.notify ? '通知を変える' : '🔔 通知を付ける'}</button>` : ''}
+            ? `<button class="dbtn nb${it.notify ? ' on' : ''}" onclick="editNotify(${idx})">${it.notify ? '変える' : '🔔 付ける'}</button>` : ''}
         </div>`;
       }).join('')
     : '<p class="empty">この日は予定なし</p>');
@@ -1964,22 +1981,41 @@ async function barkTryViaMac(sound, label){
 async function barkTest(){ await barkTry(window.__calSound || '', '今の設定'); }
 
 // あとから通知を付ける・変える
-async function editNotify(idx){
+// 🔴 番号を打たせる prompt はやめた（2026-09-03 メグ指摘）。ボタンを1回押すだけで決まる
+const NOTIFY_LABEL = {'当日朝':'当日の朝','前日夜':'前日の夜','3日前':'3日前の朝','7日前':'1週間前の朝'};
+function editNotify(idx){
   const r = schedRows[idx]; if(!r) return;
-  const cur = (r.meta||'').match(/通知:([^/\s|]+)(?:\/(\w+))?/);
-  const when = prompt(
-    `「${r.label.slice(0,24)}」の通知\n\n` +
-    `1 = 当日の朝（タイ8時）\n2 = 前日の夜（タイ20時）\n3 = 3日前の朝\n4 = 1週間前の朝\n0 = 通知をやめる`,
-    cur ? {'当日朝':'1','前日夜':'2','3日前':'3','7日前':'4'}[cur[1]] || '1' : '2');
-  if(when === null) return;
-  const W = {'1':'当日朝','2':'前日夜','3':'3日前','4':'7日前'}[when.trim()];
-  let meta = '';
-  if(when.trim() !== '0'){
-    if(!W){ toast('1〜4か0を入れてね'); return; }
-    // 🔴 鳴らし方は聞かない。既定＝マナーモードでも鳴る＋メグの音（2026-09-01）。
-    //    変えたいときはポップアップの「細かく変える」から
-    meta = `通知:${W}/high`;
+  const cur = ((r.meta||'').match(/通知:([^/\s|]+)/) || [])[1] || '';
+  let sh = $('nsheet');
+  if(!sh){
+    sh = document.createElement('div'); sh.id = 'nsheet'; sh.className = 'modal-overlay hidden';
+    sh.innerHTML = `<div class="modal">
+      <h2 id="ns-title"></h2>
+      <p id="ns-now"></p>
+      <div class="nwhen" id="ns-when"></div>
+      <button class="noff" id="ns-off">🔕 通知しない</button>
+      <p class="calnote" style="margin-top:8px">🎵 メグの音で、マナーモードでも鳴ります</p>
+      <button class="ncancel" id="ns-cancel">やめる</button>
+    </div>`;
+    document.body.appendChild(sh);
+    sh.addEventListener('click', e => { if(e.target === sh) sh.classList.add('hidden'); });
+    $('ns-cancel').onclick = () => sh.classList.add('hidden');
   }
+  $('ns-title').textContent = r.label.replace(/^([\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]+)/u,'').slice(0,30);
+  $('ns-now').textContent = cur ? `いまは「${NOTIFY_LABEL[cur] || cur}」に通知。押した瞬間に変わります` : 'いまは通知なし。押した瞬間に付きます';
+  $('ns-when').innerHTML = Object.entries(NOTIFY_LABEL)
+    .map(([v,l]) => `<button data-v="${v}" class="${v===cur?'on':''}">${l}</button>`).join('');
+  $('ns-when').querySelectorAll('button').forEach(b => b.onclick = () => { sh.classList.add('hidden'); applyNotify(idx, b.dataset.v); });
+  $('ns-off').className = 'noff' + (cur ? '' : ' on');
+  $('ns-off').onclick = () => { sh.classList.add('hidden'); applyNotify(idx, ''); };
+  sh.classList.remove('hidden');
+}
+async function applyNotify(idx, W){
+  const r = schedRows[idx]; if(!r) return;
+  // 🔴 鳴らし方は聞かない。既定＝マナーモードでも鳴る＋メグの音（2026-09-01）。
+  //    変えたいときは新規追加ポップアップの「細かく変える」から
+  const meta = W ? `通知:${W}/high` : '';
+  toast(W ? `🔔 ${NOTIFY_LABEL[W]}に通知…` : '🔕 通知をやめる…');
   try{
     for(let a=0; a<2; a++){
       const f = await getFileWithSha('スケジュール.md');
@@ -1998,7 +2034,7 @@ async function editNotify(idx){
         break;
       }catch(e){ if(a===1 || !String(e.message).includes('409')) throw e; }
     }
-    toast(meta ? '通知を付けました' : '通知をやめました');
+    toast(meta ? `🔔 ${NOTIFY_LABEL[W]}に通知を付けました` : '🔕 通知をやめました');
     await loadSchedule();
   }catch(e){ alert('変えられませんでした: '+e.message); }
 }
