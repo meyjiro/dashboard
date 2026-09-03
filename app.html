@@ -514,6 +514,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 #cal-day-list .dt{flex:1;font-size:13px;line-height:1.8;min-width:0;word-break:break-word}
 #cal-day-list .df{font-size:10.5px;color:var(--text3);margin-top:3px}
 #cal-day-list .drep{font-size:10.5px;color:var(--accent);margin-left:6px}
+a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 #cal-day-list .dbell{font-size:11px;color:var(--text3);margin-left:5px}
 /* 通知の状態は一目で分かるピルにする（2026-09-03 メグ指摘: 付いているか分かりづらい） */
 #cal-day-list .npill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;margin-top:5px;border:1px solid var(--border);color:var(--text3);background:transparent}
@@ -822,7 +823,7 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-03.1';
+const APP_VERSION = '2026-09-03.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -876,6 +877,12 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('show'), 2200);
 }
 function esc(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+// 🔴 予定・投げ込みの本文に入っているURLは、その場で押せるリンクにする（2026-09-03 メグ指示）。
+//    エスケープしてからURLだけ <a> に戻す。行のタップ（完了・通知）と衝突しないよう stopPropagation
+function escLink(s) {
+  return esc(s).replace(/(https?:\/\/[^\s<>"'）)」』、。]+)/g,
+    u => `<a class="inl" href="${u}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${u.length > 48 ? u.slice(0, 45) + '…' : u}</a>`);
+}
 const enc = s => btoa(unescape(encodeURIComponent(s)));
 const dec = s => decodeURIComponent(escape(atob(s.replace(/\n/g, ''))));
 function ts() {
@@ -1261,10 +1268,10 @@ function renderTodaySet(){
     <div class="tsh">今日やること <span>あと ${left.length}</span></div>
     ${left.map(i=> i.manual
       ? `<div class="tsrow">
-           <span class="tsn">${esc(i.label)}</span>
+           <span class="tsn">${escLink(i.label)}</span>
            <button class="tsdoneb" onclick="markSetDone('${esc(i.id)}')">済んだ</button></div>`
       : `<a class="tsrow" href="#${esc(i.anchor||'')}" onclick="jumpSet('${esc(i.anchor||'')}');return false">
-           <span class="tsn">${esc(i.label)}</span>
+           <span class="tsn">${escLink(i.label)}</span>
            <span class="tsm">${esc(i.mins||'')}</span></a>`).join('')}
   </div>`;
   setTimeout(askOpened, 60);
@@ -1472,10 +1479,10 @@ function renderBriefing() {
   if (ld) ld.innerHTML = laterDues.length
     ? `<details class="laterd"><summary>これから ${laterDues.length}件</summary>${laterDues.map(d=>
         `<div class="ldrow"><b>${esc(String(d.date||d.due||'').slice(5).replace('-','/'))}</b>
-         <span>${esc(d.title||d.what||d.summary||'')}</span></div>`).join('')}</details>` : '';
+         <span>${escLink(d.title||d.what||d.summary||'')}</span></div>`).join('')}</details>` : '';
         const done = doneKeys.some(x => x.key === key);
         return `<div class="due ${esc(d.urgency||'normal')} ${done?'done':''}" data-key="${esc(key)}">
-          <span class="d">${esc(d.date)}</span><span class="l">${esc(d.label)}</span>
+          <span class="d">${esc(d.date)}</span><span class="l">${escLink(d.label)}</span>
           <button class="due-btn ${done?'on':''}" data-i="${i}" ${done?'disabled':''}>${done?'✓ 報告済み':'✓ 完了'}</button>
           <div class="due-rep" id="rep-${i}">
             <textarea placeholder="どうやって終わった？ 気づいたこと・次にやること・結果など（空でもOK）"></textarea>
@@ -1835,7 +1842,7 @@ function renderDayList(ev) {
         const idx = schedRows.indexOf(it);
         return `<div class="dayrow">
           <div class="dm">${it.done ? '✅' : (m || '・')}</div>
-          <div class="dt">${esc(body)}
+          <div class="dt">${escLink(body)}
             ${it.repeat ? `<span class="drep">${esc(it.repeat)}</span>` : ''}
             <div class="df">${esc(it.field || '')}</div>
             ${(it.src === 'sched' && !it.done)
@@ -2756,7 +2763,7 @@ async function loadQuick() {
         <div class="qbody">${sec.items.map((it, ii) => `
           <div class="qrow">
             <div class="qtxt">
-              <div class="qlabel">${esc(it.label)}</div>
+              <div class="qlabel">${escLink(it.label)}</div>
               <div class="qval">${esc(it.value)}</div>
               ${it.note ? `<div class="qnote">${esc(it.note)}</div>` : ''}
             </div>
