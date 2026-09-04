@@ -823,7 +823,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-03.2';
+const APP_VERSION = '2026-09-04.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2381,8 +2381,16 @@ async function loadHealth() {
 
     const wcsv = await repoFile('meyjiro/personal', 'health/data/workouts.csv');
     if (wcsv) {
-      const ws = parseCsv(wcsv).slice(-3).reverse();
-      $('health-workouts').innerHTML = ws.map(w =>
+      const all = parseCsv(wcsv);
+      const ws = all.slice(-3).reverse();
+      // 🔴 止まっていることを隠さない（2026-09-04: 8/22で止まったまま13日間気づかなかった）
+      let stale = '';
+      if (all.length) {
+        const last = all[all.length - 1].start.slice(0, 10);
+        const days = Math.floor((Date.now() - new Date(last + 'T00:00:00')) / 864e5);
+        if (days >= 3) stale = `<div class="card" style="border-color:#c0392b"><div class="t" style="font-size:13px;color:#c0392b">🔴 ワークアウトが${days}日止まっています（最後: ${esc(last)}）</div><div class="s">iPhoneのショートカット「健康ワークアウト」が未設定か停止中。作り方は claude-context/projects/B4_自己管理/身体健康.md</div></div>`;
+      }
+      $('health-workouts').innerHTML = stale + ws.map(w =>
         `<div class="card"><div class="t" style="font-size:14px">${esc(w.name)} ${w.duration_min}分${+w.distance_km ? `・${w.distance_km}km` : ''}</div><div class="s">${esc(w.start)}　平均${w.avg_hr || '—'}bpm・${w.kcal}kcal</div></div>`).join('');
     }
   } catch (e) {}
