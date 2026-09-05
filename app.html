@@ -520,6 +520,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 #cal-day-list .npill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;margin-top:5px;border:1px solid var(--border);color:var(--text3);background:transparent}
 #cal-day-list .npill.on{color:#fff;background:var(--accent);border-color:var(--accent)}
 #cal-day-list .dbtn.nb{white-space:nowrap}
+#cal-day-list .dbtn.del{margin-left:4px;padding:6px 8px;color:var(--text3)}
 #cal-day-list .dbtn.nb.on{border-color:var(--accent);color:var(--accent)}
 /* 通知を選ぶシート（番号入力の prompt をやめた） */
 #nsheet .modal{max-width:360px}
@@ -823,7 +824,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-04.1';
+const APP_VERSION = '2026-09-05.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1852,6 +1853,8 @@ function renderDayList(ev) {
               : ''}</div>
           ${(it.src === 'sched' && !it.done && !it.repeated && idx >= 0)
             ? `<button class="dbtn nb${it.notify ? ' on' : ''}" onclick="editNotify(${idx})">${it.notify ? '変える' : '🔔 付ける'}</button>` : ''}
+          ${(it.src === 'sched' && !it.repeated && idx >= 0)
+            ? `<button class="dbtn del" title="この予定を消す" onclick="deleteSched(${idx})">🗑</button>` : ''}
         </div>`;
       }).join('')
     : '<p class="empty">この日は予定なし</p>');
@@ -1986,6 +1989,30 @@ async function barkTryViaMac(sound, label){
   }
 }
 async function barkTest(){ await barkTry(window.__calSound || '', '今の設定'); }
+
+// 予定を1件だけ消す（スケジュール表の行ごと削除。2026-09-05 メグ投げ込み）
+async function deleteSched(idx){
+  const r = schedRows[idx]; if(!r) return;
+  const nm = r.label.replace(/^([\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]+)/u,'').slice(0,30);
+  if(!confirm(`「${nm}」（${r.date}）をスケジュール表から消します。元に戻せません。いい？`)) return;
+  toast('消しています…');
+  try{
+    for(let a=0; a<2; a++){
+      const f = await getFileWithSha('スケジュール.md');
+      const lines = f.text.split('\n');
+      const i = lines.findIndex(l => /^\s*\|~?\s*/.test(l) && l.replace(/^\s*\|~?\s*/,'').startsWith(r.date + ' |') && l.includes(r.label.slice(0,16)));
+      if(i < 0) throw new Error('その行が見つかりません');
+      lines.splice(i, 1);
+      try{
+        await api(`/repos/${REPO}/contents/${encodeURIComponent('スケジュール.md')}`, 'PUT',
+          {message:`予定を削除: ${r.date} ${r.label.slice(0,20)}`, content:enc(lines.join('\n')), sha:f.sha, branch:BRANCH});
+        break;
+      }catch(e){ if(a===1 || !String(e.message).includes('409')) throw e; }
+    }
+    toast('🗑 消しました');
+    await loadSchedule();
+  }catch(e){ alert('消せませんでした: '+e.message); }
+}
 
 // あとから通知を付ける・変える
 // 🔴 番号を打たせる prompt はやめた（2026-09-03 メグ指摘）。ボタンを1回押すだけで決まる
