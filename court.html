@@ -434,7 +434,7 @@ function detailHTML(v){
   // ── 判決（最上部。やさしい言い換えが入ったので結論から読める）──
   if(d){
     h+='<div id="dec" class="decision '+esc(v.level)+'"><div class="dhead">判　決　—　'+esc(v.ruling)+'</div><div class="dbody">';
-    if(d.plain){
+    if(typeof d.plain==='string'&&d.plain){
       h+='<div class="plain">'+d.plain.split('\n\n').map(x=>'<p>'+esc(x)+'</p>').join('')+'</div>'
         +'<details class="more"><summary>もとの判決文を読む</summary><p class="dsum">'+esc(d.summary)+'</p></details>';
     }else{
@@ -468,13 +468,21 @@ function detailHTML(v){
     h+='<details class="sec" open><summary>① まず、この会社の話</summary><div class="secb">'
       +'<p class="oneliner lead">'+esc(p.oneliner)+'</p>';
     if(p.founded_note)h+='<div class="note">'+esc(p.founded_note)+'</div>';
-    if(p.chain){h+='<div class="blk"><h4>'+esc(p.chain.caption)+'</h4><div class="steps">'
-      +p.chain.steps.map(st=>'<div class="step'+(st.here?' here':'')+'"><div class="sn">'+esc(st.n)+'</div><div class="sw">'+esc(st.who)+'</div></div>').join('')+'</div></div>'}
+    if(p.chain){h+='<div class="blk"><h4>'+esc(p.chain.caption||'')+'</h4><div class="steps">'
+      +(p.chain.steps||[]).map(st=>'<div class="step'+(st.here?' here':'')+'"><div class="sn">'+esc(st.n)+'</div><div class="sw">'+esc(st.who)+'</div></div>').join('')+'</div></div>'}
     if((v.facts||[]).length){h+='<div class="facts">'+v.facts.map(f=>'<div class="fact"><div class="v">'+esc(f.value)+'</div>'
       +'<div class="l">'+esc(f.label)+'</div>'+(f.sub?'<div class="s">'+esc(f.sub)+'</div>':'')+'</div>').join('')+'</div>'}
-    if(p.share){h+='<div class="blk"><h4>'+esc(p.share.caption)+'</h4><div class="sharebar">'
-      +p.share.bars.map(bb=>'<div class="sb-'+esc(bb.tone)+'" style="width:'+bb.pct+'%">'+esc(bb.name)+' '+bb.pct+'%</div>').join('')
-      +'</div><div style="font-size:11px;color:var(--text3)">'+esc(p.share.note)+'</div></div>'}
+    if(p.share){
+      // シェアの物差しが効かない銘柄では share が説明文（文字列）で入る。バーが無くても落とさない
+      if(typeof p.share==='string'){
+        h+='<div class="blk"><h4>市場での位置</h4><div class="note">'+esc(p.share)+'</div></div>'
+      }else{
+        const bars=p.share.bars||[];
+        h+='<div class="blk"><h4>'+esc(p.share.caption||'市場での位置')+'</h4>'
+          +(bars.length?'<div class="sharebar">'+bars.map(bb=>'<div class="sb-'+esc(bb.tone)+'" style="width:'+bb.pct+'%">'+esc(bb.name)+' '+bb.pct+'%</div>').join('')+'</div>':'')
+          +(p.share.note?'<div style="font-size:11px;color:var(--text3)">'+esc(p.share.note)+'</div>':'')+'</div>'
+      }
+    }
     if((p.peers||[]).length){h+='<div class="blk"><h4>まわりにいる会社</h4>'
       +p.peers.map(x=>'<div class="peer '+esc(x.tone)+'"><div class="pr">'+esc(x.role)+'</div><div class="pn">'+esc(x.name)+'</div><div class="pw">'+x.what+'</div></div>').join('')+'</div>'}
     if((p.context||[]).length){h+='<div class="blk"><h4>背景を知る</h4>'
