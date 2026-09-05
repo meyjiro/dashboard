@@ -825,7 +825,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-05.4';
+const APP_VERSION = '2026-09-05.5';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1779,7 +1779,10 @@ function calEvents() {
   const m0 = calM !== undefined ? calM : new Date().getMonth();
   const viewEnd = new Date(y0, m0 + 2, 0);   // 表示中の月＋1か月先まで
   schedRows.forEach(r => {
-    add(r.date, r);
+    // 🔴 Googleカレンダー方式（2026-09-05）: 繰り返しは「終了日」と「除外日」を持てる。
+    //    終了日は繰り返し欄に `毎月〜2026-12-08`、除外日は通知欄に `除外:2026-10-09,2026-11-09`
+    const endD = repEnd(r.repeat), skip = repSkips(r.meta);
+    if (!skip.includes(r.date)) add(r.date, r);
     if (!r.repeat) return;
     let d = new Date(r.date + 'T12:00:00');
     const day0 = d.getDate();
@@ -1790,7 +1793,10 @@ function calEvents() {
       else if (r.repeat.includes('毎年')) d = new Date(d.getFullYear() + 1, d.getMonth(), day0);
       else break;
       if (d > viewEnd) break;
-      add(d.toLocaleDateString('sv-SE'), Object.assign({}, r, { repeated: true, done: false, base: r }));
+      const ds2 = d.toLocaleDateString('sv-SE');
+      if (endD && ds2 > endD) break;
+      if (skip.includes(ds2)) continue;
+      add(ds2, Object.assign({}, r, { repeated: true, done: false, base: r, occ: ds2 }));
     }
   });
   (window.__mebiusEvents || []).forEach(e => { if (e.end) add(e.end, { label: `🔮 ${e.name} 様 完了`, src: 'mb' }); });
@@ -1854,7 +1860,7 @@ function renderDayList(ev) {
                   : `<button class="npill" onclick="editNotify(${idx})">🔕 通知なし</button>`)
               : ''}</div>
           ${(it.src === 'sched' && idx >= 0)
-            ? `<button class="dbtn del" title="この予定を直す" onclick="editSched(${idx})">✏️</button><button class="dbtn del" title="この予定を消す" onclick="deleteSched(${idx})">🗑</button>` : ''}
+            ? `<button class="dbtn del" title="この予定を直す" onclick="editSched(${idx},'${calSel}')">✏️</button><button class="dbtn del" title="この予定を消す" onclick="deleteSched(${idx},'${calSel}')">🗑</button>` : ''}
         </div>`;
       }).join('')
     : '<p class="empty">この日は予定なし</p>');
@@ -1881,7 +1887,7 @@ function markFor(text, field){
 
 // ── 予定の追加（ポップアップ・2026-09-01）──
 function openCalModal(){
-  window.__calEdit = null; $('calm-title').textContent = '予定を追加'; $('calm-save').textContent = '追加する';
+  window.__calEdit = null; window.__calOcc = null; $('calm-title').textContent = '予定を追加'; $('calm-save').textContent = '追加する';
   const d = calSel || new Date().toLocaleDateString('sv-SE');
   $('calm-date').value = d; $('calm-text').value = '';
   $('calm-repeat').value = '';
@@ -1991,19 +1997,77 @@ async function barkTryViaMac(sound, label){
 }
 async function barkTest(){ await barkTry(window.__calSound || '', '今の設定'); }
 
+// ── 繰り返しの書式（Googleカレンダー方式・2026-09-05）──
+//   繰り返し欄: `毎月` / `毎月〜2026-12-08`（終了日つき）
+//   通知欄:     `除外:2026-10-09,2026-11-09`（この回だけ消した日）
+function repEnd(rep){ const m = (rep||'').match(/[〜~](\d{4}-\d{2}-\d{2})/); return m ? m[1] : ''; }
+function repBase(rep){ return (rep||'').replace(/[〜~]\d{4}-\d{2}-\d{2}/, '').trim(); }
+function repSkips(meta){ const m = (meta||'').match(/除外:([\d\-,]+)/); return m ? m[1].split(',').filter(Boolean) : []; }
+function metaWithout(meta, key){ return (meta||'').replace(new RegExp(key + ':[^\\s|]+\\s*'), '').trim(); }
+function prevDay(ds){ const d = new Date(ds + 'T12:00:00'); d.setDate(d.getDate() - 1); return d.toLocaleDateString('sv-SE'); }
+function buildRow(o){
+  let r = `| ${o.date} | ${o.field} | ${o.mark || ''}${String(o.text).replace(/\|/g,'／')} |`;
+  if (o.rep || o.meta) r += ` ${o.rep || ''} |`;
+  if (o.meta) r += ` ${o.meta} |`;
+  if (o.done) r = '|~' + r.slice(1);
+  return r;
+}
+function findRowIdx(lines, row){
+  return lines.findIndex(l => /^\s*\|~?\s*/.test(l)
+    && l.replace(/^\s*\|~?\s*/,'').startsWith(row.date + ' |')
+    && l.includes(row.label.slice(0,16)));
+}
+// スケジュール.md を1回だけ読んで直して書く（409は1度だけやり直す）
+async function editSchedFile(msg, fn){
+  for (let a = 0; a < 2; a++) {
+    const f = await getFileWithSha('スケジュール.md');
+    if (!f) throw new Error('スケジュール.mdが見つかりません');
+    const lines = f.text.split('\n');
+    if (fn(lines) === false) throw new Error('その行が見つかりません');
+    try {
+      await api(`/repos/${REPO}/contents/${encodeURIComponent('スケジュール.md')}`, 'PUT',
+        { message: msg, content: enc(lines.join('\n')), sha: f.sha, branch: BRANCH });
+      return;
+    } catch (e) { if (a === 1 || !String(e.message).includes('409')) throw e; }
+  }
+}
+// 繰り返しの予定を触るとき、範囲を聞く（Googleカレンダーと同じ3択）
+function askScope(verb, name){
+  return new Promise(resolve => {
+    let sh = $('rsheet');
+    if (!sh) {
+      sh = document.createElement('div'); sh.id = 'rsheet'; sh.className = 'modal-overlay hidden';
+      sh.innerHTML = `<div class="modal"><h2 id="rs-title"></h2><p id="rs-sub"></p>
+        <div class="nwhen" id="rs-opts">
+          <button data-v="this">この予定</button>
+          <button data-v="following">これ以降のすべて</button>
+          <button data-v="all">すべての予定</button>
+        </div><button class="ncancel" id="rs-cancel">やめる</button></div>`;
+      document.body.appendChild(sh);
+    }
+    $('rs-title').textContent = `${name} を${verb}`;
+    $('rs-sub').textContent = 'くり返しの予定です。どこまで' + verb + 'ますか';
+    const done = v => { sh.classList.add('hidden'); resolve(v); };
+    $('rs-opts').querySelectorAll('button').forEach(b => b.onclick = () => done(b.dataset.v));
+    $('rs-cancel').onclick = () => done(null);
+    sh.onclick = e => { if (e.target === sh) done(null); };
+    sh.classList.remove('hidden');
+  });
+}
+
 // 予定を直す（日付・内容・記号・分野・繰り返し・通知を書き換える。2026-09-05 メグ指示「手動で訂正できるように」）
-function editSched(idx){
+function editSched(idx, occ){
   const r = schedRows[idx]; if(!r) return;
   openCalModal();
-  window.__calEdit = r;
-  $('calm-title').textContent = r.repeat ? `予定を直す（${r.repeat}の実体・全部の回に効きます）` : '予定を直す';
+  window.__calEdit = r; window.__calOcc = occ || r.date;
+  $('calm-title').textContent = r.repeat ? `予定を直す（${repBase(r.repeat)}）` : '予定を直す';
   $('calm-save').textContent = '保存する';
-  $('calm-date').value = r.date;
+  $('calm-date').value = window.__calOcc;
   const m = (r.label.match(/^([\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]+)/u) || [])[1] || '';
   $('calm-text').value = r.label.replace(/^([\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]+)/u, '');
   window.__calMark = m; $('calm-marks').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
   window.__calField = r.field || '個人'; $('calm-fields').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.f === window.__calField));
-  $('calm-repeat').value = r.repeat || '';
+  $('calm-repeat').value = repBase(r.repeat) || '';
   if (r.notify) {
     const onBtn = $('calm-ntog').querySelector('button[data-v="on"]'); if (onBtn) onBtn.click();
     const wb = $('calm-when').querySelector(`button[data-v="${r.notify}"]`); if (wb) wb.click();
@@ -2012,25 +2076,34 @@ function editSched(idx){
 }
 
 // 予定を1件だけ消す（スケジュール表の行ごと削除。2026-09-05 メグ投げ込み）
-async function deleteSched(idx){
+async function deleteSched(idx, occ){
   const r = schedRows[idx]; if(!r) return;
-  const nm = r.label.replace(/^([\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]+)/u,'').slice(0,30);
-  if(!confirm(`「${nm}」（${r.date}${r.repeat ? '・'+r.repeat+'の全部の回' : ''}）をスケジュール表から消します。元に戻せません。いい？`)) return;
+  const nm = r.label.replace(/^([\u{1F300}-\u{1FAFF}☀-➿️]+)/u,'').slice(0,30);
+  occ = occ || r.date;
+  let scope = 'all';
+  if (r.repeat) {
+    scope = await askScope('消し', nm);
+    if (!scope) return;
+  } else if (!confirm(`「${nm}」（${r.date}）を消します。元に戻せません。いい？`)) return;
   toast('消しています…');
   try{
-    for(let a=0; a<2; a++){
-      const f = await getFileWithSha('スケジュール.md');
-      const lines = f.text.split('\n');
-      const i = lines.findIndex(l => /^\s*\|~?\s*/.test(l) && l.replace(/^\s*\|~?\s*/,'').startsWith(r.date + ' |') && l.includes(r.label.slice(0,16)));
-      if(i < 0) throw new Error('その行が見つかりません');
-      lines.splice(i, 1);
-      try{
-        await api(`/repos/${REPO}/contents/${encodeURIComponent('スケジュール.md')}`, 'PUT',
-          {message:`予定を削除: ${r.date} ${r.label.slice(0,20)}`, content:enc(lines.join('\n')), sha:f.sha, branch:BRANCH});
-        break;
-      }catch(e){ if(a===1 || !String(e.message).includes('409')) throw e; }
-    }
-    toast('🗑 消しました');
+    await editSchedFile(`予定を削除(${scope}): ${occ} ${r.label.slice(0,20)}`, lines => {
+      const i = findRowIdx(lines, r);
+      if (i < 0) return false;
+      if (scope === 'all' || (scope === 'following' && occ === r.date)) {
+        lines.splice(i, 1);
+      } else if (scope === 'following') {
+        lines[i] = buildRow({ date: r.date, field: r.field, text: r.label,
+          rep: repBase(r.repeat) + '〜' + prevDay(occ), meta: r.meta,
+          done: /^\s*\|~/.test(lines[i]) });
+      } else { // this
+        const skips = repSkips(r.meta); if (!skips.includes(occ)) skips.push(occ);
+        const meta = (metaWithout(r.meta, '除外') + ' 除外:' + skips.sort().join(',')).trim();
+        lines[i] = buildRow({ date: r.date, field: r.field, text: r.label,
+          rep: r.repeat, meta, done: /^\s*\|~/.test(lines[i]) });
+      }
+    });
+    toast(scope === 'this' ? '🗑 この回を消しました' : (scope === 'following' ? '🗑 これ以降を消しました' : '🗑 消しました'));
     await loadSchedule();
   }catch(e){ alert('消せませんでした: '+e.message); }
 }
@@ -2097,7 +2170,6 @@ async function applyNotify(idx, W){
 async function saveCalEvent(){
   const date = $('calm-date').value, text = $('calm-text').value.trim();
   if (!date || !text) { toast('日付と内容を入れてね'); return; }
-  const btn = $('calm-save'); btn.disabled = true;
   const mark = window.__calMark || markFor(text, window.__calField);
   const field = window.__calField || '個人';
   const rep = $('calm-repeat').value;
@@ -2110,45 +2182,53 @@ async function saveCalEvent(){
     if (v !== '5') meta += ` 音量:${v}`;
     if ($('calm-call').checked) meta += ' 鳴らし続ける';
   }
-  // | 日付 | 分野 | 記号+やること | 繰り返し | 通知 |
-  let row = `| ${date} | ${field} | ${mark}${text.replace(/\|/g,'／')} |`;
-  if (rep || meta) row += ` ${rep} |`;
-  if (meta) row += ` ${meta} |`;
+  const ed = window.__calEdit, occ = window.__calOcc || date;
+  // 🔴 くり返しの予定を直すときは、Googleカレンダーと同じく保存の直前に範囲を聞く（2026-09-05）
+  let scope = 'all';
+  if (ed && ed.repeat) {
+    const nm = ed.label.replace(/^([\u{1F300}-\u{1FAFF}☀-➿️]+)/u,'').slice(0,30);
+    scope = await askScope('直し', nm);
+    if (!scope) return;
+  }
+  const btn = $('calm-save'); btn.disabled = true;
   try {
-    for (let attempt = 0; attempt < 2; attempt++) {
-      const f = await getFileWithSha('スケジュール.md');
-      if (!f) throw new Error('スケジュール.mdが見つかりません');
-      const lines = f.text.split('\n');
-      const ed = window.__calEdit;
-      let msg = `予定追加: ${date} ${text}（ダッシュボード）`;
-      if (ed) {
-        const i = lines.findIndex(l => /^\s*\|~?\s*/.test(l) && l.replace(/^\s*\|~?\s*/,'').startsWith(ed.date + ' |') && l.includes(ed.label.slice(0,16)));
-        if (i < 0) throw new Error('直す行が見つかりません');
-        const done = /^\s*\|~/.test(lines[i]);
-        const kept = ((ed.meta||'').match(/済:\d{4}-\d{2}-\d{2}/) || [])[0] || '';
-        let r2 = `| ${date} | ${field} | ${mark}${text.replace(/\|/g,'／')} |`;
-        const meta2 = [kept, meta].filter(Boolean).join(' ');
-        if (rep || meta2) r2 += ` ${rep} |`;
-        if (meta2) r2 += ` ${meta2} |`;
-        if (done) r2 = '|~' + r2.slice(1);
-        lines[i] = r2;
-        msg = `予定を修正: ${date} ${text}（ダッシュボード）`;
-      } else {
+    await editSchedFile(ed ? `予定を修正(${scope}): ${date} ${text}（ダッシュボード）`
+                           : `予定追加: ${date} ${text}（ダッシュボード）`, lines => {
+      if (!ed) {
         let last = -1;
         lines.forEach((l, i) => { if (/^\s*\|~?\s*\d{4}-\d{2}-\d{2}\s*\|/.test(l)) last = i; });
-        if (last < 0) throw new Error('表が見つかりません');
-        lines.splice(last + 1, 0, row);
+        if (last < 0) return false;
+        lines.splice(last + 1, 0, buildRow({ date, field, mark, text, rep, meta }));
+        return;
       }
-      try {
-        await api(`/repos/${REPO}/contents/${encodeURIComponent('スケジュール.md')}`, 'PUT',
-          { message: msg,
-            content: enc(lines.join('\n')), sha: f.sha, branch: BRANCH });
-        break;
-      } catch (e) { if (attempt === 1 || !String(e.message).includes('409')) throw e; }
-    }
+      const i = findRowIdx(lines, ed);
+      if (i < 0) return false;
+      const done = /^\s*\|~/.test(lines[i]);
+      const kept = ((ed.meta||'').match(/済:\d{4}-\d{2}-\d{2}/) || [])[0] || '';
+      const newMeta = [kept, meta].filter(Boolean).join(' ');
+      if (!ed.repeat || scope === 'all' || (scope === 'following' && occ === ed.date)) {
+        // すべての回 = 実体行をそのまま書き換える。日付を触っていなければ元の起点を保つ
+        const anchor = (date === occ && ed.repeat) ? ed.date : date;
+        const skips = repSkips(ed.meta);
+        const m2 = [newMeta, skips.length ? '除外:' + skips.join(',') : ''].filter(Boolean).join(' ');
+        lines[i] = buildRow({ date: anchor, field, mark, text, rep, meta: m2, done });
+      } else if (scope === 'this') {
+        // この回だけ = 元の回を除外して、単発の行を足す
+        const skips = repSkips(ed.meta); if (!skips.includes(occ)) skips.push(occ);
+        const m2 = (metaWithout(ed.meta, '除外') + ' 除外:' + skips.sort().join(',')).trim();
+        lines[i] = buildRow({ date: ed.date, field: ed.field, text: ed.label, rep: ed.repeat, meta: m2, done });
+        lines.splice(i + 1, 0, buildRow({ date, field, mark, text, rep: '', meta }));
+      } else {
+        // これ以降 = 元のくり返しを前の回で終わらせ、新しいくり返しを足す
+        lines[i] = buildRow({ date: ed.date, field: ed.field, text: ed.label,
+          rep: repBase(ed.repeat) + '〜' + prevDay(occ), meta: ed.meta, done });
+        lines.splice(i + 1, 0, buildRow({ date, field, mark, text, rep, meta }));
+      }
+    });
     $('cal-modal').classList.add('hidden');
-    toast(window.__calEdit ? '直しました' : (nt ? '追加しました（通知はMacの巡回で予約されます）' : '追加しました'));
-    window.__calEdit = null;
+    toast(!ed ? (nt ? '追加しました（通知はMacの巡回で予約されます）' : '追加しました')
+              : (scope === 'this' ? 'この回だけ直しました' : (scope === 'following' ? 'これ以降を直しました' : '直しました')));
+    window.__calEdit = null; window.__calOcc = null;
     await loadSchedule();
   } catch (e) { alert((window.__calEdit ? '直せませんでした: ' : '追加できませんでした: ') + e.message); }
   finally { btn.disabled = false; }
