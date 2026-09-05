@@ -824,7 +824,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-05.1';
+const APP_VERSION = '2026-09-05.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1854,7 +1854,7 @@ function renderDayList(ev) {
           ${(it.src === 'sched' && !it.done && !it.repeated && idx >= 0)
             ? `<button class="dbtn nb${it.notify ? ' on' : ''}" onclick="editNotify(${idx})">${it.notify ? '変える' : '🔔 付ける'}</button>` : ''}
           ${(it.src === 'sched' && !it.repeated && idx >= 0)
-            ? `<button class="dbtn del" title="この予定を消す" onclick="deleteSched(${idx})">🗑</button>` : ''}
+            ? `<button class="dbtn del" title="この予定を直す" onclick="editSched(${idx})">✏️</button><button class="dbtn del" title="この予定を消す" onclick="deleteSched(${idx})">🗑</button>` : ''}
         </div>`;
       }).join('')
     : '<p class="empty">この日は予定なし</p>');
@@ -1881,6 +1881,7 @@ function markFor(text, field){
 
 // ── 予定の追加（ポップアップ・2026-09-01）──
 function openCalModal(){
+  window.__calEdit = null; $('calm-title').textContent = '予定を追加'; $('calm-save').textContent = '追加する';
   const d = calSel || new Date().toLocaleDateString('sv-SE');
   $('calm-date').value = d; $('calm-text').value = '';
   $('calm-repeat').value = '';
@@ -1990,6 +1991,26 @@ async function barkTryViaMac(sound, label){
 }
 async function barkTest(){ await barkTry(window.__calSound || '', '今の設定'); }
 
+// 予定を直す（日付・内容・記号・分野・繰り返し・通知を書き換える。2026-09-05 メグ指示「手動で訂正できるように」）
+function editSched(idx){
+  const r = schedRows[idx]; if(!r) return;
+  openCalModal();
+  window.__calEdit = r;
+  $('calm-title').textContent = '予定を直す';
+  $('calm-save').textContent = '保存する';
+  $('calm-date').value = r.date;
+  const m = (r.label.match(/^([\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]+)/u) || [])[1] || '';
+  $('calm-text').value = r.label.replace(/^([\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]+)/u, '');
+  window.__calMark = m; $('calm-marks').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+  window.__calField = r.field || '個人'; $('calm-fields').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.f === window.__calField));
+  $('calm-repeat').value = r.repeat || '';
+  if (r.notify) {
+    const onBtn = $('calm-ntog').querySelector('button[data-v="on"]'); if (onBtn) onBtn.click();
+    const wb = $('calm-when').querySelector(`button[data-v="${r.notify}"]`); if (wb) wb.click();
+    const pri = ((r.meta||'').match(/通知:[^/\s|]+\/(\w+)/) || [])[1]; if (pri) $('calm-pri').value = pri;
+  }
+}
+
 // 予定を1件だけ消す（スケジュール表の行ごと削除。2026-09-05 メグ投げ込み）
 async function deleteSched(idx){
   const r = schedRows[idx]; if(!r) return;
@@ -2098,21 +2119,38 @@ async function saveCalEvent(){
       const f = await getFileWithSha('スケジュール.md');
       if (!f) throw new Error('スケジュール.mdが見つかりません');
       const lines = f.text.split('\n');
-      let last = -1;
-      lines.forEach((l, i) => { if (/^\s*\|~?\s*\d{4}-\d{2}-\d{2}\s*\|/.test(l)) last = i; });
-      if (last < 0) throw new Error('表が見つかりません');
-      lines.splice(last + 1, 0, row);
+      const ed = window.__calEdit;
+      let msg = `予定追加: ${date} ${text}（ダッシュボード）`;
+      if (ed) {
+        const i = lines.findIndex(l => /^\s*\|~?\s*/.test(l) && l.replace(/^\s*\|~?\s*/,'').startsWith(ed.date + ' |') && l.includes(ed.label.slice(0,16)));
+        if (i < 0) throw new Error('直す行が見つかりません');
+        const done = /^\s*\|~/.test(lines[i]);
+        const kept = ((ed.meta||'').match(/済:\d{4}-\d{2}-\d{2}/) || [])[0] || '';
+        let r2 = `| ${date} | ${field} | ${mark}${text.replace(/\|/g,'／')} |`;
+        const meta2 = [kept, meta].filter(Boolean).join(' ');
+        if (rep || meta2) r2 += ` ${rep} |`;
+        if (meta2) r2 += ` ${meta2} |`;
+        if (done) r2 = '|~' + r2.slice(1);
+        lines[i] = r2;
+        msg = `予定を修正: ${date} ${text}（ダッシュボード）`;
+      } else {
+        let last = -1;
+        lines.forEach((l, i) => { if (/^\s*\|~?\s*\d{4}-\d{2}-\d{2}\s*\|/.test(l)) last = i; });
+        if (last < 0) throw new Error('表が見つかりません');
+        lines.splice(last + 1, 0, row);
+      }
       try {
         await api(`/repos/${REPO}/contents/${encodeURIComponent('スケジュール.md')}`, 'PUT',
-          { message: `予定追加: ${date} ${text}（ダッシュボード）`,
+          { message: msg,
             content: enc(lines.join('\n')), sha: f.sha, branch: BRANCH });
         break;
       } catch (e) { if (attempt === 1 || !String(e.message).includes('409')) throw e; }
     }
     $('cal-modal').classList.add('hidden');
-    toast(nt ? '追加しました（通知はMacの巡回で予約されます）' : '追加しました');
+    toast(window.__calEdit ? '直しました' : (nt ? '追加しました（通知はMacの巡回で予約されます）' : '追加しました'));
+    window.__calEdit = null;
     await loadSchedule();
-  } catch (e) { alert('追加できませんでした: ' + e.message); }
+  } catch (e) { alert((window.__calEdit ? '直せませんでした: ' : '追加できませんでした: ') + e.message); }
   finally { btn.disabled = false; }
 }
 
