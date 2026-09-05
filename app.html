@@ -704,8 +704,9 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
       <div class="card" id="health-steps"><p class="empty">Apple Watchのデータ待ち</p></div>
       <div class="section-title">❤️ 安静時心拍（30日）</div>
       <div class="card" id="health-rhr"><p class="empty">Apple Watchのデータ待ち</p></div>
-      <div class="section-title">🏃 直近のワークアウト</div>
-      <div id="health-workouts"><p class="empty">—</p></div>
+      <div class="section-title">🏃 運動した時間（14日）</div>
+      <div class="card" id="health-ex"><p class="empty">Apple Watchのデータ待ち</p></div>
+      <div id="health-workouts"></div>
       <div id="health-note"></div>
     </div>
 
@@ -825,7 +826,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-05.5';
+const APP_VERSION = '2026-09-05.6';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2523,20 +2524,24 @@ async function loadHealth() {
     if (steps.length > 1) { sparkBars($('health-steps'), steps, '歩'); $('health-steps').setAttribute('title', `歩数の推移（直近${steps.length}日）`); }
     const rhr = rows.slice(-30).filter(r => r.resting_hr).map(r => ({ label: md(r.date), v: +r.resting_hr }));
     if (rhr.length > 1) { sparkLine($('health-rhr'), rhr, 'bpm'); $('health-rhr').setAttribute('title', `安静時心拍の推移（直近${rhr.length}日）`); }
+    // 🔴 2026-09-05: ワークアウトの明細（種目ごと）はiPhone側の書き出しが要るが、
+    //    運動した分数・距離は日次データに毎日入っている。明細が無くても運動量は見えるようにする
+    const ex = rows.slice(-14).filter(r => r.exercise_min !== undefined && r.exercise_min !== '')
+                   .map(r => ({ label: md(r.date), v: +r.exercise_min }));
+    if (ex.length > 1) { sparkBars($('health-ex'), ex, '分'); $('health-ex').setAttribute('title', `運動した時間の推移（直近${ex.length}日）`); }
 
     const wcsv = await repoFile('meyjiro/personal', 'health/data/workouts.csv');
     if (wcsv) {
       const all = parseCsv(wcsv);
       const ws = all.slice(-3).reverse();
-      // 🔴 止まっていることを隠さない（2026-09-04: 8/22で止まったまま13日間気づかなかった）
-      let stale = '';
-      if (all.length) {
-        const last = all[all.length - 1].start.slice(0, 10);
-        const days = Math.floor((Date.now() - new Date(last + 'T00:00:00')) / 864e5);
-        if (days >= 3) stale = `<div class="card" style="border-color:#c0392b"><div class="t" style="font-size:13px;color:#c0392b">🔴 ワークアウトが${days}日止まっています（最後: ${esc(last)}）</div><div class="s">iPhoneのショートカット「健康ワークアウト」が未設定か停止中。作り方は claude-context/projects/B4_自己管理/身体健康.md</div></div>`;
-      }
-      $('health-workouts').innerHTML = stale + ws.map(w =>
-        `<div class="card"><div class="t" style="font-size:14px">${esc(w.name)} ${w.duration_min}分${+w.distance_km ? `・${w.distance_km}km` : ''}</div><div class="s">${esc(w.start)}　平均${w.avg_hr || '—'}bpm・${w.kcal}kcal</div></div>`).join('');
+      // 🔴 2026-09-05: 種目ごとの明細は止まっているが、上の「運動した時間」で用は足りている。
+      //    毎日赤で警告するのはやめ、新しいときだけ明細を出す（止まっている事実は朝の巡回が持つ）
+      const last = all.length ? all[all.length - 1].start.slice(0, 10) : '';
+      const days = last ? Math.floor((Date.now() - new Date(last + 'T00:00:00')) / 864e5) : 999;
+      $('health-workouts').innerHTML = days < 4
+        ? `<div class="section-title">種目ごとの記録</div>` + ws.map(w =>
+            `<div class="card"><div class="t" style="font-size:14px">${esc(w.name)} ${w.duration_min}分${+w.distance_km ? `・${w.distance_km}km` : ''}</div><div class="s">${esc(w.start)}　平均${w.avg_hr || '—'}bpm・${w.kcal}kcal</div></div>`).join('')
+        : '';
     }
   } catch (e) {}
 }
