@@ -517,7 +517,8 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 #cal-day-list .dbell{font-size:11px;color:var(--text3);margin-left:5px}
 /* 通知の状態は一目で分かるピルにする（2026-09-03 メグ指摘: 付いているか分かりづらい） */
-#cal-day-list .npill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;margin-top:5px;border:1px solid var(--border);color:var(--text3);background:transparent}
+#cal-day-list .npill{display:inline-block;font-size:11.5px;padding:4px 10px;border-radius:999px;margin-top:6px;border:1px solid var(--border);color:var(--text3);background:transparent;font-family:inherit}
+#cal-day-list .npill:active{background:var(--bg3)}
 #cal-day-list .npill.on{color:#fff;background:var(--accent);border-color:var(--accent)}
 #cal-day-list .dbtn.nb{white-space:nowrap}
 #cal-day-list .dbtn.del{margin-left:4px;padding:6px 8px;color:var(--text3)}
@@ -824,7 +825,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-05.3';
+const APP_VERSION = '2026-09-05.4';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1847,13 +1848,11 @@ function renderDayList(ev) {
           <div class="dt">${escLink(body)}
             ${it.repeat ? `<span class="drep">${esc(it.repeat)}</span>` : ''}
             <div class="df">${esc(it.field || '')}</div>
-            ${(it.src === 'sched' && !it.done)
+            ${(it.src === 'sched' && !it.done && idx >= 0)
               ? (it.notify
-                  ? `<span class="npill on">🔔 ${esc(NOTIFY_LABEL[it.notify] || it.notify)}に通知</span>`
-                  : `<span class="npill">🔕 通知なし</span>`)
+                  ? `<button class="npill on" onclick="editNotify(${idx})">🔔 ${esc(NOTIFY_LABEL[it.notify] || it.notify)}に通知</button>`
+                  : `<button class="npill" onclick="editNotify(${idx})">🔕 通知なし</button>`)
               : ''}</div>
-          ${(it.src === 'sched' && !it.done && idx >= 0)
-            ? `<button class="dbtn nb${it.notify ? ' on' : ''}" onclick="editNotify(${idx})">${it.notify ? '変える' : '🔔 付ける'}</button>` : ''}
           ${(it.src === 'sched' && idx >= 0)
             ? `<button class="dbtn del" title="この予定を直す" onclick="editSched(${idx})">✏️</button><button class="dbtn del" title="この予定を消す" onclick="deleteSched(${idx})">🗑</button>` : ''}
         </div>`;
