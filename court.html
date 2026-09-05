@@ -427,6 +427,10 @@ async function openOv(code){
   }catch(e){b.innerHTML='<div class="empty">読み込みに失敗: '+esc(e.message)+'</div>'}
 }
 function closeOv(){document.getElementById('ov').classList.remove('on');document.body.style.overflow=''}
+// 判例JSONは手で書くため、配列で来るはずの項目に説明文（文字列）が入ることがある。
+// そこで落とさない: 配列以外は空配列として扱い、文字列は本文として出す。
+const A=x=>Array.isArray(x)?x:[];
+const isStr=x=>typeof x==='string'&&x.trim()!=='';
 function detailHTML(v){
   const d=v.decision, p=v.profile, s=v.sources, s2=v.sources, o=v.origin;
   let h='';
@@ -440,21 +444,21 @@ function detailHTML(v){
     }else{
       h+='<p class="dsum">'+esc(d.summary)+'</p>';
     }
-    if((d.conditions||[]).length){
-      h+='<div class="condh">この条件を満たしたら執行できる（'+d.conditions.filter(c=>c.status==='ready').length+' / '+d.conditions.length+' 済み）</div>'
-        +d.conditions.map((c,i)=>'<div class="cond '+esc(c.status)+'"><div class="cbox">'+(c.status==='ready'?'✓':i+1)+'</div>'
+    if(A(d.conditions).length){
+      h+='<div class="condh">この条件を満たしたら執行できる（'+A(d.conditions).filter(c=>c.status==='ready').length+' / '+A(d.conditions).length+' 済み）</div>'
+        +A(d.conditions).map((c,i)=>'<div class="cond '+esc(c.status)+'"><div class="cbox">'+(c.status==='ready'?'✓':i+1)+'</div>'
         +'<div><div class="ct">'+esc(c.t)+'<span class="cbadge">'+(c.status==='ready'?'準備できている':'未達')+'</span></div>'
         +(c.plain?'<div class="cd plainline">'+esc(c.plain)+'</div><details class="more"><summary>詳しく</summary><div class="cd">'+esc(c.d)+'</div></details>'
                  :'<div class="cd">'+esc(c.d)+'</div>')
         +'</div></div>').join('');
     }
     const side=(cls,ttl,plainArr,rawArr,useTxt)=>{
-      const usePlain=(plainArr||[]).length;
+      const usePlain=A(plainArr).length;
       return '<div class="'+cls+'"><h5>'+ttl+'</h5><ul>'
-        +(usePlain?plainArr.map(x=>'<li>'+esc(x)+'</li>').join('')
-                  :(rawArr||[]).map(x=>'<li>'+(useTxt?txt(x,s2):esc(x))+'</li>').join(''))+'</ul>'
+        +(usePlain?A(plainArr).map(x=>'<li>'+esc(x)+'</li>').join('')
+                  :A(rawArr).map(x=>'<li>'+(useTxt?txt(x,s2):esc(x))+'</li>').join(''))+'</ul>'
         +(usePlain?'<details class="more"><summary>もとの文（条文つき）</summary><ul>'
-          +(rawArr||[]).map(x=>'<li>'+(useTxt?txt(x,s2):txt(x,s2))+'</li>').join('')+'</ul></details>':'')
+          +A(rawArr).map(x=>'<li>'+(useTxt?txt(x,s2):txt(x,s2))+'</li>').join('')+'</ul></details>':'')
         +'</div>';
     };
     h+='<div class="why">'
@@ -470,7 +474,7 @@ function detailHTML(v){
     if(p.founded_note)h+='<div class="note">'+esc(p.founded_note)+'</div>';
     if(p.chain){h+='<div class="blk"><h4>'+esc(p.chain.caption||'')+'</h4><div class="steps">'
       +(p.chain.steps||[]).map(st=>'<div class="step'+(st.here?' here':'')+'"><div class="sn">'+esc(st.n)+'</div><div class="sw">'+esc(st.who)+'</div></div>').join('')+'</div></div>'}
-    if((v.facts||[]).length){h+='<div class="facts">'+v.facts.map(f=>'<div class="fact"><div class="v">'+esc(f.value)+'</div>'
+    if(A(v.facts).length){h+='<div class="facts">'+A(v.facts).map(f=>'<div class="fact"><div class="v">'+esc(f.value)+'</div>'
       +'<div class="l">'+esc(f.label)+'</div>'+(f.sub?'<div class="s">'+esc(f.sub)+'</div>':'')+'</div>').join('')+'</div>'}
     if(p.share){
       // シェアの物差しが効かない銘柄では share が説明文（文字列）で入る。バーが無くても落とさない
@@ -483,12 +487,13 @@ function detailHTML(v){
           +(p.share.note?'<div style="font-size:11px;color:var(--text3)">'+esc(p.share.note)+'</div>':'')+'</div>'
       }
     }
-    if((p.peers||[]).length){h+='<div class="blk"><h4>まわりにいる会社</h4>'
-      +p.peers.map(x=>'<div class="peer '+esc(x.tone)+'"><div class="pr">'+esc(x.role)+'</div><div class="pn">'+esc(x.name)+'</div><div class="pw">'+x.what+'</div></div>').join('')+'</div>'}
-    if((p.context||[]).length){h+='<div class="blk"><h4>背景を知る</h4>'
-      +p.context.map(c=>'<div class="ctx"><h5>'+esc(c.title)+'</h5><p>'+c.body+'</p></div>').join('')+'</div>'}
-    if((p.glossary||[]).length){h+='<div class="blk"><h4>用語</h4>'
-      +p.glossary.map(g=>'<div class="gl"><b>'+esc(g.term)+'</b><span>'+esc(g.desc)+'</span></div>').join('')+'</div>'}
+    if(A(p.peers).length){h+='<div class="blk"><h4>まわりにいる会社</h4>'
+      +A(p.peers).map(x=>'<div class="peer '+esc(x.tone)+'"><div class="pr">'+esc(x.role)+'</div><div class="pn">'+esc(x.name)+'</div><div class="pw">'+x.what+'</div></div>').join('')+'</div>'}
+    if(isStr(p.context)){h+='<div class="blk"><h4>背景を知る</h4><div class="ctx"><p>'+esc(p.context)+'</p></div></div>'}
+    else if(A(p.context).length){h+='<div class="blk"><h4>背景を知る</h4>'
+      +A(p.context).map(c=>'<div class="ctx"><h5>'+esc(c.title)+'</h5><p>'+c.body+'</p></div>').join('')+'</div>'}
+    if(A(p.glossary).length){h+='<div class="blk"><h4>用語</h4>'
+      +A(p.glossary).map(g=>'<div class="gl"><b>'+esc(g.term)+'</b><span>'+esc(g.desc)+'</span></div>').join('')+'</div>'}
     h+='</div></details>';
   }
 
@@ -520,11 +525,11 @@ function detailHTML(v){
     +'</div></details>';
 
   // ── ④ 何が争われたか（検察の攻撃を前に出す）──
-  if((v.prosecution||[]).length){
-    const surv=v.prosecution.filter(x=>x.result==='survived').length;
+  if(A(v.prosecution).length){
+    const surv=A(v.prosecution).filter(x=>x.result==='survived').length;
     h+='<details class="sec" open><summary>④ 何が争われたか<span class="scount">'
-      +'検察の攻撃 '+v.prosecution.length+'件中 '+surv+'件を潰せなかった</span></summary><div class="secb">'
-      +v.prosecution.map(x=>'<div class="pros"><div class="c"><span class="tag t-'+esc(x.result)+'">'+esc(PLABEL[x.result]||x.result)+'</span>'
+      +'検察の攻撃 '+A(v.prosecution).length+'件中 '+surv+'件を潰せなかった</span></summary><div class="secb">'
+      +A(v.prosecution).map(x=>'<div class="pros"><div class="c"><span class="tag t-'+esc(x.result)+'">'+esc(PLABEL[x.result]||x.result)+'</span>'
       +'<span>'+esc(x.claim)+'</span></div>'
       +(x.plain?'<div class="n plainline">'+esc(x.plain)+'</div><details class="more"><summary>詳しく</summary><div class="n">'+esc(x.note)+'</div></details>'
                :'<div class="n">'+esc(x.note)+'</div>')
@@ -535,23 +540,23 @@ function detailHTML(v){
   // ── ⑤ 細かい審査 ──
   h+='<details class="sec"><summary>⑤ 細かい審査（条文・監視・撤退条件）</summary><div class="secb">';
   if(v.judge_addition)h+='<div class="blk"><h4>裁判官が職権で追加した論拠</h4><div class="note">'+txt(v.judge_addition,s2)+'</div></div>';
-  if((v.articles||[]).length){h+='<div class="blk"><h4>条文ごとの審査</h4>'
-    +v.articles.map(a=>'<div class="art"><span class="cell c-'+esc(a.verdict)+'">'+(MARK[a.verdict]||'?')+'</span>'
+  if(A(v.articles).length){h+='<div class="blk"><h4>条文ごとの審査</h4>'
+    +A(v.articles).map(a=>'<div class="art"><span class="cell c-'+esc(a.verdict)+'">'+(MARK[a.verdict]||'?')+'</span>'
     +'<div><div class="acode">'+esc(a.code)+' <span class="alabel">'+esc(a.label)+'</span></div>'
     +'<div class="anote">'+txt(a.note,s2)+'</div></div></div>').join('')+'</div>'}
   [['monitor','中間評価（四半期ごとに見る）'],['exit','撤退条件（先に決めてある）'],['pending','執行前に埋めること']].forEach(([k,l])=>{
-    if((v[k]||[]).length)h+='<div class="blk"><h4>'+l+'</h4><ul>'+v[k].map(x=>'<li>'+txt(x,s2)+'</li>').join('')+'</ul></div>'});
+    if(A(v[k]).length)h+='<div class="blk"><h4>'+l+'</h4><ul>'+A(v[k]).map(x=>'<li>'+txt(x,s2)+'</li>').join('')+'</ul></div>'});
   h+='</div></details>';
 
   // ── ⑥ 出典 ──
   if(s){
     h+='<details class="sec"><summary>⑥ 出典（動画で復習する）</summary><div class="secb">'
-      +(s.corpus||[]).map(x=>'<div class="src"><div class="sh">'+esc(x.who)+'　'+esc(x.date)+'「'+esc(x.title)+'」</div>'
+      +A(s.corpus).map(x=>'<div class="src"><div class="sh">'+esc(x.who)+'　'+esc(x.date)+'「'+esc(x.title)+'」</div>'
       +(x.quote?'<div class="sq">'+esc(x.quote)+'</div>':'')+'<div class="sw2">'+esc(x.why)+'</div>'
       +'<div style="margin-top:5px"><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.url)+'</a></div></div>').join('');
     if(s.caveat)h+='<div class="warnbox">'+esc(s.caveat)+'</div>';
-    if((s.web||[]).length)h+='<div class="blk"><h4>裁判官が裏取りに使った資料</h4><ul>'
-      +s.web.map(x=>'<li>'+esc(x.title)+'<br><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.url)+'</a></li>').join('')+'</ul></div>';
+    if(A(s.web).length)h+='<div class="blk"><h4>裁判官が裏取りに使った資料</h4><ul>'
+      +A(s.web).map(x=>'<li>'+esc(x.title)+'<br><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.url)+'</a></li>').join('')+'</ul></div>';
     h+='</div></details>';
   }
   return h;
