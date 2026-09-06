@@ -629,6 +629,15 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 .dy-cell.sel.has .dot{background:#fff}   /* 選んだだけの日に点を出さない（書いた日と紛れる） */
 .dy-legend{font-size:11px;color:var(--text3);margin:10px 2px 0}
 
+/* 健康タブ: こころ・からだの推移（2026-09-06。日記タブの5段階をグラフにする） */
+.mb-head{display:flex;align-items:baseline;gap:12px;margin:0 2px 4px}
+.mb-now{font-size:13px;font-weight:700}
+.mb-now u{text-decoration:none;color:var(--text2);font-weight:600;font-size:11.5px;margin-left:3px}
+.mb-key{margin-left:auto;display:flex;gap:12px;font-size:11px;color:var(--text2);font-weight:600}
+.mb-key span{display:flex;align-items:center;gap:5px}
+.mb-key i{width:14px;height:2.5px;border-radius:2px;display:block}
+.mb-empty{font-size:12.5px;color:var(--text2);line-height:1.8}
+
 /* 一覧（書いた順）— iPhoneの日記アプリの作りに寄せた（2026-09-06） */
 .dy-switch{display:flex;gap:0;margin:24px 2px 0;border:1px solid var(--border);border-radius:10px;overflow:hidden}
 .dy-switch button{flex:1;padding:8px 0;font-size:12.5px;font-weight:700;font-family:inherit;
@@ -846,6 +855,9 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
         <button class="chip" data-tpl="生理きた">🩸 生理きた</button>
         <button class="chip" data-tpl="生理おわった">🩸 終わった</button>
       </div>
+      <div class="section-title">こころとからだ<span class="sec-note">日記タブで記録した5段階</span></div>
+      <div class="card" id="health-mood"><p class="empty">日記タブで「こころ」「からだ」を押すと、ここに出ます</p></div>
+
       <div class="section-title">🛌 睡眠</div>
       <div class="card">
         <div class="hint" style="margin:0 0 8px">スクリーンタイムの「空白の時間」を見て、寝た時刻と起きた時刻を入れる（起きた日で記録）</div>
@@ -1066,7 +1078,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-06.16';
+const APP_VERSION = '2026-09-06.17';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2878,8 +2890,75 @@ function renderHealthRows(rows, todayS) {
   $('health-groups').innerHTML = out.join('');
 }
 
+// こころ・からだの推移（日記タブの5段階を健康タブでグラフにする・2026-09-06）
+async function loadMoodChart() {
+  const el = $('health-mood');
+  let days = [];
+  try {
+    const files = (await listDir(DIARY_DIR)).filter(f => f.name.endsWith('.json'))
+      .map(f => f.name.replace('.json', '')).sort().slice(-30);
+    days = (await Promise.all(files.map(async d => {
+      try {
+        const t = await repoFile(REPO, `${DIARY_DIR}/${d}.json`);
+        const j = JSON.parse(t);
+        return (j.mood || j.body) ? { d, m: j.mood || null, b: j.body || null } : null;
+      } catch (e) { return null; }
+    }))).filter(Boolean);
+  } catch (e) { return; }
+  if (!days.length) return;
+  const last = days[days.length - 1];
+  if (days.length === 1) {
+    el.innerHTML = `<div class="mb-head"><span class="mb-now">`
+      + (last.m ? `こころ <b>${esc(DY_MOOD[last.m - 1])}</b>` : '') + (last.m && last.b ? '　' : '')
+      + (last.b ? `からだ <b>${esc(DY_BODY[last.b - 1])}</b>` : '') + `</span></div>`
+      + `<p class="mb-empty">2日分たまると推移が出ます。</p>`;
+    return;
+  }
+  // 30日の枠を作り、記録のある日だけ点を打つ（無い日は線を切る）
+  const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+  const span = [];
+  for (let i = 29; i >= 0; i--) { const x = new Date(t0); x.setDate(x.getDate() - i); span.push(x.toLocaleDateString('sv-SE')); }
+  const map = Object.fromEntries(days.map(x => [x.d, x]));
+  const W = 320, H = 96, P = 10;
+  const X = i => (i / (span.length - 1)) * W;
+  const Y = v => P + (5 - v) / 4 * (H - P * 2);          // 5が上、1が下
+  const line = (key, color) => {
+    let d = '', open = false, dots = '';
+    span.forEach((ds, i) => {
+      const v = map[ds] && map[ds][key];
+      if (!v) { open = false; return; }
+      d += (open ? ' L' : ' M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1);
+      open = true;
+      dots += `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="2.6" fill="${color}"/>`;
+    });
+    return `<path d="${d.trim()}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>${dots}`;
+  };
+  let grid = '';
+  [5, 3, 1].forEach(v => {
+    grid += `<line x1="0" y1="${Y(v).toFixed(1)}" x2="${W}" y2="${Y(v).toFixed(1)}" stroke="var(--border)" stroke-width="0.7"/>`;
+  });
+  const md = d => `${+d.slice(5, 7)}/${+d.slice(8, 10)}`;
+  el.innerHTML =
+    `<div class="mb-head"><span class="mb-now">`
+      + (last.m ? `こころ <b>${esc(DY_MOOD[last.m - 1])}</b>` : '')
+      + (last.m && last.b ? '　' : '')
+      + (last.b ? `からだ <b>${esc(DY_BODY[last.b - 1])}</b>` : '')
+      + `<u>${esc(md(last.d))}</u></span>`
+    + `<span class="mb-key"><span><i style="background:var(--accent)"></i>こころ</span>`
+    + `<span><i style="background:var(--ok)"></i>からだ</span></span></div>`
+    + `<svg viewBox="0 0 ${W} ${H + 14}" style="width:100%;height:auto;margin-top:6px;font-variant-numeric:tabular-nums">`
+    + grid
+    + `<text x="2" y="${(Y(5) + 3.5).toFixed(1)}" font-size="8.5" fill="var(--text3,#9ca3af)">5</text>`
+    + `<text x="2" y="${(Y(1) + 3.5).toFixed(1)}" font-size="8.5" fill="var(--text3,#9ca3af)">1</text>`
+    + line('b', 'var(--ok)') + line('m', 'var(--accent)')
+    + `<text x="0" y="${H + 11}" font-size="9.5" fill="var(--text2)">${esc(md(span[0]))}</text>`
+    + `<text x="${W}" y="${H + 11}" text-anchor="end" font-size="9.5" fill="var(--text2)">${esc(md(span[span.length - 1]))}</text>`
+    + `</svg>`;
+}
+
 async function loadHealth() {
   await loadCycle();
+  loadMoodChart();
   try {
     const csv = await repoFile('meyjiro/personal', 'health/data/daily.csv');
     if (!csv) return;
