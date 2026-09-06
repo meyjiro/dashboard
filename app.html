@@ -544,7 +544,26 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 /* ══ 日記タブ（2026-09-06 新設）══
    続けることに価値があるものなので、書く手前の摩擦をぜんぶ削る。
    絵文字は使わない（メグ指定・安く見える）。字と余白と1色だけで作る。 */
-#tab-diary{padding-bottom:26px;max-width:560px;margin:0 auto}   /* 読み物なので幅を締める（PCで間延びさせない） */
+#tab-diary{padding-bottom:26px;max-width:560px;margin:0 auto}
+/* 一覧と「1日のページ」を分ける（2026-09-07 メグ指示。日が増えても崩れないように） */
+.dy-back{display:inline-flex;align-items:center;gap:4px;border:0;background:none;color:var(--text2);
+  font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;padding:6px 2px;margin:2px 0 6px}
+.dy-back:active{opacity:.6}
+/* 一覧の先頭に置く「今日のページ」への入口 */
+.dy-today{display:flex;align-items:center;gap:13px;width:100%;text-align:left;cursor:pointer;
+  margin:14px 0 4px;padding:14px 15px;background:var(--card);border:1px solid var(--border);
+  border-radius:13px;font-family:inherit}
+.dy-today:active{background:var(--bg3)}
+.dy-today .d{flex:none;width:34px;text-align:center}
+.dy-today .d b{display:block;font-size:21px;font-weight:700;line-height:1;letter-spacing:-.02em}
+.dy-today .d span{font-size:10px;color:var(--text3);font-weight:600}
+.dy-today .tx{flex:1;min-width:0}
+.dy-today .tx b{display:block;font-size:14px;font-weight:700}
+.dy-today .tx span{display:block;font-size:11.5px;color:var(--text2);margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dy-today .go{flex:none;color:var(--text3);font-size:19px;line-height:1}
+/* 1日のページでは、書く欄を最後に置く（読むのが主、書くのが従） */
+#dy-view-day .dy-write{margin-top:22px}   /* 読み物なので幅を締める（PCで間延びさせない） */
 .dy-head{display:flex;align-items:baseline;gap:10px;margin:6px 2px 2px}
 .dy-date{font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
 .dy-dow{font-size:13px;color:var(--text2);font-weight:600}
@@ -910,54 +929,69 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
     <!-- 日記 -->
     <div id="tab-diary" class="tab-panel">
-      <div class="dy-head">
-        <span class="dy-date" id="dy-date">—</span>
-        <span class="dy-dow" id="dy-dow"></span>
-        <span class="dy-rel" id="dy-rel"></span>
-      </div>
 
-      <div class="dy-scalewrap">
-        <div class="dy-scalelb">こころ</div>
-        <div class="dy-scale" id="dy-scale-mood"></div>
-      </div>
-      <div class="dy-scalewrap">
-        <div class="dy-scalelb">からだ</div>
-        <div class="dy-scale" id="dy-scale-body"></div>
-      </div>
-      <div class="dy-taglb">きょうを動かしたもの</div>
-      <div class="dy-tagrow" id="dy-tags"></div>
-
-      <div class="dy-write">
-        <textarea id="dy-text" placeholder="思ったことを、そのまま。ひとことでいい。"></textarea>
-        <div class="dy-tools">
-          <button class="dy-tool" id="dy-rec"><svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V22h2v-3.1A7 7 0 0 0 19 12h-2z"/></svg>録音</button>
-          <button class="dy-tool" id="dy-photo"><svg viewBox="0 0 24 24"><path d="M9 3l-1.8 2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9zm3 5a6 6 0 1 1 0 12 6 6 0 0 1 0-12zm0 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>写真</button>
-          <input type="file" id="dy-photo-input" accept="image/*" multiple style="display:none">
-          <button class="dy-save" id="dy-save">書く</button>
+      <!-- ① 一覧（既定の画面）。日をタップすると②が開く -->
+      <div id="dy-view-list">
+        <div class="dy-switch" id="dy-switch">
+          <button class="on" data-v="list">一覧</button>
+          <button data-v="cal">カレンダー</button>
         </div>
-        <div class="dy-hint" id="dy-hint"></div>
-      </div>
 
-      <div class="dy-entries" id="dy-entries"></div>
-      <div class="dy-auto" id="dy-auto" hidden><h4>この日にあったこと</h4><p id="dy-auto-body"></p></div>
+        <button class="dy-today" id="dy-today-btn">
+          <span class="d"><b id="dy-today-d">—</b><span id="dy-today-w"></span></span>
+          <span class="tx"><b>今日のページを開く</b><span id="dy-today-sub">まだ何も書いていません</span></span>
+          <span class="go">›</span>
+        </button>
 
-      <div class="dy-switch" id="dy-switch">
-        <button class="on" data-v="list">一覧</button>
-        <button data-v="cal">カレンダー</button>
-      </div>
+        <div id="dy-listwrap"><p class="empty" style="margin-top:18px">読み込み中…</p></div>
 
-      <div id="dy-listwrap"><p class="empty" style="margin-top:18px">読み込み中…</p></div>
-
-      <div class="dy-cal" id="dy-calwrap" hidden>
-        <div class="dy-calhead">
-          <span class="m" id="dy-calm">—</span>
-          <div class="nav">
-            <button id="dy-prev" aria-label="前の月">‹</button>
-            <button id="dy-next" aria-label="次の月">›</button>
+        <div class="dy-cal" id="dy-calwrap" hidden>
+          <div class="dy-calhead">
+            <span class="m" id="dy-calm">—</span>
+            <div class="nav">
+              <button id="dy-prev" aria-label="前の月">‹</button>
+              <button id="dy-next" aria-label="次の月">›</button>
+            </div>
           </div>
+          <div class="dy-grid" id="dy-grid"></div>
+          <div class="dy-legend">点がついている日は、書いたものがある日です。</div>
         </div>
-        <div class="dy-grid" id="dy-grid"></div>
-        <div class="dy-legend">点がついている日は、書いたものがある日です。</div>
+      </div>
+
+      <!-- ② 1日のページ -->
+      <div id="dy-view-day" hidden>
+        <button class="dy-back" id="dy-back">‹ 一覧へ</button>
+
+        <div class="dy-head">
+          <span class="dy-date" id="dy-date">—</span>
+          <span class="dy-dow" id="dy-dow"></span>
+          <span class="dy-rel" id="dy-rel"></span>
+        </div>
+
+        <div class="dy-scalewrap">
+          <div class="dy-scalelb">こころ</div>
+          <div class="dy-scale" id="dy-scale-mood"></div>
+        </div>
+        <div class="dy-scalewrap">
+          <div class="dy-scalelb">からだ</div>
+          <div class="dy-scale" id="dy-scale-body"></div>
+        </div>
+        <div class="dy-taglb">きょうを動かしたもの</div>
+        <div class="dy-tagrow" id="dy-tags"></div>
+
+        <div class="dy-entries" id="dy-entries"></div>
+        <div class="dy-auto" id="dy-auto" hidden><h4>この日にあったこと</h4><p id="dy-auto-body"></p></div>
+
+        <div class="dy-write" id="dy-writebox">
+          <textarea id="dy-text" placeholder="思ったことを、そのまま。ひとことでいい。"></textarea>
+          <div class="dy-tools">
+            <button class="dy-tool" id="dy-rec"><svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V22h2v-3.1A7 7 0 0 0 19 12h-2z"/></svg>録音</button>
+            <button class="dy-tool" id="dy-photo"><svg viewBox="0 0 24 24"><path d="M9 3l-1.8 2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9zm3 5a6 6 0 1 1 0 12 6 6 0 0 1 0-12zm0 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>写真</button>
+            <input type="file" id="dy-photo-input" accept="image/*" multiple style="display:none">
+            <button class="dy-save" id="dy-save">書く</button>
+          </div>
+          <div class="dy-hint" id="dy-hint"></div>
+        </div>
       </div>
     </div>
 
@@ -1078,7 +1112,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-06.19';
+const APP_VERSION = '2026-09-07.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -3280,7 +3314,7 @@ function dyRenderCal() {
   }
   $('dy-grid').innerHTML = h;
   $('dy-grid').querySelectorAll('.dy-cell[data-d]:not([disabled])').forEach(b =>
-    b.addEventListener('click', async () => { await dyLoadDay(b.dataset.d); dyRenderCal(); }));
+    b.addEventListener('click', async () => { await dyOpenDay(b.dataset.d); dyRenderCal(); }));
 }
 // 書いた順の一覧（年月でまとめる。左に日付と曜日、右にその日の写真）
 let dyIndex = [], dyShown = 30, dyView = 'list';
@@ -3308,7 +3342,8 @@ async function dyLoadIndex() {
 function dyRenderList() {
   const wrap = $('dy-listwrap');
   if (!dyIndex.length) {
-    wrap.innerHTML = '<p class="empty" style="margin-top:20px">まだ何も書いていません。上のひとことから始められます。</p>';
+    wrap.innerHTML = '<p class="empty" style="margin-top:20px">まだ日記がありません。上の「今日のページ」から始められます。</p>';
+    dyRenderTodayCard();
     return;
   }
   let h = '', ym = '';
@@ -3328,10 +3363,10 @@ function dyRenderList() {
   }
   if (dyDays.size > dyShown) h += `<button class="dy-more" id="dy-more">もっと見る</button>`;
   wrap.innerHTML = h;
+  dyRenderTodayCard();
   dyFillImages(wrap);
   wrap.querySelectorAll('.dy-row').forEach(b => b.addEventListener('click', async () => {
-    await dyLoadDay(b.dataset.d); dyRenderCal();
-    document.getElementById('tab-diary').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    await dyOpenDay(b.dataset.d); dyRenderCal();
   }));
   const more = $('dy-more');
   if (more) more.addEventListener('click', () => { dyShown += 30; dyLoadIndex(); });
@@ -3342,11 +3377,36 @@ function dySetView(v) {
   $('dy-calwrap').hidden = v !== 'cal';
   $('dy-switch').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
 }
+/** 一覧 ⇄ 1日のページ。日が増えても崩れないよう画面ごと分ける（2026-09-07） */
+function dyOpenDay(d) {
+  $('dy-view-list').hidden = true;
+  $('dy-view-day').hidden = false;
+  window.scrollTo(0, 0);
+  return dyLoadDay(d);
+}
+function dyBackToList() {
+  $('dy-view-day').hidden = true;
+  $('dy-view-list').hidden = false;
+  dyRenderTodayCard();
+  window.scrollTo(0, 0);
+}
+/** 一覧の先頭に置く「今日のページ」への入口 */
+function dyRenderTodayCard() {
+  const t = dyToday(), dt = new Date(t + 'T00:00:00');
+  $('dy-today-d').textContent = dt.getDate();
+  $('dy-today-w').textContent = ['日', '月', '火', '水', '木', '金', '土'][dt.getDay()];
+  const me = dyIndex.find(r => r.date === t);
+  const sub = me
+    ? [me.mood ? `こころ ${DY_MOOD[me.mood - 1]}` : '', me.body ? `からだ ${DY_BODY[me.body - 1]}` : '',
+       (me.text || '').split('\n')[0]].filter(Boolean).join('・')
+    : 'まだ何も書いていません';
+  $('dy-today-sub').textContent = sub;
+  $('dy-today-btn').querySelector('.tx b').textContent = me ? '今日のページ' : '今日のページを開く';
+}
 
 async function loadDiary() {
   if (!dySel) { dySel = dyToday(); const n = new Date(); dyCalY = n.getFullYear(); dyCalM = n.getMonth(); }
-  await dyLoadDay(dySel);
-  await dyLoadIndex();
+  await dyLoadIndex();     // 既定は一覧。日をタップすると1日のページが開く
   dyRenderCal();
 }
 
@@ -3863,6 +3923,8 @@ function setupEvents() {
   if ($('pp-yes')) $('pp-yes').addEventListener('click', () => savePoop(true));
   if ($('pp-no')) $('pp-no').addEventListener('click', () => savePoop(false));
   if ($('dy-save')) $('dy-save').addEventListener('click', dySave);
+  if ($('dy-back')) $('dy-back').addEventListener('click', dyBackToList);
+  if ($('dy-today-btn')) $('dy-today-btn').addEventListener('click', () => dyOpenDay(dyToday()));
   if ($('dy-rec')) $('dy-rec').addEventListener('click', dyToggleRec);
   if ($('dy-photo')) $('dy-photo').addEventListener('click', () => $('dy-photo-input').click());
   if ($('dy-photo-input')) $('dy-photo-input').addEventListener('change', e => { dyPickPhoto(e.target.files); e.target.value = ''; });
