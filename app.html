@@ -538,7 +538,12 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
   font-family:inherit;font-weight:700;transition:transform .12s,background .15s,border-color .15s}
 .dy-dots button:active{transform:scale(.9)}
 .dy-dots button.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.dy-moodnote{font-size:11.5px;color:var(--text3);margin:2px 2px 0;text-align:right;min-height:16px}
+.dy-mood .nt{font-size:11.5px;color:var(--text3);font-weight:600}
+.dy-tagrow{display:flex;flex-wrap:wrap;gap:6px;margin:15px 2px 0}
+.dy-tagrow button{border:1px solid var(--border);background:var(--bg2);color:var(--text2);border-radius:999px;
+  padding:6px 13px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .12s,color .12s,border-color .12s}
+.dy-tagrow button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.dy-taglb{font-size:11.5px;color:var(--text2);font-weight:700;letter-spacing:.06em;margin:20px 2px 0}
 
 /* 書くところ */
 .dy-write{margin:14px 0 0;background:var(--card);border:1px solid var(--border);border-radius:14px;
@@ -594,6 +599,28 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 .dy-cell.sel{background:var(--accent);color:#fff}
 .dy-cell.sel.has .dot{background:#fff}   /* 選んだだけの日に点を出さない（書いた日と紛れる） */
 .dy-legend{font-size:11px;color:var(--text3);margin:10px 2px 0}
+
+/* 一覧（書いた順）— iPhoneの日記アプリの作りに寄せた（2026-09-06） */
+.dy-switch{display:flex;gap:0;margin:24px 2px 0;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.dy-switch button{flex:1;padding:8px 0;font-size:12.5px;font-weight:700;font-family:inherit;
+  background:var(--bg2);color:var(--text2);border:0;cursor:pointer;transition:background .12s,color .12s}
+.dy-switch button.on{background:var(--accent);color:#fff}
+.dy-ym{font-size:11.5px;font-weight:700;color:var(--text2);letter-spacing:.1em;
+  margin:18px 2px 2px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.dy-row{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;cursor:pointer;
+  padding:13px 2px;background:none;border:0;border-bottom:1px solid var(--border2);font-family:inherit}
+.dy-row:active{background:var(--bg3)}
+.dy-row .d{flex:none;width:32px;text-align:center;padding-top:1px}
+.dy-row .d b{display:block;font-size:19px;font-weight:700;line-height:1.05;letter-spacing:-.02em}
+.dy-row .d span{font-size:10px;color:var(--text3);font-weight:600}
+.dy-row .d.sun b,.dy-row .d.sun span{color:var(--red)}
+.dy-row .tx{flex:1;min-width:0;font-size:13px;line-height:1.8;color:var(--text);
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.dy-row .tx.none{color:var(--text3)}
+.dy-row .mo{font-size:10.5px;color:var(--text3);font-weight:600;margin-top:4px}
+.dy-row img{flex:none;width:58px;height:58px;object-fit:cover;border-radius:9px;background:var(--bg3)}
+.dy-more{width:100%;margin-top:14px;padding:11px 0;border:1px solid var(--border);border-radius:10px;
+  background:none;color:var(--text2);font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer}
 /* 健康タブ: おつうじの30日ストリップ（2026-09-06） */
 .pstrip{display:flex;gap:3px;flex-wrap:wrap;margin-top:8px}
 .pstrip i{width:13px;height:19px;border-radius:3px;font-style:normal;font-size:9px;line-height:19px;text-align:center;
@@ -848,10 +875,17 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
       </div>
 
       <div class="dy-mood">
-        <span class="lb">きょうの調子</span>
-        <div class="dy-dots" id="dy-dots"></div>
+        <span class="lb">こころ</span>
+        <span class="nt" id="dy-note-mood"></span>
+        <div class="dy-dots" id="dy-dots-mood"></div>
       </div>
-      <div class="dy-moodnote" id="dy-moodnote"></div>
+      <div class="dy-mood">
+        <span class="lb">からだ</span>
+        <span class="nt" id="dy-note-body"></span>
+        <div class="dy-dots" id="dy-dots-body"></div>
+      </div>
+      <div class="dy-taglb">きょうを動かしたもの</div>
+      <div class="dy-tagrow" id="dy-tags"></div>
 
       <div class="dy-write">
         <textarea id="dy-text" placeholder="思ったことを、そのまま。ひとことでいい。"></textarea>
@@ -867,7 +901,14 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
       <div class="dy-entries" id="dy-entries"></div>
       <div class="dy-auto" id="dy-auto" hidden><h4>この日にあったこと</h4><p id="dy-auto-body"></p></div>
 
-      <div class="dy-cal">
+      <div class="dy-switch" id="dy-switch">
+        <button class="on" data-v="list">一覧</button>
+        <button data-v="cal">カレンダー</button>
+      </div>
+
+      <div id="dy-listwrap"><p class="empty" style="margin-top:18px">読み込み中…</p></div>
+
+      <div class="dy-cal" id="dy-calwrap" hidden>
         <div class="dy-calhead">
           <span class="m" id="dy-calm">—</span>
           <div class="nav">
@@ -997,7 +1038,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-06.10';
+const APP_VERSION = '2026-09-06.11';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2878,7 +2919,9 @@ async function loadHealth() {
 //   ・入力は claude-context の inbox/diary/YYYY-MM-DD.json に即入る（夜のroutineが整形して personal/diary へ）
 //   ・録音は既存の音声投げ込みの経路（Macのローカル文字起こし）に乗せる
 const DIARY_DIR = 'inbox/diary';
-const DY_MOOD = ['とても悪い', '悪い', 'ふつう', '良い', 'とても良い'];
+const DY_MOOD = ['とても悪い', '悪い', 'ふつう', '良い', 'とても良い'];      // こころ
+const DY_BODY = ['つらい', 'だるい', 'ふつう', '軽い', '絶好調'];            // からだ
+const DY_TAGS = ['仕事', '家族', 'ペット', 'からだ', 'お金', 'ひとり時間'];  // その日を動かしたもの（複数可）
 let dySel = null, dyCalY = 0, dyCalM = 0, dyDays = new Set(), dyPhoto = null, dyRecorder = null, dyChunks = [];
 const dyPath = d => `${DIARY_DIR}/${d}.json`;
 const dyToday = () => new Date().toLocaleDateString('sv-SE');
@@ -2909,23 +2952,41 @@ async function dyLoadDay(d) {
   $('dy-rel').textContent = diff === 0 ? '今日' : diff === 1 ? '昨日' : diff > 1 ? `${diff}日前` : '';
   let day = null;
   try { const t = await repoFile(REPO, dyPath(d)); if (t) day = JSON.parse(t); } catch (e) {}
-  dyRenderMood(day && day.mood);
+  dyScale('mood', DY_MOOD, day && day.mood);
+  dyScale('body', DY_BODY, day && day.body);
+  dyRenderTags(day && day.tags);
   dyRenderEntries(day);
   dyRenderAuto(d);
 }
 
-function dyRenderMood(v) {
-  $('dy-dots').innerHTML = [1, 2, 3, 4, 5].map(n => `<button data-m="${n}" class="${v === n ? 'on' : ''}">${n}</button>`).join('');
-  $('dy-moodnote').textContent = v ? DY_MOOD[v - 1] : '';
-  $('dy-dots').querySelectorAll('button').forEach(b => b.addEventListener('click', () => dySetMood(+b.dataset.m)));
+// 5段階のものさし。数字だけだと後から意味が分からなくなるので、言葉も一緒に保存する
+function dyScale(key, labels, v) {
+  const dots = $('dy-dots-' + key), note = $('dy-note-' + key);
+  dots.innerHTML = [1, 2, 3, 4, 5].map(n => `<button data-m="${n}" class="${v === n ? 'on' : ''}">${n}</button>`).join('');
+  note.textContent = v ? labels[v - 1] : '';
+  dots.querySelectorAll('button').forEach(b => b.addEventListener('click', () => dySetScale(key, labels, +b.dataset.m)));
 }
-async function dySetMood(n) {
-  const prev = $('dy-moodnote').textContent;
-  dyRenderMood(n);
+async function dySetScale(key, labels, n) {
+  const prev = $('dy-note-' + key).textContent;
+  dyScale(key, labels, n);
   try {
-    await dyPut(dySel, day => { day.mood = n; }, `日記 ${dySel} 調子${n}`);
+    await dyPut(dySel, day => { day[key] = n; day[key + '_label'] = labels[n - 1]; },
+      `日記 ${dySel} ${key === 'mood' ? 'こころ' : 'からだ'}${labels[n - 1]}`);
     dyDays.add(dySel); dyRenderCal();
-  } catch (e) { toast('保存できませんでした'); $('dy-moodnote').textContent = prev; }
+  } catch (e) { toast('保存できませんでした'); $('dy-note-' + key).textContent = prev; }
+}
+function dyRenderTags(sel) {
+  const el = $('dy-tags'), on = new Set(sel || []);
+  el.innerHTML = DY_TAGS.map(t => `<button data-t="${t}" class="${on.has(t) ? 'on' : ''}">${t}</button>`).join('');
+  el.querySelectorAll('button').forEach(b => b.addEventListener('click', async () => {
+    const t = b.dataset.t;
+    on.has(t) ? on.delete(t) : on.add(t);
+    dyRenderTags([...on]);
+    try {
+      await dyPut(dySel, day => { day.tags = DY_TAGS.filter(x => on.has(x)); }, `日記 ${dySel} タグ`);
+      dyDays.add(dySel); dyRenderCal();
+    } catch (e) { toast('保存できませんでした'); }
+  }));
 }
 
 function dyRenderEntries(day) {
@@ -3026,12 +3087,6 @@ async function dyToggleRec() {
   } catch (e) { $('dy-hint').textContent = 'マイクが使えませんでした'; }
 }
 
-async function dyLoadDays() {
-  try {
-    const files = await listDir(DIARY_DIR);
-    dyDays = new Set(files.filter(f => f.name.endsWith('.json')).map(f => f.name.replace('.json', '')));
-  } catch (e) { dyDays = new Set(); }
-}
 function dyRenderCal() {
   $('dy-calm').textContent = `${dyCalY}年${dyCalM + 1}月`;
   const first = new Date(dyCalY, dyCalM, 1), last = new Date(dyCalY, dyCalM + 1, 0), today = dyToday();
@@ -3046,10 +3101,69 @@ function dyRenderCal() {
   $('dy-grid').querySelectorAll('.dy-cell[data-d]:not([disabled])').forEach(b =>
     b.addEventListener('click', async () => { await dyLoadDay(b.dataset.d); dyRenderCal(); }));
 }
+// 書いた順の一覧（年月でまとめる。左に日付と曜日、右にその日の写真）
+let dyIndex = [], dyShown = 30, dyView = 'list';
+async function dyLoadIndex() {
+  const wrap = $('dy-listwrap');
+  try {
+    const files = (await listDir(DIARY_DIR)).filter(f => f.name.endsWith('.json'))
+      .map(f => f.name.replace('.json', '')).sort().reverse();
+    dyDays = new Set(files);
+    const days = await Promise.all(files.slice(0, dyShown).map(async d => {
+      try {
+        const t = await repoFile(REPO, dyPath(d));
+        const day = JSON.parse(t);
+        const es = (day.entries || []).filter(e => (e.text || '').trim() || e.img);
+        if (!es.length && !day.mood && !day.body && !(day.tags || []).length) return null;
+        return { date: d, text: es.map(e => e.text).filter(Boolean).join('\n'),
+                 img: (es.find(e => e.img) || {}).img, mood: day.mood, body: day.body, tags: day.tags || [] };
+      } catch (e) { return null; }
+    }));
+    dyIndex = days.filter(Boolean);
+    dyRenderList();
+  } catch (e) { wrap.innerHTML = '<p class="empty">読み込めませんでした</p>'; }
+}
+function dyRenderList() {
+  const wrap = $('dy-listwrap');
+  if (!dyIndex.length) {
+    wrap.innerHTML = '<p class="empty" style="margin-top:20px">まだ何も書いていません。上のひとことから始められます。</p>';
+    return;
+  }
+  let h = '', ym = '';
+  for (const r of dyIndex) {
+    const k = `${r.date.slice(0, 4)}.${r.date.slice(5, 7)}`;
+    if (k !== ym) { ym = k; h += `<div class="dy-ym">${ym}</div>`; }
+    const dt = new Date(r.date + 'T00:00:00');
+    const w = ['日', '月', '火', '水', '木', '金', '土'][dt.getDay()];
+    const meta = [r.mood ? `こころ ${DY_MOOD[r.mood - 1]}` : '', r.body ? `からだ ${DY_BODY[r.body - 1]}` : '',
+                  ...(r.tags || [])].filter(Boolean).join('・');
+    h += `<button class="dy-row" data-d="${r.date}">`
+      + `<span class="d${dt.getDay() === 0 ? ' sun' : ''}"><b>${dt.getDate()}</b><span>${w}</span></span>`
+      + `<span class="tx${r.text ? '' : ' none'}">${esc(r.text || '（この日は記録だけ）')}`
+      + (meta ? `<span class="mo" style="display:block">${esc(meta)}</span>` : '') + `</span>`
+      + (r.img ? `<img src="https://raw.githubusercontent.com/${REPO}/${BRANCH}/${r.img}" alt="">` : '')
+      + `</button>`;
+  }
+  if (dyDays.size > dyShown) h += `<button class="dy-more" id="dy-more">もっと見る</button>`;
+  wrap.innerHTML = h;
+  wrap.querySelectorAll('.dy-row').forEach(b => b.addEventListener('click', async () => {
+    await dyLoadDay(b.dataset.d); dyRenderCal();
+    document.getElementById('tab-diary').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }));
+  const more = $('dy-more');
+  if (more) more.addEventListener('click', () => { dyShown += 30; dyLoadIndex(); });
+}
+function dySetView(v) {
+  dyView = v;
+  $('dy-listwrap').hidden = v !== 'list';
+  $('dy-calwrap').hidden = v !== 'cal';
+  $('dy-switch').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+}
+
 async function loadDiary() {
   if (!dySel) { dySel = dyToday(); const n = new Date(); dyCalY = n.getFullYear(); dyCalM = n.getMonth(); }
-  await dyLoadDays();
   await dyLoadDay(dySel);
+  await dyLoadIndex();
   dyRenderCal();
 }
 
@@ -3571,6 +3685,7 @@ function setupEvents() {
   if ($('dy-photo-input')) $('dy-photo-input').addEventListener('change', e => dyPickPhoto(e.target.files[0]));
   if ($('dy-prev')) $('dy-prev').addEventListener('click', () => { dyCalM--; if (dyCalM < 0) { dyCalM = 11; dyCalY--; } dyRenderCal(); });
   if ($('dy-next')) $('dy-next').addEventListener('click', () => { dyCalM++; if (dyCalM > 11) { dyCalM = 0; dyCalY++; } dyRenderCal(); });
+  if ($('dy-switch')) $('dy-switch').querySelectorAll('button').forEach(b => b.addEventListener('click', () => dySetView(b.dataset.v)));
   $('calm-cancel').addEventListener('click', () => $('cal-modal').classList.add('hidden'));
   $('calm-try').addEventListener('click', barkTest);
 
