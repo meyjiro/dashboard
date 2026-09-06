@@ -538,7 +538,8 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
   font-family:inherit;font-weight:700;transition:transform .12s,background .15s,border-color .15s}
 .dy-dots button:active{transform:scale(.9)}
 .dy-dots button.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.dy-mood .nt{font-size:11.5px;color:var(--text3);font-weight:600}
+.dy-mood .nt{font-size:11px;color:var(--text3);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dy-mood .lb{flex:none}
 .dy-tagrow{display:flex;flex-wrap:wrap;gap:6px;margin:15px 2px 0}
 .dy-tagrow button{border:1px solid var(--border);background:var(--bg2);color:var(--text2);border-radius:999px;
   padding:6px 13px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .12s,color .12s,border-color .12s}
@@ -1038,7 +1039,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-06.11';
+const APP_VERSION = '2026-09-06.12';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2963,7 +2964,8 @@ async function dyLoadDay(d) {
 function dyScale(key, labels, v) {
   const dots = $('dy-dots-' + key), note = $('dy-note-' + key);
   dots.innerHTML = [1, 2, 3, 4, 5].map(n => `<button data-m="${n}" class="${v === n ? 'on' : ''}">${n}</button>`).join('');
-  note.textContent = v ? labels[v - 1] : '';
+  note.textContent = v ? labels[v - 1] : `1 ${labels[0]} 〜 5 ${labels[4]}`;
+  note.style.opacity = v ? '1' : '.7';
   dots.querySelectorAll('button').forEach(b => b.addEventListener('click', () => dySetScale(key, labels, +b.dataset.m)));
 }
 async function dySetScale(key, labels, n) {
