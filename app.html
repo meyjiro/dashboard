@@ -877,7 +877,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-06.1';
+const APP_VERSION = '2026-09-06.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2415,7 +2415,9 @@ async function repoFile(repo, path) {
   return dec(r.content);
 }
 function parseCsv(text) {
-  const [head, ...rows] = text.trim().split('\n');
+  // 🔴 daily.csv は Windows改行(CRLF)で書かれている。\r を落とさないと
+  //    いちばん右の列名が 'sleep_min\r' になり、その列だけ丸ごと読めなくなる（2026-09-06に発覚）
+  const [head, ...rows] = text.replace(/\r/g, '').trim().split('\n');
   const cols = head.split(',');
   return rows.map(r => { const v = r.split(','); const o = {}; cols.forEach((c, i) => o[c] = v[i] ?? ''); return o; });
 }
@@ -2712,7 +2714,8 @@ async function loadHealth() {
       const wl = await repoFile(REPO, WEIGHT_LOG);
       if (wl) parseCsv(wl).forEach(r => { if (r.date && r.weight_kg) wmap[r.date] = +r.weight_kg; });
     } catch (e) {}
-    const wt = Object.keys(wmap).sort().slice(-12).map(d => ({ label: md(d), v: wmap[d] }));
+    const ym = d => `${d.slice(2, 4)}/${+d.slice(5, 7)}`;   // 月1回なので年をまたぐ。25/8 のように出す
+    const wt = Object.keys(wmap).sort().slice(-12).map(d => ({ label: ym(d), v: wmap[d] }));
     if (wt.length > 1) { sparkLine($('health-weight'), wt, 'kg'); $('health-weight').setAttribute('title', `体重の推移（直近${wt.length}回）`); }
     else if (wt.length === 1) { $('health-weight').innerHTML = `<p class="s">${esc(wt[0].label)} ${wt[0].v}kg（2回たまると線になります）</p>`; }
 
