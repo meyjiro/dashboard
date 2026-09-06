@@ -1078,7 +1078,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-06.17';
+const APP_VERSION = '2026-09-06.18';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -3191,21 +3191,42 @@ async function dySave() {
   btn.disabled = false;
 }
 
-// 何枚でも付けられる。長辺1600pxに縮めてから持つ
+// 何枚でも付けられる。長辺1600pxに縮めてから持つ。
+// 🔴 iPhoneのHEICは createImageBitmap が失敗することがあるので、img要素で読み直す道を用意する。
+//    縮小には時間がかかるので、終わるまで「書く」を押せないようにする（押せると未処理の分が飛ぶ）
+async function dyShrink(file) {
+  const draw = (w, h, src) => {
+    const max = 1600, scale = Math.min(1, max / Math.max(w, h));
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(w * scale); cv.height = Math.round(h * scale);
+    cv.getContext('2d').drawImage(src, 0, 0, cv.width, cv.height);
+    return cv.toDataURL('image/jpeg', 0.85).split(',')[1];
+  };
+  try {
+    const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }).catch(() => createImageBitmap(file));
+    return draw(bmp.width, bmp.height, bmp);
+  } catch (e) {}
+  // fallback: object URL → img
+  return await new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const im = new Image();
+    im.onload = () => { try { res(draw(im.naturalWidth, im.naturalHeight, im)); } catch (e2) { rej(e2); } finally { URL.revokeObjectURL(url); } };
+    im.onerror = () => { URL.revokeObjectURL(url); rej(new Error('読めない')); };
+    im.src = url;
+  });
+}
 async function dyPickPhoto(files) {
   if (!files || !files.length) return;
-  for (const file of files) {
-    try {
-      const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }).catch(() => createImageBitmap(file));
-      const max = 1600, scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
-      const cv = document.createElement('canvas');
-      cv.width = Math.round(bmp.width * scale); cv.height = Math.round(bmp.height * scale);
-      cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
-      dyPhotos.push({ b64: cv.toDataURL('image/jpeg', 0.8).split(',')[1] });
-    } catch (e) {}
+  const btn = $('dy-save'), list = Array.from(files);
+  btn.disabled = true;
+  let ok = 0, ng = 0;
+  for (let i = 0; i < list.length; i++) {
+    $('dy-hint').textContent = `写真を読み込んでいます（${i + 1}/${list.length}）…`;
+    try { dyPhotos.push({ b64: await dyShrink(list[i]) }); ok++; } catch (e) { ng++; }
   }
+  btn.disabled = false;
   $('dy-hint').textContent = dyPhotos.length
-    ? `写真を${dyPhotos.length}枚つけました。「書く」で一緒に残ります`
+    ? `写真を${dyPhotos.length}枚つけました${ng ? `（${ng}枚は読めませんでした）` : ''}。「書く」で一緒に残ります`
     : '写真を読み込めませんでした';
 }
 
