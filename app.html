@@ -525,6 +525,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
   background:var(--bg3);color:var(--text3,#9ca3af)}
 .pstrip i.yes{background:var(--accent);color:#fff}
 .pstrip i.no{background:var(--warn-light);color:var(--warn);font-weight:700}
+.pstrip i.yes.not{background:var(--accent);opacity:.4;color:#fff}
 .pstat{display:flex;gap:14px;font-size:12px;color:var(--text2);margin-top:9px;font-variant-numeric:tabular-nums}
 .pstat b{color:var(--text);font-size:14px}
 .pbtns{display:flex;gap:8px;flex:1 1 100%}
@@ -742,6 +743,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
       <div class="card">
         <div class="sleeprow">
           <input type="date" id="pp-date">
+          <span>何時に</span><input type="time" id="pp-time">
           <div class="pbtns">
             <button class="btn btn-primary" id="pp-yes">あった</button>
             <button class="btn" id="pp-no">なかった</button>
@@ -877,7 +879,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-06.2';
+const APP_VERSION = '2026-09-06.3';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2359,6 +2361,7 @@ function initHealthForms() {
   const t = new Date().toLocaleDateString('sv-SE');
   if ($('wt-date') && !$('wt-date').value) $('wt-date').value = t;
   if ($('pp-date') && !$('pp-date').value) $('pp-date').value = t;
+  if ($('pp-time') && !$('pp-time').value) $('pp-time').value = new Date().toTimeString().slice(0, 5);
 }
 async function saveWeight() {
   const date = $('wt-date').value, kg = parseFloat($('wt-kg').value);
@@ -2375,38 +2378,66 @@ async function saveWeight() {
 }
 async function savePoop(had) {
   const date = $('pp-date').value || new Date().toLocaleDateString('sv-SE');
+  const time = had ? ($('pp-time').value || '') : '';
   const y = $('pp-yes'), n = $('pp-no'); y.disabled = n.disabled = true;
   $('pp-msg').textContent = '記録中…';
   try {
-    await putCsvRow(POOP_LOG, 'date,had', date, `${date},${had ? 1 : 0}`,
-      `おつうじを記録 ${date} ${had ? 'あった' : 'なかった'}`);
-    $('pp-msg').textContent = `✅ ${date} は「${had ? 'あった' : 'なかった'}」`;
+    await putCsvRow(POOP_LOG, 'date,time,had', date, `${date},${time},${had ? 1 : 0}`,
+      `おつうじを記録 ${date} ${had ? (time || 'あった') : 'なかった'}`);
+    $('pp-msg').textContent = `✅ ${date} は「${had ? (time ? time + ' に出た' : 'あった（時刻なし）') : 'なかった'}」`;
     toast(had ? '💩 記録しました' : '記録しました');
     loadHealth();
   } catch (e) { $('pp-msg').textContent = '記録できませんでした: ' + e.message; }
   finally { y.disabled = n.disabled = false; }
 }
-// 直近30日を1マス1日で並べる。○=あった ✕=なかった 空=未記録
-function poopStrip(el, map) {
-  const t = new Date(); t.setHours(0,0,0,0);
+// 直近30日を「何時に出たか」で描く（2026-09-06 メグ希望で ○✕ から時刻へ）。
+// 縦が時刻（上が0時・下が24時）、横が日。時刻なしの「あった」と「なかった」は下の帯に出す。
+function poopChart(el, map) {
+  const t0 = new Date(); t0.setHours(0, 0, 0, 0);
   const days = [];
-  for (let i = 29; i >= 0; i--) { const d = new Date(t); d.setDate(d.getDate() - i); days.push(d.toLocaleDateString('sv-SE')); }
-  const yes = days.filter(d => map[d] === '1').length, no = days.filter(d => map[d] === '0').length;
-  // 最後に「あった」日からの経過日数
+  for (let i = 29; i >= 0; i--) { const d = new Date(t0); d.setDate(d.getDate() - i); days.push(d.toLocaleDateString('sv-SE')); }
+  const mins = [];
   let since = null;
-  for (let i = days.length - 1; i >= 0; i--) if (map[days[i]] === '1') { since = days.length - 1 - i; break; }
-  const warn = since !== null && since >= 3;
+  for (let i = days.length - 1; i >= 0; i--) { const r = map[days[i]]; if (r && r.had === '1') { since = days.length - 1 - i; break; } }
+  days.forEach(d => { const r = map[d]; if (r && r.had === '1' && r.t) mins.push(+r.t.slice(0, 2) * 60 + +r.t.slice(3, 5)); });
+  const hm = m => `${Math.floor(m / 60)}:${String(Math.round(m % 60)).padStart(2, '0')}`;
+  const avg = mins.length ? mins.reduce((a, b) => a + b) / mins.length : null;
+  const yes = days.filter(d => map[d] && map[d].had === '1').length;
+  const no  = days.filter(d => map[d] && map[d].had === '0').length;
+  const last = map[days[days.length - 1]];
+  const W = 320, H = 104;
+  const X = i => ((i + 0.5) / days.length * W);
+  const Y = m => (m / 1440 * H);
+  let g = '';
+  [0, 6, 12, 18, 24].forEach(h => {
+    const y = Y(h * 60);
+    g += `<line x1="0" y1="${y.toFixed(1)}" x2="${W}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="0.7"/>`;
+    if (h % 6 === 0 && h < 24) g += `<text x="2" y="${(y + 8.5).toFixed(1)}" font-size="8.5" fill="var(--text3,#9ca3af)">${h}時</text>`;
+  });
+  if (avg !== null) g += `<line x1="0" y1="${Y(avg).toFixed(1)}" x2="${W}" y2="${Y(avg).toFixed(1)}" stroke="var(--accent)" stroke-width="1" stroke-dasharray="3 3" opacity="0.55"/>`;
+  let dots = '', strip = '';
+  days.forEach((d, i) => {
+    const r = map[d];
+    if (r && r.had === '1' && r.t) {
+      const m = +r.t.slice(0, 2) * 60 + +r.t.slice(3, 5);
+      dots += `<circle cx="${X(i).toFixed(1)}" cy="${Y(m).toFixed(1)}" r="3.6" fill="var(--accent)"><title>${d} ${r.t}</title></circle>`;
+    }
+    const cls = !r ? '' : r.had === '1' ? (r.t ? 'yes' : 'yes not') : 'no';
+    strip += `<i class="${cls}" title="${d}${r && r.t ? ' ' + r.t : ''}">${!r ? '' : r.had === '1' ? (r.t ? '' : '・') : '✕'}</i>`;
+  });
   el.innerHTML =
-    `<div class="t" style="font-size:14px">${since === null ? 'まだ「あった」の記録がありません'
-      : since === 0 ? '今日は出ています' : `最後に出たのは ${since}日前`}</div>`
-    + (warn ? `<div class="s" style="color:var(--warn);font-weight:700;margin-top:3px">⚠️ ${since}日あいています</div>` : '')
-    + `<div class="pstrip">` + days.map(d => {
-        const v = map[d], c = v === '1' ? 'yes' : v === '0' ? 'no' : '';
-        return `<i class="${c}" title="${d}">${v === '1' ? '○' : v === '0' ? '✕' : ''}</i>`;
-      }).join('') + `</div>`
+    `<div class="t" style="font-size:14px">${
+      since === null ? 'まだ「あった」の記録がありません'
+      : since === 0 ? (last && last.t ? `今日は ${last.t} に出ています` : '今日は出ています')
+      : `最後に出たのは ${since}日前`}</div>`
+    + (since !== null && since >= 3 ? `<div class="s" style="color:var(--warn);font-weight:700;margin-top:3px">⚠️ ${since}日あいています</div>` : '')
+    + (avg !== null ? `<div class="s" style="margin-top:2px">だいたい <b>${hm(avg)}</b> ごろ（時刻の記録 ${mins.length}日分）</div>` : '')
+    + `<svg viewBox="0 0 ${W} ${H + 4}" style="width:100%;height:auto;margin-top:8px;font-variant-numeric:tabular-nums">${g}${dots}</svg>`
+    + `<div class="pstrip">${strip}</div>`
     + `<div class="pstat"><span>30日で <b>${yes}</b>日あった</span><span>なかった <b>${no}</b>日</span>`
     + `<span>未記録 <b>${30 - yes - no}</b>日</span></div>`;
 }
+
 
 // ── 健康タブ（personal/health/data/ のCSVから）──
 async function repoFile(repo, path) {
@@ -2723,8 +2754,8 @@ async function loadHealth() {
     try {
       const pl = await repoFile(REPO, POOP_LOG);
       const pmap = {};
-      if (pl) parseCsv(pl).forEach(r => { if (r.date) pmap[r.date] = String(r.had || '').trim(); });
-      if (Object.keys(pmap).length) poopStrip($('health-poop'), pmap);
+      if (pl) parseCsv(pl).forEach(r => { if (r.date) pmap[r.date] = { t: (r.time || '').trim(), had: String(r.had || '').trim() }; });
+      if (Object.keys(pmap).length) poopChart($('health-poop'), pmap);
     } catch (e) {}
     const ex = rows.slice(-14).filter(r => r.exercise_min !== undefined && r.exercise_min !== '')
                    .map(r => ({ label: md(r.date), v: +r.exercise_min }));
