@@ -1078,7 +1078,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-06.18';
+const APP_VERSION = '2026-09-06.19';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -3110,8 +3110,16 @@ async function dyFillImages(scope) {
     try {
       if (!dyImgCache[path]) {
         const r = await api(`/repos/${REPO}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}?ref=${BRANCH}`);
-        if (!r || !r.content) throw 0;
-        dyImgCache[path] = 'data:image/jpeg;base64,' + r.content.replace(/\s/g, '');
+        if (!r) throw 0;
+        let b64 = r.content;
+        // 🔴 Contents API は 1MB を超えるファイルの中身を返さない（sha だけ返る）。
+        //    大きい写真はここで空になるので、Blobs API（100MBまで）から取り直す
+        if (!b64 && r.sha) {
+          const b = await api(`/repos/${REPO}/git/blobs/${r.sha}`);
+          b64 = b && b.content;
+        }
+        if (!b64) throw 0;
+        dyImgCache[path] = 'data:image/jpeg;base64,' + b64.replace(/\s/g, '');
       }
       im.src = dyImgCache[path];
     } catch (e) { im.remove(); }
@@ -3200,7 +3208,7 @@ async function dyShrink(file) {
     const cv = document.createElement('canvas');
     cv.width = Math.round(w * scale); cv.height = Math.round(h * scale);
     cv.getContext('2d').drawImage(src, 0, 0, cv.width, cv.height);
-    return cv.toDataURL('image/jpeg', 0.85).split(',')[1];
+    return cv.toDataURL('image/jpeg', 0.8).split(',')[1];   // 1MBを超えないように
   };
   try {
     const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }).catch(() => createImageBitmap(file));
