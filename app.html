@@ -519,6 +519,81 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 .sleeprow input{padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--bg3);color:var(--text);font-size:14px}
 .sleeprow input[type=date]{flex:1 1 100%}
 .sleeprow button{flex:1 1 100%;margin-top:2px}
+
+/* ══ 日記タブ（2026-09-06 新設）══
+   続けることに価値があるものなので、書く手前の摩擦をぜんぶ削る。
+   絵文字は使わない（メグ指定・安く見える）。字と余白と1色だけで作る。 */
+#tab-diary{padding-bottom:8px}
+.dy-head{display:flex;align-items:baseline;gap:10px;margin:6px 2px 2px}
+.dy-date{font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.dy-dow{font-size:13px;color:var(--text2);font-weight:600}
+.dy-rel{margin-left:auto;font-size:11.5px;color:var(--text3);font-weight:600}
+
+/* 調子（5段階） */
+.dy-mood{display:flex;align-items:center;gap:9px;margin:16px 2px 4px}
+.dy-mood .lb{font-size:11.5px;color:var(--text2);font-weight:700;letter-spacing:.06em}
+.dy-dots{display:flex;gap:7px;margin-left:auto}
+.dy-dots button{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--border);
+  background:var(--bg2);cursor:pointer;padding:0;font-size:11px;color:var(--text3);
+  font-family:inherit;font-weight:700;transition:transform .12s,background .15s,border-color .15s}
+.dy-dots button:active{transform:scale(.9)}
+.dy-dots button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.dy-moodnote{font-size:11.5px;color:var(--text3);margin:2px 2px 0;text-align:right;min-height:16px}
+
+/* 書くところ */
+.dy-write{margin:14px 0 0;background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:14px 14px 10px;transition:border-color .15s}
+.dy-write:focus-within{border-color:var(--accent)}
+.dy-write textarea{width:100%;border:0;background:none;color:var(--text);font-family:inherit;
+  font-size:15.5px;line-height:1.85;resize:none;outline:none;min-height:96px;padding:0}
+.dy-write textarea::placeholder{color:var(--text3);opacity:.75}
+.dy-tools{display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:10px;border-top:1px solid var(--border2)}
+.dy-tool{border:1px solid var(--border);background:none;color:var(--text2);border-radius:9px;
+  padding:7px 13px;font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;transition:border-color .15s,color .15s}
+.dy-tool:active{transform:scale(.97)}
+.dy-tool.rec{color:var(--red);border-color:var(--red)}
+.dy-tool svg{width:14px;height:14px;fill:currentColor}
+.dy-save{margin-left:auto;background:var(--accent);border:1px solid var(--accent);color:#fff;
+  border-radius:9px;padding:8px 20px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer}
+.dy-save:disabled{opacity:.45}
+.dy-hint{font-size:11.5px;color:var(--text3);margin:7px 4px 0;min-height:16px}
+
+/* 書いたもの */
+.dy-entries{margin-top:20px}
+.dy-entry{background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:13px 14px;margin-bottom:9px}
+.dy-entry .at{font-size:10.5px;color:var(--text3);font-weight:700;letter-spacing:.05em;margin-bottom:5px}
+.dy-entry .body{font-size:14.5px;line-height:1.9;white-space:pre-wrap;word-break:break-word}
+.dy-entry img{margin-top:9px;border-radius:9px;width:100%;display:block}
+.dy-entry .raw{margin-top:8px}
+.dy-entry .raw summary{font-size:11px;color:var(--text3);cursor:pointer;list-style:none;font-weight:600}
+.dy-entry .raw summary::-webkit-details-marker{display:none}
+.dy-entry .raw p{font-size:13px;line-height:1.85;color:var(--text2);white-space:pre-wrap;margin-top:6px}
+
+/* 自動で書かれた「今日あったこと」 */
+.dy-auto{margin-top:22px;padding-top:16px;border-top:1px solid var(--border)}
+.dy-auto h4{font-size:11.5px;color:var(--text2);font-weight:700;letter-spacing:.06em;margin:0 2px 7px}
+.dy-auto p{font-size:13px;line-height:1.95;color:var(--text2);margin:0 2px}
+
+/* カレンダー（日記専用・予定表とは別） */
+.dy-cal{margin-top:26px;padding-top:18px;border-top:1px solid var(--border)}
+.dy-calhead{display:flex;align-items:center;gap:10px;margin:0 2px 12px}
+.dy-calhead .m{font-size:15px;font-weight:700}
+.dy-calhead .nav{margin-left:auto;display:flex;gap:4px}
+.dy-calhead button{width:32px;height:32px;border:1px solid var(--border);background:var(--bg2);
+  border-radius:8px;color:var(--text2);cursor:pointer;font-size:14px;font-family:inherit;line-height:1}
+.dy-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.dy-grid .wd{text-align:center;font-size:10px;color:var(--text3);font-weight:700;padding-bottom:4px}
+.dy-cell{aspect-ratio:1;border:0;background:none;border-radius:9px;cursor:pointer;padding:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  font-family:inherit;font-size:12.5px;color:var(--text);transition:background .12s}
+.dy-cell:disabled{color:var(--text3);opacity:.35;cursor:default}
+.dy-cell .dot{width:5px;height:5px;border-radius:50%;background:transparent}
+.dy-cell.has .dot{background:var(--accent)}
+.dy-cell.today{outline:1.5px solid var(--border);outline-offset:-1.5px;font-weight:700}
+.dy-cell.sel{background:var(--accent);color:#fff}
+.dy-cell.sel .dot{background:#fff}
+.dy-legend{font-size:11px;color:var(--text3);margin:10px 2px 0}
 /* 健康タブ: おつうじの30日ストリップ（2026-09-06） */
 .pstrip{display:flex;gap:3px;flex-wrap:wrap;margin-top:8px}
 .pstrip i{width:13px;height:19px;border-radius:3px;font-style:normal;font-size:9px;line-height:19px;text-align:center;
@@ -764,6 +839,47 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
       <div id="health-note"></div>
     </div>
 
+    <!-- 日記 -->
+    <div id="tab-diary" class="tab-panel">
+      <div class="dy-head">
+        <span class="dy-date" id="dy-date">—</span>
+        <span class="dy-dow" id="dy-dow"></span>
+        <span class="dy-rel" id="dy-rel"></span>
+      </div>
+
+      <div class="dy-mood">
+        <span class="lb">きょうの調子</span>
+        <div class="dy-dots" id="dy-dots"></div>
+      </div>
+      <div class="dy-moodnote" id="dy-moodnote"></div>
+
+      <div class="dy-write">
+        <textarea id="dy-text" placeholder="思ったことを、そのまま。ひとことでいい。"></textarea>
+        <div class="dy-tools">
+          <button class="dy-tool" id="dy-rec"><svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V22h2v-3.1A7 7 0 0 0 19 12h-2z"/></svg>録音</button>
+          <button class="dy-tool" id="dy-photo"><svg viewBox="0 0 24 24"><path d="M9 3l-1.8 2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9zm3 5a6 6 0 1 1 0 12 6 6 0 0 1 0-12zm0 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>写真</button>
+          <input type="file" id="dy-photo-input" accept="image/*" style="display:none">
+          <button class="dy-save" id="dy-save">書く</button>
+        </div>
+        <div class="dy-hint" id="dy-hint"></div>
+      </div>
+
+      <div class="dy-entries" id="dy-entries"></div>
+      <div class="dy-auto" id="dy-auto" hidden><h4>この日にあったこと</h4><p id="dy-auto-body"></p></div>
+
+      <div class="dy-cal">
+        <div class="dy-calhead">
+          <span class="m" id="dy-calm">—</span>
+          <div class="nav">
+            <button id="dy-prev" aria-label="前の月">‹</button>
+            <button id="dy-next" aria-label="次の月">›</button>
+          </div>
+        </div>
+        <div class="dy-grid" id="dy-grid"></div>
+        <div class="dy-legend">点がついている日は、書いたものがある日です。</div>
+      </div>
+    </div>
+
     <!-- コピペ帳 -->
     <div id="tab-quick" class="tab-panel">
       <div class="hint" style="margin:2px 4px 10px">📋を押すとコピーされます。正本は personal リポ（変わったらClaudeが同期）</div>
@@ -777,6 +893,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
     <button class="nav-btn" data-tab="inbox"><span class="em">📥</span><span>投げ込み</span></button>
     <button class="nav-btn" data-tab="invest"><span class="em">📈</span><span>投資</span></button>
     <button class="nav-btn" data-tab="health"><span class="em">💪</span><span>健康</span></button>
+    <button class="nav-btn" data-tab="diary"><span class="em">📓</span><span>日記</span></button>
     <button class="nav-btn" data-tab="quick"><span class="em">📋</span><span>コピペ</span></button>
   </div>
 </div>
@@ -880,7 +997,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-06.7';
+const APP_VERSION = '2026-09-06.8';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2755,6 +2872,187 @@ async function loadHealth() {
   } catch (e) {}
 }
 
+// ══ 日記（2026-09-06 新設）══
+// 分身の一次資料。続くことに価値があるので、書く手前の摩擦をぜんぶ削る。
+//   ・開いた時点で「この日にあったこと」（毎晩routineが書く）が下に出ている＝白紙にしない
+//   ・入力は claude-context の inbox/diary/YYYY-MM-DD.json に即入る（夜のroutineが整形して personal/diary へ）
+//   ・録音は既存の音声投げ込みの経路（Macのローカル文字起こし）に乗せる
+const DIARY_DIR = 'inbox/diary';
+const DY_MOOD = ['とても悪い', '悪い', 'ふつう', '良い', 'とても良い'];
+let dySel = null, dyCalY = 0, dyCalM = 0, dyDays = new Set(), dyPhoto = null, dyRecorder = null, dyChunks = [];
+const dyPath = d => `${DIARY_DIR}/${d}.json`;
+const dyToday = () => new Date().toLocaleDateString('sv-SE');
+
+// その日のJSONを読んで、変えて、書き戻す（409は1回だけやり直す）
+async function dyPut(d, mutate, message) {
+  for (let a = 0; a < 2; a++) {
+    const f = await getFileWithSha(dyPath(d));
+    let day = { date: d, entries: [] };
+    if (f) { try { day = JSON.parse(f.text); } catch (e) {} }
+    if (!Array.isArray(day.entries)) day.entries = [];
+    mutate(day);
+    try {
+      await api(`/repos/${REPO}/contents/${encodeURIComponent(dyPath(d)).replace(/%2F/g, '/')}`, 'PUT',
+        { message, content: enc(JSON.stringify(day, null, 1)), branch: BRANCH, ...(f ? { sha: f.sha } : {}) });
+      return;
+    } catch (e) { if (a === 1 || !String(e.message).includes('409')) throw e; }
+  }
+}
+
+async function dyLoadDay(d) {
+  dySel = d;
+  const dt = new Date(d + 'T00:00:00');
+  $('dy-date').textContent = `${dt.getMonth() + 1}月${dt.getDate()}日`;
+  $('dy-dow').textContent = ['日', '月', '火', '水', '木', '金', '土'][dt.getDay()] + '曜日';
+  const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+  const diff = Math.round((t0 - dt) / 86400000);
+  $('dy-rel').textContent = diff === 0 ? '今日' : diff === 1 ? '昨日' : diff > 1 ? `${diff}日前` : '';
+  let day = null;
+  try { const t = await repoFile(REPO, dyPath(d)); if (t) day = JSON.parse(t); } catch (e) {}
+  dyRenderMood(day && day.mood);
+  dyRenderEntries(day);
+  dyRenderAuto(d);
+}
+
+function dyRenderMood(v) {
+  $('dy-dots').innerHTML = [1, 2, 3, 4, 5].map(n => `<button data-m="${n}" class="${v === n ? 'on' : ''}">${n}</button>`).join('');
+  $('dy-moodnote').textContent = v ? DY_MOOD[v - 1] : '';
+  $('dy-dots').querySelectorAll('button').forEach(b => b.addEventListener('click', () => dySetMood(+b.dataset.m)));
+}
+async function dySetMood(n) {
+  const prev = $('dy-moodnote').textContent;
+  dyRenderMood(n);
+  try {
+    await dyPut(dySel, day => { day.mood = n; }, `日記 ${dySel} 調子${n}`);
+    dyDays.add(dySel); dyRenderCal();
+  } catch (e) { toast('保存できませんでした'); $('dy-moodnote').textContent = prev; }
+}
+
+function dyRenderEntries(day) {
+  const el = $('dy-entries');
+  const es = (day && day.entries) || [];
+  if (!es.length) { el.innerHTML = ''; return; }
+  el.innerHTML = es.map(e => {
+    const time = (e.at || '').slice(11, 16);
+    const shown = e.text || '';
+    return `<div class="dy-entry">`
+      + (time ? `<div class="at">${esc(time)}</div>` : '')
+      + (shown ? `<div class="body">${esc(shown)}</div>` : '')
+      + (e.raw && e.raw !== shown ? `<details class="raw"><summary>話したままの言葉</summary><p>${esc(e.raw)}</p></details>` : '')
+      + (e.img ? `<img src="https://raw.githubusercontent.com/${REPO}/${BRANCH}/${e.img}" alt="">` : '')
+      + `</div>`;
+  }).join('');
+}
+
+// 毎晩routineが書く「今日あったこと」を下に出す。これがあるので白紙から書かなくていい
+async function dyRenderAuto(d) {
+  const box = $('dy-auto');
+  box.hidden = true;
+  try {
+    const md = await repoFile('meyjiro/personal', `diary/${d.slice(0, 7)}.md`);
+    if (!md) return;
+    const i = md.indexOf(`## ${d}`);
+    if (i < 0) return;
+    const next = md.indexOf('\n## ', i + 3);
+    const block = md.slice(i, next < 0 ? undefined : next);
+    const m = block.match(/\*\*今日あったこと\*\*:\s*([\s\S]*?)(?=\n\*\*|$)/);
+    if (!m || !m[1].trim()) return;
+    $('dy-auto-body').textContent = m[1].trim();
+    box.hidden = false;
+  } catch (e) {}
+}
+
+async function dySave() {
+  const text = $('dy-text').value.trim();
+  if (!text && !dyPhoto) { toast('ひとことでも書くか、写真をつけてね'); return; }
+  const btn = $('dy-save'); btn.disabled = true; $('dy-hint').textContent = '保存中…';
+  try {
+    const entry = { at: atNow(), text };
+    if (dyPhoto) {
+      const path = `inbox/img/${ts()}.jpg`;
+      await putFile(path, dyPhoto.b64, `日記の写真 ${dySel}`, true);
+      entry.img = path;
+    }
+    await dyPut(dySel, day => { day.entries.push(entry); }, `日記 ${dySel}`);
+    $('dy-text').value = ''; dyPhoto = null;
+    $('dy-hint').textContent = '書きました';
+    dyDays.add(dySel); dyRenderCal();
+    await dyLoadDay(dySel);
+  } catch (e) { $('dy-hint').textContent = '保存できませんでした: ' + e.message; }
+  btn.disabled = false;
+}
+
+async function dyPickPhoto(file) {
+  if (!file) return;
+  try {
+    const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }).catch(() => createImageBitmap(file));
+    const max = 1600, scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(bmp.width * scale); cv.height = Math.round(bmp.height * scale);
+    cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
+    const dataUrl = cv.toDataURL('image/jpeg', 0.8);
+    dyPhoto = { b64: dataUrl.split(',')[1] };
+    $('dy-hint').textContent = `写真をつけました（${Math.round(dataUrl.length * 0.75 / 1024)}KB）。「書く」で一緒に残ります`;
+  } catch (e) { toast('写真の読み込みに失敗'); }
+}
+
+// 録音は既存の音声投げ込みと同じ道（Macのローカル文字起こし → 夜のroutineが日記へ）
+async function dyToggleRec() {
+  const btn = $('dy-rec');
+  if (dyRecorder && dyRecorder.state === 'recording') { dyRecorder.stop(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mime = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : 'audio/webm';
+    dyRecorder = new MediaRecorder(stream, { mimeType: mime });
+    dyChunks = [];
+    dyRecorder.ondataavailable = e => { if (e.data.size) dyChunks.push(e.data); };
+    dyRecorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      btn.classList.remove('rec'); btn.lastChild.textContent = '録音';
+      const blob = new Blob(dyChunks, { type: dyRecorder.mimeType });
+      const ext = dyRecorder.mimeType.includes('mp4') ? 'm4a' : 'webm';
+      $('dy-hint').textContent = '送っています…';
+      try {
+        const buf = await blob.arrayBuffer();
+        let bin = ''; const bytes = new Uint8Array(buf);
+        for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+        await putFile(`inbox/audio/${ts()}_diary.${ext}`, btoa(bin), `日記の録音 ${dySel}`, true);
+        $('dy-hint').textContent = '録音を預かりました。文字にしてから、この日の日記に入ります（30分以内）';
+      } catch (e) { $('dy-hint').textContent = '送れませんでした: ' + e.message; }
+    };
+    dyRecorder.start();
+    btn.classList.add('rec'); btn.lastChild.textContent = '停止';
+    $('dy-hint').textContent = '聞いています。もう一度押すと止まります';
+  } catch (e) { $('dy-hint').textContent = 'マイクが使えませんでした'; }
+}
+
+async function dyLoadDays() {
+  try {
+    const files = await listDir(DIARY_DIR);
+    dyDays = new Set(files.filter(f => f.name.endsWith('.json')).map(f => f.name.replace('.json', '')));
+  } catch (e) { dyDays = new Set(); }
+}
+function dyRenderCal() {
+  $('dy-calm').textContent = `${dyCalY}年${dyCalM + 1}月`;
+  const first = new Date(dyCalY, dyCalM, 1), last = new Date(dyCalY, dyCalM + 1, 0), today = dyToday();
+  let h = ['日', '月', '火', '水', '木', '金', '土'].map(w => `<div class="wd">${w}</div>`).join('');
+  for (let i = 0; i < first.getDay(); i++) h += '<button class="dy-cell" disabled></button>';
+  for (let d = 1; d <= last.getDate(); d++) {
+    const ds = `${dyCalY}-${String(dyCalM + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const cls = ['dy-cell', dyDays.has(ds) ? 'has' : '', ds === today ? 'today' : '', ds === dySel ? 'sel' : ''].filter(Boolean).join(' ');
+    h += `<button class="${cls}" data-d="${ds}"${ds > today ? ' disabled' : ''}>${d}<span class="dot"></span></button>`;
+  }
+  $('dy-grid').innerHTML = h;
+  $('dy-grid').querySelectorAll('.dy-cell[data-d]:not([disabled])').forEach(b =>
+    b.addEventListener('click', async () => { await dyLoadDay(b.dataset.d); dyRenderCal(); }));
+}
+async function loadDiary() {
+  if (!dySel) { dySel = dyToday(); const n = new Date(); dyCalY = n.getFullYear(); dyCalM = n.getMonth(); }
+  await dyLoadDays();
+  await dyLoadDay(dySel);
+  dyRenderCal();
+}
+
 // ── 投資タブ（ウォッチ表を portfolio.md から）──
 async function loadWatch() {
   const el = $('invest-watch');
@@ -3178,9 +3476,10 @@ function switchTab(tab) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   $('tab-' + tab).classList.add('active');
-  $('page-title').innerHTML = { today:`今日<span class="sub" id="today-date"></span>`, cal:'予定', inbox:'投げ込み', invest:'投資', health:'健康', quick:'コピペ帳' }[tab];
+  $('page-title').innerHTML = { today:`今日<span class="sub" id="today-date"></span>`, cal:'予定', inbox:'投げ込み', invest:'投資', health:'健康', diary:'日記', quick:'コピペ帳' }[tab];
   if (tab === 'today') setToday();
   if (tab === 'quick') loadQuick();
+  if (tab === 'diary') loadDiary();
   if (tab === 'cal' && !calSel) { calSel = new Date().toLocaleDateString('sv-SE'); renderCal(); }
 }
 function setToday() {
@@ -3266,6 +3565,12 @@ function setupEvents() {
   if ($('wt-save')) $('wt-save').addEventListener('click', saveWeight);
   if ($('pp-yes')) $('pp-yes').addEventListener('click', () => savePoop(true));
   if ($('pp-no')) $('pp-no').addEventListener('click', () => savePoop(false));
+  if ($('dy-save')) $('dy-save').addEventListener('click', dySave);
+  if ($('dy-rec')) $('dy-rec').addEventListener('click', dyToggleRec);
+  if ($('dy-photo')) $('dy-photo').addEventListener('click', () => $('dy-photo-input').click());
+  if ($('dy-photo-input')) $('dy-photo-input').addEventListener('change', e => dyPickPhoto(e.target.files[0]));
+  if ($('dy-prev')) $('dy-prev').addEventListener('click', () => { dyCalM--; if (dyCalM < 0) { dyCalM = 11; dyCalY--; } dyRenderCal(); });
+  if ($('dy-next')) $('dy-next').addEventListener('click', () => { dyCalM++; if (dyCalM > 11) { dyCalM = 0; dyCalY++; } dyRenderCal(); });
   $('calm-cancel').addEventListener('click', () => $('cal-modal').classList.add('hidden'));
   $('calm-try').addEventListener('click', barkTest);
 
