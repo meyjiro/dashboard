@@ -879,7 +879,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-06.3';
+const APP_VERSION = '2026-09-06.4';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2401,7 +2401,10 @@ function poopChart(el, map) {
   for (let i = days.length - 1; i >= 0; i--) { const r = map[days[i]]; if (r && r.had === '1') { since = days.length - 1 - i; break; } }
   days.forEach(d => { const r = map[d]; if (r && r.had === '1' && r.t) mins.push(+r.t.slice(0, 2) * 60 + +r.t.slice(3, 5)); });
   const hm = m => `${Math.floor(m / 60)}:${String(Math.round(m % 60)).padStart(2, '0')}`;
-  const avg = mins.length ? mins.reduce((a, b) => a + b) / mins.length : null;
+  // 「だいたい何時ごろ」は中央値で出す。たまの夜中が1回あるだけで平均は大きくずれるため
+  const sorted = mins.slice().sort((a, b) => a - b);
+  const avg = sorted.length ? (sorted.length % 2 ? sorted[(sorted.length - 1) / 2]
+                                                 : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2) : null;
   const yes = days.filter(d => map[d] && map[d].had === '1').length;
   const no  = days.filter(d => map[d] && map[d].had === '0').length;
   const last = map[days[days.length - 1]];
@@ -2432,7 +2435,9 @@ function poopChart(el, map) {
       : `最後に出たのは ${since}日前`}</div>`
     + (since !== null && since >= 3 ? `<div class="s" style="color:var(--warn);font-weight:700;margin-top:3px">⚠️ ${since}日あいています</div>` : '')
     + (avg !== null ? `<div class="s" style="margin-top:2px">だいたい <b>${hm(avg)}</b> ごろ（時刻の記録 ${mins.length}日分）</div>` : '')
-    + `<svg viewBox="0 0 ${W} ${H + 4}" style="width:100%;height:auto;margin-top:8px;font-variant-numeric:tabular-nums">${g}${dots}</svg>`
+    + (mins.length
+        ? `<svg viewBox="0 0 ${W} ${H + 4}" style="width:100%;height:auto;margin-top:8px;font-variant-numeric:tabular-nums">${g}${dots}</svg>`
+        : `<div class="s" style="margin-top:6px;color:var(--text2)">「何時に」を入れて記録すると、ここに時刻の散らばりが出ます</div>`)
     + `<div class="pstrip">${strip}</div>`
     + `<div class="pstat"><span>30日で <b>${yes}</b>日あった</span><span>なかった <b>${no}</b>日</span>`
     + `<span>未記録 <b>${30 - yes - no}</b>日</span></div>`;
