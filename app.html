@@ -594,7 +594,11 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 .dy-entry{background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:13px 14px;margin-bottom:9px}
 .dy-entry .at{font-size:10.5px;color:var(--text3);font-weight:700;letter-spacing:.05em;margin-bottom:5px}
 .dy-entry .body{font-size:14.5px;line-height:1.9;white-space:pre-wrap;word-break:break-word}
-.dy-entry img{margin-top:9px;border-radius:9px;width:100%;display:block}
+.dy-shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:6px;margin-top:10px}
+.dy-shots img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;display:block;background:var(--bg3);cursor:zoom-in}
+.dy-lightbox{position:fixed;inset:0;background:rgba(20,18,16,.92);display:flex;align-items:center;justify-content:center;
+  z-index:200;padding:20px}
+.dy-lightbox img{max-width:100%;max-height:100%;border-radius:6px}
 .dy-entry .raw{margin-top:8px}
 .dy-entry .raw summary{font-size:11px;color:var(--text3);cursor:pointer;list-style:none;font-weight:600}
 .dy-entry .raw summary::-webkit-details-marker{display:none}
@@ -644,6 +648,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 .dy-row .tx.none{color:var(--text3)}
 .dy-row .mo{font-size:10.5px;color:var(--text3);font-weight:600;margin-top:4px}
 .dy-row img{flex:none;width:58px;height:58px;object-fit:cover;border-radius:9px;background:var(--bg3)}
+.dy-row img:not([src]){opacity:.35}
 .dy-more{width:100%;margin-top:14px;padding:11px 0;border:1px solid var(--border);border-radius:10px;
   background:none;color:var(--text2);font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer}
 /* 健康タブ: おつうじの30日ストリップ（2026-09-06） */
@@ -915,7 +920,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
         <div class="dy-tools">
           <button class="dy-tool" id="dy-rec"><svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V22h2v-3.1A7 7 0 0 0 19 12h-2z"/></svg>録音</button>
           <button class="dy-tool" id="dy-photo"><svg viewBox="0 0 24 24"><path d="M9 3l-1.8 2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9zm3 5a6 6 0 1 1 0 12 6 6 0 0 1 0-12zm0 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>写真</button>
-          <input type="file" id="dy-photo-input" accept="image/*" style="display:none">
+          <input type="file" id="dy-photo-input" accept="image/*" multiple style="display:none">
           <button class="dy-save" id="dy-save">書く</button>
         </div>
         <div class="dy-hint" id="dy-hint"></div>
@@ -1061,7 +1066,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-06.15';
+const APP_VERSION = '2026-09-06.16';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2947,7 +2952,7 @@ const DIARY_DIR = 'inbox/diary';
 const DY_MOOD = ['最悪', '悪い', 'ふつう', '良い', '最高'];        // こころ
 const DY_BODY = ['つらい', 'だるい', 'ふつう', '軽い', '絶好調'];  // からだ
 const DY_TAGS = ['仕事', '家族', 'ペット', 'からだ', 'お金', 'ひとり時間'];  // その日を動かしたもの（複数可）
-let dySel = null, dyCalY = 0, dyCalM = 0, dyDays = new Set(), dyPhoto = null, dyRecorder = null, dyChunks = [];
+let dySel = null, dyCalY = 0, dyCalM = 0, dyDays = new Set(), dyPhotos = [], dyRecorder = null, dyChunks = [];
 const dyPath = d => `${DIARY_DIR}/${d}.json`;
 const dyToday = () => new Date().toLocaleDateString('sv-SE');
 
@@ -3017,6 +3022,27 @@ function dyRenderTags(sel) {
   }));
 }
 
+// 🔴 リポジトリが private なので raw.githubusercontent.com では画像が出ない（2026-09-06に発覚）。
+//    API で中身を取って data URI にする。一度読んだものは覚えておく
+const dyImgCache = {};
+async function dyFillImages(scope) {
+  for (const im of scope.querySelectorAll('img[data-path]:not([src])')) {
+    const path = im.dataset.path;
+    try {
+      if (!dyImgCache[path]) {
+        const r = await api(`/repos/${REPO}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}?ref=${BRANCH}`);
+        if (!r || !r.content) throw 0;
+        dyImgCache[path] = 'data:image/jpeg;base64,' + r.content.replace(/\s/g, '');
+      }
+      im.src = dyImgCache[path];
+    } catch (e) { im.remove(); }
+  }
+}
+function dyShots(e) {
+  const list = e.imgs || (e.img ? [e.img] : []);
+  if (!list.length) return '';
+  return `<div class="dy-shots">` + list.map(p => `<img data-path="${esc(p)}" alt="">`).join('') + `</div>`;
+}
 function dyRenderEntries(day) {
   const el = $('dy-entries');
   const es = (day && day.entries) || [];
@@ -3025,12 +3051,21 @@ function dyRenderEntries(day) {
     const time = (e.at || '').slice(11, 16);
     const shown = e.text || '';
     return `<div class="dy-entry">`
-      + (time ? `<div class="at">${esc(time)}</div>` : '')
+      + (time ? `<div class="at">${esc(time)}${e.src === 'voice' ? '　話したぶん' : ''}</div>` : '')
       + (shown ? `<div class="body">${esc(shown)}</div>` : '')
       + (e.raw && e.raw !== shown ? `<details class="raw"><summary>話したままの言葉</summary><p>${esc(e.raw)}</p></details>` : '')
-      + (e.img ? `<img src="https://raw.githubusercontent.com/${REPO}/${BRANCH}/${e.img}" alt="">` : '')
+      + dyShots(e)
       + `</div>`;
   }).join('');
+  dyFillImages(el);
+  el.querySelectorAll('.dy-shots img').forEach(im => im.addEventListener('click', () => {
+    if (!im.src) return;
+    const ov = document.createElement('div');
+    ov.className = 'dy-lightbox';
+    ov.innerHTML = `<img src="${im.src}" alt="">`;
+    ov.addEventListener('click', () => ov.remove());
+    document.body.appendChild(ov);
+  }));
 }
 
 // 毎晩routineが書く「今日あったこと」を下に出す。これがあるので白紙から書かなくていい
@@ -3053,36 +3088,46 @@ async function dyRenderAuto(d) {
 
 async function dySave() {
   const text = $('dy-text').value.trim();
-  if (!text && !dyPhoto) { toast('ひとことでも書くか、写真をつけてね'); return; }
-  const btn = $('dy-save'); btn.disabled = true; $('dy-hint').textContent = '保存中…';
+  if (!text && !dyPhotos.length) { toast('ひとことでも書くか、写真をつけてね'); return; }
+  const btn = $('dy-save'); btn.disabled = true;
   try {
     const entry = { at: atNow(), text };
-    if (dyPhoto) {
-      const path = `inbox/img/${ts()}.jpg`;
-      await putFile(path, dyPhoto.b64, `日記の写真 ${dySel}`, true);
-      entry.img = path;
+    if (dyPhotos.length) {
+      entry.imgs = [];
+      for (let i = 0; i < dyPhotos.length; i++) {
+        $('dy-hint').textContent = `写真を送っています（${i + 1}/${dyPhotos.length}）…`;
+        const path = `inbox/img/${ts()}_${i}.jpg`;
+        await putFile(path, dyPhotos[i].b64, `日記の写真 ${dySel}`, true);
+        entry.imgs.push(path);
+      }
     }
+    $('dy-hint').textContent = '保存中…';
     await dyPut(dySel, day => { day.entries.push(entry); }, `日記 ${dySel}`);
-    $('dy-text').value = ''; dyPhoto = null;
+    $('dy-text').value = ''; dyPhotos = [];
     $('dy-hint').textContent = '書きました';
     dyDays.add(dySel); dyRenderCal();
     await dyLoadDay(dySel);
+    dyLoadIndex();
   } catch (e) { $('dy-hint').textContent = '保存できませんでした: ' + e.message; }
   btn.disabled = false;
 }
 
-async function dyPickPhoto(file) {
-  if (!file) return;
-  try {
-    const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }).catch(() => createImageBitmap(file));
-    const max = 1600, scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
-    const cv = document.createElement('canvas');
-    cv.width = Math.round(bmp.width * scale); cv.height = Math.round(bmp.height * scale);
-    cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
-    const dataUrl = cv.toDataURL('image/jpeg', 0.8);
-    dyPhoto = { b64: dataUrl.split(',')[1] };
-    $('dy-hint').textContent = `写真をつけました（${Math.round(dataUrl.length * 0.75 / 1024)}KB）。「書く」で一緒に残ります`;
-  } catch (e) { toast('写真の読み込みに失敗'); }
+// 何枚でも付けられる。長辺1600pxに縮めてから持つ
+async function dyPickPhoto(files) {
+  if (!files || !files.length) return;
+  for (const file of files) {
+    try {
+      const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }).catch(() => createImageBitmap(file));
+      const max = 1600, scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(bmp.width * scale); cv.height = Math.round(bmp.height * scale);
+      cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
+      dyPhotos.push({ b64: cv.toDataURL('image/jpeg', 0.8).split(',')[1] });
+    } catch (e) {}
+  }
+  $('dy-hint').textContent = dyPhotos.length
+    ? `写真を${dyPhotos.length}枚つけました。「書く」で一緒に残ります`
+    : '写真を読み込めませんでした';
 }
 
 // 録音は既存の音声投げ込みと同じ道（Macのローカル文字起こし → 夜のroutineが日記へ）
@@ -3144,7 +3189,8 @@ async function dyLoadIndex() {
         const es = (day.entries || []).filter(e => (e.text || '').trim() || e.img);
         if (!es.length && !day.mood && !day.body && !(day.tags || []).length) return null;
         return { date: d, text: es.map(e => e.text).filter(Boolean).join('\n'),
-                 img: (es.find(e => e.img) || {}).img, mood: day.mood, body: day.body, tags: day.tags || [] };
+                 img: (es.map(e => (e.imgs || (e.img ? [e.img] : []))[0]).find(Boolean)) || null,
+                 mood: day.mood, body: day.body, tags: day.tags || [] };
       } catch (e) { return null; }
     }));
     dyIndex = days.filter(Boolean);
@@ -3169,11 +3215,12 @@ function dyRenderList() {
       + `<span class="d${dt.getDay() === 0 ? ' sun' : ''}"><b>${dt.getDate()}</b><span>${w}</span></span>`
       + `<span class="tx${r.text ? '' : ' none'}">${esc(r.text || '（この日は記録だけ）')}`
       + (meta ? `<span class="mo" style="display:block">${esc(meta)}</span>` : '') + `</span>`
-      + (r.img ? `<img src="https://raw.githubusercontent.com/${REPO}/${BRANCH}/${r.img}" alt="">` : '')
+      + (r.img ? `<img data-path="${esc(r.img)}" alt="">` : '')
       + `</button>`;
   }
   if (dyDays.size > dyShown) h += `<button class="dy-more" id="dy-more">もっと見る</button>`;
   wrap.innerHTML = h;
+  dyFillImages(wrap);
   wrap.querySelectorAll('.dy-row').forEach(b => b.addEventListener('click', async () => {
     await dyLoadDay(b.dataset.d); dyRenderCal();
     document.getElementById('tab-diary').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -3710,7 +3757,7 @@ function setupEvents() {
   if ($('dy-save')) $('dy-save').addEventListener('click', dySave);
   if ($('dy-rec')) $('dy-rec').addEventListener('click', dyToggleRec);
   if ($('dy-photo')) $('dy-photo').addEventListener('click', () => $('dy-photo-input').click());
-  if ($('dy-photo-input')) $('dy-photo-input').addEventListener('change', e => dyPickPhoto(e.target.files[0]));
+  if ($('dy-photo-input')) $('dy-photo-input').addEventListener('change', e => { dyPickPhoto(e.target.files); e.target.value = ''; });
   if ($('dy-prev')) $('dy-prev').addEventListener('click', () => { dyCalM--; if (dyCalM < 0) { dyCalM = 11; dyCalY--; } dyRenderCal(); });
   if ($('dy-next')) $('dy-next').addEventListener('click', () => { dyCalM++; if (dyCalM > 11) { dyCalM = 0; dyCalY++; } dyRenderCal(); });
   if ($('dy-switch')) $('dy-switch').querySelectorAll('button').forEach(b => b.addEventListener('click', () => dySetView(b.dataset.v)));
