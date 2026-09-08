@@ -307,6 +307,14 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 /* 解説＝紙の下段。ゴシックで少し小さく、罫で区切る（2026-09-08） */
 #tab-today .quote-card .n{font-family:inherit;font-size:12px;line-height:1.85;color:#5a4d3a;
   margin-top:14px;padding-top:12px;border-top:1px dashed rgba(140,110,60,.35);letter-spacing:.02em;white-space:pre-wrap}
+/* 今日の学び＝名言の下。読み物なので行間広め（2026-09-08） */
+#tab-today .learn-card{background:var(--card,#fff);border:1px solid var(--border2,#e6e0d6);border-radius:12px;padding:16px 18px;margin:0 0 18px}
+#tab-today .learn-card .lh{font-size:12px;font-weight:700;color:var(--text2);letter-spacing:.04em;display:flex;gap:8px;align-items:center}
+#tab-today .learn-card .lchk{font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:999px}
+#tab-today .learn-card .lchk.ok{background:#e5f2ea;color:#2f7d4f} #tab-today .learn-card .lchk.ng{background:#f8e5e5;color:#b23a3a}
+#tab-today .learn-card .lt{font-size:15px;font-weight:700;margin:8px 0 6px;line-height:1.5}
+#tab-today .learn-card .lb{font-size:13.5px;line-height:1.9;white-space:pre-wrap}
+#tab-today .learn-card .lu{display:inline-block;margin-top:10px;font-size:12.5px;color:var(--accent,#0bb7ae);text-decoration:none}
 /* 見出しは琥珀の小さな帯 */
 #tab-today .blk-h{color:var(--text2);font-size:12.5px;letter-spacing:.04em;font-weight:700;
   margin:26px 2px 9px;display:flex;align-items:center;gap:9px}
@@ -774,6 +782,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
       <div id="brief-stale"></div>
       <div id="ver-bar"></div>
       <div id="brief-quote"></div>
+      <div id="brief-learn"></div>
       <div id="today-set"></div>
       <div id="today-nums"></div>
 
@@ -1116,7 +1125,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-08.2';
+const APP_VERSION = '2026-09-08.3';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1759,6 +1768,11 @@ function renderBriefing() {
   }
   const age = (Date.now() - new Date(b.generated_at).getTime()) / 3600000;
   if (age > 26) $('brief-stale').innerHTML = `<div class="stale">⚠️ これは ${new Date(b.generated_at).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})} のブリーフィングです（今朝の分がまだ届いていません）</div>`;
+  // 🔴 今日の学び（learn）: 投資の学習routineが書く500字。名言の次に出す（2026-09-08）
+  const lb = $('brief-learn'); if (lb) {
+    const L = b.learn;
+    lb.innerHTML = L && L.body ? `<div class="learn-card"><div class="lh">📚 今日の学び${L.check==='ng'?'<span class="lchk ng">検品で差し戻し</span>':(L.check==='ok'?'<span class="lchk ok">検品済</span>':'')}</div><div class="lt">${esc(L.title||'')}</div><div class="lb">${esc(L.body)}</div>${L.url?`<a class="lu" href="${esc(L.url)}" target="_blank" rel="noopener">🎬 動画を見る</a>`:''}</div>` : '';
+  }
   // 🔴 解説（note）を言葉の下に出す（2026-09-08 メグ「解説があると地肉になる」）
   $('brief-quote').innerHTML = b.quote ? `<div class="quote-card"><div class="q">${esc(b.quote.text)}</div><div class="a">— ${esc(b.quote.author || '')}</div>${b.quote.note ? `<div class="n">${esc(b.quote.note)}</div>` : ''}</div>` : '';
   // 🔴 近日（3日以内）だけ出して、それ以降は畳む（2026-08-30 メグ指示）
