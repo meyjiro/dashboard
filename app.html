@@ -315,6 +315,29 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .learn-card .lt{font-size:15px;font-weight:700;margin:8px 0 6px;line-height:1.5}
 #tab-today .learn-card .lb{font-size:13.5px;line-height:1.9;white-space:pre-wrap}
 #tab-today .learn-card .lu{display:inline-block;margin-top:10px;font-size:12.5px;color:var(--accent,#0bb7ae);text-decoration:none}
+/* やりとり板（2026-09-08） */
+.bd-sub{font-weight:400;font-size:12px;color:var(--text2);margin-left:6px}
+.bd-item{background:var(--card,#fff);border:1px solid var(--border2,#e6e0d6);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.bd-item.answered{border-color:#0bb7ae}.bd-item.done{border-color:#c9c2b6;opacity:.92}
+.bd-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.bd-t{font-weight:700;font-size:14.5px;line-height:1.5}
+.bd-badge{font-size:10.5px;padding:2px 8px;border-radius:999px;white-space:nowrap;flex:none;margin-top:3px;background:#fbf0dc;color:#b7731c}
+.bd-item.answered .bd-badge{background:#e0f5f4;color:#0b8a83}.bd-item.done .bd-badge{background:#e4f2ea;color:#2e7d4f}
+.bd-from{font-size:11px;color:var(--text2);margin-top:2px}
+.bd-ctx{font-size:13px;color:var(--text2);line-height:1.7;margin-top:8px;white-space:pre-wrap;word-break:break-word}
+.bd-ctx a{color:var(--accent,#0bb7ae)}
+.bd-rec{font-size:12px;color:var(--text2);margin-top:6px}
+.bd-opts{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.bd-opts label{display:flex;gap:9px;align-items:flex-start;padding:8px 11px;border:1px solid var(--border2,#e6e0d6);border-radius:9px;font-size:13.5px;line-height:1.5;cursor:pointer}
+.bd-opts label:has(input:checked){border-color:var(--accent,#0bb7ae);background:#0bb7ae12}
+.bd-opts input{margin-top:4px;accent-color:var(--accent,#0bb7ae)}
+.bd-memo{width:100%;font:inherit;font-size:13.5px;padding:8px 11px;border:1px solid var(--border2,#e6e0d6);border-radius:9px;margin-top:8px;min-height:40px;resize:vertical;background:var(--bg,#faf8f4)}
+.bd-res{font-size:13px;line-height:1.7;margin-top:10px;padding:8px 12px;border-left:3px solid #2e7d4f;background:#e4f2ea;border-radius:0 8px 8px 0;white-space:pre-wrap;word-break:break-word}
+.bd-wait{font-size:12px;color:#0b8a83;margin-top:8px}
+.bd-new{display:flex;flex-direction:column;gap:8px;margin:14px 0 8px}
+.bd-new textarea{min-height:64px;font:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--border2,#e6e0d6);border-radius:10px;resize:vertical}
+.bd-done summary{font-size:13px;color:var(--text2);cursor:pointer;margin:6px 2px}
+.today-board{font-size:13.5px;padding:10px 14px;border:1px dashed var(--border2,#e6e0d6);border-radius:10px;margin:0 0 18px;cursor:pointer}
 /* 見出しは琥珀の小さな帯 */
 #tab-today .blk-h{color:var(--text2);font-size:12.5px;letter-spacing:.04em;font-weight:700;
   margin:26px 2px 9px;display:flex;align-items:center;gap:9px}
@@ -783,6 +806,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
       <div id="ver-bar"></div>
       <div id="brief-quote"></div>
       <div id="brief-learn"></div>
+      <div id="brief-board"></div>
       <div id="today-set"></div>
       <div id="today-nums"></div>
 
@@ -840,7 +864,15 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
         <div class="hint" id="photo-hint"></div>
       </div>
       <div class="hint" style="margin:0 4px 14px">日時は自動で記録されます。🎤は録音（長押し不要・もう一度押すと停止）。音声はMacのローカルWhisperが30分以内に文字起こしして仕分けに乗ります。朝8:30と夜22:30にClaudeが仕分けし、夜は日記にも織り込まれます。</div>
-      <div class="section-title">⏳ 仕分け待ち</div>
+      <div class="section-title">💬 やりとり板 <span class="bd-sub" id="board-status"></span></div>
+      <div class="hint" style="margin:-6px 4px 10px">クロードからの「決めてほしい」と、メグからの「やって・教えて」が残る板。選ぶ・書くと3分以内にクロードが起動して、結果をここに書き戻します。</div>
+      <div id="board-list"><p class="empty">読み込み中…</p></div>
+      <div class="bd-new">
+        <textarea id="board-req" placeholder="クロードに頼む・聞く（板に残る。1行目が見出しになる）"></textarea>
+        <button class="btn btn-primary" id="board-send">板に書く</button>
+      </div>
+      <details class="bd-done"><summary>済んだもの <span id="board-done-n"></span></summary><div id="board-done"></div></details>
+      <div class="section-title" style="margin-top:22px">⏳ 仕分け待ち</div>
       <div id="queue-list"><p class="empty">読み込み中…</p></div>
       <div class="section-title">✅ 最近の仕分け結果</div>
       <div class="loglist" id="inbox-log"></div>
@@ -1125,7 +1157,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-08.3';
+const APP_VERSION = '2026-09-08.4';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -3860,12 +3892,92 @@ function switchTab(tab) {
   $('page-title').innerHTML = { today:`今日<span class="sub" id="today-date"></span>`, cal:'予定', inbox:'投げ込み', invest:'投資', health:'健康', diary:'日記', quick:'コピペ帳' }[tab];
   if (tab === 'today') setToday();
   if (tab === 'quick') loadQuick();
+  if (tab === 'inbox') loadBoard();
   if (tab === 'diary') loadDiary();
   if (tab === 'cal' && !calSel) { calSel = new Date().toLocaleDateString('sv-SE'); renderCal(); }
 }
 function setToday() {
   const el = $('today-date'); if (!el) return;
   el.textContent = new Date().toLocaleDateString('ja-JP', { month:'numeric', day:'numeric', weekday:'short' });
+}
+
+// ── やりとり板（inbox/board/*.json・2026-09-08）──
+// 1項目=1ファイル。メグは choice/memo だけ書く。Claude（巡回・処理係routine・Fable）は result/status を書く。
+let boardItems = [];
+function bdStamp(){ const d=new Date(); const z=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}-${z(d.getHours())}${z(d.getMinutes())}`; }
+function bdLink(t){ return esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>'); }
+async function loadBoard() {
+  const list = $('board-list'); if (!list) return;
+  try {
+    const files = (await listDir('inbox/board')).filter(f => f.name.endsWith('.json'));
+    const items = [];
+    for (const f of files) {
+      try { const r = await getFileWithSha('inbox/board/' + f.name); const d = JSON.parse(r.text); d.__path = 'inbox/board/' + f.name; d.__sha = r.sha; items.push(d); } catch (e) {}
+    }
+    boardItems = items;
+    renderBoard();
+  } catch (e) { list.innerHTML = `<p class="empty">読み込めない: ${esc(e.message)}</p>`; }
+}
+function bdCard(d) {
+  const st = d.status || 'open';
+  const badge = { open: d.from === 'claude' ? 'メグ待ち' : 'クロード待ち', answered: 'クロード待ち', done: '済', closed: '取り下げ' }[st] || st;
+  const from = d.from === 'claude' ? '🤖 クロードから' : '🧑 メグから';
+  const opts = (d.options || []).map(o => `<label><input type="radio" name="bd-${esc(d.id)}" value="${esc(o)}" ${d.choice === o ? 'checked' : ''} ${st==='done'?'disabled':''}><span>${esc(o)}</span></label>`).join('');
+  return `<div class="bd-item ${st}" data-id="${esc(d.id)}">
+    <div class="bd-h"><div><div class="bd-t">${esc(d.title || '')}</div><div class="bd-from">${from} · ${esc((d.created||'').slice(0,16).replace('T',' '))}</div></div><span class="bd-badge">${badge}</span></div>
+    ${d.ctx ? `<div class="bd-ctx">${bdLink(d.ctx)}</div>` : ''}
+    ${d.rec ? `<div class="bd-rec">推奨：${esc(d.rec)}</div>` : ''}
+    ${opts ? `<div class="bd-opts">${opts}</div>` : ''}
+    <textarea class="bd-memo" placeholder="メモ・条件（任意）" ${st==='done'?'disabled':''}>${esc(d.memo || '')}</textarea>
+    ${st === 'answered' && !d.result ? `<div class="bd-wait">⏳ クロードが受け取りました（3分以内に起動・結果はここに出ます）</div>` : ''}
+    ${d.result ? `<div class="bd-res">🤖 ${bdLink(d.result)}</div>` : ''}
+  </div>`;
+}
+function renderBoard() {
+  const list = $('board-list'), doneEl = $('board-done'); if (!list) return;
+  const order = { open: 0, answered: 1 };
+  const live = boardItems.filter(d => d.status !== 'done' && d.status !== 'closed').sort((a, b) => (order[a.status] ?? 2) - (order[b.status] ?? 2) || (b.updated || '').localeCompare(a.updated || ''));
+  const done = boardItems.filter(d => d.status === 'done' || d.status === 'closed').sort((a, b) => (b.updated || '').localeCompare(a.updated || ''));
+  list.innerHTML = live.length ? live.map(bdCard).join('') : '<p class="empty">いま板は空。下から頼めます</p>';
+  if (doneEl) { doneEl.innerHTML = done.map(bdCard).join(''); $('board-done-n').textContent = done.length ? `(${done.length})` : ''; }
+  const megu = live.filter(d => d.status === 'open' && d.from === 'claude').length, cl = live.filter(d => d.status === 'answered' || (d.status === 'open' && d.from !== 'claude')).length;
+  if ($('board-status')) $('board-status').textContent = `メグ待ち ${megu} · クロード待ち ${cl}`;
+  const tb = $('brief-board');
+  if (tb) tb.innerHTML = (megu || cl) ? `<div class="today-board" onclick="switchTab('inbox')">💬 やりとり板：${megu ? `<b>クロードから聞かれていること ${megu}件</b>` : ''}${megu && cl ? ' ／ ' : ''}${cl ? `クロード作業中 ${cl}件` : ''} →</div>` : '';
+}
+async function bdSave(id, patch) {
+  const d = boardItems.find(x => x.id === id); if (!d) return;
+  Object.assign(d, patch, { updated: new Date().toISOString() });
+  if (d.from === 'claude' && d.choice && d.status === 'open') d.status = 'answered';
+  const body = Object.fromEntries(Object.entries(d).filter(([k]) => !k.startsWith('__')));
+  const write = async () => api(`/repos/${REPO}/contents/${d.__path}`, 'PUT', { message: `やりとり板: ${id} ${patch.choice ? '選択' : 'メモ'}`, content: enc(JSON.stringify(body, null, 1)), branch: BRANCH, sha: d.__sha });
+  try { const r = await write(); d.__sha = r.content.sha; toast('板に書いた'); }
+  catch (e) {
+    if (/409|422/.test(e.message)) { try { const r0 = await getFileWithSha(d.__path); d.__sha = r0.sha; const r = await write(); d.__sha = r.content.sha; toast('板に書いた'); } catch (e2) { toast('保存に失敗: ' + e2.message); } }
+    else toast('保存に失敗: ' + e.message);
+  }
+  renderBoard();
+}
+document.addEventListener('change', e => {
+  const card = e.target.closest && e.target.closest('.bd-item'); if (!card) return;
+  if (e.target.type === 'radio') bdSave(card.dataset.id, { choice: e.target.value });
+});
+let bdMemoTimer = {};
+document.addEventListener('input', e => {
+  if (!e.target.classList || !e.target.classList.contains('bd-memo')) return;
+  const card = e.target.closest('.bd-item'); if (!card) return;
+  clearTimeout(bdMemoTimer[card.dataset.id]);
+  bdMemoTimer[card.dataset.id] = setTimeout(() => bdSave(card.dataset.id, { memo: e.target.value }), 1200);
+});
+async function bdSend() {
+  const ta = $('board-req'), btn = $('board-send'); const text = (ta.value || '').trim(); if (!text) return;
+  btn.disabled = true; btn.textContent = '書き込み中…';
+  const stamp = bdStamp(); const id = `${stamp}-m-${Math.random().toString(36).slice(2, 6)}`;
+  const title = text.split('\n')[0].slice(0, 48);
+  const d = { id, from: 'megu', kind: 'request', created: new Date().toISOString(), title, ctx: text, rec: '', options: [], choice: '', memo: '', result: '', status: 'answered', updated: new Date().toISOString() };
+  try { await putFile(`inbox/board/${id}.json`, JSON.stringify(d, null, 1), `やりとり板: メグ起票 ${stamp}`); ta.value = ''; toast('板に書いた。3分以内にクロードが起動 💬'); await loadBoard(); }
+  catch (e) { toast('書き込みに失敗: ' + e.message); }
+  btn.disabled = false; btn.textContent = '板に書く';
 }
 
 // ── バージョン自動リロード ──
@@ -3923,7 +4035,7 @@ let isLoading = false;
 async function loadAll() {
   if (isLoading || !pat) return;
   isLoading = true; $('refresh-btn').classList.add('spinning');
-  await Promise.all([loadOps(), loadMebiusDrafts(), loadGlzCount(), loadNums(), loadNewStuff(), loadBriefing(), loadQueue(), loadLedger(), loadWatch(), loadIbkr(), loadVerdicts(), loadDocket(), loadScout(), loadMebius(), loadHealth()]);
+  await Promise.all([loadOps(), loadMebiusDrafts(), loadGlzCount(), loadNums(), loadNewStuff(), loadBriefing(), loadQueue(), loadBoard(), loadLedger(), loadWatch(), loadIbkr(), loadVerdicts(), loadDocket(), loadScout(), loadMebius(), loadHealth()]);
   await loadSchedule(); // メビウス予定をカレンダーに重ねるため後で描画
   isLoading = false; $('refresh-btn').classList.remove('spinning');
 }
@@ -3931,6 +4043,7 @@ async function loadAll() {
 // ── Init ──
 function setupEvents() {
   document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+  if ($('board-send')) $('board-send').addEventListener('click', bdSend);
   $('refresh-btn').addEventListener('click', loadAll);
   $('inbox-send').addEventListener('click', sendInbox);
   if ($('yoken-open')) $('yoken-open').addEventListener('click', () => { $('yoken-form').style.display = ''; renderYoken(); $('yoken-form').scrollIntoView({behavior:'smooth'}); });
