@@ -153,6 +153,7 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 .quote-card{background:linear-gradient(135deg,#0bb7ae10,#0bb7ae04);border:1px solid var(--accent-light);border-radius:14px;padding:16px 18px;margin-bottom:12px}
 .quote-card .q{font-size:15px;line-height:1.75;font-weight:600}
 .quote-card .a{font-size:12px;color:var(--text2);margin-top:6px;text-align:right}
+.quote-card .n{font-size:12.5px;line-height:1.75;color:var(--text2);margin-top:10px;padding-top:10px;border-top:1px dashed var(--accent-light);white-space:pre-wrap}
 .due{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--card);border:1px solid var(--border);margin-bottom:8px}
 .due .d{font-size:12px;font-weight:700;white-space:nowrap;padding:3px 8px;border-radius:8px;background:var(--bg3);color:var(--text2)}
 .due.warn .d{background:var(--warn-light);color:var(--warn)}
@@ -303,6 +304,9 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
   text-align:justify;text-justify:inter-character}
 #tab-today .quote-card .a{font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;
   font-size:10.5px;color:#7c6947;margin-top:14px;text-align:right;font-weight:500;letter-spacing:.14em}
+/* 解説＝紙の下段。ゴシックで少し小さく、罫で区切る（2026-09-08） */
+#tab-today .quote-card .n{font-family:inherit;font-size:12px;line-height:1.85;color:#5a4d3a;
+  margin-top:14px;padding-top:12px;border-top:1px dashed rgba(140,110,60,.35);letter-spacing:.02em;white-space:pre-wrap}
 /* 見出しは琥珀の小さな帯 */
 #tab-today .blk-h{color:var(--text2);font-size:12.5px;letter-spacing:.04em;font-weight:700;
   margin:26px 2px 9px;display:flex;align-items:center;gap:9px}
@@ -1112,7 +1116,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-08.1';
+const APP_VERSION = '2026-09-08.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1755,7 +1759,8 @@ function renderBriefing() {
   }
   const age = (Date.now() - new Date(b.generated_at).getTime()) / 3600000;
   if (age > 26) $('brief-stale').innerHTML = `<div class="stale">⚠️ これは ${new Date(b.generated_at).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})} のブリーフィングです（今朝の分がまだ届いていません）</div>`;
-  $('brief-quote').innerHTML = b.quote ? `<div class="quote-card"><div class="q">${esc(b.quote.text)}</div><div class="a">— ${esc(b.quote.author || '')}</div></div>` : '';
+  // 🔴 解説（note）を言葉の下に出す（2026-09-08 メグ「解説があると地肉になる」）
+  $('brief-quote').innerHTML = b.quote ? `<div class="quote-card"><div class="q">${esc(b.quote.text)}</div><div class="a">— ${esc(b.quote.author || '')}</div>${b.quote.note ? `<div class="n">${esc(b.quote.note)}</div>` : ''}</div>` : '';
   // 🔴 近日（3日以内）だけ出して、それ以降は畳む（2026-08-30 メグ指示）
   const allDues = (b.today || []);
   const dayLeft = d => { const m=String(d.date||d.due||'').match(/(\d{4})-(\d\d)-(\d\d)/);
