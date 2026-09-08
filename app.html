@@ -1112,7 +1112,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-07.1';
+const APP_VERSION = '2026-09-08.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1191,7 +1191,12 @@ async function api(path, method = 'GET', body = null) {
   return res.json();
 }
 async function getFile(path, repo) {
-  const r = await api(`/repos/${repo || REPO}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}?ref=${BRANCH}`);
+  // 🔴 ref=main を付けてよいのは自分のリポジトリ（claude-context）だけ。
+  //    personal は既定ブランチが master で、main は 2026-08-20 で止まった古いブランチ。
+  //    ref=main で読むと8月のデータが返る（2026-09-08発覚: IBKRの総資産が8/20から動かなかった）。
+  //    他リポジトリは ref を付けず、GitHubの既定ブランチに任せる（repoFile と同じ扱い）。
+  const ref = (!repo || repo === REPO) ? `?ref=${BRANCH}` : '';
+  const r = await api(`/repos/${repo || REPO}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}${ref}`);
   if (!r || r.__404) return null;
   return dec(r.content);
 }
