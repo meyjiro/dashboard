@@ -976,6 +976,8 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
       <div class="card" id="health-steps"><p class="empty">Apple Watchのデータ待ち</p></div>
       <div class="section-title">❤️ 安静時心拍（30日）</div>
       <div class="card" id="health-rhr"><p class="empty">Apple Watchのデータ待ち</p></div>
+      <div class="section-title">💓 HRV（30日）</div>
+      <div class="card" id="health-hrv"><p class="empty">Apple Watchのデータ待ち</p></div>
       <div class="section-title">🏃 運動した時間（14日）</div>
       <div class="card" id="health-ex"><p class="empty">Apple Watchのデータ待ち</p></div>
       <div id="health-workouts"></div>
@@ -1167,7 +1169,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-08.5';
+const APP_VERSION = '2026-09-10.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2757,6 +2759,22 @@ function sparkLine(el, data, unit) {
   s += `<text x="${W}" y="${H + 13}" text-anchor="end" font-size="9.5" fill="var(--text2)">${esc(data[data.length - 1].label)}</text></svg>`;
   el.innerHTML = s;
 }
+function sparkLineAvg(el, data, unit) { // data: [{label, v, avg}] 日々の値（薄）＋7日平均（太）
+  const vs = data.map(d => d.v).concat(data.map(d => d.avg));
+  const lo = Math.min(...vs), hi = Math.max(...vs), span = Math.max(hi - lo, 1);
+  const W = 320, H = 70, P = 6;
+  const y = v => (P + (1 - (v - lo) / span) * (H - P * 2)).toFixed(1);
+  const x = i => (i / (data.length - 1) * W).toFixed(1);
+  const last = data[data.length - 1];
+  let s = `<svg viewBox="0 0 ${W} ${H + 16}" style="width:100%;height:auto;font-variant-numeric:tabular-nums">`;
+  s += `<polyline points="${data.map((d, i) => `${x(i)},${y(d.v)}`).join(' ')}" fill="none" stroke="var(--accent)" stroke-opacity=".35" stroke-width="1.5" stroke-linejoin="round"/>`;
+  s += `<polyline points="${data.map((d, i) => `${x(i)},${y(d.avg)}`).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  s += `<circle cx="${x(data.length - 1)}" cy="${y(last.avg)}" r="3.5" fill="var(--accent)"/>`;
+  s += `<text x="${Math.min(+x(data.length - 1), W - 30)}" y="${Math.max(+y(last.avg) - 7, 9)}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--text)">${last.avg}</text>`;
+  s += `<text x="0" y="${H + 13}" font-size="9.5" fill="var(--text2)">${esc(data[0].label)}　低${lo}〜高${hi}${unit}　太線=7日平均・今日${last.v}</text>`;
+  s += `<text x="${W}" y="${H + 13}" text-anchor="end" font-size="9.5" fill="var(--text2)">${esc(last.label)}</text></svg>`;
+  el.innerHTML = s;
+}
 async function loadCycle() {
   try {
     const csv = await repoFile('meyjiro/personal', 'health/cycle.csv');
@@ -3072,6 +3090,14 @@ async function loadHealth() {
     if (steps.length > 1) { sparkBars($('health-steps'), steps, '歩'); $('health-steps').setAttribute('title', `歩数の推移（直近${steps.length}日）`); }
     const rhr = rows.slice(-30).filter(r => r.resting_hr).map(r => ({ label: md(r.date), v: +r.resting_hr }));
     if (rhr.length > 1) { sparkLine($('health-rhr'), rhr, 'bpm'); $('health-rhr').setAttribute('title', `安静時心拍の推移（直近${rhr.length}日）`); }
+    // 💓 HRV（2026-09-10 メグ希望）。日々のばらつきが大きいので、薄い線＝その日の値、太い線＝7日平均
+    const hrvAll = rows.filter(r => r.hrv_ms).map(r => ({ date: r.date, v: +r.hrv_ms }));
+    const hrv = hrvAll.slice(-30).map((r, i, a) => {
+      const k = hrvAll.length - a.length + i;                       // 全体での位置（7日平均は30日より前も使う）
+      const win = hrvAll.slice(Math.max(0, k - 6), k + 1).map(x => x.v);
+      return { label: md(r.date), v: r.v, avg: +(win.reduce((p, c) => p + c, 0) / win.length).toFixed(1) };
+    });
+    if (hrv.length > 1) { sparkLineAvg($('health-hrv'), hrv, 'ms'); $('health-hrv').setAttribute('title', `HRVの推移（直近${hrv.length}日）`); }
     // 🔴 2026-09-05: ワークアウトの明細（種目ごと）はiPhone側の書き出しが要るが、
     //    運動した分数・距離は日次データに毎日入っている。明細が無くても運動量は見えるようにする
     initSleepForm();
