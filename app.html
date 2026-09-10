@@ -663,6 +663,17 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 .dy-lightbox{position:fixed;inset:0;background:rgba(20,18,16,.92);display:flex;align-items:center;justify-content:center;
   z-index:200;padding:20px}
 .dy-lightbox img{max-width:100%;max-height:100%;border-radius:6px}
+.dy-entry{position:relative}
+.dy-entry .at{display:flex;align-items:center;gap:6px}
+.dy-entry .at .sp{flex:1}
+.dy-ed-btn{border:none;background:none;color:var(--text3);cursor:pointer;font-size:11px;font-weight:700;
+  padding:2px 6px;border-radius:6px;font-family:inherit;letter-spacing:.03em}
+.dy-ed-btn:hover{background:var(--bg3);color:var(--text2)}
+.dy-ed-btn.warn:hover{color:var(--red)}
+.dy-entry textarea{width:100%;font:inherit;font-size:14.5px;line-height:1.9;color:var(--text);
+  background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px;resize:vertical;min-height:120px}
+.dy-ed-row{display:flex;gap:8px;margin-top:8px;align-items:center}
+.dy-ed-row .note{font-size:10.5px;color:var(--text3);flex:1;line-height:1.5}
 .dy-entry .raw{margin-top:8px}
 .dy-entry .raw summary{font-size:11px;color:var(--text3);cursor:pointer;list-style:none;font-weight:600}
 .dy-entry .raw summary::-webkit-details-marker{display:none}
@@ -1169,7 +1180,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-10.1';
+const APP_VERSION = '2026-09-10.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -3260,16 +3271,25 @@ function dyRenderEntries(day) {
   const el = $('dy-entries');
   const es = (day && day.entries) || [];
   if (!es.length) { el.innerHTML = ''; return; }
-  el.innerHTML = es.map(e => {
+  el.innerHTML = es.map((e, i) => {
     const time = (e.at || '').slice(11, 16);
     const shown = e.text || '';
-    return `<div class="dy-entry">`
-      + (time ? `<div class="at">${esc(time)}${e.src === 'voice' ? '　話したぶん' : ''}</div>` : '')
+    // 🔴 2026-09-10 メグ「日記を後から自分で編集できるように」。
+    //    直すのは text だけ。raw（話したままの言葉）は分身の一次資料なので画面からは変えられない
+    return `<div class="dy-entry" data-i="${i}">`
+      + `<div class="at">${esc(time)}${e.src === 'voice' ? '　話したぶん' : ''}${e.edited ? '　直した' : ''}`
+      + `<span class="sp"></span>`
+      + `<button class="dy-ed-btn" data-act="edit" data-i="${i}">直す</button>`
+      + `<button class="dy-ed-btn warn" data-act="del" data-i="${i}">消す</button></div>`
       + (shown ? `<div class="body">${esc(shown)}</div>` : '')
       + (e.raw && e.raw !== shown ? `<details class="raw"><summary>話したままの言葉</summary><p>${esc(e.raw)}</p></details>` : '')
       + dyShots(e)
       + `</div>`;
   }).join('');
+  el.querySelectorAll('.dy-ed-btn').forEach(b => b.addEventListener('click', () => {
+    const i = +b.dataset.i;
+    if (b.dataset.act === 'edit') dyEdit(i, es[i]); else dyDelete(i, es[i]);
+  }));
   dyFillImages(el);
   el.querySelectorAll('.dy-shots img').forEach(im => im.addEventListener('click', () => {
     if (!im.src) return;
@@ -3279,6 +3299,65 @@ function dyRenderEntries(day) {
     ov.addEventListener('click', () => ov.remove());
     document.body.appendChild(ov);
   }));
+}
+
+// 書いたもの・話したものを後から直す（2026-09-10 メグ希望）。
+// 直すのは text だけ。raw は消さない・変えない（言い直しや言い間違いが分身の材料・生活OS §5）。
+function dyEdit(i, e) {
+  const card = $('dy-entries').querySelector(`.dy-entry[data-i="${i}"]`);
+  if (!card || card.querySelector('textarea')) return;
+  const body = card.querySelector('.body');
+  const cur = (e && e.text) || '';
+  const ta = document.createElement('textarea');
+  ta.value = cur;
+  const row = document.createElement('div');
+  row.className = 'dy-ed-row';
+  row.innerHTML = `<button class="dy-tool" data-go="1">保存</button>`
+    + `<button class="dy-tool" data-go="0">やめる</button>`
+    + `<span class="note">話したままの言葉は残ります</span>`;
+  if (body) { body.replaceWith(ta); } else { card.appendChild(ta); }
+  ta.after(row);
+  ta.focus();
+  ta.style.height = Math.min(ta.scrollHeight + 4, 420) + 'px';
+  row.querySelector('[data-go="0"]').addEventListener('click', () => dyLoadDay(dySel));
+  row.querySelector('[data-go="1"]').addEventListener('click', async () => {
+    const v = ta.value;
+    if (v === cur) return dyLoadDay(dySel);
+    const btn = row.querySelector('[data-go="1"]');
+    btn.disabled = true; btn.textContent = '保存中';
+    try {
+      await dyPut(dySel, day => {
+        const t = dyFind(day, e, i);
+        if (t) { t.text = v; t.edited = true; }
+      }, `日記を直した ${dySel}`);
+      toast('直しました');
+    } catch (err) { alert('保存できませんでした: ' + err.message); }
+    dyLoadDay(dySel);
+  });
+}
+
+async function dyDelete(i, e) {
+  const head = ((e && e.text) || '').slice(0, 24);
+  if (!confirm(`この記録を消しますか。話したままの言葉ごと消えます。\n\n「${head}…」`)) return;
+  try {
+    await dyPut(dySel, day => {
+      const t = dyFind(day, e, i);
+      if (t) day.entries.splice(day.entries.indexOf(t), 1);
+    }, `日記の記録を消した ${dySel}`);
+    toast('消しました');
+  } catch (err) { alert('消せませんでした: ' + err.message); }
+  dyLoadDay(dySel);
+}
+
+// 書き戻すときに同じ記録を探す。画面を開いてから新しい録音が入って並びがずれても取り違えないよう、
+// 時刻＋話したままの言葉で照合し、見つからないときだけ並び順で拾う
+function dyFind(day, e, i) {
+  const es = day.entries || [];
+  let hit = es.filter(x => x.at === (e && e.at) && (x.raw || '') === ((e && e.raw) || ''));
+  if (hit.length === 1) return hit[0];
+  hit = es.filter(x => x.at === (e && e.at));
+  if (hit.length === 1) return hit[0];
+  return es[i];
 }
 
 // 毎晩routineが書く「今日あったこと」を下に出す。これがあるので白紙から書かなくていい
