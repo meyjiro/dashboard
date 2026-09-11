@@ -28,11 +28,11 @@
   /* 地と紙 — noteの白に近いグレー。長時間見るので純白は避ける */
   --bg:#f7f9f9;--bg2:#ffffff;--bg3:#eef1f1;
   /* 字 — noteの文字色 */
-  --text:#222222;--text2:#66706e;--text3:#8a9391;
+  --text:#1b211a;--text2:#5f6a63;--text3:#889189;
   /* 🔴 2026-09-11 メグ「緑より、真っ黒じゃなくてグレーみたいなのがいい」。
-     濃い方だけチャコールにして、薄い方（背景に敷く薄緑）はnoteの色のまま残す（メグ指定）。
+     濃い方は #212720（メグ指定・緑みのある黒）、薄い方（背景に敷く薄緑）はnoteの色のまま。
      差し色（済んだ=緑・注意=橙・危険=赤）もそのまま */
-  --accent:#45505a;--accent-light:#e4f3ee;
+  --accent:#212720;--accent-light:#e4f3ee;
   --ok:#2f7a5f;--ok-light:#e9f3ee;
   --warn:#b9761a;--warn-light:#fdf2e2;--red:#c0473a;--red-light:#fbeeec;--sat:#3f6d9e;
   --card:#ffffff;--border:#e3e8e7;--border2:#eef1f1;
@@ -600,6 +600,12 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 .dy-back{display:inline-flex;align-items:center;gap:4px;border:0;background:none;color:var(--text2);
   font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;padding:6px 2px;margin:2px 0 6px}
 .dy-back:active{opacity:.6}
+/* 詳細の末尾の導線（2026-09-11） */
+.dy-foot{display:flex;gap:8px;margin:26px 0 8px;padding-top:16px;border-top:1px solid var(--border2)}
+.dy-foot .dy-back{flex:1;justify-content:center;border:1px solid var(--border);border-radius:8px;
+  padding:12px 0;font-size:13px;font-weight:700;background:var(--bg2)}
+.dy-foot .dy-back:active{background:var(--bg3);opacity:1}
+.dy-foot .dy-top{flex:0 0 92px}
 /* 一覧の先頭に置く「今日のページ」への入口 */
 .dy-today{display:flex;align-items:center;gap:13px;width:100%;text-align:left;cursor:pointer;
   margin:14px 0 4px;padding:14px 15px;background:var(--card);border:1px solid var(--border);
@@ -1093,6 +1099,12 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
           </div>
           <div class="dy-hint" id="dy-hint"></div>
         </div>
+
+        <!-- 2026-09-11 メグ指定: 下まで長くなるので、末尾にも一覧へ戻る導線を置く -->
+        <div class="dy-foot">
+          <button class="dy-back dy-back-b" id="dy-back2">‹ 一覧へもどる</button>
+          <button class="dy-back dy-top" id="dy-totop">↑ 上へ</button>
+        </div>
       </div>
     </div>
 
@@ -1213,7 +1225,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-11.6';
+const APP_VERSION = '2026-09-11.7';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4286,6 +4298,8 @@ function setupEvents() {
   if ($('pp-no')) $('pp-no').addEventListener('click', () => savePoop(false));
   if ($('dy-save')) $('dy-save').addEventListener('click', dySave);
   if ($('dy-back')) $('dy-back').addEventListener('click', dyBackToList);
+  if ($('dy-back2')) $('dy-back2').addEventListener('click', dyBackToList);
+  if ($('dy-totop')) $('dy-totop').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
   if ($('dy-today-btn')) $('dy-today-btn').addEventListener('click', () => dyOpenDay(dyToday()));
   if ($('dy-rec')) $('dy-rec').addEventListener('click', dyToggleRec);
   if ($('dy-photo')) $('dy-photo').addEventListener('click', () => $('dy-photo-input').click());
