@@ -30,7 +30,7 @@
   /* 意味を持つ色は2つだけ。琥珀＝これから手を動かす、深緑＝もう済んだ */
   --accent:#986327;--accent-light:#fbf3e8;
   --ok:#3f6b52;--ok-light:#edf3ef;
-  --warn:#a8721c;--warn-light:#fbf4e6;--red:#a8443a;--red-light:#f9eeec;
+  --warn:#a8721c;--warn-light:#fbf4e6;--red:#a8443a;--red-light:#f9eeec;--sat:#3f6d9e;
   --card:#fffdfa;--border:#e6e0d6;--border2:#f0ebe3;
   --safe-bottom:env(safe-area-inset-bottom,0px);
 }
@@ -42,7 +42,7 @@
     --text:#eae6df;--text2:#a9a29a;--text3:#7d766e;
     --accent:#e0a860;--accent-light:#2e2519;
     --ok:#7fb99a;--ok-light:#1e2722;
-    --warn:#d7b95e;--warn-light:#2b2617;--red:#e08b80;--red-light:#2c1e1c;
+    --warn:#d7b95e;--warn-light:#2b2617;--red:#e08b80;--red-light:#2c1e1c;--sat:#84aad5;
     --card:#232120;--border:#38342f;--border2:#2e2b28;
   }
 }
@@ -727,20 +727,31 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 .dy-switch button{flex:1;padding:8px 0;font-size:12.5px;font-weight:700;font-family:inherit;
   background:var(--bg2);color:var(--text2);border:0;cursor:pointer;transition:background .12s,color .12s}
 .dy-switch button.on{background:var(--accent);color:#fff}
-.dy-ym{font-size:11.5px;font-weight:700;color:var(--text2);letter-spacing:.1em;
-  margin:18px 2px 2px;padding-bottom:6px;border-bottom:1px solid var(--border)}
-.dy-row{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;cursor:pointer;
-  padding:13px 2px;background:none;border:0;border-bottom:1px solid var(--border2);font-family:inherit}
-.dy-row:active{background:var(--bg3)}
-.dy-row .d{flex:none;width:32px;text-align:center;padding-top:1px}
-.dy-row .d b{display:block;font-size:19px;font-weight:700;line-height:1.05;letter-spacing:-.02em}
-.dy-row .d span{font-size:10px;color:var(--text3);font-weight:600}
+.dy-ym{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.12em;
+  margin:20px 4px 8px;padding:0;border:0}
+.dy-ym::after{content:"";display:block;height:1px;background:var(--border2);margin-top:7px}
+/* 🔴 2026-09-11 作り直し。指摘: 日曜以外が青い（buttonの既定色が出ていた）／文字が大きい／
+   手紙の🕊が一覧に無い／写真がある日でも出ないことがある／もっと見やすく可愛く */
+.dy-row{display:flex;gap:11px;align-items:center;width:100%;text-align:left;cursor:pointer;
+  padding:11px 12px;margin-bottom:7px;background:var(--bg2);color:var(--text);
+  border:1px solid var(--border2);border-radius:14px;font-family:inherit;
+  transition:background .12s,transform .08s}
+.dy-row:active{background:var(--bg3);transform:scale(.995)}
+.dy-row .d{flex:none;width:36px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:1px}
+.dy-row .d b{display:block;font-size:16.5px;font-weight:700;line-height:1.1;letter-spacing:-.02em;color:var(--text)}
+.dy-row .d span{font-size:9.5px;color:var(--text3);font-weight:700;letter-spacing:.04em}
 .dy-row .d.sun b,.dy-row .d.sun span{color:var(--red)}
-.dy-row .tx{flex:1;min-width:0;font-size:13px;line-height:1.8;color:var(--text);
-  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.dy-row .d.sat b,.dy-row .d.sat span{color:var(--sat)}
+.dy-row .d .bird{font-size:10px;line-height:1;margin-top:2px}
+.dy-row .tx{flex:1;min-width:0;font-size:12.5px;line-height:1.7;color:var(--text);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .dy-row .tx.none{color:var(--text3)}
-.dy-row .mo{font-size:10.5px;color:var(--text3);font-weight:600;margin-top:4px}
-.dy-row img{flex:none;width:58px;height:58px;object-fit:cover;border-radius:9px;background:var(--bg3)}
+.dy-row .pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.dy-row .pills i{font-style:normal;font-size:9.5px;font-weight:700;line-height:1.6;
+  padding:1px 7px;border-radius:999px;background:var(--bg3);color:var(--text3);white-space:nowrap}
+.dy-row .pills i.m{background:var(--accent-light);color:var(--accent)}
+.dy-row .pills i.b{background:var(--warn-light);color:var(--warn)}
+.dy-row img{flex:none;width:50px;height:50px;object-fit:cover;border-radius:12px;background:var(--bg3)}
 .dy-row img:not([src]){opacity:.35}
 .dy-more{width:100%;margin-top:14px;padding:11px 0;border:1px solid var(--border);border-radius:10px;
   background:none;color:var(--text2);font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer}
@@ -1192,7 +1203,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-11.1';
+const APP_VERSION = '2026-09-11.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -3545,10 +3556,14 @@ async function dyLoadIndex() {
       try {
         const t = await repoFile(REPO, dyPath(d));
         const day = JSON.parse(t);
-        const es = (day.entries || []).filter(e => (e.text || '').trim() || e.img);
+        // 🔴 2026-09-11: 以前は e.img（単数）しか見ておらず、写真だけの entry（imgs のみ）が
+        //    まるごと除外されて一覧に写真が出なかった。imgs も数える
+        const pics = e => (e.imgs && e.imgs.length ? e.imgs : (e.img ? [e.img] : []));
+        const es = (day.entries || []).filter(e => (e.text || '').trim() || pics(e).length);
         if (!es.length && !day.mood && !day.body && !(day.tags || []).length) return null;
+        const allImgs = es.flatMap(pics);
         return { date: d, text: es.map(e => e.text).filter(Boolean).join('\n'),
-                 img: (es.map(e => (e.imgs || (e.img ? [e.img] : []))[0]).find(Boolean)) || null,
+                 img: allImgs[0] || null, nimg: allImgs.length,
                  mood: day.mood, body: day.body, tags: day.tags || [] };
       } catch (e) { return null; }
     }));
@@ -3563,18 +3578,30 @@ function dyRenderList() {
     dyRenderTodayCard();
     return;
   }
+  // 一覧に出る月ぶんの手紙（🕊）を読んでおく。読めたら描き直す
+  const months = [...new Set(dyIndex.map(r => r.date.slice(0, 7)))];
+  const unread = months.filter(m => !dyLetterMonths.has(m));
+  if (unread.length) { Promise.all(unread.map(dyLoadLetters)).then(() => dyRenderList()); }
+
   let h = '', ym = '';
   for (const r of dyIndex) {
     const k = `${r.date.slice(0, 4)}.${r.date.slice(5, 7)}`;
     if (k !== ym) { ym = k; h += `<div class="dy-ym">${ym}</div>`; }
     const dt = new Date(r.date + 'T00:00:00');
-    const w = ['日', '月', '火', '水', '木', '金', '土'][dt.getDay()];
-    const meta = [r.mood ? `こころ ${DY_MOOD[r.mood - 1]}` : '', r.body ? `からだ ${DY_BODY[r.body - 1]}` : '',
-                  ...(r.tags || [])].filter(Boolean).join('・');
+    const dow = dt.getDay();
+    const w = ['日', '月', '火', '水', '木', '金', '土'][dow];
+    const dcls = dow === 0 ? ' sun' : dow === 6 ? ' sat' : '';
+    const pills = [];
+    if (r.mood) pills.push(`<i class="m">こころ ${esc(DY_MOOD[r.mood - 1])}</i>`);
+    if (r.body) pills.push(`<i class="b">からだ ${esc(DY_BODY[r.body - 1])}</i>`);
+    (r.tags || []).forEach(t => pills.push(`<i>${esc(t)}</i>`));
+    if (r.nimg > 1) pills.push(`<i>📷 ${r.nimg}</i>`);
     h += `<button class="dy-row" data-d="${r.date}">`
-      + `<span class="d${dt.getDay() === 0 ? ' sun' : ''}"><b>${dt.getDate()}</b><span>${w}</span></span>`
+      + `<span class="d${dcls}"><b>${dt.getDate()}</b><span>${w}</span>`
+      + (dyLetters.has(r.date) ? `<span class="bird" title="鈴木さんからの手紙">🕊</span>` : '')
+      + `</span>`
       + `<span class="tx${r.text ? '' : ' none'}">${esc(r.text || '（この日は記録だけ）')}`
-      + (meta ? `<span class="mo" style="display:block">${esc(meta)}</span>` : '') + `</span>`
+      + (pills.length ? `<span class="pills">${pills.join('')}</span>` : '') + `</span>`
       + (r.img ? `<img data-path="${esc(r.img)}" alt="">` : '')
       + `</button>`;
   }
