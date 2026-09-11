@@ -692,8 +692,12 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 .dy-letter .sign{display:block;margin-top:12px;text-align:right;font-size:13px;color:var(--text2)}
 
 /* カレンダー（日記専用・予定表とは別） */
-/* 🕊 鈴木さんからの手紙がある日の印（2026-09-11） */
-.dy-cell .bird{position:absolute;top:1px;right:2px;font-size:9px;line-height:1;opacity:.85;pointer-events:none}
+/* 手紙がある日の印（2026-09-11）。絵文字をやめて自作の線画にした（メグ指定） */
+.dyico{display:inline-block;vertical-align:-.2em;object-fit:contain}
+.dy-cell .bird{position:absolute;top:0;right:0;line-height:1;pointer-events:none}
+.dy-cell .bird .dyico{width:15px;height:15px;vertical-align:top}
+.dy-row .d .bird .dyico{width:20px;height:20px;vertical-align:top}
+.dy-letter h4 .dyico{width:19px;height:19px;margin-right:5px}
 .dy-cal{margin-top:26px;padding-top:18px;border-top:1px solid var(--border)}
 .dy-calhead{display:flex;align-items:center;gap:10px;margin:0 2px 12px}
 .dy-calhead .m{font-size:15px;font-weight:700}
@@ -731,7 +735,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
   margin:20px 4px 8px;padding:0;border:0}
 .dy-ym::after{content:"";display:block;height:1px;background:var(--border2);margin-top:7px}
 /* 🔴 2026-09-11 作り直し。指摘: 日曜以外が青い（buttonの既定色が出ていた）／文字が大きい／
-   手紙の🕊が一覧に無い／写真がある日でも出ないことがある／もっと見やすく可愛く */
+   手紙の💌が一覧に無い／写真がある日でも出ないことがある／もっと見やすく可愛く */
 .dy-row{display:flex;gap:11px;align-items:center;width:100%;text-align:left;cursor:pointer;
   padding:11px 12px;margin-bottom:7px;background:var(--bg2);color:var(--text);
   border:1px solid var(--border2);border-radius:14px;font-family:inherit;
@@ -1071,7 +1075,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
         <div class="dy-auto" id="dy-auto" hidden><h4>この日にあったこと</h4><p id="dy-auto-body"></p></div>
 
         <!-- 鈴木さんからの手紙（2026-09-11 新設）。夜のroutineが personal/diary に書いたものを読む -->
-        <div class="dy-letter" id="dy-letter" hidden><h4>🕊 鈴木さんから</h4><div id="dy-letter-body"></div></div>
+        <div class="dy-letter" id="dy-letter" hidden><h4><span id="dy-letter-ico"></span>鈴木さんから</h4><div id="dy-letter-body"></div></div>
 
         <div class="dy-write" id="dy-writebox">
           <textarea id="dy-text" placeholder="思ったことを、そのまま。ひとことでいい。"></textarea>
@@ -1203,7 +1207,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-11.2';
+const APP_VERSION = '2026-09-11.3';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -3192,7 +3196,14 @@ const DY_MOOD = ['最悪', '悪い', 'ふつう', '良い', '最高'];        //
 const DY_BODY = ['つらい', 'だるい', 'ふつう', '軽い', '絶好調'];  // からだ
 const DY_TAGS = ['仕事', '家族', 'ペット', 'からだ', 'お金', 'ひとり時間'];  // その日を動かしたもの（複数可）
 let dySel = null, dyCalY = 0, dyCalM = 0, dyDays = new Set(), dyPhotos = [], dyRecorder = null, dyChunks = [];
-// 🕊 鈴木さんからの手紙がある日（2026-09-11 新設）。personal/diary/YYYY-MM.md の見出しの🕊から拾う
+// 返信マーク（2026-09-11 メグ指定）。メグが用意した素材を4つに切り出して img/diary/ に置いてある。
+//   その日ごとに1つ選ぶ。日付から決めるので、同じ日は何度開いても同じ子が出る（毎回変わるとうるさい）
+const DY_ICONS = ['img/diary/dy1.png', 'img/diary/dy2.png', 'img/diary/dy3.png', 'img/diary/dy4.png'];
+function dyIcon(d) {
+  let h = 0; for (let i = 0; i < d.length; i++) h = (h * 31 + d.charCodeAt(i)) >>> 0;
+  return `<img class="dyico" src="${DY_ICONS[h % DY_ICONS.length]}" alt="" loading="lazy">`;
+}
+// 鈴木さんからの手紙がある日（2026-09-11 新設）。personal/diary/YYYY-MM.md の見出しの💌から拾う
 let dyLetters = new Set(), dyLetterMonths = new Set();
 async function dyLoadLetters(ym) {
   if (dyLetterMonths.has(ym)) return;
@@ -3200,7 +3211,7 @@ async function dyLoadLetters(ym) {
   try {
     const md = await repoFile('meyjiro/personal', `diary/${ym}.md`);
     if (!md) return;
-    const re = /^## (\d{4}-\d{2}-\d{2})（.）🕊/gm;
+    const re = /^## (\d{4}-\d{2}-\d{2})（.）💌/gm;
     let m; while ((m = re.exec(md))) dyLetters.add(m[1]);
   } catch (e) {}
 }
@@ -3413,7 +3424,7 @@ async function dyRenderAuto(d) {
       box.hidden = false;
     }
 
-    // 🕊 鈴木さんからの手紙（2026-09-11 新設）。**太字** と引用だけ軽く整えて出す
+    // 💌 鈴木さんからの手紙（2026-09-11 新設）。**太字** と引用だけ軽く整えて出す
     const lt = block.match(/\*\*鈴木さんから\*\*:\s*([\s\S]*?)$/);
     const lbox = $('dy-letter');
     if (lt && lt[1].trim()) {
@@ -3424,6 +3435,7 @@ async function dyRenderAuto(d) {
       const esc = x => x.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
       let html = esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
       if (sign) html += '<span class="sign">' + sign + '</span>';
+      const ico = $('dy-letter-ico'); if (ico) ico.innerHTML = dyIcon(d);
       $('dy-letter-body').innerHTML = html;
       lbox.hidden = false;
     } else {
@@ -3537,7 +3549,7 @@ function dyRenderCal() {
   for (let d = 1; d <= last.getDate(); d++) {
     const ds = `${dyCalY}-${String(dyCalM + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const cls = ['dy-cell', dyDays.has(ds) ? 'has' : '', ds === today ? 'today' : '', ds === dySel ? 'sel' : ''].filter(Boolean).join(' ');
-    const bird = dyLetters.has(ds) ? '<span class="bird">🕊</span>' : '';
+    const bird = dyLetters.has(ds) ? '<span class="bird">' + dyIcon(ds) + '</span>' : '';
     h += `<button class="${cls}" data-d="${ds}"${ds > today ? ' disabled' : ''}>${d}<span class="dot"></span>${bird}</button>`;
   }
   $('dy-grid').innerHTML = h;
@@ -3578,7 +3590,7 @@ function dyRenderList() {
     dyRenderTodayCard();
     return;
   }
-  // 一覧に出る月ぶんの手紙（🕊）を読んでおく。読めたら描き直す
+  // 一覧に出る月ぶんの手紙（💌）を読んでおく。読めたら描き直す
   const months = [...new Set(dyIndex.map(r => r.date.slice(0, 7)))];
   const unread = months.filter(m => !dyLetterMonths.has(m));
   if (unread.length) { Promise.all(unread.map(dyLoadLetters)).then(() => dyRenderList()); }
@@ -3598,7 +3610,7 @@ function dyRenderList() {
     if (r.nimg > 1) pills.push(`<i>📷 ${r.nimg}</i>`);
     h += `<button class="dy-row" data-d="${r.date}">`
       + `<span class="d${dcls}"><b>${dt.getDate()}</b><span>${w}</span>`
-      + (dyLetters.has(r.date) ? `<span class="bird" title="鈴木さんからの手紙">🕊</span>` : '')
+      + (dyLetters.has(r.date) ? `<span class="bird" title="鈴木さんからの手紙">${dyIcon(r.date)}</span>` : '')
       + `</span>`
       + `<span class="tx${r.text ? '' : ' none'}">${esc(r.text || '（この日は記録だけ）')}`
       + (pills.length ? `<span class="pills">${pills.join('')}</span>` : '') + `</span>`
