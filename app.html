@@ -30,8 +30,9 @@
   /* 字 — noteの文字色 */
   --text:#222222;--text2:#66706e;--text3:#8a9391;
   /* 🔴 2026-09-11 メグ「緑より、真っ黒じゃなくてグレーみたいなのがいい」。
-     主役の色は無彩色に寄せたチャコール。差し色（済んだ=緑・注意=橙・危険=赤）はそのまま残す */
-  --accent:#45505a;--accent-light:#eceff2;
+     濃い方だけチャコールにして、薄い方（背景に敷く薄緑）はnoteの色のまま残す（メグ指定）。
+     差し色（済んだ=緑・注意=橙・危険=赤）もそのまま */
+  --accent:#45505a;--accent-light:#e4f3ee;
   --ok:#2f7a5f;--ok-light:#e9f3ee;
   --warn:#b9761a;--warn-light:#fdf2e2;--red:#c0473a;--red-light:#fbeeec;--sat:#3f6d9e;
   --card:#ffffff;--border:#e3e8e7;--border2:#eef1f1;
@@ -43,7 +44,7 @@
   :root{
     --bg:#191817;--bg2:#232120;--bg3:#2c2a28;
     --text:#eae6df;--text2:#a9a29a;--text3:#7d766e;
-    --accent:#c3ccd4;--accent-light:#23282d;
+    --accent:#c3ccd4;--accent-light:#14302a;
     --ok:#7fb99a;--ok-light:#1e2722;
     --warn:#d7b95e;--warn-light:#2b2617;--red:#e08b80;--red-light:#2c1e1c;--sat:#84aad5;
     --card:#232120;--border:#38342f;--border2:#2e2b28;
@@ -1212,7 +1213,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-11.5';
+const APP_VERSION = '2026-09-11.6';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
