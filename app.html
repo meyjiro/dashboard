@@ -683,8 +683,17 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 .dy-auto{margin-top:22px;padding-top:16px;border-top:1px solid var(--border)}
 .dy-auto h4{font-size:11.5px;color:var(--text2);font-weight:700;letter-spacing:.06em;margin:0 2px 7px}
 .dy-auto p{font-size:13px;line-height:1.95;color:var(--text2);margin:0 2px}
+/* 鈴木さんからの手紙（2026-09-11）。作業ログとは見た目を変えて、手紙らしく */
+.dy-letter{margin-top:18px;padding:15px 16px 13px;border-radius:12px;
+  background:var(--accent-soft,rgba(120,160,220,.1));border:1px solid var(--border)}
+.dy-letter h4{font-size:11.5px;color:var(--text2);font-weight:700;letter-spacing:.06em;margin:0 0 9px}
+.dy-letter #dy-letter-body{font-size:13.5px;line-height:2.0;color:var(--text);white-space:pre-wrap;word-break:break-word}
+.dy-letter #dy-letter-body b{font-weight:700}
+.dy-letter .sign{display:block;margin-top:12px;text-align:right;font-size:13px;color:var(--text2)}
 
 /* カレンダー（日記専用・予定表とは別） */
+/* 🕊 鈴木さんからの手紙がある日の印（2026-09-11） */
+.dy-cell .bird{position:absolute;top:1px;right:2px;font-size:9px;line-height:1;opacity:.85;pointer-events:none}
 .dy-cal{margin-top:26px;padding-top:18px;border-top:1px solid var(--border)}
 .dy-calhead{display:flex;align-items:center;gap:10px;margin:0 2px 12px}
 .dy-calhead .m{font-size:15px;font-weight:700}
@@ -693,7 +702,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
   border-radius:8px;color:var(--text2);cursor:pointer;font-size:14px;font-family:inherit;line-height:1}
 .dy-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
 .dy-grid .wd{text-align:center;font-size:10px;color:var(--text3);font-weight:700;padding-bottom:4px}
-.dy-cell{min-height:42px;border:0;background:none;border-radius:9px;cursor:pointer;padding:0;
+.dy-cell{min-height:42px;border:0;background:none;border-radius:9px;cursor:pointer;padding:0;position:relative;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
   font-family:inherit;font-size:12.5px;color:var(--text);transition:background .12s}
 .dy-cell:disabled{color:var(--text3);opacity:.35;cursor:default}
@@ -1050,6 +1059,9 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
         <div class="dy-entries" id="dy-entries"></div>
         <div class="dy-auto" id="dy-auto" hidden><h4>この日にあったこと</h4><p id="dy-auto-body"></p></div>
 
+        <!-- 鈴木さんからの手紙（2026-09-11 新設）。夜のroutineが personal/diary に書いたものを読む -->
+        <div class="dy-letter" id="dy-letter" hidden><h4>🕊 鈴木さんから</h4><div id="dy-letter-body"></div></div>
+
         <div class="dy-write" id="dy-writebox">
           <textarea id="dy-text" placeholder="思ったことを、そのまま。ひとことでいい。"></textarea>
           <div class="dy-tools">
@@ -1180,7 +1192,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-10.2';
+const APP_VERSION = '2026-09-11.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -3169,6 +3181,18 @@ const DY_MOOD = ['最悪', '悪い', 'ふつう', '良い', '最高'];        //
 const DY_BODY = ['つらい', 'だるい', 'ふつう', '軽い', '絶好調'];  // からだ
 const DY_TAGS = ['仕事', '家族', 'ペット', 'からだ', 'お金', 'ひとり時間'];  // その日を動かしたもの（複数可）
 let dySel = null, dyCalY = 0, dyCalM = 0, dyDays = new Set(), dyPhotos = [], dyRecorder = null, dyChunks = [];
+// 🕊 鈴木さんからの手紙がある日（2026-09-11 新設）。personal/diary/YYYY-MM.md の見出しの🕊から拾う
+let dyLetters = new Set(), dyLetterMonths = new Set();
+async function dyLoadLetters(ym) {
+  if (dyLetterMonths.has(ym)) return;
+  dyLetterMonths.add(ym);
+  try {
+    const md = await repoFile('meyjiro/personal', `diary/${ym}.md`);
+    if (!md) return;
+    const re = /^## (\d{4}-\d{2}-\d{2})（.）🕊/gm;
+    let m; while ((m = re.exec(md))) dyLetters.add(m[1]);
+  } catch (e) {}
+}
 const dyPath = d => `${DIARY_DIR}/${d}.json`;
 const dyToday = () => new Date().toLocaleDateString('sv-SE');
 
@@ -3364,6 +3388,7 @@ function dyFind(day, e, i) {
 async function dyRenderAuto(d) {
   const box = $('dy-auto');
   box.hidden = true;
+  const lbox0 = $('dy-letter'); if (lbox0) lbox0.hidden = true;
   try {
     const md = await repoFile('meyjiro/personal', `diary/${d.slice(0, 7)}.md`);
     if (!md) return;
@@ -3372,9 +3397,27 @@ async function dyRenderAuto(d) {
     const next = md.indexOf('\n## ', i + 3);
     const block = md.slice(i, next < 0 ? undefined : next);
     const m = block.match(/\*\*今日あったこと\*\*:\s*([\s\S]*?)(?=\n\*\*|$)/);
-    if (!m || !m[1].trim()) return;
-    $('dy-auto-body').textContent = m[1].trim();
-    box.hidden = false;
+    if (m && m[1].trim()) {
+      $('dy-auto-body').textContent = m[1].trim();
+      box.hidden = false;
+    }
+
+    // 🕊 鈴木さんからの手紙（2026-09-11 新設）。**太字** と引用だけ軽く整えて出す
+    const lt = block.match(/\*\*鈴木さんから\*\*:\s*([\s\S]*?)$/);
+    const lbox = $('dy-letter');
+    if (lt && lt[1].trim()) {
+      let t = lt[1].trim();
+      let sign = '';
+      const sm = t.match(/\n\s*鈴木さんより\s*$/);
+      if (sm) { t = t.slice(0, sm.index).trim(); sign = '鈴木さんより'; }
+      const esc = x => x.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+      let html = esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+      if (sign) html += '<span class="sign">' + sign + '</span>';
+      $('dy-letter-body').innerHTML = html;
+      lbox.hidden = false;
+    } else {
+      lbox.hidden = true;
+    }
   } catch (e) {}
 }
 
@@ -3474,6 +3517,8 @@ async function dyToggleRec() {
 }
 
 function dyRenderCal() {
+  const ym = `${dyCalY}-${String(dyCalM + 1).padStart(2, '0')}`;
+  if (!dyLetterMonths.has(ym)) { dyLoadLetters(ym).then(() => dyRenderCal()); }
   $('dy-calm').textContent = `${dyCalY}年${dyCalM + 1}月`;
   const first = new Date(dyCalY, dyCalM, 1), last = new Date(dyCalY, dyCalM + 1, 0), today = dyToday();
   let h = ['日', '月', '火', '水', '木', '金', '土'].map(w => `<div class="wd">${w}</div>`).join('');
@@ -3481,7 +3526,8 @@ function dyRenderCal() {
   for (let d = 1; d <= last.getDate(); d++) {
     const ds = `${dyCalY}-${String(dyCalM + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const cls = ['dy-cell', dyDays.has(ds) ? 'has' : '', ds === today ? 'today' : '', ds === dySel ? 'sel' : ''].filter(Boolean).join(' ');
-    h += `<button class="${cls}" data-d="${ds}"${ds > today ? ' disabled' : ''}>${d}<span class="dot"></span></button>`;
+    const bird = dyLetters.has(ds) ? '<span class="bird">🕊</span>' : '';
+    h += `<button class="${cls}" data-d="${ds}"${ds > today ? ' disabled' : ''}>${d}<span class="dot"></span>${bird}</button>`;
   }
   $('dy-grid').innerHTML = h;
   $('dy-grid').querySelectorAll('.dy-cell[data-d]:not([disabled])').forEach(b =>
