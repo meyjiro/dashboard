@@ -442,6 +442,27 @@ details.ops.ok[open]>summary::after{content:" ▴"}
   font-size:12px;line-height:1.7;margin-top:8px;font-weight:600}
 .gc .gcv{font-size:10.5px;color:var(--text2);line-height:1.6;display:flex;flex-direction:column}
 .gc .gcv .hot{color:var(--red);font-weight:800}
+/* 📰 地域の新聞（2026-09-11 メグ指示）。紙面に寄せる: 題字 → 面 → 記事。
+   リード記事だけ大きく、あとは同じ大きさで並べる */
+.paper{background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:14px 16px 12px;margin:8px 0}
+.pp-head{display:flex;align-items:baseline;gap:9px;padding-bottom:9px;margin-bottom:4px;
+  border-bottom:2px solid var(--text)}
+.pp-head b{font-size:16px;font-weight:800;letter-spacing:.08em}
+.pp-head span{font-size:10.5px;color:var(--text3);font-variant-numeric:tabular-nums;margin-left:auto}
+.pp-sec{margin-top:14px}
+.pp-sh{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:800;letter-spacing:.1em;
+  color:var(--text2);padding-bottom:6px;border-bottom:1px solid var(--border2)}
+.pp-em{font-size:12px}
+.pp-art{display:block;padding:10px 0;border-bottom:1px solid var(--border2);
+  text-decoration:none;color:var(--text)}
+.pp-sec .pp-art:last-child{border-bottom:none;padding-bottom:2px}
+.pp-art b{display:block;font-size:13.5px;font-weight:700;line-height:1.65}
+.pp-art.lead b{font-size:15.5px;line-height:1.55}
+.pp-body{display:block;font-size:12px;color:var(--text2);line-height:1.85;margin-top:4px}
+.pp-src{display:inline-block;font-size:10px;color:var(--text3);margin-top:5px;
+  padding:1px 7px;border:1px solid var(--border);border-radius:999px}
+.pp-art:active{opacity:.65}
 .nsnews{display:block;padding:8px 0;border-top:1px solid var(--border);text-decoration:none;color:var(--text);font-size:13.5px;line-height:1.7}
 .nsnews span{display:block;font-size:11.5px;color:var(--text2)}
 .mbsold{margin-top:10px}
@@ -1225,7 +1246,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-11.7';
+const APP_VERSION = '2026-09-11.8';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1820,15 +1841,35 @@ async function loadNewStuff(){
     </div>`);
   }
 
-  // タイ・チェンマイ
-  const th = m.thai||[];
-  if(th.length || m.thai_none){
-    parts.push(`<div class="nsbox">
-      <div class="nsh">🇹🇭 タイ・チェンマイ${m.pm25?`<span class="nstag">PM2.5 ${m.pm25.value} ${esc(m.pm25.level||'')}</span>`:''}</div>
-      ${th.length ? th.map(t=>`<a class="nsnews" href="${esc(t.url||'#')}" target="_blank" rel="noopener">
-          <b>${esc(t.title||'')}</b>${t.note?`<span>${esc(t.note)}</span>`:''}</a>`).join('')
-        : `<div class="nsl2">今日は特になし</div>`}
+  // 📰 地域の新聞（2026-09-11 メグ指示で作り直し）
+  //    面ごとに分ける: 一面(タイ全国) / 暮らし・物価 / 北部・チェンマイ / 東南アジア
+  //    タイ人が普段読む媒体（ไทยรัฐ 等）も入れるので、出どころを必ず出す
+  const pp = m.paper;
+  if(pp && (pp.sections||[]).length){
+    const secs = pp.sections.filter(x => (x.items||[]).length).map(sec => `
+      <div class="pp-sec">
+        <div class="pp-sh"><span class="pp-em">${esc(sec.emoji||'')}</span>${esc(sec.label||'')}</div>
+        ${sec.items.map((t,i)=>`<a class="pp-art${i===0&&sec.key==='top'?' lead':''}" href="${esc(t.url||'#')}" target="_blank" rel="noopener">
+            <b>${esc(t.title||'')}</b>
+            ${t.note?`<span class="pp-body">${esc(t.note)}</span>`:''}
+            ${t.src?`<span class="pp-src">${esc(t.src)}</span>`:''}
+          </a>`).join('')}
+      </div>`).join('');
+    parts.push(`<div class="paper">
+      <div class="pp-head"><b>チェンマイ日報</b><span>${esc(pp.date||'')}${m.pm25?` ・ PM2.5 ${m.pm25.value} ${esc(m.pm25.level||'')}`:''}</span></div>
+      ${secs}
     </div>`);
+  } else {
+    // 旧形式（thai配列）も当分は読めるようにしておく
+    const th = m.thai||[];
+    if(th.length || m.thai_none){
+      parts.push(`<div class="nsbox">
+        <div class="nsh">🇹🇭 タイ・チェンマイ${m.pm25?`<span class="nstag">PM2.5 ${m.pm25.value} ${esc(m.pm25.level||'')}</span>`:''}</div>
+        ${th.length ? th.map(t=>`<a class="nsnews" href="${esc(t.url||'#')}" target="_blank" rel="noopener">
+            <b>${esc(t.title||'')}</b>${t.note?`<span>${esc(t.note)}</span>`:''}</a>`).join('')
+          : `<div class="nsl2">今日は特になし</div>`}
+      </div>`);
+    }
   }
 
   if(!parts.length){ el.innerHTML=''; return; }
