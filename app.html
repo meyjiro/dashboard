@@ -717,7 +717,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 .dy-auto{margin-top:22px;padding-top:16px;border-top:1px solid var(--border)}
 .dy-auto h4{font-size:11.5px;color:var(--text2);font-weight:700;letter-spacing:.06em;margin:0 2px 7px}
 .dy-auto p{font-size:13px;line-height:1.95;color:var(--text2);margin:0 2px}
-/* ぺっぺこからの手紙（2026-09-11）。作業ログとは見た目を変えて、手紙らしく */
+/* モッフルからの手紙（2026-09-11）。作業ログとは見た目を変えて、手紙らしく */
 .dy-letter{margin-top:18px;padding:15px 16px 13px;border-radius:8px;
   background:var(--accent-soft,rgba(120,160,220,.1));border:1px solid var(--border)}
 .dy-letter h4{font-size:11.5px;color:var(--text2);font-weight:700;letter-spacing:.06em;margin:0 0 9px}
@@ -1108,8 +1108,8 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
         <div class="dy-entries" id="dy-entries"></div>
         <div class="dy-auto" id="dy-auto" hidden><h4>この日にあったこと</h4><p id="dy-auto-body"></p></div>
 
-        <!-- ぺっぺこからの手紙（2026-09-11 新設）。夜のroutineが personal/diary に書いたものを読む -->
-        <div class="dy-letter" id="dy-letter" hidden><h4><span id="dy-letter-ico"></span>ぺっぺこから</h4><div id="dy-letter-body"></div></div>
+        <!-- モッフルからの手紙（2026-09-11 新設）。夜のroutineが personal/diary に書いたものを読む -->
+        <div class="dy-letter" id="dy-letter" hidden><h4><span id="dy-letter-ico"></span>モッフルから</h4><div id="dy-letter-body"></div></div>
 
         <div class="dy-write" id="dy-writebox">
           <textarea id="dy-text" placeholder="思ったことを、そのまま。ひとことでいい。"></textarea>
@@ -1247,7 +1247,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-11.10';
+const APP_VERSION = '2026-09-11.12';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -3263,7 +3263,7 @@ function dyIcon(d) {
   let h = 0; for (let i = 0; i < d.length; i++) h = (h * 31 + d.charCodeAt(i)) >>> 0;
   return `<img class="dyico" src="${DY_ICONS[h % DY_ICONS.length]}" alt="" loading="lazy">`;
 }
-// ぺっぺこからの手紙がある日（2026-09-11 新設）。personal/diary/YYYY-MM.md の見出しの💌から拾う
+// モッフルからの手紙がある日（2026-09-11 新設）。personal/diary/YYYY-MM.md の見出しの💌から拾う
 let dyLetters = new Set(), dyLetterMonths = new Set();
 async function dyLoadLetters(ym) {
   if (dyLetterMonths.has(ym)) return;
@@ -3484,14 +3484,14 @@ async function dyRenderAuto(d) {
       box.hidden = false;
     }
 
-    // 💌 ぺっぺこからの手紙（2026-09-11 新設）。**太字** と引用だけ軽く整えて出す
-    // 🔴 2026-09-11 改名（鈴木さん→ぺっぺこ）。改名前の手紙は旧名のまま残してあるので両方拾う
-    const lt = block.match(/\*\*(?:ぺっぺこ|鈴木さん)から\*\*:\s*([\s\S]*?)$/);
+    // 💌 モッフルからの手紙（2026-09-11 新設）。**太字** と引用だけ軽く整えて出す
+    // 🔴 2026-09-11 改名（鈴木さん→ぺっぺこ→モッフル）。改名前の手紙は旧名のまま残してあるので両方拾う
+    const lt = block.match(/\*\*(?:モッフル|ぺっぺこ|鈴木さん)から\*\*:\s*([\s\S]*?)$/);
     const lbox = $('dy-letter');
     if (lt && lt[1].trim()) {
       let t = lt[1].trim();
       let sign = '';
-      const sm = t.match(/\n\s*(ぺっぺこ|鈴木さん)より\s*$/);
+      const sm = t.match(/\n\s*(モッフル|ぺっぺこ|鈴木さん)より\s*$/);
       if (sm) { t = t.slice(0, sm.index).trim(); sign = sm[1] + 'より'; }
       const esc = x => x.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
       let html = esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
@@ -3671,7 +3671,7 @@ function dyRenderList() {
     if (r.nimg > 1) pills.push(`<i>📷 ${r.nimg}</i>`);
     h += `<button class="dy-row" data-d="${r.date}">`
       + `<span class="d${dcls}"><b>${dt.getDate()}</b><span>${w}</span>`
-      + (dyLetters.has(r.date) ? `<span class="bird" title="ぺっぺこからの手紙">${dyIcon(r.date)}</span>` : '')
+      + (dyLetters.has(r.date) ? `<span class="bird" title="モッフルからの手紙">${dyIcon(r.date)}</span>` : '')
       + `</span>`
       + `<span class="tx${r.text ? '' : ' none'}">${esc(r.text || '（この日は記録だけ）')}`
       + (pills.length ? `<span class="pills">${pills.join('')}</span>` : '') + `</span>`
