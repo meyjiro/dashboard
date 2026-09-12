@@ -882,7 +882,6 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
     <!-- 今日 -->
     <div id="tab-today" class="tab-panel active">
       <div id="brief-stale"></div>
-      <div id="ver-bar"></div>
       <div id="brief-quote"></div>
       <div id="brief-learn"></div>
       <div id="brief-board"></div>
@@ -1247,7 +1246,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-11.12';
+const APP_VERSION = '2026-09-12.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1661,13 +1660,21 @@ function saveSet(st){ localStorage.setItem(SETKEY, JSON.stringify(st)); }
 
 // 画面の上に、今どの版を見ているかと再取得を常設する。
 // 古い版に取り残されたときでも、ここから必ず抜け出せるようにするため。
+// 版を数にして比べる。'2026-09-11.9' と '2026-09-11.10' を文字列で比べると
+// .10 のほうが小さく出るので、必ずここを通す。
+function verNum(v){
+  const m = /^(\d{4})-(\d{2})-(\d{2})\.(\d+)$/.exec(v || '');
+  return m ? (+m[1])*1e10 + (+m[2])*1e8 + (+m[3])*1e6 + (+m[4]) : 0;
+}
+// 🔴 2026-09-12: ここは以前トップに常設の帯を出していたが、比較が「文字列が違うか」
+//    だけだったため、localStorage に古い latest_seen（例 2026-08-31.6）が残っていると
+//    *古い番号*を「新しい版が出ています」と表示し続けた。ボタンを押しても値が消えないので
+//    直らない＝「機能しないボタン」に見えていた（メグ報告 2026-09-12）。
+//    常設の帯は撤去し、版は設定タブにだけ出す。本当に新しいときだけ showStaleBar が出る。
 function renderVerBar(){
-  const el = $('ver-bar'); if(!el) return;
   const latest = localStorage.getItem('latest_seen') || '';
-  const stale = latest && latest !== APP_VERSION;
-  el.innerHTML = `<div class="verbar${stale?' stale':''}">
-    <span>版 ${esc(APP_VERSION)}${stale?` → 新しい版 ${esc(latest)} が出ています`:''}</span>
-    <button onclick="forceUpdate()">最新にする</button></div>`;
+  if (latest && verNum(latest) <= verNum(APP_VERSION)) localStorage.removeItem('latest_seen');
+  if ($('ver-now')) $('ver-now').textContent = APP_VERSION;
 }
 
 function renderTodaySet(){
@@ -4273,7 +4280,7 @@ async function checkVersion() {
     if (!m) return;
     localStorage.setItem('latest_seen', m[1]);
     renderVerBar();
-    if (m[1] === APP_VERSION) return;
+    if (verNum(m[1]) <= verNum(APP_VERSION)) return;   // 同じか古ければ何もしない
     // 🔴 同じ版で何度もリロードし続ける事故を防ぐ。ただし版が変われば必ず1回は動く
     if (localStorage.getItem('reloaded_for') === m[1]) {
       // すでにリロードしたはずなのにまだ古い＝キャッシュから読まれている。手で直せるよう伝える
@@ -4288,6 +4295,7 @@ async function checkVersion() {
 
 // リロードしても古いままのときだけ出る帯。押せばキャッシュごと捨てて取り直す
 function showStaleBar(newer){
+  if (verNum(newer) <= verNum(APP_VERSION)) return;   // 古い値で出さない
   if (document.getElementById('stale-bar')) return;
   const b = document.createElement('div');
   b.id = 'stale-bar';
