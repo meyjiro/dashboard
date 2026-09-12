@@ -970,7 +970,6 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
       <div id="invest-docket"><p class="empty">読み込み中…</p></div>
 
       <div class="section-title">📰 Yパパ・ものづくり太郎の新着</div>
-      <div id="invest-digest"><p class="empty">読み込み中…</p></div>
 
       <div class="section-title">🔭 注目企業（Yパパ基準クリア・毎朝わき出る）</div>
       <div id="invest-scout"><p class="empty">読み込み中…</p></div>
@@ -1048,7 +1047,6 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
       <div class="card" id="health-hrv"><p class="empty">Apple Watchのデータ待ち</p></div>
       <div class="section-title">🏃 運動した時間（14日）</div>
       <div class="card" id="health-ex"><p class="empty">Apple Watchのデータ待ち</p></div>
-      <div id="health-workouts"></div>
       <div id="health-note"></div>
     </div>
 
@@ -1246,7 +1244,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-12.1';
+const APP_VERSION = '2026-09-12.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1364,9 +1362,11 @@ const OPS = [
   { name:'朝の巡回',     why:'クラウドが毎朝ブリーフィングを作る',
     repo:'meyjiro/claude-context', path:'inbox/briefing.json', limit:1.2,
     read:t=>JSON.parse(t).generated_at },
-  { name:'投資の新候補', why:'注目企業台帳に毎日1社',
-    repo:'meyjiro/claude-context', path:'projects/B7_投資/注目企業台帳.md', limit:2,
-    read:t=>{ const m=[...t.matchAll(/^## (\d{4}-\d\d-\d\d)/gm)]; return m.length?m[m.length-1][1]:null; } },
+  // 🔴 2026-09-12: 監視先を台帳(.md)から watchlist.json に変えた。画面に出しているのはこちらで、
+  //    台帳だけ更新されて watchlist が古いと「緑なのに画面は古い」が起きる（棚卸しで発覚）
+  { name:'投資の新候補', why:'注目企業ウォッチに毎日1社',
+    repo:'meyjiro/claude-context', path:'inbox/watchlist.json', limit:2,
+    read:t=>{ const e=JSON.parse(t).entries||[]; return e.length?e[e.length-1].date:null; } },
   { name:'朝のメニュー', why:'クラウドが毎朝9時に新しいものを集める',
     repo:'meyjiro/claude-context', path:'inbox/morning.json', limit:1.2,
     read:t=>JSON.parse(t).generated_at },
@@ -1780,35 +1780,39 @@ async function loadNewStuff(){
   const age = (Date.now() - new Date(m.generated_at).getTime())/3600000;
   const parts = [];
 
-  // 今日の投資候補
-  const c = m.candidate;
-  if(c && !c.skipped && c.name){
-    // 🔴 平易な説明(plain)を主役に。専門用語入りの from/why/pitch は「詳しく」に畳む
-    //    （2026-08-30 メグ指示: どういう会社でなぜ挙がったかが5行で分かること）
-    // plain は5つの見出しつき。古い配列形式も一応受ける
-    const P = c.plain && !Array.isArray(c.plain) && typeof c.plain === 'object' ? c.plain : null;
-    const pl = Array.isArray(c.plain) ? c.plain : (typeof c.plain === 'string' ? [c.plain] : []);
+  // 🆕 今日の投資候補
+  // 🔴 2026-09-12: 読み先を morning.json から watchlist.json に変えた。
+  //    それまで「朝のメニュー」と「朝の巡回」が別々に1社ずつ選んでいて、
+  //    ① トップと投資タブで会社が食い違う（9/11実例）
+  //    ② morning.json は毎朝上書きなので前日ぶんが画面から消える
+  //    ③ トップの候補は裁判に送れない
+  //    の3つが起きていた。選定は §4-c（朝の巡回）だけにして、ここは台帳の最新1件を出す。
+  const c = await latestScout();
+  if(c && c.name){
+    const P = c.plain && typeof c.plain === 'object' && !Array.isArray(c.plain) ? c.plain : null;
     const LB = {what:'どんな会社？', strong:'なぜ強いの？', money:'儲かってるの？',
                 why_today:'なんで今日これ？', watch:'気をつけること'};
+    const key = `${c.date}_${c.code || c.name}`;
+    const sent = JSON.parse(localStorage.getItem('scout-sent') || '[]');
+    const st = c.status || '';
+    const judged = st.includes('裁判済み');
+    const done = judged || st.includes('裁判送り') || sent.includes(key);
     parts.push(`<div class="nsbox cand">
-      <div class="nsh">🆕 今日の投資候補<span class="nstag">${esc(c.market||'')}</span></div>
+      <div class="nsh">🆕 今日の投資候補<span class="nstag">${esc(c.date||'')}</span></div>
       <div class="nsname">${esc(c.name)}${c.code?` <span class="nscode">${esc(c.code)}</span>`:''}</div>
       ${P ? `<div class="plainbox">${['what','strong','money','why_today','watch']
               .filter(k=>P[k]).map(k=>`<div class="pl"><div class="plk">${LB[k]}</div>
                 <p>${esc(P[k])}</p></div>`).join('')}</div>`
-          : pl.length ? `<div class="plainbox">${pl.map(x=>`<p>${esc(x)}</p>`).join('')}</div>`
-                      : `<div class="nsl2">やさしい説明は明日の朝から出ます</div>`}
-      ${/* 🔴 専門用語だらけの元データは、やさしい説明の有無に関わらず必ず畳む
-             （2026-08-30 メグ「すげえわかりづらい情報が下に書いてある。読む気にもならない」）*/''}
-      ${(c.from||c.why||c.pitch||c.flag)?`<details class="cmore"><summary>専門的な記録を見る</summary>
-        ${c.flag?`<div class="nsl"><span>留意</span>${esc(c.flag)}</div>`:''}
-        ${c.from?`<div class="nsl"><span>どこから</span>${esc(c.from)}</div>`:''}
-        ${c.why?`<div class="nsl"><span>なぜ今日これか</span>${esc(c.why)}</div>`:''}
-        ${c.pitch?`<div class="nsl"><span>買い論拠</span>${esc(c.pitch)}</div>`:''}
+          : `<div class="plainbox"><p>${esc(c.reason||'')}</p></div>`}
+      <div style="margin-top:10px"><button class="btn ${done?'':'btn-primary'}" data-scout="${esc(key)}"
+        data-name="${esc(c.name)}" data-code="${esc(c.code||'')}" ${done?'disabled':''}>${
+        judged?'⚖️ 判決ずみ':done?'⚖️ 裁判送り済み':'⚖️ 裁判にかける'}</button></div>
+      ${(c.market||c.articles)?`<details class="cmore"><summary>専門的な記録を見る</summary>
+        ${c.market?`<div class="nsl"><span>どこで買える</span>${esc(c.market)}</div>`:''}
+        ${(c.articles||[]).length?`<div class="nsl"><span>Yパパ基準</span>${c.articles.map(esc).join('・')}</div>`:''}
+        ${c.note?`<div class="nsl"><span>メモ</span>${esc(c.note)}</div>`:''}
       </details>`:''}
     </div>`);
-  } else if(c && c.skipped){
-    parts.push(`<div class="nsbox dim">🆕 今日の投資候補はなし${c.skip_reason?`<div class="nsl2">${esc(c.skip_reason)}</div>`:''}</div>`);
   }
 
   // 動画（保有と無関係に全部・URL付き）
@@ -1883,6 +1887,7 @@ async function loadNewStuff(){
   if(!parts.length){ el.innerHTML=''; return; }
   el.innerHTML = `<div class="blk-h">🆕 新しく入ってきたもの
     ${age>30?`<span class="sec-note">🔴 ${Math.floor(age/24)}日前の内容です</span>`:''}</div>${parts.join('')}`;
+  bindScoutButtons(el);   // 🔴 トップからも裁判に送れるようにする（2026-09-12）
 }
 
 // ── ガチレズ: 読んで仕分けた結果を出す（2026-08-31）──
@@ -1978,13 +1983,8 @@ function renderBriefing() {
   $('brief-log').innerHTML = briefLogFallback;
   if (!ledgerLoaded) $('inbox-log').innerHTML = briefLogFallback;
   if (b.health && b.health.note) $('health-note').innerHTML = `<div class="card"><div class="s" style="color:var(--text)">${esc(b.health.note)}</div></div>`;
-  const iv = b.invest || {};
-  const dg = iv.digest || [], notes = iv.watch_notes || [];
-  if (dg.length || notes.length) {
-    $('invest-digest').innerHTML =
-      dg.map(d => `<div class="card"><div class="t" style="font-size:14px">${esc(d.src||'')}</div><div class="s">${esc(d.point||'')}</div></div>`).join('')
-      + notes.map(n => `<div class="card" style="padding:12px 15px"><div class="s" style="margin-top:0">${esc(n)}</div></div>`).join('');
-  }
+  // 🔴 2026-09-12: invest-digest の枠は撤去した。廃止したダイジェスト用の名前のまま、
+  //    中身は注目企業の説明が入っていて名実が食い違っていた。説明はトップの候補カードが持つ。
 }
 
 // ── メビウス完了予定 ──
@@ -3235,19 +3235,8 @@ async function loadHealth() {
                    .map(r => ({ label: md(r.date), v: +r.exercise_min }));
     if (ex.length > 1) { sparkBars($('health-ex'), ex, '分'); $('health-ex').setAttribute('title', `運動した時間の推移（直近${ex.length}日）`); }
 
-    const wcsv = await repoFile('meyjiro/personal', 'health/data/workouts.csv');
-    if (wcsv) {
-      const all = parseCsv(wcsv);
-      const ws = all.slice(-3).reverse();
-      // 🔴 2026-09-05: 種目ごとの明細は止まっているが、上の「運動した時間」で用は足りている。
-      //    毎日赤で警告するのはやめ、新しいときだけ明細を出す（止まっている事実は朝の巡回が持つ）
-      const last = all.length ? all[all.length - 1].start.slice(0, 10) : '';
-      const days = last ? Math.floor((Date.now() - new Date(last + 'T00:00:00')) / 864e5) : 999;
-      $('health-workouts').innerHTML = days < 4
-        ? `<div class="section-title">種目ごとの記録</div>` + ws.map(w =>
-            `<div class="card"><div class="t" style="font-size:14px">${esc(w.name)} ${w.duration_min}分${+w.distance_km ? `・${w.distance_km}km` : ''}</div><div class="s">${esc(w.start)}　平均${w.avg_hr || '—'}bpm・${w.kcal}kcal</div></div>`).join('')
-        : '';
-    }
+    // 🔴 2026-09-12: 種目ごとの記録の枠を撤去。ワークアウトは「取らない」でメグが確定済み（2026-09-05）。
+    //    最終記録は 2026-08-22 で、4日以内しか描かない作りだったため永久に空だった。
   } catch (e) {}
 }
 
@@ -3979,11 +3968,36 @@ async function loadDocket() {
 }
 
 // ── 投資タブ: 注目企業（inbox/watchlist.json・蓄積表示）──
+// 注目企業の台帳（inbox/watchlist.json）。トップと投資タブの両方がここを見る。
+async function scoutEntries(){
+  const raw = await getFile('inbox/watchlist.json');
+  return raw ? (JSON.parse(raw).entries || []) : [];
+}
+async function latestScout(){
+  try{ const l = await scoutEntries(); return l.length ? l[l.length-1] : null; }
+  catch(e){ return null; }
+}
+// 「⚖️ 裁判にかける」。投げ込みに裁判依頼を1本置くだけ（送信も判決もここではしない）
+function bindScoutButtons(root){
+  root.querySelectorAll('[data-scout]').forEach(btn => btn.addEventListener('click', async () => {
+    btn.disabled = true; btn.textContent = '送信中…';
+    try {
+      await putFile(`inbox/queue/${ts()}.md`,
+        `at: ${atNow()}\nkind: 裁判依頼\n\n注目企業「${btn.dataset.name}${btn.dataset.code?'（'+btn.dataset.code+'）':''}」を裁判にかけてください（注目企業ウォッチからピックアップ）`,
+        `裁判依頼 ${btn.dataset.name}`);
+      const s = JSON.parse(localStorage.getItem('scout-sent') || '[]');
+      s.push(btn.dataset.scout); localStorage.setItem('scout-sent', JSON.stringify(s));
+      document.querySelectorAll(`[data-scout="${btn.dataset.scout}"]`).forEach(b=>{
+        b.disabled = true; b.textContent = '⚖️ 裁判送り済み'; b.classList.remove('btn-primary'); });
+      toast('裁判にかけた！ 資料ができたら報告します ⚖️');
+    } catch (e) { btn.disabled = false; btn.textContent = '⚖️ 裁判にかける'; toast('送信に失敗: ' + e.message); }
+  }));
+}
+
 async function loadScout() {
   const el = $('invest-scout');
   try {
-    const raw = await getFile('inbox/watchlist.json');
-    const list = raw ? (JSON.parse(raw).entries || []) : [];
+    const list = await scoutEntries();
     if (!list.length) { el.innerHTML = '<p class="empty">明日の朝から毎日1社わき出ます 🔭</p>'; return; }
     const sent = JSON.parse(localStorage.getItem('scout-sent') || '[]');
     el.innerHTML = list.slice().reverse().map((e, i) => {
@@ -3996,16 +4010,7 @@ async function loadScout() {
         ${e.articles && e.articles.length ? `<div class="s" style="font-size:11px;margin-top:4px">Yパパ基準: ${e.articles.map(esc).join('・')}</div>` : ''}
         <div style="margin-top:8px"><button class="btn ${done ? '' : 'btn-primary'}" data-scout="${esc(key)}" data-name="${esc(e.name)}" data-code="${esc(e.code || '')}" ${done ? 'disabled' : ''}>${judged ? '⚖️ 判決ずみ' : done ? '⚖️ 裁判送り済み' : '⚖️ 裁判にかける'}</button></div></div>`;
     }).join('');
-    el.querySelectorAll('[data-scout]').forEach(btn => btn.addEventListener('click', async () => {
-      btn.disabled = true; btn.textContent = '送信中…';
-      try {
-        await putFile(`inbox/queue/${ts()}.md`, `at: ${atNow()}\nkind: 裁判依頼\n\n注目企業「${btn.dataset.name}${btn.dataset.code ? '（' + btn.dataset.code + '）' : ''}」を裁判にかけてください（注目企業ウォッチからピックアップ）`, `裁判依頼 ${btn.dataset.name}`);
-        const s = JSON.parse(localStorage.getItem('scout-sent') || '[]');
-        s.push(btn.dataset.scout); localStorage.setItem('scout-sent', JSON.stringify(s));
-        btn.textContent = '⚖️ 裁判送り済み'; btn.classList.remove('btn-primary');
-        toast('裁判にかけた！ 資料ができたら報告します ⚖️');
-      } catch (e) { btn.disabled = false; btn.textContent = '⚖️ 裁判にかける'; toast('送信に失敗: ' + e.message); }
-    }));
+    bindScoutButtons(el);
   } catch (e) { el.innerHTML = '<p class="empty">読み込みに失敗</p>'; }
 }
 
