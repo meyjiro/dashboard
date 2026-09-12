@@ -1244,7 +1244,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-12.2';
+const APP_VERSION = '2026-09-12.3';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2330,7 +2330,7 @@ function renderDayList(ev) {
 //    schedule-notify.py の MARKS と同じ並びにしてある。片方だけ直さないこと。
 const CAL_MARKS = [
   ['🐕', ['小太郎','こたろう','トム','とむ','犬','ワクチン','ノミダニ','動物病院','フィラリア']],
-  ['🏍', ['バイク','自賠責','陸運局','車検','オイル交換','整備','タイヤ']],
+  ['🛵', ['バイク','自賠責','陸運局','車検','オイル交換','整備','タイヤ']],
   ['🌸', ['ガチレズ','掲示板','通報','セーフサーチ','SEO','イベント','L友','真夜中']],
   ['🔮', ['メビウス','相談','草案','施術','奉納','術']],
   ['💰', ['入金','家賃','支払','振込','請求','税金','確定申告','マネーデー']],
@@ -2353,7 +2353,7 @@ function openCalModal(){
   $('calm-repeat').value = '';
   $('calm-pri').value = 'high';
   window.__calMark = ''; window.__calField = '個人';
-  $('calm-marks').innerHTML = ['','🐕','🏍','🌸','🔮','💰','🏥','🛒','✈️','📄','📈','🎉','📞','🍽']
+  $('calm-marks').innerHTML = ['','🐕','🛵','🌸','🔮','💰','🏥','🛒','✈️','📄','📈','🎉','📞','🍽']
     .map(m => `<button data-m="${m}" class="${m===''?'on':''}">${m || 'ー'}</button>`).join('');
   $('calm-fields').innerHTML = ['個人','ガチレズ','メビウス','投資','裁判・相続']
     .map(f => `<button data-f="${f}" class="${f==='個人'?'on':''}">${f}</button>`).join('');
