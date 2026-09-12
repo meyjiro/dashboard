@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f4f0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="robots" content="noindex">
+<title>オイル交換の手元</title>
+<style>
+:root{
+  --bg:#f6f4f0; --card:#fff; --ink:#17201a; --ink2:#4e564d; --ink3:#858d84;
+  --line:#e2e0d9; --accent:#212720; --soft:#e4f3ee;
+  --red:#a8402c; --redbg:#fbeeea; --spray:#1c5f7a; --spraybg:#e6f1f6; --done:#2f6b4f;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121510; --card:#1b1f19; --ink:#eaece6; --ink2:#a9b0a6; --ink3:#787f76;
+  --line:#2d322b; --accent:#cfe0d4; --soft:#1e2e27;
+  --red:#e5937e; --redbg:#2b1d18; --spray:#7ec2dd; --spraybg:#152630; --done:#8fc4a8;
+}}
+:root[data-theme="dark"]{
+  --bg:#121510; --card:#1b1f19; --ink:#eaece6; --ink2:#a9b0a6; --ink3:#787f76;
+  --line:#2d322b; --accent:#cfe0d4; --soft:#1e2e27;
+  --red:#e5937e; --redbg:#2b1d18; --spray:#7ec2dd; --spraybg:#152630; --done:#8fc4a8;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:17px/1.8 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+.wrap{max-width:660px;margin:0 auto;padding-block:22px 90px;padding-left:16px;padding-right:16px}
+
+header.top{position:sticky;top:0;z-index:30;background:var(--bg);
+  border-bottom:1px solid var(--line);padding-block:12px 10px;margin-bottom:6px}
+h1{margin:0;font-size:20px;letter-spacing:.01em}
+.sub{margin:2px 0 0;font-size:12.5px;color:var(--ink3)}
+.bar{display:flex;align-items:center;gap:10px;margin-top:9px}
+.track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.fill{height:100%;width:0;background:var(--done);border-radius:99px;transition:width .25s}
+.cnt{font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+h2{margin:30px 0 10px;font-size:16px;letter-spacing:.02em;
+  padding-bottom:6px;border-bottom:2px solid var(--accent)}
+
+.tool{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 4px;margin-bottom:10px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:13px;
+  padding:14px 16px;margin-bottom:11px;position:relative}
+.step.done{opacity:.5}
+.row{display:flex;align-items:flex-start;gap:13px}
+.chk{flex:none;cursor:pointer;padding-top:2px}
+.chk input{position:absolute;opacity:0;width:0;height:0}
+.chk span{display:block;width:27px;height:27px;border:2px solid var(--ink3);border-radius:8px;position:relative}
+.chk input:checked+span{background:var(--done);border-color:var(--done)}
+.chk input:checked+span::after{content:"";position:absolute;left:9px;top:3px;width:7px;height:14px;
+  border:solid var(--card);border-width:0 3px 3px 0;transform:rotate(45deg)}
+.body{flex:1;min-width:0}
+.ttl{font-weight:700;font-size:17px;line-height:1.5}
+.tm{font-size:11.5px;color:var(--ink3);font-variant-numeric:tabular-nums;margin-left:6px;font-weight:500}
+.step p{margin:6px 0 0;font-size:15.5px;color:var(--ink2);line-height:1.8}
+
+.bolt{display:inline-flex;align-items:baseline;gap:3px;background:var(--accent);color:var(--bg);
+  border-radius:7px;padding:2px 10px;font-weight:700;font-size:15px;margin:0 2px;
+  font-variant-numeric:tabular-nums}
+.dir{display:inline-block;background:var(--soft);color:var(--ink);border-radius:6px;
+  padding:1px 8px;font-weight:700;font-size:14.5px;margin:0 1px}
+
+.spray{margin:11px 0 0;background:var(--spraybg);border-left:4px solid var(--spray);
+  border-radius:0 9px 9px 0;padding:9px 13px;font-size:14.5px;line-height:1.75;color:var(--ink2)}
+.spray b{color:var(--spray)}
+.warn{margin:11px 0 0;background:var(--redbg);border-left:4px solid var(--red);
+  border-radius:0 9px 9px 0;padding:9px 13px;font-size:14.5px;line-height:1.75;color:var(--ink2)}
+.warn b{color:var(--red)}
+.note{margin:11px 0 0;background:var(--soft);border-radius:9px;padding:9px 13px;
+  font-size:14px;line-height:1.75;color:var(--ink2)}
+.note b{color:var(--ink)}
+
+.timer{margin:12px 0 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.timer button{font:inherit;font-size:15px;font-weight:700;cursor:pointer;
+  border:2px solid var(--accent);background:var(--card);color:var(--ink);
+  border-radius:10px;padding:9px 18px;-webkit-tap-highlight-color:transparent}
+.timer button:active{background:var(--soft)}
+.tleft{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.tleft.ring{color:var(--done)}
+
+.never{background:var(--card);border:2px solid var(--red);border-radius:13px;padding:14px 16px;margin:12px 0 0}
+.never .h{font-weight:700;color:var(--red);font-size:16px}
+.never ul{margin:8px 0 0;padding-left:20px;font-size:15px;color:var(--ink2);line-height:1.9}
+
+.rec{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:14px 16px;margin-top:14px}
+.rec label{display:block;font-size:13px;color:var(--ink3);margin-top:10px}
+.rec input{width:100%;font:inherit;font-size:17px;margin-top:4px;padding:9px 12px;
+  border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink)}
+.player{margin-top:14px}
+.frame{position:relative;width:100%;aspect-ratio:16/9;max-width:100%;
+  border-radius:13px;overflow:hidden;background:#000;border:1px solid var(--line)}
+.frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.pnote{font-size:13px;color:var(--ink3);line-height:1.7;margin-top:7px}
+.pnote a{color:var(--red);font-weight:700;text-decoration:none;white-space:nowrap}
+.player.stick .frame{position:sticky;top:96px;z-index:20;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+a.vid{display:flex;align-items:center;gap:14px;margin-top:14px;text-decoration:none;
+  background:var(--card);border:2px solid var(--red);border-radius:13px;padding:13px 16px;color:var(--ink)}
+a.vid .vp{flex:none;width:46px;height:46px;border-radius:50%;background:var(--red);color:#fff;
+  display:grid;place-items:center;font-size:19px;padding-left:3px}
+a.vid b{display:block;font-size:16px}
+a.vid span{display:block;font-size:13px;color:var(--ink3);line-height:1.6;margin-top:1px}
+a.tm{font-size:12.5px;font-variant-numeric:tabular-nums;margin-left:7px;font-weight:700;
+  color:var(--red);text-decoration:none;background:var(--redbg);border-radius:6px;
+  padding:3px 8px;white-space:nowrap;display:inline-block;-webkit-tap-highlight-color:transparent}
+a.tm:active{opacity:.6}
+footer{margin-top:34px;font-size:12.5px;color:var(--ink3);text-align:center;line-height:1.9}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+<header class="top">
+  <h1>オイル交換の手元</h1>
+  <p class="sub">YAMAHA Grand Filano（B8B8・2021）／エンジンオイル・ストレーナー・ギアオイル</p>
+  <div class="bar"><div class="track"><div class="fill" id="fill"></div></div>
+    <div class="cnt"><span id="dn">0</span> / <span id="tt">0</span></div></div>
+</header>
+
+<div class="player">
+  <div class="frame"><iframe id="yt"
+    src="https://www.youtube.com/embed/SA2l30o5pok?rel=0&playsinline=1"
+    title="オイル交換の動画" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+    referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+  <div class="pnote">各手順の <b>▶時刻</b> を押すと、ここがその場面から再生されます。
+    <a href="https://www.youtube.com/watch?v=SA2l30o5pok" target="_blank" rel="noopener">映らないときはYouTubeで開く ↗</a></div>
+</div>
+
+<div class="warn" style="margin-top:14px">
+<b>先に1つだけ。動画の書き出しに間違いがある。</b><br>
+「オイルドレンボルト（12番）を<b>時計回りに回して外し</b>」とあるけど、<b>時計回りは締まる方向</b>。
+ネジは全部 <b>ゆるめる＝反時計回り（左）／締める＝時計回り（右）</b>。
+ここを逆にするとアルミのネジ山が壊れて<b>修理はエンジン割り</b>になる。下の手順は正しい向きで書いてある。
+</div>
+
+<h2>用意するもの</h2>
+<div class="tool">
+  <div class="step" style="border:0;margin:0;padding:8px 12px"><div class="row">
+    <label class="chk"><input type="checkbox" class="c"><span></span></label>
+    <div class="body"><div class="ttl">エンジンオイル 0.8L（Yamalube BLUE CORE）</div></div></div></div>
+  <div class="step" style="border:0;margin:0;padding:8px 12px"><div class="row">
+    <label class="chk"><input type="checkbox" class="c"><span></span></label>
+    <div class="body"><div class="ttl">ギアオイル 100ml</div></div></div></div>
+  <div class="step" style="border:0;margin:0;padding:8px 12px"><div class="row">
+    <label class="chk"><input type="checkbox" class="c"><span></span></label>
+    <div class="body"><div class="ttl">レンチ／ソケット <span class="bolt">10</span><span class="bolt">12</span><span class="bolt">17</span></div></div></div></div>
+  <div class="step" style="border:0;margin:0;padding:8px 12px"><div class="row">
+    <label class="chk"><input type="checkbox" class="c"><span></span></label>
+    <div class="body"><div class="ttl">オイル受け皿・じょうご・ウエス</div></div></div></div>
+  <div class="step" style="border:0;margin:0;padding:8px 12px"><div class="row">
+    <label class="chk"><input type="checkbox" class="c"><span></span></label>
+    <div class="body"><div class="ttl">使い古した歯ブラシ（ストレーナー洗い用）</div></div></div></div>
+  <div class="step" style="border:0;margin:0;padding:8px 12px"><div class="row">
+    <label class="chk"><input type="checkbox" class="c"><span></span></label>
+    <div class="body"><div class="ttl">SUMO パーツクリーナー 840ml</div>
+      <p style="font-size:14px">Shopeeで買ったスプレー。<code>ล้างเบรค / ล้างน้ำมัน</code>＝ブレーキ洗浄・油落とし</p></div></div></div>
+</div>
+
+<h2>① エンジンオイル</h2>
+
+<div class="step"><div class="row">
+  <label class="chk"><input type="checkbox" class="c"><span></span></label>
+  <div class="body">
+    <div class="ttl">2〜3分だけ暖機して止める</div>
+    <p>冷えていると固くて抜けきらない。<b>触って「ぬるい」くらい</b>で止める。</p>
+    <div class="warn"><b>熱いうちにスプレーは絶対にしない。</b>パーツクリーナーは引火性。掃除は抜いて冷めてから。</div>
+  </div></div></div>
+
+<div class="step"><div class="row">
+  <label class="chk"><input type="checkbox" class="c"><span></span></label>
+  <div class="body">
+    <div class="ttl">センタースタンドを立てて水平に</div>
+    <p>傾いていると抜ける量も入れる量も狂う。</p>
+  </div></div></div>
+
+<div class="step"><div class="row">
+  <label class="chk"><input type="checkbox" class="c"><span></span></label>
+  <div class="body">
+    <div class="ttl">ドレンボルトを外してオイルを抜く<a class="tm" href="https://www.youtube.com/watch?v=SA2l30o5pok&t=98s" data-t="98" target="_blank" rel="noopener">▶ 1:38–1:50</a></div>
+    <p>車体下部。<span class="bolt">12</span> を <span class="dir">反時計回り（左）</span> でゆるめる。受け皿を真下に。<b>最後は手で回す</b>（一気に緩むと浴びる）。</p>
+    <div class="spray">🧴 <b>スプレー①</b> ゆるめる前に、<b>ボルトの周りに軽く吹いて砂や泥を飛ばす</b>。汚れたまま抜くとゴミがエンジンの中に落ちる。<b>エンジンが熱いあいだは吹かない</b>ので、手が入れば軽くだけ。</div>
+  </div></div></div>
+
+<div class="step"><div class="row">
+  <label class="chk"><input type="checkbox" class="c"><span></span></label>
+  <div class="body">
+    <div class="ttl">5〜8分そのまま待つ<a class="tm" href="https://www.youtube.com/watch?v=SA2l30o5pok&t=150s" data-t="150" target="_blank" rel="noopener">▶ 2:30–2:39</a></div>
+    <p>急がない。最後の一滴まで落とす。</p>
+    <div class="timer">
+      <button id="t-start">8分はかる</button>
+      <div class="tleft" id="t-left">--:--</div>
+    </div>
+    <div class="note">待っているあいだにエンジンが冷める。<b>次のスプレー作業はここで冷えてから。</b></div>
+  </div></div></div>
+
+<div class="step"><div class="row">
+  <label class="chk"><input type="checkbox" class="c"><span></span></label>
+  <div class="body">
+    <div class="ttl">ストレーナーを外す<a class="tm" href="https://www.youtube.com/watch?v=SA2l30o5pok&t=171s" data-t="171" target="_blank" rel="noopener">▶ 2:51–3:02</a></div>
+    <p>車体<b>側面</b>。<span class="bolt">17</span> を <span class="dir">反時計回り（左）</span> で外す。
+    中から <b>フィルター（金網）とスプリング</b> が出てくる。<b>出てきた順番を覚える／写真を撮る</b>。</p>
+  </div></div></div>
+
+<div class="step"><div class="row">
+  <label class="chk"><input type="checkbox" class="c"><span></span></label>
+  <div class="body">
+    <div class="ttl">ストレーナーを洗う<a class="tm" href="https://www.youtube.com/watch?v=SA2l30o5pok&t=226s" data-t="226" target="_blank" rel="noopener">▶ 3:46–4:18</a></div>
+    <p>歯ブラシで金網の汚れを落とす。<b>網が破れていないか</b>も見る。</p>
+    <div class="spray">🧴 <b>スプレー②（ここが本命）</b> 動画は水で洗っているけど、<b>パーツクリーナーのほうがいい</b>。速乾で<b>錆びないし、乾燥を待たなくていい</b>。<br>
+    金網に吹いて歯ブラシ → もう一度吹いて流す。<b>完全に乾いてから</b>戻す。</div>
+    <div class="spray">🧴 <b>スプレー③</b> ボルトの<b>穴の周りと座面</b>も吹いて拭く。ここに砂が残ると新しいオイルに入る。</div>
+  </div></div></div>
+
+<div class="step"><div class="row">
+  <label class="chk"><input type="checkbox" class="c"><span></span></label>
+  <div class="body">
+    <div class="ttl">ストレーナーを戻す<a class="tm" href="https://www.youtube.com/watch?v=SA2l30o5pok&t=282s" data-t="282" target="_blank" rel="noopener">▶ 4:42–5:50</a></div>
+    <p><b>フィルター → スプリング → ボルト</b> の順で元どおりに。
+    <span class="bolt">17</span> を <span class="dir">時計回り（右）</span> で締める。</p>
+    <div class="warn"><b>締めすぎない。</b>手で回して止まったところから、工具で<b>1/8回転だけ</b>。「ぐっ」と来たら止める。体重をかけない。</div>
+  </div></div></div>
+
+<div class="step"><div class="row">
+  <label class="chk"><input type="checkbox" class="c"><span></span></label>
+  <div class="body">
+    <div class="ttl">ドレンボルトを戻す</div>
+    <p><span class="bolt">12</span> を <span class="dir">時計回り（右）</span>。ここも<b>1/8回転だけ</b>。</p>
+    <div class="spray">🧴 <b>スプレー④</b> 締めたあと、<b>ボルトの周りの油を完全に落とす</b>。<br>
+    これをやると、あとで見たときに<b>「新しい滲み」がひと目で分かる</b>。拭いただけだと古い油と区別がつかない。</div>
+  </div></div></div>
+
+<div class="step"><div class="row">
+  <label class="chk"><input type="checkbox" class="c"><span></span></label>
+  <div class="body">
+    <div class="ttl">新しいオイルを入れる<a class="tm" href="https://www.youtube.com/watch?v=SA2l30o5pok&t=533s" data-t="533" target="_blank" rel="noopener">▶ 8:53–9:00</a></div>
+    <p>注入口からじょうごで <b>0.8L 全量</b>。</p>
+    <div class="warn"><b>入れすぎも壊れる。</b>0.8Lきっかり。目分量で足さない。</div>
+  </div></div></div>
+
+<div class="step"><div class="row">
+  <label class="chk"><input type="checkbox" class="c"><span></span></label>
+  <div class="body">
+    <div class="ttl">レベルゲージで確認<a class="tm" href="https://www.youtube.com/watch?v=SA2l30o5pok&t=582s" data-t="582" target="_blank" rel="noopener">▶ 9:42–9:55</a></div>
+    <p>ゲージは <b>差すだけ（ねじ込まない）</b>。上限と下限の<b>真ん中〜やや上</b>が正解。</p>
+    <div class="note">エンジンを<b>1分</b>回す → 止めて<b>2〜3分</b>待つ → もう一度見ると正確。</div>
+  </div></div></div>
+
+<h2>② ギアオイル</h2>
+
+<div class="step"><div class="row">
+  <label class="chk"><input type="checkbox" class="c"><span></span></label>
+  <div class="body">
+    <div class="ttl">先に注入口のキャップをゆるめる</div>
+    <p>車体<b>後方</b>の注入口。</p>
+    <div class="warn"><b>順番が大事。</b>先に抜いてしまってから注入口が固くて回らないと、<b>オイルが入れられないまま動かせなくなる</b>。開くことを確認してから抜く。</div>
+  </div></div></div>
+
+<div class="step"><div class="row">
+  <label class="chk"><input type="checkbox" class="c"><span></span></label>
+  <div class="body">
+    <div class="ttl">ギアオイルを抜く<a class="tm" href="https://www.youtube.com/watch?v=SA2l30o5pok&t=611s" data-t="611" target="_blank" rel="noopener">▶ 10:11–10:29</a></div>
+    <p>後輪付近のドレンボルト <span class="bolt">10</span> を <span class="dir">反時計回り（左）</span>。</p>
+    <div class="spray">🧴 <b>スプレー⑤</b> ここも、ゆるめる前にボルト周りを吹いて汚れを落とす。</div>
+    <div class="note"><b>100mlしか入っていない。</b>ちょろっとしか出なくても正常。心配しなくていい。</div>
+  </div></div></div>
+
+<div class="step"><div class="row">
+  <label class="chk"><input type="checkbox" class="c"><span></span></label>
+  <div class="body">
+    <div class="ttl">ドレンボルトを締める<a class="tm" href="https://www.youtube.com/watch?v=SA2l30o5pok&t=737s" data-t="737" target="_blank" rel="noopener">▶ 12:17–12:21</a></div>
+    <p><span class="bolt">10</span> を <span class="dir">時計回り（右）</span>。<b>ここも1/8回転だけ。</b></p>
+    <div class="spray">🧴 <b>スプレー⑥</b> 締めたあと周りを脱脂。滲みが見えるようにしておく。</div>
+  </div></div></div>
+
+<div class="step"><div class="row">
+  <label class="chk"><input type="checkbox" class="c"><span></span></label>
+  <div class="body">
+    <div class="ttl">ギアオイルを入れる<a class="tm" href="https://www.youtube.com/watch?v=SA2l30o5pok&t=746s" data-t="746" target="_blank" rel="noopener">▶ 12:26–12:49</a></div>
+    <p>後方の注入口から <b>100ml 全量</b>。キャップをしっかり締める。</p>
+  </div></div></div>
+
+<h2>スプレーをかけてはいけない所</h2>
+<div class="never">
+  <div class="h">ここにかけたら走らなくなる・壊れる</div>
+  <ul>
+    <li><b>Vベルトとプーリー（ケースの中）</b> — グランドフィラーノはベルト駆動。油分が入ると<b>滑って走らなくなる</b></li>
+    <li><b>タイヤ</b> — ゴムが劣化する。床に流れた分も踏まないように</li>
+    <li><b>ゴムホース・樹脂のカウル・塗装面</b> — 溶ける・白く曇る</li>
+    <li><b>熱いエンジン</b> — 引火する。火の気のない換気のいい場所で</li>
+  </ul>
+</div>
+
+<h2>終わったら</h2>
+
+<div class="step"><div class="row">
+  <label class="chk"><input type="checkbox" class="c"><span></span></label>
+  <div class="body">
+    <div class="ttl">ドレン周りの滲みを見る</div>
+    <p>脱脂してあるので、滲んでいればすぐ分かる。<b>5〜10km走ってからもう一度</b>見る。</p>
+  </div></div></div>
+
+<div class="step"><div class="row">
+  <label class="chk"><input type="checkbox" class="c"><span></span></label>
+  <div class="body">
+    <div class="ttl">廃油を捨てる</div>
+    <p>そのまま流さない。吸収材に吸わせるか、近所のバイク屋（<code>ร้านซ่อมมอเตอร์ไซค์</code>）に持って行けば引き取ってくれる。</p>
+  </div></div></div>
+
+<div class="rec">
+  <div class="ttl" style="font-size:16px">記録（次回の目安になる）</div>
+  <label>今日の走行距離（km）<input id="r-km" inputmode="numeric" placeholder="例 12,340"></label>
+  <label>気づいたこと<input id="r-memo" placeholder="ストレーナーの汚れ具合・滲みなど"></label>
+  <p style="font-size:13.5px;color:var(--ink3);margin-top:12px">
+  終わったらモッフルに数字を言えば <code>personal/bike_oil.md</code> の整備記録に足すのだ。
+  <b>次は2,000〜3,000kmごと</b>（ギアオイルはオイル3回に1回）。</p>
+</div>
+
+<footer>手順は動画の書き出しから。ボルトの向きだけ直してある。<br>── モッフル</footer>
+</div>
+
+<script>
+const K='bike-oil-2026-09-12';
+let done = new Set(JSON.parse(localStorage.getItem(K)||'[]'));
+const boxes=[...document.querySelectorAll('.c')];
+boxes.forEach((b,i)=>{ b.dataset.i=i; });
+document.getElementById('tt').textContent=boxes.length;
+function paint(){
+  boxes.forEach((b,i)=>{ const on=done.has(String(i)); b.checked=on;
+    b.closest('.step').classList.toggle('done',on); });
+  const n=boxes.filter(b=>b.checked).length;
+  document.getElementById('dn').textContent=n;
+  document.getElementById('fill').style.width=(n/boxes.length*100)+'%';
+}
+document.addEventListener('change',e=>{
+  if(!e.target.classList.contains('c'))return;
+  const i=e.target.dataset.i;
+  e.target.checked?done.add(i):done.delete(i);
+  try{localStorage.setItem(K,JSON.stringify([...done]))}catch(_){}
+  paint();
+});
+// 待ち時間のタイマー
+let tEnd=0,tId=null;
+const tl=document.getElementById('t-left'), tb=document.getElementById('t-start');
+function tick(){
+  const s=Math.max(0,Math.round((tEnd-Date.now())/1000));
+  tl.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+  if(s<=0){ clearInterval(tId); tId=null; tl.classList.add('ring'); tl.textContent='抜けた！';
+    tb.textContent='もう一度'; try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(_){}}
+}
+tb.addEventListener('click',()=>{
+  if(tId){clearInterval(tId);tId=null;tb.textContent='8分はかる';tl.textContent='--:--';tl.classList.remove('ring');return;}
+  tEnd=Date.now()+8*60*1000; tl.classList.remove('ring'); tb.textContent='やめる';
+  tick(); tId=setInterval(tick,250);
+});
+// 入力は覚えておく
+['r-km','r-memo'].forEach(id=>{
+  const el=document.getElementById(id);
+  try{ el.value=localStorage.getItem(K+':'+id)||''; }catch(_){}
+  el.addEventListener('input',()=>{ try{localStorage.setItem(K+':'+id,el.value)}catch(_){} });
+});
+// ▶時刻 → 埋め込みプレイヤーをその場面から再生（ページを離れない）
+const yt = document.getElementById('yt');
+document.addEventListener('click', e => {
+  const a = e.target.closest('a.tm'); if(!a || !yt) return;
+  e.preventDefault();
+  yt.src = 'https://www.youtube.com/embed/SA2l30o5pok?rel=0&playsinline=1&autoplay=1&start=' + a.dataset.t;
+  document.querySelector('.player').scrollIntoView({behavior:'smooth', block:'start'});
+});
+paint();
+</script>
+
+</body>
+</html>
