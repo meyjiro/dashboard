@@ -523,6 +523,20 @@ details.ops.ok[open]>summary::after{content:" ▴"}
 .mbar::before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--border)}
 .mbar i{position:absolute;top:0;height:6px;border-radius:3px}
 .mnote{font-size:10.5px;color:var(--text2);line-height:1.7;margin:6px 5px 0}
+/* 正常値との位置（2026-09-13 メグ希望: 「自分の年齢の正常値からどの位置か」を見たい） */
+.mrow{grid-template-rows:auto auto}
+.mref{grid-column:1/-1;display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--text2);margin-top:-2px}
+.mref .rg{position:relative;flex:1;max-width:150px;height:8px;border-radius:4px;background:var(--bg3)}
+.mref .rg b{position:absolute;top:0;height:8px;background:var(--ok-light);border:1px solid var(--ok);border-radius:4px;box-sizing:border-box;opacity:.9}
+.mref .rg i{position:absolute;top:-2px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--text);border:2px solid var(--card);box-sizing:border-box}
+.mref .rt{white-space:nowrap;font-variant-numeric:tabular-nums}
+.mref .rs{font-weight:700;white-space:nowrap}
+.mref.in .rs{color:var(--ok)} .mref.lo .rs,.mref.hi .rs{color:var(--warn)} .mref.good .rs{color:var(--accent)}
+.refline{font-size:10.5px;color:var(--text2);margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+/* 更新されているかの印（2026-09-13 メグ希望: 更新が正常かどうかを記号で） */
+.hfresh{display:flex;align-items:center;gap:8px;font-size:11.5px;padding:7px 11px;border-radius:8px;margin-bottom:8px;border:1px solid var(--border);background:var(--card)}
+.hfresh.ok{border-color:var(--ok);background:var(--ok-light)} .hfresh.wn{border-color:var(--warn);background:var(--warn-light)} .hfresh.bd{border-color:var(--red);background:var(--red-light)}
+.hfresh b{font-weight:700} .hfresh span{color:var(--text2)}
 .tile{border-radius:8px;padding:14px;border:1px solid var(--border);text-decoration:none;color:var(--text);display:block;background:var(--card)}
 .tile .em{font-size:20px}
 .tile .l{font-weight:700;font-size:14px;margin-top:4px}
@@ -984,6 +998,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
     <!-- 健康 -->
     <div id="tab-health" class="tab-panel">
+      <div id="health-fresh"></div>
       <div id="health-hero"></div>
       <div id="health-cycle"></div>
       <div id="health-groups"></div>
@@ -1244,7 +1259,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-12.3';
+const APP_VERSION = '2026-09-13.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -3080,6 +3095,73 @@ function renderHealthHero(rows, todayS) {
   </div>`;
 }
 
+// ══ 年齢別の正常値（2026-09-13 メグ希望）══
+// 🔴 上の「ふだんとの差」は自分比。ここは「同じ年齢・性別の一般的な正常値」との位置。
+//    出典の確かさが違うので、表示では「正常」「目安」「目標」を使い分ける:
+//      正常 = 医学会・公的機関の基準（心拍・睡眠・BMI）
+//      目標 = 公的な推奨（歩数＝健康日本21、運動＝WHO）
+//      目安 = 装着型機器の集団データや研究室の値（HRV・歩き方）。Apple Watchは日常の全歩行を平均するため
+//             研究室の値より低めに出る傾向があり、帯も少し下げている。参考程度に
+let H_PROF = null;   // personal/health/profile.json（生年月日・身長・性別）
+function hAge(prof) {
+  if (!prof || !prof.birth) return null;
+  const b = new Date(prof.birth), n = new Date();
+  return n.getFullYear() - b.getFullYear() - (n < new Date(n.getFullYear(), b.getMonth(), b.getDate()) ? 1 : 0);
+}
+function hRef(col, prof, latestWeight) {
+  const age = hAge(prof), h = prof && prof.height_cm;
+  const f = !prof || prof.sex !== 'M';   // 既定は女性の帯
+  switch (col) {
+    case 'hrv_ms':      return age == null ? null : age < 30 ? { lo: 45, hi: 80, k: '目安', why: 'Apple Watch(SDNN)の20代の帯' }
+                             : age < 40 ? { lo: 35, hi: 65, k: '目安', why: 'Apple Watch(SDNN)の30代の帯' }
+                             : age < 50 ? { lo: 30, hi: 55, k: '目安', why: 'Apple Watch(SDNN)の40代の帯。年齢とともに下がるのが普通' }
+                             : { lo: 25, hi: 45, k: '目安', why: 'Apple Watch(SDNN)の50代以上の帯' };
+    case 'resting_hr':  return { lo: 60, hi: 100, k: '正常', goodLow: 50, why: '成人の正常範囲（米国心臓協会）。鍛えた人は50台でも健康' };
+    case 'steps':       return { lo: 8000, hi: null, k: '目標', why: '健康日本21（第三次）20〜64歳の1日の目標' };
+    case 'exercise_min':return { lo: 21, hi: null, k: '目標', why: 'WHO: 中強度の運動を週150分以上（1日21分）' };
+    case 'walking_speed_kmh': return { lo: 3.6, hi: 5.0, k: '目安', why: '研究室の快適歩行は40代女性で約5.0km/h。Apple Watchは日常の全歩行の平均なので低めに出る' };
+    case 'step_length_cm':    return h ? { lo: Math.round(h * .37), hi: Math.round(h * .45), k: '目安', why: `身長${h}cmの37〜45%。Apple Watchの計測は研究室より短めに出る` } : null;
+    case 'double_support_pct':return { lo: 20, hi: 40, k: '目安', why: 'Apple Healthが示す一般的な範囲' };
+    case 'asymmetry_pct':     return { lo: 0, hi: 3, k: '目安', why: '健康な歩き方は左右差がほぼ無い。3%超が続くと片足をかばっている疑い' };
+    case 'sleep_min':   return { lo: 420, hi: 540, k: '正常', why: '26〜64歳の推奨7〜9時間（米国睡眠財団）' };
+    case 'weight_kg':   return h ? { lo: +(18.5 * (h / 100) ** 2).toFixed(1), hi: +(25 * (h / 100) ** 2).toFixed(1), k: '正常', why: `BMI 18.5〜25（日本肥満学会）を身長${h}cmに換算` } : null;
+    case 'basal_kcal': {
+      // Mifflin-St Jeor。Apple Watchの基礎代謝は式より2〜3割高めに出るので色は付けず参考表示だけ
+      if (!h || !latestWeight || age == null) return null;
+      const bmr = Math.round(10 * latestWeight + 6.25 * h - 5 * age + (f ? -161 : 5));
+      return { info: `計算式だと約${bmr.toLocaleString()}kcal（Apple Watchは式より高めに出る）` };
+    }
+    default: return null;
+  }
+}
+// 正常値の帯と今の値の位置を1行にする。dir: 1=高いほど良い / -1=低いほど良い
+function hRefLine(col, v, unit, nd, dir, prof, latestWeight) {
+  const r = hRef(col, prof, latestWeight);
+  if (!r) return '';
+  if (r.info) return `<div class="mref"><span class="rt">${r.info}</span></div>`;
+  const fmt = x => col === 'sleep_min' ? fmtHM(x) : (+x).toLocaleString(undefined, { maximumFractionDigits: nd });
+  let st, cls;
+  if (r.hi == null) {                       // 片側だけ（目標）
+    st = v >= r.lo ? '目標クリア' : `目標まで${fmt(r.lo - v)}${col === 'sleep_min' ? '' : unit}`; cls = v >= r.lo ? 'in' : 'lo';
+  } else if (v < r.lo) {
+    const good = (dir === -1 && (!r.goodLow || v >= r.goodLow));
+    st = good ? '低め（良い方向）' : '低め'; cls = good ? 'good' : 'lo';
+  } else if (v > r.hi) {
+    st = dir === 1 ? '高め（良い方向）' : '高め'; cls = dir === 1 ? 'good' : 'hi';
+  } else {
+    const pos = Math.round((v - r.lo) / (r.hi - r.lo) * 100);
+    st = `範囲内（${pos < 34 ? '下の方' : pos < 67 ? 'まん中' : '上の方'}）`; cls = 'in';
+  }
+  // 帯の両側に帯幅の半分ずつ余白を取った目盛りに、帯と●を置く
+  let gauge = '';
+  if (r.hi != null) {
+    const span = r.hi - r.lo, a = r.lo - span / 2, b = r.hi + span / 2;
+    const pct = x => Math.max(0, Math.min(100, (x - a) / (b - a) * 100)).toFixed(1);
+    gauge = `<div class="rg"><b style="left:${pct(r.lo)}%;width:${pct(r.hi) - pct(r.lo)}%"></b><i style="left:${pct(v)}%"></i></div>`;
+  }
+  const band = r.hi == null ? `${fmt(r.lo)}${unit}以上` : `${fmt(r.lo)}〜${fmt(r.hi)}${col === 'sleep_min' ? '' : unit}`;
+  return `<div class="mref ${cls}" title="${esc(r.why)}"><span class="rt">${r.k} ${band}</span>${gauge}<span class="rs">${st}</span></div>`;
+}
 function renderHealthRows(rows, todayS) {
   const done = rows.filter(r => r.date !== todayS);
   const cur = done[done.length - 1];
@@ -3104,9 +3186,11 @@ function renderHealthRows(rows, todayS) {
         <div class="mval">${v.toFixed(nd) * 1 === v ? v.toLocaleString(undefined, { minimumFractionDigits: nd, maximumFractionDigits: nd }) : v.toFixed(nd)}<u>${unit}</u></div>
         <div class="mbar"><i style="left:${left}%;width:${Math.max(2, w)}%;background:${c}"></i></div>
         <div class="mdiff" style="color:${c}">${!dir ? '' : (pct >= 0 ? '+' : '') + pct.toFixed(0) + '%'}</div>
+        ${hRefLine(col, v, unit, nd, dir, H_PROF, window.__latestWeight)}
       </div>`;
     }).join('');
-    out.push(`<div class="mgroup"><h4>${title}<span style="font-weight:500;letter-spacing:0;text-transform:none"> ・ふだんとの差</span></h4>
+    const ageTxt = hAge(H_PROF) != null ? `・下段は${hAge(H_PROF)}歳${H_PROF.sex === 'M' ? '男性' : '女性'}の正常値との位置` : '';
+    out.push(`<div class="mgroup"><h4>${title}<span style="font-weight:500;letter-spacing:0;text-transform:none"> ・ふだんとの差${ageTxt}</span></h4>
       <div class="mrows">${rowsHtml}</div>
       <div class="mnote">${note}</div></div>`);
   }
@@ -3179,6 +3263,36 @@ async function loadMoodChart() {
     + `</svg>`;
 }
 
+// ══ 更新されているかの印（2026-09-13 メグ希望）══
+// 基準（health-watch.sh が30分ごとに書く inbox/health_status.json と、daily.csv そのものから判定）:
+//   🟢 正常  = Apple Watchの値が昨日ぶんまで入っている（値は翌日に確定するので「昨日まで」が正常）
+//              かつ iPhone の書き出しが18時間以内
+//   🟡 遅れ  = 2日止まっている、または書き出しが18〜36時間前（iPhoneが1回走らなかった程度）
+//   🔴 停止  = 3日以上止まっている、または書き出しが36時間以上前（ショートカットが動いていない）
+async function renderHealthFresh(rows, todayS) {
+  const el = $('health-fresh'); if (!el) return;
+  let st = null;
+  try { const t = await repoFile(REPO, 'inbox/health_status.json'); st = t ? JSON.parse(t) : null; } catch (e) {}
+  // daily.csv 側からも数える（status が古くても見られるように）
+  const withWatch = rows.filter(r => r.steps || r.resting_hr || r.hrv_ms);
+  const lastW = withWatch.length ? withWatch[withWatch.length - 1].date : null;
+  const dayGap = lastW ? Math.round((new Date(todayS) - new Date(lastW)) / 86400000) : 99;
+  const stale = st && st.daily_stale_days != null ? Math.min(st.daily_stale_days, dayGap) : dayGap;
+  const expH = st && st.export_file_age_hours != null ? st.export_file_age_hours : null;
+  const md = d => d ? `${+d.slice(5, 7)}/${+d.slice(8, 10)}` : '－';
+  let cls, icon, title, why;
+  if (stale >= 3 || (expH != null && expH >= 36)) {
+    cls = 'bd'; icon = '🔴'; title = '更新が止まっています';
+    why = stale >= 3 ? `Apple Watchの値が${stale}日入っていない（最後は${md(lastW)}）` : `iPhoneの書き出しが${Math.round(expH)}時間前で止まっている`;
+  } else if (stale === 2 || (expH != null && expH >= 18)) {
+    cls = 'wn'; icon = '🟡'; title = '更新が遅れています';
+    why = stale === 2 ? `昨日ぶんがまだ来ていない（最後は${md(lastW)}）。iPhoneのショートカットが次に走れば埋まる` : `iPhoneの書き出しが${Math.round(expH)}時間前`;
+  } else {
+    cls = 'ok'; icon = '🟢'; title = '正常に更新されています';
+    why = `${md(lastW)}ぶんまで入力済み${expH != null ? `・iPhoneの書き出しは${expH < 1 ? Math.round(expH * 60) + '分' : Math.round(expH) + '時間'}前` : ''}`;
+  }
+  el.innerHTML = `<div class="hfresh ${cls}" title="Apple Watchの値は翌日に確定するので、前日ぶんまで入っていれば正常です">${icon} <b>${title}</b><span>${esc(why)}</span></div>`;
+}
 async function loadHealth() {
   await loadCycle();
   loadMoodChart();
@@ -3188,6 +3302,16 @@ async function loadHealth() {
     const rows = parseCsv(csv).filter(r => r.date);
     const md = s => `${+s.slice(5, 7)}/${+s.slice(8, 10)}`;
     const todayS = new Date().toLocaleDateString('sv-SE');
+    // 正常値の帯は年齢・身長・性別から計算する。プロフィールは personal（非公開）に置く
+    try { const pj = await repoFile('meyjiro/personal', 'health/profile.json'); H_PROF = pj ? JSON.parse(pj) : null; } catch (e) { H_PROF = null; }
+    // 基礎代謝・BMIの計算に使う最新の体重（Apple由来と手入力の新しい方）
+    try {
+      const wm = {}; rows.forEach(r => { if (r.weight_kg) wm[r.date] = +r.weight_kg; });
+      const wl = await repoFile(REPO, WEIGHT_LOG);
+      if (wl) parseCsv(wl).forEach(r => { if (r.date && r.weight_kg) wm[r.date] = +r.weight_kg; });
+      const ks = Object.keys(wm).sort(); window.__latestWeight = ks.length ? wm[ks[ks.length - 1]] : null;
+    } catch (e) {}
+    renderHealthFresh(rows, todayS);
     renderHealthHero(rows, todayS);
     renderHealthRows(rows, todayS);
 
@@ -3210,6 +3334,7 @@ async function loadHealth() {
     // 睡眠は分で持っているが、見せるのは日本語の時間（2026-09-06 メグ希望）
     if (sl.length > 1) { sparkBars($('health-sleep'), sl, '', fmtHM); $('health-sleep').setAttribute('title', `睡眠の推移（直近${sl.length}日）`); }
     else if (sl.length === 1) { $('health-sleep').innerHTML = `<p class="s">${esc(sl[0].label)} ${fmtHM(sl[0].v)}（2日分たまるとグラフになります）</p>`; }
+    if (sl.length) $('health-sleep').insertAdjacentHTML('beforeend', `<div class="refline">${hRefLine('sleep_min', sl[sl.length - 1].v, '', 0, 0, H_PROF)}</div>`);
 
     // ⚖️ 体重（月1回）: daily.csv の weight_kg と手入力の中継CSVをまとめる。同じ日は手入力が勝つ
     initHealthForms();
@@ -3223,6 +3348,10 @@ async function loadHealth() {
     const wt = Object.keys(wmap).sort().slice(-12).map(d => ({ label: ym(d), v: wmap[d] }));
     if (wt.length > 1) { sparkLine($('health-weight'), wt, 'kg'); $('health-weight').setAttribute('title', `体重の推移（直近${wt.length}回）`); }
     else if (wt.length === 1) { $('health-weight').innerHTML = `<p class="s">${esc(wt[0].label)} ${wt[0].v}kg（2回たまると線になります）</p>`; }
+    if (wt.length && H_PROF && H_PROF.height_cm) {
+      const w = wt[wt.length - 1].v, bmi = (w / (H_PROF.height_cm / 100) ** 2).toFixed(1);
+      $('health-weight').insertAdjacentHTML('beforeend', `<div class="refline">${hRefLine('weight_kg', w, 'kg', 1, 0, H_PROF)}<span>BMI ${bmi}</span></div>`);
+    }
 
     // 💩 おつうじ: 中継CSVをそのまま読む（Apple由来の指標とは混ぜない）
     try {
