@@ -387,12 +387,18 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 .sc .s1{font-size:14px;font-weight:800;white-space:nowrap}
 .sc .s2{font-size:10.5px;color:var(--text2);white-space:nowrap;margin-top:1px}
 /* 自動処理は畳んだ1行 */
+/* 見張りは常設・最上部（2026-09-13 棚卸し: 折りたたみの中では止まっても目に入らない） */
+.opsbar{display:flex;align-items:center;gap:8px;font-size:11.5px;padding:6px 10px;border-radius:8px;margin-bottom:10px;border:1px solid var(--border);background:var(--card);color:var(--text2)}
+.opsbar.ok{border-color:var(--ok);background:var(--ok-light)} .opsbar.bad{display:block;border-color:var(--red);background:var(--red-light);color:var(--text);font-size:13px;padding:10px 12px}
+.opsbar summary{cursor:pointer;list-style:none} .opsbar summary::-webkit-details-marker{display:none}
+.opsbar .opsrow{margin-top:6px;line-height:1.55} .opsbar .opsrow b{color:var(--red)} .opsbar .opsmini{font-size:11px;color:var(--text2)}
 details.ops.ok{background:none;border:0;padding:0;margin:0 0 8px}
 details.ops.ok>summary{font-size:11px;color:var(--text3,#9ca3af);cursor:pointer;list-style:none;padding:2px}
 details.ops.ok>summary::-webkit-details-marker{display:none}
 details.ops.ok>summary::after{content:" ▾"}
 details.ops.ok[open]>summary::after{content:" ▴"}
 /* そのほか（畳み） */
+.nav-btn.alert{position:relative} .nav-btn.alert::after{content:'';position:absolute;top:6px;right:22%;width:8px;height:8px;border-radius:50%;background:var(--red)}
 .more2{margin-top:18px;border-top:1px solid var(--border);padding-top:4px}
 .more2>summary{font-size:12px;color:var(--text2);font-weight:700;cursor:pointer;list-style:none;padding:9px 2px}
 .more2>summary::-webkit-details-marker{display:none}
@@ -895,6 +901,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
   <div class="tab-content">
     <!-- 今日 -->
     <div id="tab-today" class="tab-panel active">
+      <div id="ops-status"></div>
       <div id="brief-stale"></div>
       <div id="brief-quote"></div>
       <div id="brief-learn"></div>
@@ -914,7 +921,6 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
       <div id="today-new"></div>
 
       <details class="more2"><summary>そのほか</summary>
-        <div id="ops-status"></div>
         <div id="brief-attention-wrap" style="display:none">
           <div class="blk-sub">👀 注目</div>
           <div id="brief-attention"></div>
@@ -1259,7 +1265,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-13.2';
+const APP_VERSION = '2026-09-13.3';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1365,10 +1371,17 @@ async function listDir(path) {
 // 🔴 この仕組みの最大の弱点は「気づかないうちに止まること」。
 //    2026-08-29 だけで3件見つかった（健康データ1日／投資候補3日／repeat-guardのすり抜け）。
 //    だから毎朝ここを見れば、次からは1日で気づける。
+// 🔴 2026-09-13 棚卸し（Gemini第三者レビュー）で「更新日しか見ていない」「折りたたみの中で見えない」と指摘。
+//    以後は各項目に verify（中身の実在チェック）を持たせ、今日タブの最上部に常設する。
+//    read: 日付を取り出す ／ verify: 中身が壊れていれば理由の文字列を返す（正常なら null）
 const OPS = [
-  { name:'健康データ',   why:'Apple Watch → iCloud → Mac',
+  { name:'健康データ',   why:'Apple Watch → iPhone → GitHub。値は翌日確定なので「昨日ぶん」まであれば正常',
     repo:'meyjiro/personal', path:'health/data/daily.csv', limit:2,
-    read:t=>{ const r=t.trim().split('\n'); return r[r.length-1].split(',')[0]; } },
+    // 🔴 最終行の日付ではなく「Apple Watchの値が入っている最後の行」を見る（睡眠だけ手入力の行で誤って正常になった型）
+    read:t=>{ const rows=parseCsv(t); const r=rows.filter(x=>x.steps||x.resting_hr||x.hrv_ms); return r.length?r[r.length-1].date:null; } },
+  { name:'健康の見張り', why:'Macが30分ごとに health_status.json を書く。これ自体が止まると健康タブの🟢が嘘になる',
+    repo:'meyjiro/claude-context', path:'inbox/health_status.json', limit:0.2,
+    read:t=>JSON.parse(t).at },
   // 🔴 為替は土日に市場が閉まる。値が動かないとファイルを書かない仕様なので、
   //    週末は「更新が無い＝正常」。月曜の朝までしきい値を伸ばす（2026-08-30の誤検知で判明）。
   { name:'為替',         why:'Macが1時間ごとに取得（土日は市場が閉まる）',
@@ -1376,10 +1389,28 @@ const OPS = [
     read:t=>JSON.parse(t).updated },
   { name:'IBKR',         why:'毎朝9:05に保有と取引',
     repo:'meyjiro/personal', path:'money/ibkr_summary.json', limit:2,
-    read:t=>{ const j=JSON.parse(t); return j.updated||j.asof||j.date||j.generated_at; } },
-  { name:'朝の巡回',     why:'クラウドが毎朝ブリーフィングを作る',
+    read:t=>{ const j=JSON.parse(t); return j.updated||j.asof||j.date||j.generated_at; },
+    verify:t=>{ const j=JSON.parse(t); return (+j.nav_end>0 && Array.isArray(j.positions)) ? null : '総資産か保有の中身が空'; } },
+  { name:'Wise残高',     why:'毎朝9:00にMacが記録',
+    repo:'meyjiro/personal', path:'money/wise_balances.csv', limit:1.5,
+    read:t=>{ const r=t.trim().split('\n'); return r[r.length-1].split(',')[0]; } },
+  { name:'朝の巡回',     why:'クラウドが毎朝ブリーフィングを作り、本流(main)にpushする',
     repo:'meyjiro/claude-context', path:'inbox/briefing.json', limit:1.2,
-    read:t=>JSON.parse(t).generated_at },
+    read:t=>JSON.parse(t).generated_at,
+    verify:t=>{ const j=JSON.parse(t); return (Array.isArray(j.today)&&Array.isArray(j.attention)) ? null : '中身の形が違う（today/attentionが無い）'; } },
+  { name:'夜の日記',     why:'クラウドが毎晩22:30に前日までの日記を personal/diary に書く',
+    repo:'meyjiro/personal', pathFn:()=>{ const d=new Date(); return `diary/${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}.md`; },
+    altPathFn:()=>{ const d=new Date(); d.setDate(0); return `diary/${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}.md`; },
+    limit:1.7,
+    read:t=>{ const m=[...t.matchAll(/^## (\d{4}-\d{2}-\d{2})/gm)]; return m.length?m[m.length-1][1]:null; } },
+  { name:'ガチレズ巡回', why:'Macが8:20/14:20/20:20に3サイトを見る',
+    repo:'meyjiro/claude-context', path:'inbox/glz_snapshot.json', limit:0.6,
+    read:t=>JSON.parse(t).generated_at,
+    verify:t=>{ const j=JSON.parse(t); return (j.counts && j.counts['本家']) ? null : '件数の中身が無い（取得失敗の疑い）'; } },
+  { name:'メビウス巡回', why:'Macが8:25/14:25/20:25に草案と入金を見る',
+    repo:'meyjiro/claude-context', path:'inbox/mbs_snapshot.json', limit:0.6,
+    read:t=>JSON.parse(t).generated_at,
+    verify:t=>{ const j=JSON.parse(t); return (j.counts && 'draft_ready' in j.counts) ? null : '件数の中身が無い（取得失敗の疑い）'; } },
   // 🔴 2026-09-12: 監視先を台帳(.md)から watchlist.json に変えた。画面に出しているのはこちらで、
   //    台帳だけ更新されて watchlist が古いと「緑なのに画面は古い」が起きる（棚卸しで発覚）
   { name:'投資の新候補', why:'注目企業ウォッチに毎日1社',
@@ -1388,9 +1419,19 @@ const OPS = [
   { name:'朝のメニュー', why:'クラウドが毎朝9時に新しいものを集める',
     repo:'meyjiro/claude-context', path:'inbox/morning.json', limit:1.2,
     read:t=>JSON.parse(t).generated_at },
-  { name:'判例',         why:'クラウドが毎朝10時に1件裁く',
-    repo:'meyjiro/claude-context', path:'projects/B7_投資/判例/data/_index.json', limit:3,
-    read:t=>JSON.parse(t).updated },
+  // 🔴 判例は「開廷待ちが無ければ止まっていて正常」。court_status.json（Macが7:15/12:15/18:15に書く）と合わせて判定する
+  { name:'裁判',         why:'検察意見書ができた銘柄を、クラウドが毎朝10時に裁く。意見書が無ければ何も出ないのが正常',
+    check: async ()=>{
+      const cs = JSON.parse(await repoFile('meyjiro/claude-context','inbox/court_status.json') || '{}');
+      const at = cs.at; const waiting = (cs.generated||[]).length + (cs.pending||[]).length;
+      if(!at) return {err:'court_status.json が無い'};
+      if((Date.now()-new Date(at).getTime())/86400000 > 1.2) return {at, err:'検察の見張りが1日以上書いていない'};
+      if(!waiting) return {at, note:'開廷待ち0件'};
+      const idx = JSON.parse(await repoFile('meyjiro/claude-context','projects/B7_投資/判例/data/_index.json') || '{}');
+      const jd = new Date((idx.updated||'2000-01-01')+'T12:00:00+09:00');
+      if((Date.now()-jd.getTime())/86400000 > 1.5) return {at, err:`開廷待ち${waiting}件あるのに判決が${idx.updated}から出ていない`};
+      return {at};
+    } },
 ];
 async function loadOps(){
   const el = $('ops-status');
@@ -1398,7 +1439,14 @@ async function loadOps(){
   const now = Date.now();
   const rows = await Promise.all(OPS.map(async o=>{
     try{
-      const t = await repoFile(o.repo, o.path);
+      if(o.check){                                  // 複数ファイルを突き合わせる項目
+        const r = await o.check();
+        const d = r.at ? new Date(r.at) : null;
+        return {...o, at:d, days:d?(now-d.getTime())/86400000:0, limit:99, err:r.err||null, note:r.note};
+      }
+      let path = o.pathFn ? o.pathFn() : o.path;
+      let t = await repoFile(o.repo, path);
+      if(!t && o.altPathFn) t = await repoFile(o.repo, o.altPathFn());   // 月初は前月のファイルを見る
       if(!t) return {...o, err:'ファイルが無い'};
       const raw = o.read(t);
       if(!raw) return {...o, err:'日付を読めない'};
@@ -1406,25 +1454,27 @@ async function loadOps(){
       if(isNaN(d)) return {...o, err:'日付を読めない'};
       const wd = new Date().getDay();               // 0=日 6=土
       const lim = (o.weekend && (wd===0 || wd===6 || wd===1)) ? o.weekend : o.limit;
-      return {...o, at:d, days:(now-d.getTime())/86400000, limit:lim};
-    }catch(e){ return {...o, err:'読み込みに失敗'}; }
+      const bad = o.verify ? o.verify(t) : null;    // 中身の実在チェック（日付が新しくても中身が空なら異常）
+      return {...o, at:d, days:(now-d.getTime())/86400000, limit:lim, err: bad||null};
+    }catch(e){ return {...o, err:'読み込みに失敗（'+(e.message||'').slice(0,40)+'）'}; }
   }));
   const bad = rows.filter(r=>r.err || r.days>r.limit);
   const fmt = d=>d.toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
   const ago = n=> n<1 ? Math.round(n*24)+'時間前' : Math.floor(n)+'日前';
+  window.__opsBad = bad.length;
+  const nav = document.querySelector('.nav-btn[data-tab="today"]');
+  if(nav) nav.classList.toggle('alert', bad.length>0);
   if(!bad.length){
-    el.innerHTML = `<details class="ops ok"><summary>⚙️ 自動処理 ${rows.length}件とも正常</summary>
-      <div class="opsmini" style="padding:0 2px 4px">${rows.map(r=>r.name+' '+ago(r.days)).join(' ／ ')}</div></details>`;
+    el.innerHTML = `<details class="opsbar ok"><summary>🟢 自動処理 ${rows.length}件とも正常 ▾</summary>
+      <div class="opsmini" style="margin-top:4px">${rows.map(r=>r.name+' '+(r.note||ago(r.days))).join(' ／ ')}</div></details>`;
     return;
   }
-  el.innerHTML = `<div class="ops bad"><div class="opsh">🔴 止まっているものがあります</div>
-    ${bad.map(r=>`<div class="opsrow"><b>${r.name}</b>
-      <span>${r.err ? r.err : '最終 '+fmt(r.at)+'（'+ago(r.days)+'）'}</span>
-      <span class="opsmini">${r.why}</span></div>`).join('')}
-    ${rows.length-bad.length ? `<div class="opsmini" style="margin-top:6px">ほか${rows.length-bad.length}件は正常</div>`:''}
+  el.innerHTML = `<div class="opsbar bad"><b>🔴 止まっているものがあります（${bad.length}件）</b>
+    ${bad.map(r=>`<div class="opsrow"><b>${r.name}</b>　${r.err ? r.err : '最終 '+fmt(r.at)+'（'+ago(r.days)+'）'}
+      <div class="opsmini">${r.why}</div></div>`).join('')}
+    <div class="opsmini" style="margin-top:8px">ほか${rows.length-bad.length}件は正常。Claude Codeで「自動処理の見張りが赤い」と言えば調べます</div>
   </div>`;
 }
-
 
 // ══ 📊 今日の数字（朝のメニュー【4】・2026-08-30）══
 // 各タブに散っている数字のうち、朝いちばんに見たいものだけを1行にまとめる。
@@ -1767,8 +1817,9 @@ async function loadGlzCount(){
       {id:'glz', n, label:`ガチレズの通報 ${n}件`, mins:'ターミナルで', anchor:''}});
     if(!n) markSetDone('glz');
   }catch(e){
-    window.__setParts = Object.assign(window.__setParts||{}, {glz:{id:'glz', n:0}});
-    markSetDone('glz');
+    // 🔴 取得失敗を「0件・完了」にしない（棚卸し 2026-09-13）。見えている形で残す
+    window.__setParts = Object.assign(window.__setParts||{}, {glz:
+      {id:'glz', n:1, label:'ガチレズの通報: 取得できていない（見張りを確認）', mins:'', anchor:''}});
   }
   tryBuildSet();
 }
@@ -3280,13 +3331,19 @@ async function renderHealthFresh(rows, todayS) {
   const withWatch = rows.filter(r => r.steps || r.resting_hr || r.hrv_ms);
   const lastW = withWatch.length ? withWatch[withWatch.length - 1].date : null;
   const dayGap = lastW ? Math.round((new Date(todayS) - new Date(lastW)) / 86400000) : 99;
-  const stale = st && st.daily_stale_days != null ? Math.min(st.daily_stale_days, dayGap) : dayGap;
-  const expH = st && st.export_file_age_hours != null ? st.export_file_age_hours : null;
+  // 🔴 見張りファイル自体が古ければ、その中の値は信じない（棚卸し 2026-09-13 の指摘）
+  const stAgeH = st && st.at ? (Date.now() - new Date(st.at).getTime()) / 3600000 : null;
+  const stFresh = stAgeH != null && stAgeH < 3;
+  const stale = stFresh && st.daily_stale_days != null ? Math.min(st.daily_stale_days, dayGap) : dayGap;
+  const expH = stFresh && st.export_file_age_hours != null ? st.export_file_age_hours : null;
   const md = d => d ? `${+d.slice(5, 7)}/${+d.slice(8, 10)}` : '－';
   let cls, icon, title, why;
   if (stale >= 3 || (expH != null && expH >= 36)) {
     cls = 'bd'; icon = '🔴'; title = '更新が止まっています';
     why = stale >= 3 ? `Apple Watchの値が${stale}日入っていない（最後は${md(lastW)}）` : `iPhoneの書き出しが${Math.round(expH)}時間前で止まっている`;
+  } else if (stAgeH != null && !stFresh) {
+    cls = 'wn'; icon = '🟡'; title = '見張りが止まっています';
+    why = `Macの健康の見張りが${Math.round(stAgeH)}時間書いていない（データ自体は${md(lastW)}まで）`;
   } else if (stale === 2 || (expH != null && expH >= 18)) {
     cls = 'wn'; icon = '🟡'; title = '更新が遅れています';
     why = stale === 2 ? `昨日ぶんがまだ来ていない（最後は${md(lastW)}）。iPhoneのショートカットが次に走れば埋まる` : `iPhoneの書き出しが${Math.round(expH)}時間前`;
@@ -4409,7 +4466,9 @@ async function checkVersion() {
   try {
     // 🔴 no-store だけでは足りない。iOSのホーム画面アプリはURLごと覚えているので、
     //    毎回ちがうURLで取りに行かせる（2026-08-30 スマホで更新されない件）。
-    const res = await fetch(location.pathname + '?_=' + Date.now(),
+    // 🔴 location.pathname は index.html（ローダー）で、そこに APP_VERSION は無い → 常に何もしなかった
+    //    （棚卸し 2026-09-13 で発覚）。中身の app.html を直接取る
+    const res = await fetch('app.html?_=' + Date.now(),
                             { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
     if (!res.ok) return;
     const html = await res.text();
