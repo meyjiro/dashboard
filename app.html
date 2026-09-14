@@ -1265,7 +1265,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-14.1';
+const APP_VERSION = '2026-09-14.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1298,6 +1298,18 @@ const COUNTDOWNS = [ ...TRIPS.map(t => ({ emoji:'✈️', label:t.title, date:t.
 const MEBIUS_API = 'https://mebiusmagic.com/mebius_admin/api_calendar.php';
 
 // ── State ──
+// 🔴 2026-09-14: ホーム画面に追加し直すと鍵が全部消え、iPhoneの本体アプリではモーダルの入力欄が
+//    押せなかった（原因未特定）。URLの後ろに #k=... で鍵を渡せる逃げ道を作る。
+//    例: https://meyjiro.github.io/dashboard/#gh_pat=gho_xxx&mbs_read_key=mbs_read_xxx&mebius_token=mbs_cal_xxx&bark_key=xxx
+//    読んだら localStorage に入れて、URLから消す（履歴に残さない）。
+try {
+  if (location.hash && location.hash.indexOf('=') > 0) {
+    const kv = new URLSearchParams(location.hash.slice(1));
+    let n = 0;
+    ['gh_pat', 'mebius_token', 'mbs_read_key', 'bark_key'].forEach(k => { const v = kv.get(k); if (v) { localStorage.setItem(k, v.trim()); n++; } });
+    if (n) history.replaceState(null, '', location.pathname + location.search);
+  }
+} catch (e) {}
 let pat = localStorage.getItem('gh_pat') || '';
 let mebiusToken = localStorage.getItem('mebius_token') || '';
 // 🔴 相談・草案の本文を読む鍵。ソースに書かない（このページは公開URLで開ける）。
