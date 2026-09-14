@@ -1265,7 +1265,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-13.3';
+const APP_VERSION = '2026-09-14.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1406,7 +1406,7 @@ const OPS = [
   { name:'ガチレズ巡回', why:'Macが8:20/14:20/20:20に3サイトを見る',
     repo:'meyjiro/claude-context', path:'inbox/glz_snapshot.json', limit:0.6,
     read:t=>JSON.parse(t).generated_at,
-    verify:t=>{ const j=JSON.parse(t); return (j.counts && j.counts['本家']) ? null : '件数の中身が無い（取得失敗の疑い）'; } },
+    verify:t=>{ const j=JSON.parse(t); return (j.counts && ('本家' in j.counts)) ? null : '件数の中身が無い（取得失敗の疑い）'; } },   // キーの存在で見る（値が0でも正常）
   { name:'メビウス巡回', why:'Macが8:25/14:25/20:25に草案と入金を見る',
     repo:'meyjiro/claude-context', path:'inbox/mbs_snapshot.json', limit:0.6,
     read:t=>JSON.parse(t).generated_at,
