@@ -1265,7 +1265,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-14.2';
+const APP_VERSION = '2026-09-14.3';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1307,7 +1307,9 @@ try {
     const kv = new URLSearchParams(location.hash.slice(1));
     let n = 0;
     ['gh_pat', 'mebius_token', 'mbs_read_key', 'bark_key'].forEach(k => { const v = kv.get(k); if (v) { localStorage.setItem(k, v.trim()); n++; } });
-    if (n) history.replaceState(null, '', location.pathname + location.search);
+    // 🔴 URLから消さない。iOSは「ホーム画面に追加」した時のURLを保存し、本体アプリはSafariと別の
+    //    localStorage を持つ。消すと追加した後のアプリが空の状態で開いてしまう（この端末の中だけの話なので残してよい）
+    if (n && !navigator.standalone) { /* Safariで開いている間は残す */ }
   }
 } catch (e) {}
 let pat = localStorage.getItem('gh_pat') || '';
