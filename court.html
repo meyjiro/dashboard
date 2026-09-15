@@ -538,6 +538,11 @@ function detailHTML(v){
   }
 
   // ── ⑤ 細かい審査 ──
+  // ── ④-b 執行案（2026-09-15 メグ指示: 判決と一緒に「いくらで・分割するか・出口」の最適解を1つ出す）──
+  if(v.execution){const e=v.execution;
+    h+='<details class="sec" open><summary>④-b 執行案（いくらで・何回に分けて・いつ降りるか）</summary><div class="secb">'
+      +[['entry','入る価格'],['split','分割'],['size','金額の上限'],['exit','出口（利確）'],['stop','撤退線'],['why','この案にした理由']].map(([k,l])=>e[k]?'<div class="blk"><h4>'+l+'</h4><div class="note">'+txt(e[k],s2)+'</div></div>':'').join('')
+      +'</div></details>';}
   h+='<details class="sec"><summary>⑤ 細かい審査（条文・監視・撤退条件）</summary><div class="secb">';
   if(v.judge_addition)h+='<div class="blk"><h4>裁判官が職権で追加した論拠</h4><div class="note">'+txt(v.judge_addition,s2)+'</div></div>';
   if(A(v.articles).length){h+='<div class="blk"><h4>条文ごとの審査</h4>'
