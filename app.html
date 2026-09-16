@@ -1265,7 +1265,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-16.1';
+const APP_VERSION = '2026-09-16.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -3021,7 +3021,7 @@ const H_METRICS = [
 const H_GROUPS = [
   ['recover', '回復',     0.40, '寝ている間にどれだけ体が戻ったか。HRVは高いほど・安静時心拍は低いほど良好です。'],
   ['active',  '活動',     0.35, 'どれだけ動いたか。基礎代謝はじっとしていても燃える分なので、増減より安定しているかを見ます。'],
-  ['gait',    '歩き方',   0.25, '疲れると速度が落ち歩幅が縮み、両脚が地面についている時間が伸びます。左右差は3%以下が正常です。'],
+  ['gait',    '歩き方',   0.25, '疲れると速度が落ち歩幅が縮み、両脚が地面についている時間が伸びます。左右差は3%以下が正常です。🔴 この4つはiPhoneを身につけて歩いた日だけ測れます（Watchだけの日は空欄）。'],
 ];
 
 function hStats(rows, todayS) {
