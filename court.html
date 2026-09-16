@@ -553,6 +553,13 @@ function detailHTML(v){
     if(A(v[k]).length)h+='<div class="blk"><h4>'+l+'</h4><ul>'+A(v[k]).map(x=>'<li>'+txt(x,s2)+'</li>').join('')+'</ul></div>'});
   h+='</div></details>';
 
+  // ── ⑤-b 関連レポート（2026-09-16 メグ指示: 答え合わせで判決からレポートへ飛べるように）──
+  if(A(v.reports).length){
+    h+='<details class="sec" open><summary>📊 関連レポート</summary><div class="secb">'
+      +A(v.reports).map(r=>'<div class="src"><div class="sh">'+esc(r.date||'')+'　'+esc(r.title||'')+'</div>'
+      +(r.url?'<div style="margin-top:4px"><a href="'+esc(r.url)+'" target="_blank" rel="noopener">'+esc(r.url)+'</a></div>':'')
+      +(r.path?'<div class="sw2">保管: '+esc(r.path)+'</div>':'')+'</div>').join('')
+      +'</div></details>';}
   // ── ⑥ 出典 ──
   if(s){
     h+='<details class="sec"><summary>⑥ 出典（動画で復習する）</summary><div class="secb">'
