@@ -1265,7 +1265,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-16.2';
+const APP_VERSION = '2026-09-17.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1416,7 +1416,8 @@ const OPS = [
     repo:'meyjiro/personal', pathFn:()=>{ const d=new Date(); return `diary/${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}.md`; },
     altPathFn:()=>{ const d=new Date(); d.setDate(0); return `diary/${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}.md`; },
     limit:1.7,
-    read:t=>{ const m=[...t.matchAll(/^## (\d{4}-\d{2}-\d{2})/gm)]; return m.length?m[m.length-1][1]:null; } },
+    // 🔴 日記は新しい日が上に並ぶ。「最後の見出し」ではなく「いちばん新しい日付」を取る（2026-09-17 毎朝赤く出ていた原因）
+    read:t=>{ const m=[...t.matchAll(/^## (\d{4}-\d{2}-\d{2})/gm)].map(x=>x[1]); return m.length?m.sort().pop():null; } },
   { name:'ガチレズ巡回', why:'Macが8:20/14:20/20:20に3サイトを見る',
     repo:'meyjiro/claude-context', path:'inbox/glz_snapshot.json', limit:0.6,
     read:t=>JSON.parse(t).generated_at,
