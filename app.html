@@ -1265,7 +1265,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-17.2';
+const APP_VERSION = '2026-09-17.3';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1479,15 +1479,29 @@ async function loadOps(){
   window.__opsBad = bad.length;
   const nav = document.querySelector('.nav-btn[data-tab="today"]');
   if(nav) nav.classList.toggle('alert', bad.length>0);
+  // 📈 直近14日の見張りの記録（Macが毎朝09:40に inbox/ops_history.jsonl へ積む・2026-09-17）。
+  //    「直したものが効いているか」「良くなっているか」をここで見る。■=全部🟢 ▲=赤あり
+  let hist = '';
+  try {
+    const t = await repoFile(REPO, 'inbox/ops_history.jsonl');
+    if (t) {
+      const byDay = {};
+      t.trim().split('\n').forEach(l => { try { const j = JSON.parse(l); const d = new Date(j.date).toLocaleDateString('sv-SE'); byDay[d] = (byDay[d] || []).concat(j.bad || []); } catch (e) {} });
+      const days = Object.keys(byDay).sort().slice(-14);
+      const redDays = days.filter(d => byDay[d].length).length;
+      hist = `<div class="opsmini" style="margin-top:6px">直近${days.length}日の見張り: ${days.map(d => `<span title="${d}${byDay[d].length ? ' 🔴 ' + [...new Set(byDay[d])].join('・') : ' 🟢'}" style="color:${byDay[d].length ? 'var(--red)' : 'var(--ok)'}">${byDay[d].length ? '▲' : '■'}</span>`).join('')}
+        　赤い日 ${redDays}／${days.length}${redDays ? '（' + [...new Set(days.flatMap(d => byDay[d]))].join('・') + '）' : ''}</div>`;
+    }
+  } catch (e) {}
   if(!bad.length){
     el.innerHTML = `<details class="opsbar ok"><summary>🟢 自動処理 ${rows.length}件とも正常 ▾</summary>
-      <div class="opsmini" style="margin-top:4px">${rows.map(r=>r.name+' '+(r.note||ago(r.days))).join(' ／ ')}</div></details>`;
+      <div class="opsmini" style="margin-top:4px">${rows.map(r=>r.name+' '+(r.note||ago(r.days))).join(' ／ ')}</div>${hist}</details>`;
     return;
   }
   el.innerHTML = `<div class="opsbar bad"><b>🔴 止まっているものがあります（${bad.length}件）</b>
     ${bad.map(r=>`<div class="opsrow"><b>${r.name}</b>　${r.err ? r.err : '最終 '+fmt(r.at)+'（'+ago(r.days)+'）'}
       <div class="opsmini">${r.why}</div></div>`).join('')}
-    <div class="opsmini" style="margin-top:8px">ほか${rows.length-bad.length}件は正常。Claude Codeで「自動処理の見張りが赤い」と言えば調べます</div>
+    <div class="opsmini" style="margin-top:8px">ほか${rows.length-bad.length}件は正常。Claude Codeで「自動処理の見張りが赤い」と言えば調べます</div>${hist}
   </div>`;
 }
 
