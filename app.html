@@ -1265,7 +1265,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-17.1';
+const APP_VERSION = '2026-09-17.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1940,7 +1940,13 @@ async function loadNewStuff(){
   // 📰 地域の新聞（2026-09-11 メグ指示で作り直し）
   //    面ごとに分ける: 一面(タイ全国) / 暮らし・物価 / 北部・チェンマイ / 東南アジア
   //    タイ人が普段読む媒体（ไทยรัฐ 等）も入れるので、出どころを必ず出す
-  const pp = m.paper;
+  let pp = m.paper;
+  // 🔴 2026-09-17: routineが paper を {top:[...],life:[...]} の形で書いてきて「特になし」になった。
+  //    正しい形は {date, sections:[{key,label,emoji,items}]}。どちらでも読めるようにする（仕様は 朝のメニュー.md に明記）
+  const PAPER_KEYS = [['top','一面','📰'],['life','暮らし・物価','🏠'],['north','北部・チェンマイ','⛰'],['event','催し・お店','🎪'],['asean','東南アジア','🌏']];
+  if(pp && !pp.sections && PAPER_KEYS.some(([k])=>Array.isArray(pp[k]))){
+    pp = { date: pp.date||m.generated_at||'', sections: PAPER_KEYS.filter(([k])=>Array.isArray(pp[k])&&pp[k].length).map(([k,label,emoji])=>({key:k,label,emoji,items:pp[k]})) };
+  }
   if(pp && (pp.sections||[]).length){
     const secs = pp.sections.filter(x => (x.items||[]).length).map(sec => `
       <div class="pp-sec">
