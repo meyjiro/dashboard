@@ -73,6 +73,7 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 .tab-content{flex:1;overflow-y:auto;overflow-x:hidden;padding:12px 14px calc(70px + var(--safe-bottom) + 16px);-webkit-overflow-scrolling:touch}
+[hidden]{display:none!important}
 .tab-panel{display:none}
 .tab-panel.active{display:block}
 
@@ -1290,7 +1291,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-18.3';
+const APP_VERSION = '2026-09-18.4';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
