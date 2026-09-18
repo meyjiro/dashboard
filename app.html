@@ -276,6 +276,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .vprev[open]>summary{margin-bottom:8px}
 #tab-today .vprev[open]>summary::after{content:" ▴"}
 #tab-today .vprev /* 🧬 カンブリア（学習ページ）2026-09-18 v1。計画: ~/学習/カンブリア_計画.html、仕様: claude-context/knowledge/学習/学習OS.md */
+#la-reader{position:fixed;inset:0;z-index:9999;background:var(--bg,#f7f5f2);display:flex;flex-direction:column}#la-reader .lrh{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border2,#e6e0d6);padding-top:calc(10px + env(safe-area-inset-top))}#la-reader .lrt{font-size:13px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#la-reader .lrf{flex:1;width:100%;border:0;background:#fff}
 .lentry{display:flex;align-items:center;gap:12px;background:var(--card,#fff);border:1px solid var(--border2,#e6e0d6);border-left:4px solid var(--accent,#0bb7ae);border-radius:10px;padding:12px 14px;margin:0 0 12px;cursor:pointer}.lentry .le1{font-size:15px;font-weight:700}.lentry .le2{font-size:12px;color:var(--text2);margin-top:2px}.lentry .lego{margin-left:auto;font-size:13px;color:var(--accent,#0bb7ae);white-space:nowrap}
 .lp-head{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;margin:0 0 10px}.lp-head .st{font-size:12px;color:var(--text2)}.lp-head .st b{display:block;font-size:20px;font-weight:600;color:var(--text)}
 .lp-nav{display:flex;gap:6px;margin:0 0 14px}.lp-nav button{font:inherit;font-size:13px;padding:5px 14px;border-radius:999px;border:1px solid var(--border2,#e6e0d6);background:var(--card,#fff);color:var(--text2)}.lp-nav button.on{background:var(--accent,#0bb7ae);color:#fff;border-color:var(--accent,#0bb7ae)}
@@ -1291,7 +1292,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-18.4';
+const APP_VERSION = '2026-09-19.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4523,10 +4524,18 @@ function renderLearnToday(){
     const cs = e.target.closest('.la-csave'); if(cs){ const box=cs.closest('.lc'); const c={}; box.querySelectorAll('.la-c').forEach(i=>c[i.dataset.k]=i.value.trim()); if(!c.shelf&&!c.background){ toast('背景か棚を1つは書いてね'); return; }
       cs.disabled=true; try{ await laPut(laDate, j=>{ j.connect=Object.assign({}, c, {at:new Date().toISOString()}); }, `今日の1本を棚に置く ${laDate}`); toast('棚に置いた。夜にカードへ入るのだ'); renderLearnToday(); }catch(err){ toast('保存できなかった: '+err.message); } cs.disabled=false; return; }
     const oh = e.target.closest('[data-openhtml]'); if(oh){ oh.disabled=true;
-      try{ const h = await repoFile('meyjiro/claude-context', oh.dataset.openhtml); if(!h){ alert('まだファイルが無い（'+oh.dataset.openhtml+'）'); return; }
-           const w = window.open('', '_blank'); if(!w){ alert('ポップアップが止められた'); return; } w.document.open(); w.document.write(h); w.document.close(); }
-      catch(err){ alert('開けなかった: '+err.message); } finally{ oh.disabled=false; } }
+      // 🔴 iPhoneは読み込み後の window.open を止める（2026-09-19 メグ報告）→ ページ内に重ねて表示する
+      try{ const h = await repoFile('meyjiro/claude-context', oh.dataset.openhtml); if(!h){ toast('まだファイルが無い（'+oh.dataset.openhtml+'）'); return; }
+           laOpenReader(h, oh.textContent.trim()); }
+      catch(err){ toast('開けなかった: '+err.message); } finally{ oh.disabled=false; } }
   });
+}
+// 📖 階段・深掘りのHTMLをページ内に重ねて表示（iframe srcdoc。窓を開かない）
+function laOpenReader(html, title){
+  let ov = document.getElementById('la-reader');
+  if(!ov){ ov = document.createElement('div'); ov.id='la-reader'; ov.innerHTML = '<div class="lrh"><span class="lrt"></span><button class="btn lrx">閉じる ✕</button></div><iframe class="lrf" sandbox="allow-same-origin"></iframe>'; document.body.appendChild(ov);
+    ov.querySelector('.lrx').addEventListener('click', ()=>{ ov.hidden=true; ov.querySelector('.lrf').srcdoc=''; document.body.style.overflow=''; }); }
+  ov.querySelector('.lrt').textContent = title||''; ov.querySelector('.lrf').srcdoc = html; ov.hidden=false; document.body.style.overflow='hidden';
 }
 // 🎤 深い問いの録音: inbox/audio/<ts>_quiz_<id>.<ext> に置く → Macの書き起こしが quiz_answers に文字を足す
 async function laToggleRec(btn, id){
