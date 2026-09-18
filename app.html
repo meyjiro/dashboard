@@ -274,7 +274,11 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .vprev>summary::after{content:" ▾"}
 #tab-today .vprev[open]>summary{margin-bottom:8px}
 #tab-today .vprev[open]>summary::after{content:" ▴"}
-#tab-today .vprev .nsbox{opacity:.86}
+#tab-today .vprev .quiz{background:var(--card,#fff);border:1px solid var(--border2,#e6e0d6);border-left:4px solid var(--accent,#0bb7ae);border-radius:10px;padding:14px 16px;margin:0 0 14px}
+.quiz .qh{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--text2);letter-spacing:.04em}.quiz .qh .qs{margin-left:auto;font-weight:500;letter-spacing:0}
+.quiz .qi{margin:10px 0 0;padding:10px 12px;background:var(--bg2,#f6f3ee);border-radius:8px}.quiz .qi b{display:block;font-size:12px;color:var(--text2);margin-bottom:2px}.quiz .qi .qt{font-size:14.5px;line-height:1.6}.quiz .qi .qn{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.6}
+.quiz .qb{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.quiz .strip{display:flex;gap:4px;align-items:center;margin-top:10px;font-size:11px;color:var(--text2)}.quiz .strip i{display:inline-block;width:18px;height:18px;border-radius:4px;background:var(--border2,#e6e0d6);font-style:normal;font-size:10px;line-height:18px;text-align:center}.quiz .strip i.s3{background:var(--accent,#0bb7ae);color:#fff}.quiz .strip i.s2{background:#cfe9e5}.quiz .strip i.s1{background:#f3e2b3}.quiz .strip i.s0{background:#e9b3a8}
+.nsbox{opacity:.86}
 #tab-today .wtitle{display:block;font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;
   font-size:15px;line-height:1.7;color:var(--text);text-decoration:none;margin:0 0 8px;
   text-underline-offset:3px}
@@ -1265,7 +1269,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-17.3';
+const APP_VERSION = '2026-09-18.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1408,6 +1412,11 @@ const OPS = [
   { name:'Wise残高',     why:'毎朝9:00にMacが記録',
     repo:'meyjiro/personal', path:'money/wise_balances.csv', limit:1.5,
     read:t=>{ const r=t.trim().split('\n'); return r[r.length-1].split(',')[0]; } },
+  // 🎓 2026-09-18 学習OS: 朝のメニューが quiz を毎朝書く（9/22開始）。開始前は正常扱い
+  { name:'今日の2問',   why:'朝のメニュー(9:00)が knowledge/学習/問い.jsonl から2問選んで morning.json の quiz に書く。答えは日記、採点は夜の巡回',
+    repo:'meyjiro/claude-context', path:'inbox/morning.json', limit:1.2,
+    read:t=>{ const j=JSON.parse(t); if(j.quiz&&j.quiz.date) return j.quiz.date; return Date.now()<new Date('2026-09-22T00:00:00+09:00').getTime() ? new Date().toISOString() : null; },
+    verify:t=>{ const j=JSON.parse(t); if(!j.quiz) return Date.now()<new Date('2026-09-22T00:00:00+09:00').getTime() ? null : 'quiz が無い'; return (Array.isArray(j.quiz.items)&&j.quiz.items.length&&j.quiz.items.every(x=>x.text)) ? null : 'quiz の中身が空'; } },
   { name:'朝の巡回',     why:'クラウドが毎朝ブリーフィングを作り、本流(main)にpushする',
     repo:'meyjiro/claude-context', path:'inbox/briefing.json', limit:1.2,
     read:t=>JSON.parse(t).generated_at,
@@ -1878,6 +1887,34 @@ async function loadNewStuff(){
   const age = (Date.now() - new Date(m.generated_at).getTime())/3600000;
   const parts = [];
 
+  // 🎓 今日の2問（2026-09-18 学習OS）。仕様: claude-context/knowledge/学習/学習OS.md
+  //    朝のメニューroutineが quiz を書く。答えは日記タブ。採点は夜の巡回が成績.jsonl に積む。
+  const qz = m.quiz;
+  if(qz && Array.isArray(qz.items) && qz.items.length){
+    let strip='', streak='';
+    try{
+      const g = await repoFile('meyjiro/claude-context','knowledge/学習/成績.jsonl');
+      if(g){
+        const rows = g.trim().split('\n').filter(Boolean).map(l=>{try{return JSON.parse(l)}catch(_){return null}}).filter(Boolean);
+        const byDay = {}; rows.forEach(r=>{ if(r.score!=null){ (byDay[r.date]=byDay[r.date]||[]).push(r.score); } });
+        const days = Object.keys(byDay).sort();
+        let n=0; const d=new Date(); if(!byDay[d.toISOString().slice(0,10)]) d.setDate(d.getDate()-1);
+        while(byDay[d.toISOString().slice(0,10)]){ n++; d.setDate(d.getDate()-1); }
+        streak = n ? `連続 ${n}日` : '';
+        strip = days.slice(-7).map(k=>{ const a=byDay[k]; const avg=a.reduce((x,y)=>x+y,0)/a.length; const c=avg>=2.5?3:avg>=1.5?2:avg>=0.5?1:0; return `<i class="s${c}" title="${k}">${Math.round(avg)}</i>`; }).join('');
+      }
+    }catch(_){}
+    const modeLbl = qz.mode==='easy' ? '今日は軽い1問' : qz.mode==='sunday' ? '日曜の2問（白紙地図＋Yパパ予測）' : '今日の2問';
+    parts.push(`<div class="quiz">
+      <div class="qh">🎓 ${modeLbl}<span class="qs">${esc(qz.date||'')}${streak?' ・ '+streak:''}</span></div>
+      ${qz.items.map((it,i)=>`<div class="qi"><b>問${i+1} ${esc(it.kind||'')}${it.card?' ・ '+esc(it.card):''}</b><div class="qt">${esc(it.text||'')}</div>${it.note?`<div class="qn">${esc(it.note)}</div>`:''}</div>`).join('')}
+      <div class="qb"><button class="btn btn-primary" id="quiz-answer">✍️ 日記で答える</button>
+        ${qz.stairs&&qz.stairs.path?`<button class="btn" data-openhtml="${esc(qz.stairs.path)}">📖 ${esc(qz.stairs.theme||'')}の階段 第${esc(String(qz.stairs.step||''))}段を読む</button>`:''}
+        ${qz.report&&qz.report.path?`<button class="btn" data-openhtml="${esc(qz.report.path)}">🔍 深掘り: ${esc(qz.report.title||'')}</button>`:''}</div>
+      ${strip?`<div class="strip">直近7日 ${strip}</div>`:''}
+    </div>`);
+  }
+
   // 🆕 今日の投資候補
   // 🔴 2026-09-12: 読み先を morning.json から watchlist.json に変えた。
   //    それまで「朝のメニュー」と「朝の巡回」が別々に1社ずつ選んでいて、
@@ -1991,6 +2028,21 @@ async function loadNewStuff(){
   if(!parts.length){ el.innerHTML=''; return; }
   el.innerHTML = `<div class="blk-h">🆕 新しく入ってきたもの
     ${age>30?`<span class="sec-note">🔴 ${Math.floor(age/24)}日前の内容です</span>`:''}</div>${parts.join('')}`;
+  // 🎓 2問のボタン: 日記タブへ／階段・深掘りのHTMLを別窓で開く（claude-context は非公開なのでトークンで読んで書き出す）
+  const qa = document.getElementById('quiz-answer');
+  if(qa) qa.addEventListener('click', ()=>{
+    const nb = document.querySelector('.nav-btn[data-tab="diary"]'); if(nb) nb.click();
+    const ta = document.getElementById('dy-text'); if(ta){ if(!ta.value.trim()) ta.value = '問1: \n問2: '; setTimeout(()=>ta.focus(), 50); }
+  });
+  el.querySelectorAll('[data-openhtml]').forEach(b=>b.addEventListener('click', async ()=>{
+    b.disabled = true;
+    try{ const h = await repoFile('meyjiro/claude-context', b.dataset.openhtml);
+         if(!h){ alert('まだファイルが無い（' + b.dataset.openhtml + '）'); return; }
+         const w = window.open('', '_blank'); if(!w){ alert('ポップアップが止められた'); return; }
+         w.document.open(); w.document.write(h); w.document.close(); }
+    catch(e){ alert('開けなかった: ' + e.message); }
+    finally{ b.disabled = false; }
+  }));
   bindScoutButtons(el);   // 🔴 トップからも裁判に送れるようにする（2026-09-12）
 }
 
