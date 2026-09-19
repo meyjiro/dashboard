@@ -275,7 +275,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .vprev>summary::after{content:" ▾"}
 #tab-today .vprev[open]>summary{margin-bottom:8px}
 #tab-today .vprev[open]>summary::after{content:" ▴"}
-#tab-today .vprev /* 🧬 カンブリア（学習ページ）2026-09-18 v1。計画: ~/学習/カンブリア_計画.html、仕様: claude-context/knowledge/学習/学習OS.md */
+/* 🧬 カンブリア（学習ページ）2026-09-18 v1。計画: ~/学習/カンブリア_計画.html、仕様: claude-context/knowledge/学習/学習OS.md */
 #la-reader{position:fixed;inset:0;z-index:9999;background:var(--bg,#f7f5f2);display:flex;flex-direction:column}#la-reader .lrh{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border2,#e6e0d6);padding-top:calc(10px + env(safe-area-inset-top))}#la-reader .lrt{font-size:13px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#la-reader .lrf{flex:1;width:100%;border:0;background:#fff}
 .lentry{display:flex;align-items:center;gap:12px;background:var(--card,#fff);border:1px solid var(--border2,#e6e0d6);border-left:4px solid var(--accent,#0bb7ae);border-radius:10px;padding:12px 14px;margin:0 0 12px;cursor:pointer}.lentry .le1{font-size:15px;font-weight:700}.lentry .le2{font-size:12px;color:var(--text2);margin-top:2px}.lentry .lego{margin-left:auto;font-size:13px;color:var(--accent,#0bb7ae);white-space:nowrap}
 .lp-head{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;margin:0 0 10px}.lp-head .st{font-size:12px;color:var(--text2)}.lp-head .st b{display:block;font-size:20px;font-weight:600;color:var(--text)}
@@ -294,7 +294,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 .quiz .qi{margin:10px 0 0;padding:10px 12px;background:var(--bg2,#f6f3ee);border-radius:8px}.quiz .qi b{display:block;font-size:12px;color:var(--text2);margin-bottom:2px}.quiz .qi .qt{font-size:14.5px;line-height:1.6}.quiz .qi .qn{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.6}
 .quiz .qk{margin:8px 0 0;padding:8px 10px;border:1px solid var(--border2,#e6e0d6);border-radius:8px;font-size:13.5px;line-height:1.55}.quiz .qk .kc{font-size:11px;color:var(--text2)}.quiz .qk .ka{margin-top:6px;padding:6px 8px;background:var(--bg2,#f6f3ee);border-radius:6px;font-size:13px}.quiz .qk .ks{display:flex;gap:6px;margin-top:6px;align-items:center;font-size:12px;color:var(--text2)}.quiz .qk .ks button{font:inherit;font-size:12px;padding:2px 10px;border-radius:6px;border:1px solid var(--border2,#e6e0d6);background:var(--card,#fff);color:var(--text)}.quiz .qk .ks button.on{background:var(--accent,#0bb7ae);color:#fff;border-color:var(--accent,#0bb7ae)}.quiz .qk.done{opacity:.6}.quiz .qkh{margin-top:12px;font-size:12px;font-weight:700;color:var(--text2);display:flex;gap:8px}.quiz .qkh .qkn{margin-left:auto;font-weight:500}
 .quiz .qb{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.quiz .strip{display:flex;gap:4px;align-items:center;margin-top:10px;font-size:11px;color:var(--text2)}.quiz .strip i{display:inline-block;width:18px;height:18px;border-radius:4px;background:var(--border2,#e6e0d6);font-style:normal;font-size:10px;line-height:18px;text-align:center}.quiz .strip i.s3{background:var(--accent,#0bb7ae);color:#fff}.quiz .strip i.s2{background:#cfe9e5}.quiz .strip i.s1{background:#f3e2b3}.quiz .strip i.s0{background:#e9b3a8}
-.nsbox{opacity:.86}
+#tab-today .vprev .nsbox{opacity:.86}
 #tab-today .wtitle{display:block;font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;
   font-size:15px;line-height:1.7;color:var(--text);text-decoration:none;margin:0 0 8px;
   text-underline-offset:3px}
@@ -1292,7 +1292,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-19.1';
+const APP_VERSION = '2026-09-19.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
