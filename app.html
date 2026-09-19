@@ -1311,7 +1311,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-19.8';
+const APP_VERSION = '2026-09-19.9';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1457,7 +1457,7 @@ const OPS = [
   // 🎓 2026-09-18 学習OS: 朝のメニューが quiz を毎朝書く（9/21開始）。開始前は正常扱い
   { name:'今日の2問',   why:'朝のメニュー(9:00)が knowledge/学習/問い.jsonl から2問選んで morning.json の quiz に書く。答えは日記、採点は夜の巡回',
     repo:'meyjiro/claude-context', path:'inbox/morning.json', limit:1.2,
-    read:t=>{ const j=JSON.parse(t); if(j.quiz&&j.quiz.date) return j.quiz.date; return Date.now()<new Date('2026-09-21T00:00:00+09:00').getTime() ? new Date().toISOString() : null; },
+    read:t=>{ const j=JSON.parse(t); const pre = Date.now()<new Date('2026-09-21T00:00:00+09:00').getTime(); if(pre) return new Date().toISOString(); return (j.quiz&&j.quiz.date) ? j.quiz.date : null; },   // 開講前（〜9/20）は常に正常（9/18に手で置いた quiz が古くなって赤くなった・9/19）
     verify:t=>{ const j=JSON.parse(t); if(!j.quiz) return Date.now()<new Date('2026-09-21T00:00:00+09:00').getTime() ? null : 'quiz が無い'; return (Array.isArray(j.quiz.items)&&j.quiz.items.length&&j.quiz.items.every(x=>x.text)) ? null : 'quiz の中身が空'; } },
   { name:'朝の巡回',     why:'クラウドが毎朝ブリーフィングを作り、本流(main)にpushする',
     repo:'meyjiro/claude-context', path:'inbox/briefing.json', limit:1.2,
@@ -4627,6 +4627,7 @@ textarea,input{width:100%;font:16px/1.75 "Zen Kurenaido","Shippori Mincho",serif
 .hint{font-family:"Zen Kaku Gothic New",sans-serif;font-size:12px;color:var(--ink3);margin-top:6px}
 .done-box{margin-top:26px;text-align:center;font-family:"Zen Kaku Gothic New",sans-serif;font-size:13px;color:var(--ink2)}
 .stamp{display:inline-block;margin-top:8px;font-family:"Shippori Mincho",serif;font-weight:800;color:var(--red);border:3px double var(--red);border-radius:50%;width:86px;height:86px;line-height:80px;font-size:15px;transform:rotate(-8deg);opacity:.9}
+.stmp{position:absolute;right:14px;bottom:12px;font-family:"Shippori Mincho",serif;font-weight:800;color:var(--red);border:2.5px double var(--red);border-radius:50%;width:44px;height:44px;line-height:40px;text-align:center;font-size:14px;transform:rotate(-12deg);opacity:.85;pointer-events:none}.card.done{opacity:.72}
 .open{width:100%;min-height:46px;font:700 14px "Zen Kaku Gothic New",sans-serif;border:1.5px solid var(--ink);background:transparent;border-radius:10px;color:var(--ink);margin-top:6px}`;
 function laTestHtml(qz, day, scores){
   const ans=(day&&day.answers)||{}, selfS=(day&&day.self)||{}, conf=(day&&day.conf)||{}, con=(day&&day.connect)||{};
@@ -4634,12 +4635,12 @@ function laTestHtml(qz, day, scores){
   const qDone=quick.filter(k=>selfS[k.id]!=null).length, dDone=items.filter(it=>ans[it.id]&&ans[it.id].text).length;
   const total=quick.length+items.length, done=qDone+dDone;   // 棚に置くは任意（2026-09-19 メグ）
   const modeLbl = qz.mode==='easy'?'軽い日':qz.mode==='sunday'?'日曜':'朝の出力';
-  const quickHtml = quick.map((k,i)=>{ const sc=selfS[k.id]; const cf=conf[k.id]; const isDone=sc!=null; return `<div class="card${isDone?' done':''}" data-id="${esc(k.id)}" data-kind="quick"><div class="no">${String(i+1).padStart(2,'0')}</div><div class="tag">浅い ・ ${esc(k.card||'')}${k.src?' ・ '+esc(k.src):''}</div><div class="q">${esc(k.text||'')}</div>${k.note?`<div class="note">${esc(k.note)}</div>`:''}
+  const quickHtml = quick.map((k,i)=>{ const sc=selfS[k.id]; const cf=conf[k.id]; const isDone=sc!=null; return `<div class="card${isDone?' done':''}" data-id="${esc(k.id)}" data-kind="quick">${isDone?'<div class="stmp">済</div>':''}<div class="no">${String(i+1).padStart(2,'0')}</div><div class="tag">浅い ・ ${esc(k.card||'')}${k.src?' ・ '+esc(k.src):''}</div><div class="q">${esc(k.text||'')}</div>${k.note?`<div class="note">${esc(k.note)}</div>`:''}
     <div class="conf">答える前に、どのくらい自信がある？</div><div class="opts">${['分からない','たぶん','確信'].map((t,v)=>`<button data-conf="${v}" class="${cf===v?'on':''}">${t}</button>`).join('')}</div>
     <button class="reveal" ${isDone?'hidden':''}>答えを見る</button>
     <div class="ans" ${isDone?'':'hidden'}><div class="ah">答え</div><div class="at">${esc(k.answer_key||k.answer||'')}</div>${k.shelf?`<div class="ax">→ ${esc(k.shelf)}</div>`:''}
     <div class="score">${[0,1,2,3].map(v=>`<button data-s="${v}" class="${sc===v?'on':''}"><b>${v}</b>${['分からなかった','かすった','ほぼ','言えた'][v]}</button>`).join('')}</div></div></div>`; }).join('');
-  const deepHtml = items.map((it,i)=>{ const a=ans[it.id]||{}; const s=(scores||[]).find(r=>r.date===qz.date&&r.id===it.id); return `<div class="card${a.text?' done':''}" data-id="${esc(it.id)}" data-kind="deep"><div class="no">問${i+1}</div><div class="tag">深い ・ ${esc(it.kind||'')}${it.card?' ・ '+esc(it.card):''}</div><div class="q">${esc(it.text||'')}</div>${it.note?`<div class="note">${esc(it.note)}</div>`:''}
+  const deepHtml = items.map((it,i)=>{ const a=ans[it.id]||{}; const s=(scores||[]).find(r=>r.date===qz.date&&r.id===it.id); return `<div class="card${a.text?' done':''}" data-id="${esc(it.id)}" data-kind="deep">${a.text?'<div class="stmp">済</div>':''}<div class="no">問${i+1}</div><div class="tag">深い ・ ${esc(it.kind||'')}${it.card?' ・ '+esc(it.card):''}</div><div class="q">${esc(it.text||'')}</div>${it.note?`<div class="note">${esc(it.note)}</div>`:''}
     <textarea class="dtext" placeholder="30秒でちょっちに説明するつもりで。話し言葉でいい。🎤でもいい。">${esc(a.text||'')}</textarea>
     <div class="row"><button class="rec">🎤 録音</button><button class="p save">保存 → 夜に採点</button></div><div class="hint">${a.at?'保存済み '+esc(String(a.at).slice(11,16))+(a.audio?' ・ 🎤あり':''):''}</div>
     ${s?`<div class="sc">モッフルの採点 <b>${s.score}／3</b>${s.miss?`<div class="miss">抜け: ${esc(s.miss)}</div>`:''}</div>`:''}</div>`; }).join('');
@@ -4655,17 +4656,18 @@ ${extra?`<div class="sec">読む</div>`:''}${extra}
 <div class="done-box">${done>=total?'<span class="stamp">本日<br>済</span><br>夜に採点が戻る。今夜の授業は「今夜の授業」タブに':'全部終わると「本日済」の印が出る'}</div>
 </div><script>
 const post=m=>parent.postMessage(Object.assign({src:'la-test'},m),'*');
+const stamp=k=>{ if(!k.querySelector('.stmp')){ const d=document.createElement('div'); d.className='stmp'; d.textContent='済'; k.appendChild(d); } };
 document.addEventListener('click',e=>{
   const c=e.target.closest('[data-conf]'); if(c){ const k=c.closest('.card'); k.querySelectorAll('[data-conf]').forEach(x=>x.classList.toggle('on',x===c)); post({type:'conf',id:k.dataset.id,v:+c.dataset.conf}); return; }
   const r=e.target.closest('.reveal'); if(r){ const k=r.closest('.card'); k.querySelector('.ans').hidden=false; r.hidden=true; return; }
-  const s=e.target.closest('[data-s]'); if(s){ const k=s.closest('.card'); k.querySelectorAll('[data-s]').forEach(x=>x.classList.toggle('on',x===s)); k.classList.add('done'); post({type:'self',id:k.dataset.id,v:+s.dataset.s}); return; }
+  const s=e.target.closest('[data-s]'); if(s){ const k=s.closest('.card'); k.querySelectorAll('[data-s]').forEach(x=>x.classList.toggle('on',x===s)); k.classList.add('done'); stamp(k); post({type:'self',id:k.dataset.id,v:+s.dataset.s}); return; }
   const sv=e.target.closest('.save'); if(sv){ const k=sv.closest('.card'); const t=k.querySelector('.dtext').value.trim(); if(!t){ alert('ひとことでも書いてね'); return; } sv.disabled=true; post({type:'deep',id:k.dataset.id,text:t}); return; }
   const rc=e.target.closest('.rec'); if(rc){ const k=rc.closest('.card'); rc.classList.toggle('on'); rc.textContent=rc.classList.contains('on')?'⏹ 停止':'🎤 録音'; post({type:'rec',id:k.dataset.id}); return; }
   const cs=e.target.closest('.csave'); if(cs){ const k=cs.closest('.card'); const o={}; k.querySelectorAll('.c').forEach(i=>o[i.dataset.k]=i.value.trim()); if(!o.shelf&&!o.background){ alert('背景か棚を1つは書いてね'); return; } cs.disabled=true; post({type:'connect',data:o}); return; }
   const op=e.target.closest('[data-open]'); if(op){ post({type:'open',path:op.dataset.open}); }
 });
 window.addEventListener('message',e=>{ const d=e.data||{}; if(d.type==='progress'){ document.getElementById('cnt').textContent=d.done+' / '+d.total; document.getElementById('bar').style.width=Math.round(d.done/d.total*100)+'%'; if(d.done>=d.total){ document.querySelector('.done-box').innerHTML='<span class="stamp">本日<br>済</span><br>夜に採点が戻る。今夜の授業は「今夜の授業」タブに'; } }
-  if(d.type==='saved'&&d.id){ const k=document.querySelector('.card[data-id="'+d.id+'"]'); if(k){ const b=k.querySelector('.save'); if(b) b.disabled=false; const h=k.querySelector('.hint'); if(h) h.textContent='保存した '+new Date().toTimeString().slice(0,5)+(d.audio?' ・ 🎤あり':''); k.classList.add('done'); } }
+  if(d.type==='saved'&&d.id){ const k=document.querySelector('.card[data-id="'+d.id+'"]'); if(k){ const b=k.querySelector('.save'); if(b) b.disabled=false; const h=k.querySelector('.hint'); if(h) h.textContent='保存した '+new Date().toTimeString().slice(0,5)+(d.audio?' ・ 🎤あり':''); k.classList.add('done'); stamp(k); } }
   if(d.type==='saved'&&d.kind==='connect'){ const k=document.querySelector('.card[data-kind="connect"]'); const b=k.querySelector('.csave'); if(b) b.disabled=false; k.querySelector('.hint').textContent='棚に置いた '+new Date().toTimeString().slice(0,5); k.classList.add('done'); }
   if(d.type==='rec-state'){ const k=document.querySelector('.card[data-id="'+d.id+'"]'); if(k){ const b=k.querySelector('.rec'); b.classList.toggle('on',!!d.on); b.textContent=d.on?'⏹ 停止':'🎤 録音'; } } });
 <\/script></body></html>`;
