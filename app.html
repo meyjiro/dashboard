@@ -1172,7 +1172,8 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
     <!-- コピペ帳 -->
     <div id="tab-learn" class="tab-panel">
       <div class="lp-head" id="lp-head"></div>
-      <div class="lp-nav"><button class="on" data-lp="today">朝</button><button data-lp="night">今夜の授業</button><button data-lp="log">記録</button><button data-lp="back">← 今日タブへ</button></div>
+      <div class="lp-nav"><button class="on" data-lp="today">朝</button><button data-lp="night">今夜の授業</button><button data-lp="log">記録</button><button data-lp="place" id="lp-place-btn" hidden>配置テスト</button><button data-lp="back">← 今日タブへ</button></div>
+      <div id="lp-place" hidden></div>
       <div id="lp-today"></div>
       <div id="lp-night" hidden></div>
       <div id="lp-log" hidden></div>
@@ -1293,7 +1294,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-19.3';
+const APP_VERSION = '2026-09-19.4';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4476,7 +4477,11 @@ async function loadLearn(){
   head.innerHTML = `<span class="st">物差し<b>${mono}本</b></span><span class="st">図鑑<b>${zukan}/300</b></span><span class="st">連続<b>${streak}日</b></span><span class="st"><span class="strip7">${laStrip(laScores)||'<i>·</i>'}</span></span>`;
   renderLearnToday();
   document.querySelectorAll('.lp-nav button').forEach(b=>{ b.onclick = ()=>{ const k=b.dataset.lp; if(k==='back'){ switchTab('today'); return; }
-    document.querySelectorAll('.lp-nav button').forEach(x=>x.classList.toggle('on', x===b)); $('lp-today').hidden = k!=='today'; $('lp-night').hidden = k!=='night'; $('lp-log').hidden = k!=='log'; if(k==='log') renderLearnLog(); if(k==='night') renderLearnNight(); }; });
+    document.querySelectorAll('.lp-nav button').forEach(x=>x.classList.toggle('on', x===b)); $('lp-today').hidden = k!=='today'; $('lp-night').hidden = k!=='night'; $('lp-log').hidden = k!=='log'; $('lp-place').hidden = k!=='place'; if(k==='log') renderLearnLog(); if(k==='night') renderLearnNight(); if(k==='place') renderPlacement(); }; });
+  // 配置テストは開講前日（時間割の placement 日）と、未受験の間だけ出す
+  try{ if(!laTT){ const t = await repoFile('meyjiro/claude-context','knowledge/学習/時間割.json'); laTT = t ? JSON.parse(t) : null; }
+       const pl = laTT && laTT.placement; const pd = pl ? await laGet(pl) : null; const done = pd && pd.placement && pd.placement.done;
+       $('lp-place-btn').hidden = !(pl && !done); }catch(_){}
 }
 function laScoreOf(id){ return (laScores||[]).find(r=>r.date===laDate && r.id===id) || null; }
 function renderLearnToday(){
@@ -4614,6 +4619,48 @@ async function renderLearnNight(){
   } else if(row.saturday){ el.innerHTML = `<div class="lb"><div class="lbh">🗣 土曜 ・ 口頭説明</div><p style="margin:8px 0 0;font-size:13.5px">${esc(row.saturday)}。どこで詰まったかだけ、朝のページの深い問いの欄に書いておくのだ。</p></div>`; }
   else if(row.sunday){ el.innerHTML = `<div class="lb"><div class="lbh">🗺 日曜 ・ 白紙テスト</div><p style="margin:8px 0 0;font-size:13.5px">「${esc(row.sunday.blank_map||'')}」を白紙から。朝のページの問いに出ている。${row.sunday.midterm?'<b>今日は中間テスト。</b>':''}</p></div>`; }
   el.querySelectorAll('[data-lesson]').forEach(b=>b.addEventListener('click', ()=>{ const [t,n]=b.dataset.lesson.split(':'); laOpenLesson(t, +n); }));
+}
+
+
+// ══ 配置テスト（開講前日）: 14枚を1枚1分で🎤 or 文字。Lv0〜3 を自分で付ける → inbox/quiz_answers/<配置日>.json の placement ══
+const LA_CARDS = ['中東','中国・台湾','米国','ロシア・ウクライナ・欧州','日本','東南アジア・タイ','インド','韓国','中南米・アフリカ','エネルギー','半導体・AI','バイオ・製薬','金融','量子・物理・宇宙'];
+async function renderPlacement(){
+  const el = $('lp-place'); const pl = laTT && laTT.placement; if(!pl){ el.innerHTML='<div class="lb">配置テストの日が時間割に無い</div>'; return; }
+  const day = await laGet(pl) || {}; const P = day.placement || { cards:{} };
+  const doneN = Object.values(P.cards||{}).filter(c=>c.level!=null).length;
+  el.innerHTML = `<div class="lb" style="border-left:4px solid var(--accent,#0bb7ae)"><div class="lbh">🗺 配置テスト ・ ${esc(pl)} <span class="lbt">${doneN}/14 済</span></div>
+    <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">1枚1分。「①歴史 ②今 ③産業 ④誰が得して誰が困る」の順で、知ってることを喋る（🎤）か書く。終わったら自分でLvを付ける: 0=ほぼ知らない／1=単語が出る／2=2枠は言える／3=4枠言える。Lv2以上の週は飛び級（深掘り週）になる。</p></div>
+    ${LA_CARDS.map((c,i)=>{ const r=(P.cards||{})[c]||{}; return `<div class="lq" data-card="${esc(c)}"><b>${i+1}／14</b><div class="qt">${esc(c)}</div>
+      <textarea class="pl-text" placeholder="知ってることを、順番に。①歴史 ②今 ③産業 ④誰が得して誰が困る">${esc(r.text||'')}</textarea>
+      <div class="lqb"><button class="btn rec pl-rec">🎤 録音</button><span class="hint">${r.audio?'🎤あり ':''}${r.at?'保存 '+esc(String(r.at).slice(11,16)):''}</span></div>
+      <div class="ks" style="margin-top:6px">Lv: ${[0,1,2,3].map(v=>`<button data-lv="${v}" class="${r.level===v?'on':''}">${v} ${['知らない','単語が出る','2枠','4枠'][v]}</button>`).join('')}</div></div>`; }).join('')}
+    <div class="lb"><button class="btn btn-primary" id="pl-done" ${doneN<14?'disabled':''}>配置テストを終える（14枚にLvを付けたら押せる）</button><span class="hint" style="font-size:12px;color:var(--text2);margin-left:8px">${P.done?'済 ・ 飛び級の判定は明朝の手紙で':''}</span></div>`;
+  if(el.dataset.bound) return; el.dataset.bound='1';
+  el.addEventListener('click', async e=>{
+    const lv = e.target.closest('[data-lv]'); if(lv){ const q=lv.closest('.lq'); const card=q.dataset.card; const text=q.querySelector('.pl-text').value.trim(); const v=+lv.dataset.lv;
+      q.querySelectorAll('[data-lv]').forEach(x=>x.classList.toggle('on', x===lv));
+      try{ await laPut(pl, j=>{ j.placement=j.placement||{cards:{}}; j.placement.cards[card]=Object.assign(j.placement.cards[card]||{}, {text, level:v, at:new Date().toISOString()}); }, `配置テスト ${card} Lv${v}`); renderPlacement(); }catch(err){ toast('保存できなかった: '+err.message); } return; }
+    const rc = e.target.closest('.pl-rec'); if(rc){ const card=rc.closest('.lq').dataset.card; laToggleRecTo(rc, `placement_${LA_CARDS.indexOf(card)+1}`, pl, async ()=>{ await laPut(pl, j=>{ j.placement=j.placement||{cards:{}}; j.placement.cards[card]=Object.assign(j.placement.cards[card]||{}, {audio:true, at:new Date().toISOString()}); }, `配置テスト 録音 ${card}`); renderPlacement(); }); return; }
+    const dn = e.target.closest('#pl-done'); if(dn){ dn.disabled=true; try{ await laPut(pl, j=>{ j.placement=j.placement||{cards:{}}; j.placement.done=true; j.placement.done_at=new Date().toISOString(); }, '配置テスト 完了'); toast('配置テスト完了。飛び級の判定は明朝の手紙に出るのだ'); $('lp-place-btn').hidden=true; renderPlacement(); }catch(err){ toast('保存できなかった: '+err.message); dn.disabled=false; } }
+  });
+}
+// 録音の汎用版: ファイル名 inbox/audio/<ts>_quiz_<tag>.<ext>（Macの書き起こしが quiz_answers/<date>.json の answers[tag].text に足す）
+async function laToggleRecTo(btn, tag, date, after){
+  if(laRecorder && laRecorder.state==='recording'){ laRecorder.stop(); return; }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    const mime = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : 'audio/webm';
+    laRecorder = new MediaRecorder(stream, { mimeType:mime }); laChunks=[];
+    laRecorder.ondataavailable = e=>{ if(e.data.size) laChunks.push(e.data); };
+    laRecorder.onstop = async ()=>{
+      stream.getTracks().forEach(t=>t.stop()); btn.classList.remove('on'); btn.textContent='🎤 録音';
+      const blob = new Blob(laChunks, { type: laRecorder.mimeType }); const ext = laRecorder.mimeType.includes('mp4') ? 'm4a' : 'webm';
+      try{ const buf = await blob.arrayBuffer(); let bin=''; const bytes=new Uint8Array(buf); for(let i=0;i<bytes.length;i+=0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i,i+0x8000));
+           await putFile(`inbox/audio/${ts()}_quiz_${tag}.${ext}`, btoa(bin), `録音 ${date} ${tag}`, true); toast('録音を預かった。30分以内に文字になるのだ'); if(after) await after(); }
+      catch(e){ toast('送れなかった: '+e.message); }
+    };
+    laRecorder.start(); btn.classList.add('on'); btn.textContent='⏹ 停止';
+  }catch(e){ toast('マイクが使えなかった'); }
 }
 
 // 🎤 深い問いの録音: inbox/audio/<ts>_quiz_<id>.<ext> に置く → Macの書き起こしが quiz_answers に文字を足す
