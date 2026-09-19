@@ -1294,7 +1294,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-19.5';
+const APP_VERSION = '2026-09-19.6';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4575,7 +4575,7 @@ function laTestHtml(qz, day, scores){
   const ans=(day&&day.answers)||{}, selfS=(day&&day.self)||{}, conf=(day&&day.conf)||{}, con=(day&&day.connect)||{};
   const quick=qz.quick||[], items=qz.items||[];
   const qDone=quick.filter(k=>selfS[k.id]!=null).length, dDone=items.filter(it=>ans[it.id]&&ans[it.id].text).length;
-  const total=quick.length+items.length+1, done=qDone+dDone+(con.shelf?1:0);
+  const total=quick.length+items.length, done=qDone+dDone;   // 棚に置くは任意（2026-09-19 メグ）
   const modeLbl = qz.mode==='easy'?'軽い日':qz.mode==='sunday'?'日曜':'朝の出力';
   const quickHtml = quick.map((k,i)=>{ const sc=selfS[k.id]; const cf=conf[k.id]; const isDone=sc!=null; return `<div class="card${isDone?' done':''}" data-id="${esc(k.id)}" data-kind="quick"><div class="no">${String(i+1).padStart(2,'0')}</div><div class="tag">浅い ・ ${esc(k.card||'')}${k.src?' ・ '+esc(k.src):''}</div><div class="q">${esc(k.text||'')}</div>${k.note?`<div class="note">${esc(k.note)}</div>`:''}
     <div class="conf">答える前に、どのくらい自信がある？</div><div class="opts">${['分からない','たぶん','確信'].map((t,v)=>`<button data-conf="${v}" class="${cf===v?'on':''}">${t}</button>`).join('')}</div>
@@ -4594,7 +4594,7 @@ function laTestHtml(qz, day, scores){
 <div class="top"><span><b>${esc(modeLbl)}</b> ・ ${esc(qz.date||'')}</span><span id="cnt">${done} / ${total}</span></div><div class="prog"><i id="bar" style="width:${Math.round(done/total*100)}%"></i></div>
 ${quick.length?`<div class="sec">① 思い出す ・ 浅い${quick.length}問 ・ 5分</div>${quickHtml}`:''}
 ${items.length?`<div class="sec">② 説明する ・ 深い${items.length}問 ・ 10分</div>${deepHtml}`:''}
-<div class="sec">③ つなげる ・ 10分</div>${conHtml}${extra}
+<div class="sec">③ つなげる ・ 任意（やらなくても本日済になる。学びは投げ込み箱でもOK）</div>${conHtml}${extra}
 <div class="done-box">${done>=total?'<span class="stamp">本日<br>済</span><br>夜に採点が戻る。今夜の授業は「今夜の授業」タブに':'全部終わると「本日済」の印が出る'}</div>
 </div><script>
 const post=m=>parent.postMessage(Object.assign({src:'la-test'},m),'*');
@@ -4614,11 +4614,11 @@ window.addEventListener('message',e=>{ const d=e.data||{}; if(d.type==='progress
 <\/script></body></html>`;
 }
 function laTestProgress(){ const qz=laQuiz||{}; const ans=(laDay&&laDay.answers)||{}, selfS=(laDay&&laDay.self)||{}, con=(laDay&&laDay.connect)||{}; const quick=qz.quick||[], items=qz.items||[];
-  const total=quick.length+items.length+1, done=quick.filter(k=>selfS[k.id]!=null).length+items.filter(it=>ans[it.id]&&ans[it.id].text).length+(con.shelf?1:0); return {done,total}; }
+  const total=quick.length+items.length, done=quick.filter(k=>selfS[k.id]!=null).length+items.filter(it=>ans[it.id]&&ans[it.id].text).length; return {done,total}; }
 function renderLearnTodayPaper(){
   const el = $('lp-today'); const qz = laQuiz; const {done,total} = laTestProgress();
   el.innerHTML = `<div class="lb" style="border-left:4px solid var(--accent,#0bb7ae)"><div class="lbh">🎓 ${esc(qz.mode==='easy'?'今日は軽い日':qz.mode==='sunday'?'日曜の出力':'朝の出力')} <span class="lbt">${esc(qz.date||'')} ・ ${done}/${total} 済</span></div>
-    <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">答案用紙を開いて、上から順に。①浅い${(qz.quick||[]).length}問（確信度→答え→自分で点）②深い${(qz.items||[]).length}問（文字か🎤）③今日の1本を棚に置く。30分。</p>
+    <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">答案用紙を開いて、上から順に。①浅い${(qz.quick||[]).length}問（確信度→答え→自分で点）②深い${(qz.items||[]).length}問（文字か🎤）③（任意）今日の1本を棚に置く。学びたいことは投げ込み箱に入れれば、夜の授業に課として出るのだ。30分。</p>
     <div class="lqb" style="margin-top:10px"><button class="btn btn-primary" id="la-open-test">📝 答案用紙を開く</button></div></div>`;
   $('la-open-test').addEventListener('click', ()=>{ laOpenReader(laTestHtml(qz, laDay, laScores), `朝の出力 ${qz.date||''}`); });
 }
@@ -4666,7 +4666,7 @@ figure{margin:12px 0 18px;padding:12px 12px 8px;background:rgba(255,255,255,.45)
 .foot{display:flex;justify-content:space-between;gap:12px;font-family:"Zen Kaku Gothic New",sans-serif;font-size:12px;color:var(--ink3);margin-top:16px;flex-wrap:wrap}
 @media (max-width:640px){.sheet{padding:18px 16px 26px}.cornell{grid-template-columns:1fr}.cue{border-right:0;border-bottom:1px solid var(--rule);padding:0 0 10px;margin-bottom:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}.cue .c{margin:0}body{font-size:16.5px}h1{font-size:23px}.main p{text-align:left}}`;
 function laInline(t){ return esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\[\[(.+?)\]\]/g,'<span class="num">$1</span>').replace(/\{\{(.+?)\}\}/g,'<span class="term">$1</span>').replace(/\(\((.+?)\)\)/g,' <span class="mn">← $1</span>'); }
-const LA_TRACK = { A:{name:'教科書A 世界の見取り図', total:60}, B:{name:'教科書B 宇宙・量子・物理', total:60}, C:{name:'教科書C 投資の物差し', total:36} };
+const LA_TRACK = { A:{name:'教科書A 世界の見取り図', total:60}, B:{name:'教科書B 宇宙・量子・物理', total:60}, C:{name:'教科書C 投資の物差し', total:36}, X:{name:'投げ込みからの課', total:''} };
 function laLessonHtml(L, saved){
   const tr = LA_TRACK[L.track]||{name:L.track,total:''};
   const cue = (L.cue||[]).map(c=>`<div class="c ${esc(c.t||'')}"><b>${esc(c.h||'')}</b>${laInline(c.b||'')}</div>`).join('');
@@ -4691,7 +4691,7 @@ async function laOpenLesson(track, no){
 }
 window.addEventListener('message', async e=>{
   const d = e.data; if(!d || d.type!=='lesson-done') return;
-  const key = `${d.track}${d.no}`;
+  const key = d.track==='X' ? String(d.no) : `${d.track}${d.no}`;
   try{ await laPut(laDate||laToday(), j=>{ j.lessons = j.lessons||{}; j.lessons[key] = {track:d.track, no:d.no, my3:d.my3, myq:d.myq, done:true, at:new Date().toISOString()}; }, `授業を終えた ${key}`);
        const fr = document.querySelector('#la-reader .lrf'); if(fr&&fr.contentWindow) fr.contentWindow.postMessage({type:'lesson-saved'},'*'); renderLearnNight(); }
   catch(err){ toast('保存できなかった: '+err.message); }
@@ -4711,7 +4711,17 @@ async function renderLearnNight(){
       ${row.lessons.map(l=>{ const k=`${l.track}${l.no}`; const dn=done[k]&&done[k].done; return `<div class="lq"><b>${esc(LA_TRACK[l.track]?LA_TRACK[l.track].name:l.track)} ・ 第${esc(String(l.no))}課</b><div class="qt">${esc(l.title||'')}</div><div class="lqb"><button class="btn ${dn?'':'btn-primary'}" data-lesson="${esc(l.track)}:${esc(String(l.no))}">${dn?'✓ 終えた ・ もう一度読む':'📖 読む'}</button></div></div>`; }).join('')}</div>`;
   } else if(row.saturday){ el.innerHTML = `<div class="lb"><div class="lbh">🗣 土曜 ・ 口頭説明</div><p style="margin:8px 0 0;font-size:13.5px">${esc(row.saturday)}。どこで詰まったかだけ、朝のページの深い問いの欄に書いておくのだ。</p></div>`; }
   else if(row.sunday){ el.innerHTML = `<div class="lb"><div class="lbh">🗺 日曜 ・ 白紙テスト</div><p style="margin:8px 0 0;font-size:13.5px">「${esc(row.sunday.blank_map||'')}」を白紙から。朝のページの問いに出ている。${row.sunday.midterm?'<b>今日は中間テスト。</b>':''}</p></div>`; }
+  const ex = (laQuiz && Array.isArray(laQuiz.extra)) ? laQuiz.extra.filter(x=>x&&x.path) : [];
+  if(ex.length){ const dn0=(laDay&&laDay.lessons)||{}; el.insertAdjacentHTML('beforeend', `<div class="lb"><div class="lbh">🧬 投げ込みからの1課 <span class="lbt">読むかどうかは自由 ・ 5分</span></div>${ex.map(x=>{ const dn=dn0[x.path]&&dn0[x.path].done; return `<div class="lq"><b>${esc(x.from||'投げ込み')}</b><div class="qt">${esc(x.title||x.path)}</div><div class="lqb"><button class="btn ${dn?'':'btn-primary'}" data-lesson-path="${esc(x.path)}">${dn?'✓ 終えた ・ もう一度':'📖 読む'}</button></div></div>`; }).join('')}</div>`); }
   el.querySelectorAll('[data-lesson]').forEach(b=>b.addEventListener('click', ()=>{ const [t,n]=b.dataset.lesson.split(':'); laOpenLesson(t, +n); }));
+  el.querySelectorAll('[data-lesson-path]').forEach(b=>b.addEventListener('click', ()=>laOpenLessonPath(b.dataset.lessonPath)));
+}
+async function laOpenLessonPath(path){
+  const t = await repoFile('meyjiro/claude-context', path); if(!t){ toast('まだ書かれていない（'+path+'）'); return; }
+  let L; try{ L = JSON.parse(t); }catch(e){ toast('課のJSONが壊れている'); return; }
+  L.track = L.track||'X'; L.no = L.no||path;
+  const saved = laDay && laDay.lessons && laDay.lessons[path];
+  laOpenReader(laLessonHtml(L, saved), L.title||path);
 }
 
 
