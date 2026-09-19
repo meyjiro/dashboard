@@ -277,6 +277,9 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .vprev[open]>summary::after{content:" ▴"}
 /* 🧬 カンブリア（学習ページ）2026-09-18 v1。計画: ~/学習/カンブリア_計画.html、仕様: claude-context/knowledge/学習/学習OS.md */
 #la-reader{position:fixed;inset:0;z-index:9999;background:var(--bg,#f7f5f2);display:flex;flex-direction:column}#la-reader .lrh{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border2,#e6e0d6);padding-top:calc(10px + env(safe-area-inset-top))}#la-reader .lrt{font-size:13px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#la-reader .lrf{flex:1;width:100%;border:0;background:#fff}
+.learn-box{background:var(--card,#fff);border:1.5px dashed var(--accent,#0bb7ae);border-radius:12px;padding:12px 14px;margin:0 0 18px}.learn-box .lbx-h{font-size:14px;font-weight:700;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.learn-box .lbx-h span{font-size:11.5px;font-weight:500;color:var(--text2)}
+.learn-box textarea{width:100%;min-height:76px;margin-top:8px;font:inherit;font-size:14.5px;line-height:1.6;padding:8px 10px;border:1px solid var(--border2,#e6e0d6);border-radius:8px;background:var(--bg2,#f6f3ee);color:var(--text);resize:vertical}.learn-box input{width:100%;margin-top:6px;font:inherit;font-size:13.5px;padding:7px 10px;border:1px solid var(--border2,#e6e0d6);border-radius:8px;background:var(--bg2,#f6f3ee);color:var(--text)}
+.learn-box .lbx-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.learn-box .lbx-chips button{font:inherit;font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--border2,#e6e0d6);background:var(--card,#fff);color:var(--text2)}.learn-box .lbx-chips button.on{background:var(--accent,#0bb7ae);color:#fff;border-color:var(--accent,#0bb7ae)}
 .lentry{display:flex;align-items:center;gap:12px;background:var(--card,#fff);border:1px solid var(--border2,#e6e0d6);border-left:4px solid var(--accent,#0bb7ae);border-radius:10px;padding:12px 14px;margin:0 0 12px;cursor:pointer}.lentry .le1{font-size:15px;font-weight:700}.lentry .le2{font-size:12px;color:var(--text2);margin-top:2px}.lentry .lego{margin-left:auto;font-size:13px;color:var(--accent,#0bb7ae);white-space:nowrap}
 .lp-head{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;margin:0 0 10px}.lp-head .st{font-size:12px;color:var(--text2)}.lp-head .st b{display:block;font-size:20px;font-weight:600;color:var(--text)}
 .lp-nav{display:flex;gap:6px;margin:0 0 14px}.lp-nav button{font:inherit;font-size:13px;padding:5px 14px;border-radius:999px;border:1px solid var(--border2,#e6e0d6);background:var(--card,#fff);color:var(--text2)}.lp-nav button.on{background:var(--accent,#0bb7ae);color:#fff;border-color:var(--accent,#0bb7ae)}
@@ -983,6 +986,20 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
         <div class="hint" id="photo-hint"></div>
       </div>
       <div class="hint" style="margin:0 4px 14px">日時は自動で記録されます。🎤は録音（長押し不要・もう一度押すと停止）。音声はMacのローカルWhisperが30分以内に文字起こしして仕分けに乗ります。朝8:30と夜22:30にClaudeが仕分けし、夜は日記にも織り込まれます。</div>
+      <!-- 🧬 覚えたい（学びの投げ込み・2026-09-19 メグ「学習専用の投げ込み箱を」）。仕分けなしで夜の授業の課になる -->
+      <div class="learn-box">
+        <div class="lbx-h">🧬 覚えたい <span>長期記憶に入れたいものはこっち。仕分けなしで、夜の授業の「投げ込みからの1課」になる</span></div>
+        <textarea id="learn-text" placeholder="見た・聞いた・読んだことを、そのまま。URLだけでもいい。&#10;例:「ホルムズが止まると肥料も止まるらしい。尿素の3割」「Yパパ: 利上げ局面のバイオは触るな」"></textarea>
+        <input id="learn-why" placeholder="なぜ気になった？ どこで見た？（1行・任意。ここを書くと3倍残る）">
+        <div class="lbx-chips" id="learn-chips"><button data-t="仕組み">仕組み</button><button data-t="事実・数字">事実・数字</button><button data-t="人物・会社">人物・会社</button><button data-t="なんで？">なんで？</button><button data-t="言葉">言葉</button></div>
+        <div class="inbox-actions">
+          <button class="btn btn-ghost" id="learn-photo-btn">📷</button>
+          <button class="btn btn-ghost" id="learn-rec-btn">🎤</button>
+          <input type="file" id="learn-photo-input" accept="image/*" style="display:none">
+          <button class="btn btn-primary" id="learn-send">🧬 覚えたいに投げる</button>
+        </div>
+        <div class="hint" id="learn-hint"></div>
+      </div>
       <div class="section-title">💬 やりとり板 <span class="bd-sub" id="board-status"></span></div>
       <div class="hint" style="margin:-6px 4px 10px">1件＝1スレッド。クロードからの「決めてほしい」も、メグからの「やって・教えて」も、返事を積んでいく。送ると3分以内にクロードが起動して、このスレッドに返事を積む。どちらが「完了」「保留」を押してもいい。</div>
       <div id="board-list"><p class="empty">読み込み中…</p></div>
@@ -1294,7 +1311,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-19.7';
+const APP_VERSION = '2026-09-19.8';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2196,6 +2213,46 @@ async function sendDueDone(i, due, btn) {
     toast(memo ? '報告した！ メモは仕分けに乗ります 📝' : '完了を報告した！ ✓');
     loadQueue();
   } catch (e) { toast('送信に失敗: ' + e.message); btn.disabled = false; btn.textContent = '報告する'; }
+}
+
+
+// ══ 🧬 覚えたい（学びの投げ込み）── inbox/queue/<ts>_learn.md（kind: 学び）。巡回は仕分けせず、夜の授業の課にする（生活OS §2「学びの投げ込みの扱い」）══
+let learnPhoto = null, learnType = '', learnRecorder = null, learnChunks = [];
+function learnInit(){
+  const chips = $('learn-chips'); if(!chips || chips.dataset.bound) return; chips.dataset.bound='1';
+  chips.addEventListener('click', e=>{ const b=e.target.closest('[data-t]'); if(!b) return; const on=b.classList.contains('on'); chips.querySelectorAll('button').forEach(x=>x.classList.remove('on')); if(!on){ b.classList.add('on'); learnType=b.dataset.t; } else learnType=''; });
+  $('learn-photo-btn').addEventListener('click', ()=>$('learn-photo-input').click());
+  $('learn-photo-input').addEventListener('change', async e=>{ const f=e.target.files[0]; if(!f) return; try{ const b64 = await (typeof shrinkImage==='function' ? shrinkImage(f) : new Promise((ok,ng)=>{ const r=new FileReader(); r.onload=()=>ok(r.result.split(',')[1]); r.onerror=ng; r.readAsDataURL(f); })); learnPhoto={b64}; $('learn-hint').textContent='📷 写真を1枚つけた'; }catch(err){ toast('写真を読めなかった'); } e.target.value=''; });
+  $('learn-rec-btn').addEventListener('click', learnToggleRec);
+  $('learn-send').addEventListener('click', learnSend);
+}
+async function learnToggleRec(){
+  const btn = $('learn-rec-btn');
+  if(learnRecorder && learnRecorder.state==='recording'){ learnRecorder.stop(); return; }
+  try{ const stream = await navigator.mediaDevices.getUserMedia({audio:true}); const mime = MediaRecorder.isTypeSupported('audio/mp4')?'audio/mp4':'audio/webm';
+    learnRecorder = new MediaRecorder(stream,{mimeType:mime}); learnChunks=[]; learnRecorder.ondataavailable=e=>{ if(e.data.size) learnChunks.push(e.data); };
+    learnRecorder.onstop = async ()=>{ stream.getTracks().forEach(t=>t.stop()); btn.textContent='🎤'; const blob=new Blob(learnChunks,{type:learnRecorder.mimeType}); const ext=learnRecorder.mimeType.includes('mp4')?'m4a':'webm';
+      try{ const buf=await blob.arrayBuffer(); let bin=''; const bytes=new Uint8Array(buf); for(let i=0;i<bytes.length;i+=0x8000) bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));
+           const stamp=ts(); await putFile(`inbox/audio/${stamp}_learn.${ext}`, btoa(bin), `覚えたい 録音 ${stamp}`, true);
+           if(learnType||$('learn-why').value.trim()) await putFile(`inbox/queue/${stamp}_learn_note.md`, `at: ${atNow()}\nkind: 学び\ntype: ${learnType}\naudio: inbox/audio/${stamp}_learn.${ext}\n\n（🎤の補足）${$('learn-why').value.trim()}`, `覚えたい 補足 ${stamp}`);
+           $('learn-hint').textContent='🎤 録音を投げた。文字にして夜の授業の課になる'; toast('🧬 覚えたいに録音を投げた'); }
+      catch(e){ toast('送れなかった: '+e.message); } };
+    learnRecorder.start(); btn.textContent='⏹'; $('learn-hint').textContent='聞いています。もう一度押すと止まる';
+  }catch(e){ toast('マイクが使えなかった'); }
+}
+async function learnSend(){
+  const text = $('learn-text').value.trim(), why = $('learn-why').value.trim();
+  if(!text && !learnPhoto){ toast('ひとことか写真をつけてね'); return; }
+  const btn=$('learn-send'); btn.disabled=true;
+  try{ const stamp=ts(); let meta=`at: ${atNow()}\nkind: 学び`; if(learnType) meta+=`\ntype: ${learnType}`;
+    const url=(text.match(/https?:\/\/\S+/)||[])[0]; if(url) meta+=`\nurl: ${url}`;
+    if(learnPhoto){ const ip=`inbox/img/${stamp}_learn.jpg`; await putFile(ip, learnPhoto.b64, `覚えたい 写真 ${stamp}`, true); meta+=`\nimg: ${ip}`; }
+    const body = `${meta}\n\n${text}${why?`\n\nなぜ気になった・どこで見た: ${why}`:''}`;
+    await putFile(`inbox/queue/${stamp}_learn.md`, body, `覚えたい ${stamp}`);
+    $('learn-text').value=''; $('learn-why').value=''; learnPhoto=null; learnType=''; $('learn-chips').querySelectorAll('button').forEach(x=>x.classList.remove('on')); $('learn-hint').textContent='投げた。次の巡回で5分の課になって、夜の授業に出る';
+    toast('🧬 覚えたいに投げた'); if(typeof loadQueue==='function') loadQueue();
+  }catch(e){ toast('送れなかった: '+e.message); }
+  btn.disabled=false;
 }
 
 async function sendInbox() {
@@ -4589,12 +4646,12 @@ function laTestHtml(qz, day, scores){
   const conHtml = `<div class="card${con.shelf?' done':''}" data-kind="connect"><div class="no">棚</div><div class="tag">つなげる ・ 今日の1本を棚に置く</div><div class="q" style="font-size:17px">朝の1本を3行で。背景／誰が得して誰が困る／どの棚</div>
     <input class="c" data-k="title" placeholder="どの記事（見出しをコピペでOK）" value="${esc(con.title||'')}"><input class="c" data-k="background" placeholder="① 背景: どういう経緯の続き？" value="${esc(con.background||'')}"><input class="c" data-k="who" placeholder="② 誰が得して誰が困る？" value="${esc(con.who||'')}"><input class="c" data-k="shelf" placeholder="③ どの棚？（例: エネルギー②、中東④）" value="${esc(con.shelf||'')}">
     <div class="row"><button class="p csave">棚に置く</button></div><div class="hint">${con.at?'保存済み '+esc(String(con.at).slice(11,16)):''}</div></div>`;
-  const extra = (qz.stairs&&qz.stairs.path)||(qz.report&&qz.report.path) ? `<div class="sec">読む</div>${qz.stairs&&qz.stairs.path?`<button class="open" data-open="${esc(qz.stairs.path)}">📖 ${esc(qz.stairs.theme||'')}の階段 第${esc(String(qz.stairs.step||''))}段: ${esc(qz.stairs.title||'')}</button>`:''}${qz.report&&qz.report.path?`<button class="open" data-open="${esc(qz.report.path)}">🔍 深掘り: ${esc(qz.report.title||'')}</button>`:''}` : '';
+  const extra = (qz.stairs&&qz.stairs.path)||(qz.report&&qz.report.path) ? `${qz.stairs&&qz.stairs.path?`<button class="open" data-open="${esc(qz.stairs.path)}">📖 ${esc(qz.stairs.theme||'')}の階段 第${esc(String(qz.stairs.step||''))}段: ${esc(qz.stairs.title||'')}</button>`:''}${qz.report&&qz.report.path?`<button class="open" data-open="${esc(qz.report.path)}">🔍 深掘り: ${esc(qz.report.title||'')}</button>`:''}` : '';
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@500;700&family=Zen+Kurenaido&display=swap"><style>${LA_TEST_CSS}</style></head><body><div class="page">
 <div class="top"><span><b>${esc(modeLbl)}</b> ・ ${esc(qz.date||'')}</span><span id="cnt">${done} / ${total}</span></div><div class="prog"><i id="bar" style="width:${Math.round(done/total*100)}%"></i></div>
 ${quick.length?`<div class="sec">① 思い出す ・ 浅い${quick.length}問 ・ 5分</div>${quickHtml}`:''}
 ${items.length?`<div class="sec">② 説明する ・ 深い${items.length}問 ・ 10分</div>${deepHtml}`:''}
-<div class="sec">③ つなげる ・ 任意（やらなくても本日済になる。学びは投げ込み箱でもOK）</div>${conHtml}${extra}
+${extra?`<div class="sec">読む</div>`:''}${extra}
 <div class="done-box">${done>=total?'<span class="stamp">本日<br>済</span><br>夜に採点が戻る。今夜の授業は「今夜の授業」タブに':'全部終わると「本日済」の印が出る'}</div>
 </div><script>
 const post=m=>parent.postMessage(Object.assign({src:'la-test'},m),'*');
@@ -4618,7 +4675,7 @@ function laTestProgress(){ const qz=laQuiz||{}; const ans=(laDay&&laDay.answers)
 function renderLearnTodayPaper(){
   const el = $('lp-today'); const qz = laQuiz; const {done,total} = laTestProgress();
   el.innerHTML = `<div class="lb" style="border-left:4px solid var(--accent,#0bb7ae)"><div class="lbh">🎓 ${esc(qz.mode==='easy'?'今日は軽い日':qz.mode==='sunday'?'日曜の出力':'朝の出力')} <span class="lbt">${esc(qz.date||'')} ・ ${done}/${total} 済</span></div>
-    <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">答案用紙を開いて、上から順に。①浅い${(qz.quick||[]).length}問（確信度→答え→自分で点）②深い${(qz.items||[]).length}問（文字か🎤）③（任意）今日の1本を棚に置く。学びたいことは投げ込み箱に入れれば、夜の授業に課として出るのだ。30分。</p>
+    <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">答案用紙を開いて、上から順に。①浅い${(qz.quick||[]).length}問（確信度→答え→自分で点）②深い${(qz.items||[]).length}問（文字か🎤）覚えたいことは投げ込みタブの「🧬 覚えたい」箱へ（夜の授業に課として出る）。30分。</p>
     <div class="lqb" style="margin-top:10px"><button class="btn btn-primary" id="la-open-test">📝 答案用紙を開く</button></div></div>`;
   $('la-open-test').addEventListener('click', ()=>{ laOpenReader(laTestHtml(qz, laDay, laScores), `朝の出力 ${qz.date||''}`); });
 }
@@ -4809,7 +4866,7 @@ function switchTab(tab) {
   if (tab === 'learn') loadLearn();
   if (tab === 'today') setToday();
   if (tab === 'quick') loadQuick();
-  if (tab === 'inbox') loadBoard();
+  if (tab === 'inbox') { loadBoard(); learnInit(); }
   if (tab === 'diary') loadDiary();
   if (tab === 'cal' && !calSel) { calSel = new Date().toLocaleDateString('sv-SE'); renderCal(); }
 }
