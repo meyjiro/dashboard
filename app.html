@@ -289,7 +289,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-learn .lb{background:var(--pcard);border:1px solid var(--prule);border-radius:8px;box-shadow:0 12px 30px -24px rgba(60,40,10,.5);color:var(--pink);position:relative}#tab-learn .lb .lbh{font-family:"Zen Kaku Gothic New",sans-serif;color:var(--pink2)}#tab-learn .lb .lbh .lbt{color:var(--pink3)}#tab-learn .lb p{color:var(--pink2)!important;font-family:"Zen Kaku Gothic New",sans-serif}
 #tab-learn .lq,#tab-learn .lk{background:rgba(255,255,255,.45);border:1px solid var(--prule);border-radius:6px;position:relative;color:var(--pink)}#tab-learn .lq b,#tab-learn .lk .kc{font-family:"Zen Kaku Gothic New",sans-serif;color:var(--pblue)}#tab-learn .lq .qt{font-size:15.5px;font-weight:700}#tab-learn .lq .qn,#tab-learn .lq .hint{font-family:"Zen Kaku Gothic New",sans-serif;color:var(--pink2)}
 #tab-learn .btn{font-family:"Zen Kaku Gothic New",sans-serif;border:1.5px solid var(--pink);background:transparent;color:var(--pink);border-radius:8px}#tab-learn .btn.btn-primary{background:var(--pink);color:var(--paper)}#tab-learn .btn[disabled]{opacity:.5}
-#tab-learn .lgd{border-top:1px dashed var(--prule)}#tab-learn .lgd .lgdh{font-family:"Zen Kaku Gothic New",sans-serif;color:var(--pblue)}#tab-learn .lgd .lgi{border-left-color:var(--prule)}#tab-learn .lgd .lgi .a{color:var(--pink2)}
+#tab-learn .lgd{border-top:1px dashed var(--prule)}#tab-learn .lgd .lgdh{font-family:"Zen Kaku Gothic New",sans-serif;color:var(--pblue);cursor:pointer;list-style:none;padding-right:56px}#tab-learn .lgd .lgdh::-webkit-details-marker{display:none}#tab-learn .lgd .lgs{font-weight:500;font-size:12.5px;color:var(--pink2)}#tab-learn .lgd .lgi{border-left-color:var(--prule)}#tab-learn .lgd .lgi .a{color:var(--pink2)}
 #tab-learn .strip7 i{background:var(--prule)}#tab-learn .strip7 i.s3{background:var(--pgreen);color:#fff}#tab-learn .strip7 i.s2{background:#cfe0c8}#tab-learn .strip7 i.s1{background:#f3e2b3}#tab-learn .strip7 i.s0{background:#e9b3a8}
 #tab-learn .lq textarea,#tab-learn .lc input{font-family:"Zen Kurenaido","Shippori Mincho",serif;background:rgba(255,255,255,.5);border-color:var(--prule);color:var(--pink)}
 /* 赤い「済」の判（一覧用） */
@@ -1326,7 +1326,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-19.11';
+const APP_VERSION = '2026-09-19.12';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4868,11 +4868,19 @@ async function renderLearnLog(){
   const scores = laScores || await laLoadScores();
   const days = []; for(const d of files){ const j = await laGet(d); if(j) days.push(j); }
   if(!days.length){ el.innerHTML = '<div class="lb">まだ記録がない。今日の問いに答えると、ここに溜まっていくのだ。</div>'; return; }
+  // 一覧は1日1行の概要だけ（2026-09-19 メグ「積み重なるから、どういう問題が出たかの概要だけ」）。押すと中身
   el.innerHTML = days.map(j=>{ const q=j.quiz||{}; const items=q.items||[], quick=q.quick||[]; const ans=j.answers||{}, self=j.self||{};
-    const sc = scores.filter(r=>r.date===j.date); const deep = items.map(it=>{ const a=ans[it.id]||{}; const s=sc.find(r=>r.id===it.id); return `<div class="lgi"><div>${esc(it.text||it.id)}</div>${a.text?`<div class="a">${esc(a.text)}</div>`:'<div class="a">（未回答）</div>'}${s?`<div><span class="s">${s.score}／3</span>${s.miss?' ・ 抜け: '+esc(s.miss):''}</div>`:''}</div>`; }).join('');
-    const qs = quick.length ? `<div class="lgi">浅い${quick.length}問: 自己採点 ${Object.keys(self).length}問 ・ 平均 ${(Object.values(self).reduce((x,y)=>x+y,0)/Math.max(1,Object.keys(self).length)).toFixed(1)}</div>` : '';
-    const con = j.connect&&j.connect.shelf ? `<div class="lgi">🔗 ${esc(j.connect.title||'')} → ${esc(j.connect.shelf)}<div class="a">${esc(j.connect.background||'')}${j.connect.who?' ／ '+esc(j.connect.who):''}</div></div>` : '';
-    const allDone = items.length && items.every(it=>ans[it.id]&&ans[it.id].text) && quick.every(k=>self[k.id]!=null); return `<div class="lgd" style="position:relative">${allDone?'<div class="stmp">済</div>':''}<div class="lgdh">${esc(j.date)}${q.mode==='easy'?' ・ 軽い日':q.mode==='sunday'?' ・ 日曜':''}</div>${deep}${qs}${con}</div>`; }).join('');
+    const sc = scores.filter(r=>r.date===j.date);
+    const qDone=quick.filter(k=>self[k.id]!=null).length, dDone=items.filter(it=>ans[it.id]&&ans[it.id].text).length;
+    const allDone = (quick.length+items.length)>0 && qDone===quick.length && dDone===items.length;
+    const cards=[...new Set(quick.map(k=>k.card).filter(Boolean))]; const deepT=items.map(it=>(it.card?it.card+'：':'')+String(it.text||'').replace(/[。？?].*$/,'').slice(0,22)).join('／');
+    const selfAvg = qDone? (Object.values(self).reduce((x,y)=>x+y,0)/qDone).toFixed(1) : null;
+    const moff = sc.filter(r=>r.score!=null); const moffAvg = moff.length? (moff.reduce((x,r)=>x+r.score,0)/moff.length).toFixed(1) : null;
+    const lessons = Object.values(j.lessons||{}).filter(l=>l.done).map(l=>(l.track==='X'?'投げ込み':l.track)+(l.track==='X'?'':l.no)).join('・');
+    const summary = `<span class="lgs">浅い${quick.length}${cards.length?'（'+esc(cards.slice(0,4).join('・'))+(cards.length>4?'…':'')+'）':''}${items.length?' ・ 深い'+items.length+'（'+esc(deepT)+'）':''}${selfAvg!=null?' ・ 自己'+selfAvg:''}${moffAvg!=null?' ・ 採点'+moffAvg:''}${lessons?' ・ 授業 '+esc(lessons):''}</span>`;
+    const deep = items.map(it=>{ const a=ans[it.id]||{}; const s=sc.find(r=>r.id===it.id); return `<div class="lgi"><div>${esc(it.text||it.id)}</div>${a.text?`<div class="a">${esc(a.text)}</div>`:'<div class="a">（未回答）</div>'}${s?`<div><span class="s">${s.score}／3</span>${s.miss?' ・ 抜け: '+esc(s.miss):''}</div>`:''}</div>`; }).join('');
+    const qk = quick.map(k=>`<div class="lgi" style="font-size:12.5px">${esc(k.text||'')}<span style="color:var(--pink3)"> → ${esc(k.answer_key||k.answer||'')}${self[k.id]!=null?' ・ '+self[k.id]+'点':''}</span></div>`).join('');
+    return `<details class="lgd" style="position:relative">${allDone?'<div class="stmp">済</div>':''}<summary class="lgdh">${esc(j.date)}${q.mode==='easy'?' ・ 軽い日':q.mode==='sunday'?' ・ 日曜':''}<br>${summary}</summary>${deep}${qk}</details>`; }).join('');
 }
 
 function switchTab(tab) {
