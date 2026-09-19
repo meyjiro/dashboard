@@ -1294,7 +1294,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-19.6';
+const APP_VERSION = '2026-09-19.7';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4540,7 +4540,7 @@ function renderLearnToday(){
 // 📖 階段・深掘りのHTMLをページ内に重ねて表示（iframe srcdoc。窓を開かない）
 function laOpenReader(html, title){
   let ov = document.getElementById('la-reader');
-  if(!ov){ ov = document.createElement('div'); ov.id='la-reader'; ov.innerHTML = '<div class="lrh"><span class="lrt"></span><button class="btn lrx">閉じる ✕</button></div><iframe class="lrf" sandbox="allow-same-origin"></iframe>'; document.body.appendChild(ov);
+  if(!ov){ ov = document.createElement('div'); ov.id='la-reader'; ov.innerHTML = '<div class="lrh"><span class="lrt"></span><button class="btn lrx">閉じる ✕</button></div><iframe class="lrf" sandbox="allow-same-origin allow-scripts allow-popups"></iframe>'; document.body.appendChild(ov);
     ov.querySelector('.lrx').addEventListener('click', ()=>{ ov.hidden=true; ov.querySelector('.lrf').srcdoc=''; document.body.style.overflow=''; }); }
   ov.querySelector('.lrt').textContent = title||''; ov.querySelector('.lrf').srcdoc = html; ov.hidden=false; document.body.style.overflow='hidden';
 }
