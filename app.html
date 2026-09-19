@@ -293,8 +293,8 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-learn .strip7 i{background:var(--prule)}#tab-learn .strip7 i.s3{background:var(--pgreen);color:#fff}#tab-learn .strip7 i.s2{background:#cfe0c8}#tab-learn .strip7 i.s1{background:#f3e2b3}#tab-learn .strip7 i.s0{background:#e9b3a8}
 #tab-learn .lq textarea,#tab-learn .lc input{font-family:"Zen Kurenaido","Shippori Mincho",serif;background:rgba(255,255,255,.5);border-color:var(--prule);color:var(--pink)}
 /* 赤い「済」の判（一覧用） */
-#tab-learn .stmp{position:absolute;right:12px;top:10px;font-family:"Shippori Mincho",serif;font-weight:800;color:var(--pred);border:2.5px double var(--pred);border-radius:50%;width:42px;height:42px;line-height:38px;text-align:center;font-size:13.5px;transform:rotate(-12deg);opacity:.9;pointer-events:none;background:rgba(247,241,227,.6)}
-#tab-learn .stmp.big{width:74px;height:74px;line-height:70px;font-size:15px;right:16px;top:12px}#tab-learn .done{opacity:.8}
+#tab-learn .stmp{position:absolute;right:12px;top:10px;font-family:"Shippori Mincho",serif;font-weight:800;color:var(--pred);border:2.5px double var(--pred);border-radius:50%;width:46px;height:46px;line-height:42px;text-align:center;font-size:22px;transform:rotate(-12deg);opacity:.9;pointer-events:none;background:rgba(247,241,227,.6)}
+#tab-learn .stmp.big{width:78px;height:78px;line-height:72px;font-size:30px;right:16px;top:10px}#tab-learn .done{opacity:.8}
 .lentry{display:flex;align-items:center;gap:12px;background:var(--card,#fff);border:1px solid var(--border2,#e6e0d6);border-left:4px solid var(--accent,#0bb7ae);border-radius:10px;padding:12px 14px;margin:0 0 12px;cursor:pointer}.lentry .le1{font-size:15px;font-weight:700}.lentry .le2{font-size:12px;color:var(--text2);margin-top:2px}.lentry .lego{margin-left:auto;font-size:13px;color:var(--accent,#0bb7ae);white-space:nowrap}
 .lp-head{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;margin:0 0 10px}.lp-head .st{font-size:12px;color:var(--text2)}.lp-head .st b{display:block;font-size:20px;font-weight:600;color:var(--text)}
 .lp-nav{display:flex;gap:6px;margin:0 0 14px}.lp-nav button{font:inherit;font-size:13px;padding:5px 14px;border-radius:999px;border:1px solid var(--border2,#e6e0d6);background:var(--card,#fff);color:var(--text2)}.lp-nav button.on{background:var(--accent,#0bb7ae);color:#fff;border-color:var(--accent,#0bb7ae)}
@@ -1326,7 +1326,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-19.10';
+const APP_VERSION = '2026-09-19.11';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4641,8 +4641,8 @@ textarea,input{width:100%;font:16px/1.75 "Zen Kurenaido","Shippori Mincho",serif
 .sc{margin-top:10px;padding:8px 10px;border-left:3px solid var(--green);background:rgba(255,255,255,.5);border-radius:6px;font-family:"Zen Kaku Gothic New",sans-serif;font-size:13px}.sc b{font-size:16px}.sc .miss{color:#8a6a1f}
 .hint{font-family:"Zen Kaku Gothic New",sans-serif;font-size:12px;color:var(--ink3);margin-top:6px}
 .done-box{margin-top:26px;text-align:center;font-family:"Zen Kaku Gothic New",sans-serif;font-size:13px;color:var(--ink2)}
-.stamp{display:inline-block;margin-top:8px;font-family:"Shippori Mincho",serif;font-weight:800;color:var(--red);border:3px double var(--red);border-radius:50%;width:86px;height:86px;line-height:80px;font-size:15px;transform:rotate(-8deg);opacity:.9}
-.stmp{position:absolute;right:14px;top:10px;font-family:"Shippori Mincho",serif;font-weight:800;color:var(--red);border:3px double var(--red);border-radius:50%;width:52px;height:52px;line-height:46px;text-align:center;font-size:16px;transform:rotate(-12deg);opacity:.92;pointer-events:none;background:rgba(247,241,227,.7)}.card.done{opacity:.78}.card.done .no{opacity:.4}
+.stamp{display:inline-block;margin-top:8px;font-family:"Shippori Mincho",serif;font-weight:800;color:var(--red);border:3px double var(--red);border-radius:50%;width:86px;height:86px;line-height:80px;font-size:36px;transform:rotate(-8deg);opacity:.9}
+.stmp{position:absolute;right:14px;top:10px;font-family:"Shippori Mincho",serif;font-weight:800;color:var(--red);border:3px double var(--red);border-radius:50%;width:54px;height:54px;line-height:48px;text-align:center;font-size:26px;transform:rotate(-12deg);opacity:.92;pointer-events:none;background:rgba(247,241,227,.7)}.card.done{opacity:.78}.card.done .no{opacity:.4}
 .open{width:100%;min-height:46px;font:700 14px "Zen Kaku Gothic New",sans-serif;border:1.5px solid var(--ink);background:transparent;border-radius:10px;color:var(--ink);margin-top:6px}`;
 function laTestHtml(qz, day, scores){
   const ans=(day&&day.answers)||{}, selfS=(day&&day.self)||{}, conf=(day&&day.conf)||{}, con=(day&&day.connect)||{};
@@ -4668,7 +4668,7 @@ function laTestHtml(qz, day, scores){
 ${quick.length?`<div class="sec">① 思い出す ・ 浅い${quick.length}問 ・ 5分</div>${quickHtml}`:''}
 ${items.length?`<div class="sec">② 説明する ・ 深い${items.length}問 ・ 10分</div>${deepHtml}`:''}
 ${extra?`<div class="sec">読む</div>`:''}${extra}
-<div class="done-box">${done>=total?'<span class="stamp">本日<br>済</span><br>夜に採点が戻る。今夜の授業は「今夜の授業」タブに':'全部終わると「本日済」の印が出る'}</div>
+<div class="done-box">${done>=total?'<span class="stamp">済</span><br>夜に採点が戻る。今夜の授業は「今夜の授業」タブに':'全部終わると「本日済」の印が出る'}</div>
 </div><script>
 const post=m=>parent.postMessage(Object.assign({src:'la-test'},m),'*');
 const stamp=k=>{ if(!k.querySelector('.stmp')){ const d=document.createElement('div'); d.className='stmp'; d.textContent='済'; k.appendChild(d); } };
@@ -4681,7 +4681,7 @@ document.addEventListener('click',e=>{
   const cs=e.target.closest('.csave'); if(cs){ const k=cs.closest('.card'); const o={}; k.querySelectorAll('.c').forEach(i=>o[i.dataset.k]=i.value.trim()); if(!o.shelf&&!o.background){ alert('背景か棚を1つは書いてね'); return; } cs.disabled=true; post({type:'connect',data:o}); return; }
   const op=e.target.closest('[data-open]'); if(op){ post({type:'open',path:op.dataset.open}); }
 });
-window.addEventListener('message',e=>{ const d=e.data||{}; if(d.type==='progress'){ document.getElementById('cnt').textContent=d.done+' / '+d.total; document.getElementById('bar').style.width=Math.round(d.done/d.total*100)+'%'; if(d.done>=d.total){ document.querySelector('.done-box').innerHTML='<span class="stamp">本日<br>済</span><br>夜に採点が戻る。今夜の授業は「今夜の授業」タブに'; } }
+window.addEventListener('message',e=>{ const d=e.data||{}; if(d.type==='progress'){ document.getElementById('cnt').textContent=d.done+' / '+d.total; document.getElementById('bar').style.width=Math.round(d.done/d.total*100)+'%'; if(d.done>=d.total){ document.querySelector('.done-box').innerHTML='<span class="stamp">済</span><br>夜に採点が戻る。今夜の授業は「今夜の授業」タブに'; } }
   if(d.type==='saved'&&d.id){ const k=document.querySelector('.card[data-id="'+d.id+'"]'); if(k){ const b=k.querySelector('.save'); if(b) b.disabled=false; const h=k.querySelector('.hint'); if(h) h.textContent='保存した '+new Date().toTimeString().slice(0,5)+(d.audio?' ・ 🎤あり':''); k.classList.add('done'); stamp(k); } }
   if(d.type==='saved'&&d.kind==='connect'){ const k=document.querySelector('.card[data-kind="connect"]'); const b=k.querySelector('.csave'); if(b) b.disabled=false; k.querySelector('.hint').textContent='棚に置いた '+new Date().toTimeString().slice(0,5); k.classList.add('done'); }
   if(d.type==='rec-state'){ const k=document.querySelector('.card[data-id="'+d.id+'"]'); if(k){ const b=k.querySelector('.rec'); b.classList.toggle('on',!!d.on); b.textContent=d.on?'⏹ 停止':'🎤 録音'; } } });
@@ -4691,7 +4691,7 @@ function laTestProgress(){ const qz=laQuiz||{}; const ans=(laDay&&laDay.answers)
   const total=quick.length+items.length, done=quick.filter(k=>selfS[k.id]!=null).length+items.filter(it=>ans[it.id]&&ans[it.id].text).length; return {done,total}; }
 function renderLearnTodayPaper(){
   const el = $('lp-today'); const qz = laQuiz; const {done,total} = laTestProgress();
-  el.innerHTML = `<div class="lb" style="border-left:4px solid var(--pred,#a3402b)">${done>=total&&total>0?'<div class="stmp big">本日<br>済</div>':''}<div class="lbh">🎓 ${esc(qz.mode==='easy'?'今日は軽い日':qz.mode==='sunday'?'日曜の出力':'朝の出力')} <span class="lbt">${esc(qz.date||'')} ・ ${done}/${total} 済</span></div>
+  el.innerHTML = `<div class="lb" style="border-left:4px solid var(--pred,#a3402b)">${done>=total&&total>0?'<div class="stmp big">済</div>':''}<div class="lbh">🎓 ${esc(qz.mode==='easy'?'今日は軽い日':qz.mode==='sunday'?'日曜の出力':'朝の出力')} <span class="lbt">${esc(qz.date||'')} ・ ${done}/${total} 済</span></div>
     <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">答案用紙を開いて、上から順に。①浅い${(qz.quick||[]).length}問（確信度→答え→自分で点）②深い${(qz.items||[]).length}問（文字か🎤）覚えたいことは投げ込みタブの「🧬 覚えたい」箱へ（夜の授業に課として出る）。30分。</p>
     <div class="lqb" style="margin-top:10px"><button class="btn btn-primary" id="la-open-test">📝 答案用紙を開く</button></div></div>`;
   $('la-open-test').addEventListener('click', ()=>{ laOpenReader(laTestHtml(qz, laDay, laScores), `朝の出力 ${qz.date||''}`); });
