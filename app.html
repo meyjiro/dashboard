@@ -280,6 +280,21 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 .learn-box{background:var(--card,#fff);border:1.5px dashed var(--accent,#0bb7ae);border-radius:12px;padding:12px 14px;margin:0 0 18px}.learn-box .lbx-h{font-size:14px;font-weight:700;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.learn-box .lbx-h span{font-size:11.5px;font-weight:500;color:var(--text2)}
 .learn-box textarea{width:100%;min-height:76px;margin-top:8px;font:inherit;font-size:14.5px;line-height:1.6;padding:8px 10px;border:1px solid var(--border2,#e6e0d6);border-radius:8px;background:var(--bg2,#f6f3ee);color:var(--text);resize:vertical}.learn-box input{width:100%;margin-top:6px;font:inherit;font-size:13.5px;padding:7px 10px;border:1px solid var(--border2,#e6e0d6);border-radius:8px;background:var(--bg2,#f6f3ee);color:var(--text)}
 .learn-box .lbx-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.learn-box .lbx-chips button{font:inherit;font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--border2,#e6e0d6);background:var(--card,#fff);color:var(--text2)}.learn-box .lbx-chips button.on{background:var(--accent,#0bb7ae);color:#fff;border-color:var(--accent,#0bb7ae)}
+/* 🧬 カンブリアのページ全体を古紙の雰囲気に（2026-09-19 メグ「一覧も中身と合わせて」）。答案用紙・教科書と同じ色 */
+#tab-learn{--paper:#efe6cf;--pink:#2b2418;--pink2:#5c5040;--pink3:#8c8069;--prule:#cdbf9c;--pred:#a3402b;--pblue:#2f5a78;--pgreen:#4d6b3a;--pcard:#f7f1e3;
+  margin:-12px -12px 0;padding:14px 14px 40px;min-height:70vh;color:var(--pink);font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;
+  background-color:var(--paper);background-image:radial-gradient(ellipse at 12% 8%,rgba(120,90,40,.10),transparent 42%),radial-gradient(ellipse at 88% 92%,rgba(120,90,40,.12),transparent 40%),url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.28 0 0 0 0 0.16 0 0 0 .09 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+#tab-learn .lp-head{border-bottom:2px solid var(--pink);padding-bottom:8px;margin-bottom:12px}#tab-learn .lp-head .st{font-family:"Zen Kaku Gothic New",sans-serif;color:var(--pink2)}#tab-learn .lp-head .st b{font-family:"Shippori Mincho",serif;color:var(--pink);font-weight:800}
+#tab-learn .lp-nav button{font-family:"Zen Kaku Gothic New",sans-serif;background:rgba(255,255,255,.45);border-color:var(--prule);color:var(--pink2)}#tab-learn .lp-nav button.on{background:var(--pink);color:var(--paper);border-color:var(--pink)}
+#tab-learn .lb{background:var(--pcard);border:1px solid var(--prule);border-radius:8px;box-shadow:0 12px 30px -24px rgba(60,40,10,.5);color:var(--pink);position:relative}#tab-learn .lb .lbh{font-family:"Zen Kaku Gothic New",sans-serif;color:var(--pink2)}#tab-learn .lb .lbh .lbt{color:var(--pink3)}#tab-learn .lb p{color:var(--pink2)!important;font-family:"Zen Kaku Gothic New",sans-serif}
+#tab-learn .lq,#tab-learn .lk{background:rgba(255,255,255,.45);border:1px solid var(--prule);border-radius:6px;position:relative;color:var(--pink)}#tab-learn .lq b,#tab-learn .lk .kc{font-family:"Zen Kaku Gothic New",sans-serif;color:var(--pblue)}#tab-learn .lq .qt{font-size:15.5px;font-weight:700}#tab-learn .lq .qn,#tab-learn .lq .hint{font-family:"Zen Kaku Gothic New",sans-serif;color:var(--pink2)}
+#tab-learn .btn{font-family:"Zen Kaku Gothic New",sans-serif;border:1.5px solid var(--pink);background:transparent;color:var(--pink);border-radius:8px}#tab-learn .btn.btn-primary{background:var(--pink);color:var(--paper)}#tab-learn .btn[disabled]{opacity:.5}
+#tab-learn .lgd{border-top:1px dashed var(--prule)}#tab-learn .lgd .lgdh{font-family:"Zen Kaku Gothic New",sans-serif;color:var(--pblue)}#tab-learn .lgd .lgi{border-left-color:var(--prule)}#tab-learn .lgd .lgi .a{color:var(--pink2)}
+#tab-learn .strip7 i{background:var(--prule)}#tab-learn .strip7 i.s3{background:var(--pgreen);color:#fff}#tab-learn .strip7 i.s2{background:#cfe0c8}#tab-learn .strip7 i.s1{background:#f3e2b3}#tab-learn .strip7 i.s0{background:#e9b3a8}
+#tab-learn .lq textarea,#tab-learn .lc input{font-family:"Zen Kurenaido","Shippori Mincho",serif;background:rgba(255,255,255,.5);border-color:var(--prule);color:var(--pink)}
+/* 赤い「済」の判（一覧用） */
+#tab-learn .stmp{position:absolute;right:12px;top:10px;font-family:"Shippori Mincho",serif;font-weight:800;color:var(--pred);border:2.5px double var(--pred);border-radius:50%;width:42px;height:42px;line-height:38px;text-align:center;font-size:13.5px;transform:rotate(-12deg);opacity:.9;pointer-events:none;background:rgba(247,241,227,.6)}
+#tab-learn .stmp.big{width:74px;height:74px;line-height:70px;font-size:15px;right:16px;top:12px}#tab-learn .done{opacity:.8}
 .lentry{display:flex;align-items:center;gap:12px;background:var(--card,#fff);border:1px solid var(--border2,#e6e0d6);border-left:4px solid var(--accent,#0bb7ae);border-radius:10px;padding:12px 14px;margin:0 0 12px;cursor:pointer}.lentry .le1{font-size:15px;font-weight:700}.lentry .le2{font-size:12px;color:var(--text2);margin-top:2px}.lentry .lego{margin-left:auto;font-size:13px;color:var(--accent,#0bb7ae);white-space:nowrap}
 .lp-head{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;margin:0 0 10px}.lp-head .st{font-size:12px;color:var(--text2)}.lp-head .st b{display:block;font-size:20px;font-weight:600;color:var(--text)}
 .lp-nav{display:flex;gap:6px;margin:0 0 14px}.lp-nav button{font:inherit;font-size:13px;padding:5px 14px;border-radius:999px;border:1px solid var(--border2,#e6e0d6);background:var(--card,#fff);color:var(--text2)}.lp-nav button.on{background:var(--accent,#0bb7ae);color:#fff;border-color:var(--accent,#0bb7ae)}
@@ -1311,7 +1326,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-19.9';
+const APP_VERSION = '2026-09-19.10';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4627,7 +4642,7 @@ textarea,input{width:100%;font:16px/1.75 "Zen Kurenaido","Shippori Mincho",serif
 .hint{font-family:"Zen Kaku Gothic New",sans-serif;font-size:12px;color:var(--ink3);margin-top:6px}
 .done-box{margin-top:26px;text-align:center;font-family:"Zen Kaku Gothic New",sans-serif;font-size:13px;color:var(--ink2)}
 .stamp{display:inline-block;margin-top:8px;font-family:"Shippori Mincho",serif;font-weight:800;color:var(--red);border:3px double var(--red);border-radius:50%;width:86px;height:86px;line-height:80px;font-size:15px;transform:rotate(-8deg);opacity:.9}
-.stmp{position:absolute;right:14px;bottom:12px;font-family:"Shippori Mincho",serif;font-weight:800;color:var(--red);border:2.5px double var(--red);border-radius:50%;width:44px;height:44px;line-height:40px;text-align:center;font-size:14px;transform:rotate(-12deg);opacity:.85;pointer-events:none}.card.done{opacity:.72}
+.stmp{position:absolute;right:14px;top:10px;font-family:"Shippori Mincho",serif;font-weight:800;color:var(--red);border:3px double var(--red);border-radius:50%;width:52px;height:52px;line-height:46px;text-align:center;font-size:16px;transform:rotate(-12deg);opacity:.92;pointer-events:none;background:rgba(247,241,227,.7)}.card.done{opacity:.78}.card.done .no{opacity:.4}
 .open{width:100%;min-height:46px;font:700 14px "Zen Kaku Gothic New",sans-serif;border:1.5px solid var(--ink);background:transparent;border-radius:10px;color:var(--ink);margin-top:6px}`;
 function laTestHtml(qz, day, scores){
   const ans=(day&&day.answers)||{}, selfS=(day&&day.self)||{}, conf=(day&&day.conf)||{}, con=(day&&day.connect)||{};
@@ -4676,7 +4691,7 @@ function laTestProgress(){ const qz=laQuiz||{}; const ans=(laDay&&laDay.answers)
   const total=quick.length+items.length, done=quick.filter(k=>selfS[k.id]!=null).length+items.filter(it=>ans[it.id]&&ans[it.id].text).length; return {done,total}; }
 function renderLearnTodayPaper(){
   const el = $('lp-today'); const qz = laQuiz; const {done,total} = laTestProgress();
-  el.innerHTML = `<div class="lb" style="border-left:4px solid var(--accent,#0bb7ae)"><div class="lbh">🎓 ${esc(qz.mode==='easy'?'今日は軽い日':qz.mode==='sunday'?'日曜の出力':'朝の出力')} <span class="lbt">${esc(qz.date||'')} ・ ${done}/${total} 済</span></div>
+  el.innerHTML = `<div class="lb" style="border-left:4px solid var(--pred,#a3402b)">${done>=total&&total>0?'<div class="stmp big">本日<br>済</div>':''}<div class="lbh">🎓 ${esc(qz.mode==='easy'?'今日は軽い日':qz.mode==='sunday'?'日曜の出力':'朝の出力')} <span class="lbt">${esc(qz.date||'')} ・ ${done}/${total} 済</span></div>
     <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">答案用紙を開いて、上から順に。①浅い${(qz.quick||[]).length}問（確信度→答え→自分で点）②深い${(qz.items||[]).length}問（文字か🎤）覚えたいことは投げ込みタブの「🧬 覚えたい」箱へ（夜の授業に課として出る）。30分。</p>
     <div class="lqb" style="margin-top:10px"><button class="btn btn-primary" id="la-open-test">📝 答案用紙を開く</button></div></div>`;
   $('la-open-test').addEventListener('click', ()=>{ laOpenReader(laTestHtml(qz, laDay, laScores), `朝の出力 ${qz.date||''}`); });
@@ -4767,11 +4782,11 @@ async function renderLearnNight(){
   else if(row.lessons && row.lessons.length){
     el.innerHTML = `<div class="lb"><div class="lbh">📖 今夜の授業 <span class="lbt">第${esc(String(row.week))}週 ・ ${esc(row.unit||'')} ・ 20分</span></div>
       <p style="margin:6px 0 0;font-size:13px;color:var(--text2)">読む前に事前テスト3問 → 本文 → 自分の3行と問いを1つ。寝て、明日の朝に思い出す。</p>
-      ${row.lessons.map(l=>{ const k=`${l.track}${l.no}`; const dn=done[k]&&done[k].done; return `<div class="lq"><b>${esc(LA_TRACK[l.track]?LA_TRACK[l.track].name:l.track)} ・ 第${esc(String(l.no))}課</b><div class="qt">${esc(l.title||'')}</div><div class="lqb"><button class="btn ${dn?'':'btn-primary'}" data-lesson="${esc(l.track)}:${esc(String(l.no))}">${dn?'✓ 終えた ・ もう一度読む':'📖 読む'}</button></div></div>`; }).join('')}</div>`;
+      ${row.lessons.map(l=>{ const k=`${l.track}${l.no}`; const dn=done[k]&&done[k].done; return `<div class="lq${dn?' done':''}">${dn?'<div class="stmp">済</div>':''}<b>${esc(LA_TRACK[l.track]?LA_TRACK[l.track].name:l.track)} ・ 第${esc(String(l.no))}課</b><div class="qt">${esc(l.title||'')}</div><div class="lqb"><button class="btn ${dn?'':'btn-primary'}" data-lesson="${esc(l.track)}:${esc(String(l.no))}">${dn?'もう一度読む':'📖 読む'}</button></div></div>`; }).join('')}</div>`;
   } else if(row.saturday){ el.innerHTML = `<div class="lb"><div class="lbh">🗣 土曜 ・ 口頭説明</div><p style="margin:8px 0 0;font-size:13.5px">${esc(row.saturday)}。どこで詰まったかだけ、朝のページの深い問いの欄に書いておくのだ。</p></div>`; }
   else if(row.sunday){ el.innerHTML = `<div class="lb"><div class="lbh">🗺 日曜 ・ 白紙テスト</div><p style="margin:8px 0 0;font-size:13.5px">「${esc(row.sunday.blank_map||'')}」を白紙から。朝のページの問いに出ている。${row.sunday.midterm?'<b>今日は中間テスト。</b>':''}</p></div>`; }
   const ex = (laQuiz && Array.isArray(laQuiz.extra)) ? laQuiz.extra.filter(x=>x&&x.path) : [];
-  if(ex.length){ const dn0=(laDay&&laDay.lessons)||{}; el.insertAdjacentHTML('beforeend', `<div class="lb"><div class="lbh">🧬 投げ込みからの1課 <span class="lbt">読むかどうかは自由 ・ 5分</span></div>${ex.map(x=>{ const dn=dn0[x.path]&&dn0[x.path].done; return `<div class="lq"><b>${esc(x.from||'投げ込み')}</b><div class="qt">${esc(x.title||x.path)}</div><div class="lqb"><button class="btn ${dn?'':'btn-primary'}" data-lesson-path="${esc(x.path)}">${dn?'✓ 終えた ・ もう一度':'📖 読む'}</button></div></div>`; }).join('')}</div>`); }
+  if(ex.length){ const dn0=(laDay&&laDay.lessons)||{}; el.insertAdjacentHTML('beforeend', `<div class="lb"><div class="lbh">🧬 投げ込みからの1課 <span class="lbt">読むかどうかは自由 ・ 5分</span></div>${ex.map(x=>{ const dn=dn0[x.path]&&dn0[x.path].done; return `<div class="lq${dn?' done':''}">${dn?'<div class="stmp">済</div>':''}<b>${esc(x.from||'投げ込み')}</b><div class="qt">${esc(x.title||x.path)}</div><div class="lqb"><button class="btn ${dn?'':'btn-primary'}" data-lesson-path="${esc(x.path)}">${dn?'もう一度':'📖 読む'}</button></div></div>`; }).join('')}</div>`); }
   el.querySelectorAll('[data-lesson]').forEach(b=>b.addEventListener('click', ()=>{ const [t,n]=b.dataset.lesson.split(':'); laOpenLesson(t, +n); }));
   el.querySelectorAll('[data-lesson-path]').forEach(b=>b.addEventListener('click', ()=>laOpenLessonPath(b.dataset.lessonPath)));
 }
@@ -4792,7 +4807,7 @@ async function renderPlacement(){
   const doneN = Object.values(P.cards||{}).filter(c=>c.level!=null).length;
   el.innerHTML = `<div class="lb" style="border-left:4px solid var(--accent,#0bb7ae)"><div class="lbh">🗺 配置テスト ・ ${esc(pl)} <span class="lbt">${doneN}/14 済</span></div>
     <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">1枚1分。「①歴史 ②今 ③産業 ④誰が得して誰が困る」の順で、知ってることを喋る（🎤）か書く。終わったら自分でLvを付ける: 0=ほぼ知らない／1=単語が出る／2=2枠は言える／3=4枠言える。Lv2以上の週は飛び級（深掘り週）になる。</p></div>
-    ${LA_CARDS.map((c,i)=>{ const r=(P.cards||{})[c]||{}; return `<div class="lq" data-card="${esc(c)}"><b>${i+1}／14</b><div class="qt">${esc(c)}</div>
+    ${LA_CARDS.map((c,i)=>{ const r=(P.cards||{})[c]||{}; return `<div class="lq${r.level!=null?' done':''}" data-card="${esc(c)}">${r.level!=null?'<div class="stmp">済</div>':''}<b>${i+1}／14</b><div class="qt">${esc(c)}</div>
       <textarea class="pl-text" placeholder="知ってることを、順番に。①歴史 ②今 ③産業 ④誰が得して誰が困る">${esc(r.text||'')}</textarea>
       <div class="lqb"><button class="btn rec pl-rec">🎤 録音</button><span class="hint">${r.audio?'🎤あり ':''}${r.at?'保存 '+esc(String(r.at).slice(11,16)):''}</span></div>${VA['placement_'+(i+1)]&&VA['placement_'+(i+1)].text?`<div class="qn" style="margin-top:6px;font-size:12.5px;color:var(--text2)">🎤 文字起こし: ${esc(VA['placement_'+(i+1)].text)}</div>`:''}
       <div class="ks" style="margin-top:6px">Lv: ${[0,1,2,3].map(v=>`<button data-lv="${v}" class="${r.level===v?'on':''}">${v} ${['知らない','単語が出る','2枠','4枠'][v]}</button>`).join('')}</div></div>`; }).join('')}
@@ -4857,7 +4872,7 @@ async function renderLearnLog(){
     const sc = scores.filter(r=>r.date===j.date); const deep = items.map(it=>{ const a=ans[it.id]||{}; const s=sc.find(r=>r.id===it.id); return `<div class="lgi"><div>${esc(it.text||it.id)}</div>${a.text?`<div class="a">${esc(a.text)}</div>`:'<div class="a">（未回答）</div>'}${s?`<div><span class="s">${s.score}／3</span>${s.miss?' ・ 抜け: '+esc(s.miss):''}</div>`:''}</div>`; }).join('');
     const qs = quick.length ? `<div class="lgi">浅い${quick.length}問: 自己採点 ${Object.keys(self).length}問 ・ 平均 ${(Object.values(self).reduce((x,y)=>x+y,0)/Math.max(1,Object.keys(self).length)).toFixed(1)}</div>` : '';
     const con = j.connect&&j.connect.shelf ? `<div class="lgi">🔗 ${esc(j.connect.title||'')} → ${esc(j.connect.shelf)}<div class="a">${esc(j.connect.background||'')}${j.connect.who?' ／ '+esc(j.connect.who):''}</div></div>` : '';
-    return `<div class="lgd"><div class="lgdh">${esc(j.date)}${q.mode==='easy'?' ・ 軽い日':q.mode==='sunday'?' ・ 日曜':''}</div>${deep}${qs}${con}</div>`; }).join('');
+    const allDone = items.length && items.every(it=>ans[it.id]&&ans[it.id].text) && quick.every(k=>self[k.id]!=null); return `<div class="lgd" style="position:relative">${allDone?'<div class="stmp">済</div>':''}<div class="lgdh">${esc(j.date)}${q.mode==='easy'?' ・ 軽い日':q.mode==='sunday'?' ・ 日曜':''}</div>${deep}${qs}${con}</div>`; }).join('');
 }
 
 function switchTab(tab) {
