@@ -511,7 +511,9 @@ details.ops.ok[open]>summary::after{content:" ▴"}
   white-space:pre-wrap;word-break:break-word}
 .pp-src{display:inline-block;font-size:10px;color:var(--text3);margin-top:5px;
   padding:1px 7px;border:1px solid var(--border);border-radius:999px}
-.pp-art:active{opacity:.65}
+.pp-art b a{color:inherit;text-decoration:none}
+.pp-art b a:active{opacity:.65}
+.pp-body,.pp-art b{-webkit-user-select:text;user-select:text}
 .nsnews{display:block;padding:8px 0;border-top:1px solid var(--border);text-decoration:none;color:var(--text);font-size:13.5px;line-height:1.7}
 .nsnews span{display:block;font-size:11.5px;color:var(--text2)}
 .mbsold{margin-top:10px}
@@ -1330,7 +1332,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-19.14';
+const APP_VERSION = '2026-09-20.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2025,6 +2027,7 @@ async function loadNewStuff(){
   }
 
   // 📰 地域の新聞（2026-09-11 メグ指示で作り直し）
+  //    🔴 2026-09-20 メグ指示: 記事全体をリンクにすると本文が長押し・選択でコピーできない。リンクはタイトルだけに
   //    面ごとに分ける: 一面(タイ全国) / 暮らし・物価 / 北部・チェンマイ / 東南アジア
   //    タイ人が普段読む媒体（ไทยรัฐ 等）も入れるので、出どころを必ず出す
   let pp = m.paper;
@@ -2038,11 +2041,11 @@ async function loadNewStuff(){
     const secs = pp.sections.filter(x => (x.items||[]).length).map(sec => `
       <div class="pp-sec">
         <div class="pp-sh"><span class="pp-em">${esc(sec.emoji||'')}</span>${esc(sec.label||'')}</div>
-        ${sec.items.map((t,i)=>`<a class="pp-art${i===0&&sec.key==='top'?' lead':''}" href="${esc(t.url||'#')}" target="_blank" rel="noopener">
-            <b>${esc(t.title||'')}</b>
+        ${sec.items.map((t,i)=>`<div class="pp-art${i===0&&sec.key==='top'?' lead':''}">
+            <b>${t.url?`<a href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.title||'')}</a>`:esc(t.title||'')}</b>
             ${t.note?`<span class="pp-body">${esc(t.note)}</span>`:''}
             ${t.src?`<span class="pp-src">${esc(t.src)}</span>`:''}
-          </a>`).join('')}
+          </div>`).join('')}
       </div>`).join('');
     parts.push(`<div class="paper">
       <div class="pp-head"><b>チェンマイ日報</b><span>${esc(pp.date||'')}${m.pm25?` ・ PM2.5 ${m.pm25.value} ${esc(m.pm25.level||'')}`:''}</span></div>
