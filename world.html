@@ -42,6 +42,7 @@ svg{width:100%;height:100%;display:block;touch-action:none}
 .sec .body{font-size:13.5px;line-height:1.8}.sec .body p{margin:4px 0}.sec .body li{margin:3px 0}.sec .body ul,.sec .body ol{padding-left:1.3em;margin:4px 0}
 .tl{margin-top:6px}.tl .it{display:grid;grid-template-columns:78px 1fr;gap:8px;padding:7px 0;border-bottom:1px dashed var(--rule);font-size:12.5px;line-height:1.65}
 .tl .d{font:700 12px "Shippori Mincho",serif;color:var(--red)}.tl .s{display:block;font-size:10px;color:var(--ink3);letter-spacing:.06em}
+.panel figure.hero{margin:6px 0 10px}.panel figure.hero img{width:100%;height:auto;max-height:200px;object-fit:cover;border-radius:6px;border:1px solid var(--rule);display:block;filter:sepia(.15)}.panel figcaption{font-size:11px;color:var(--ink2);margin-top:4px;line-height:1.5}.panel figcaption .cr{color:var(--ink3)}
 .empty{font-size:12.5px;color:var(--ink3);border:1px dashed var(--rule);border-radius:6px;padding:10px 12px}
 .msg{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:8;font:700 15px "Shippori Mincho",serif;color:var(--ink2);background:rgba(239,230,207,.85)}
 @media (max-width:700px){.panel{top:auto;height:72%;width:100%;border-left:0;border-top:1px solid var(--rule);border-radius:14px 14px 0 0;transform:translateY(105%)}.panel.open{transform:none}.legend{bottom:auto;top:100px;max-width:180px}.top .stat.sub{display:none}}
@@ -114,7 +115,8 @@ function openPanel(id){
     if(c.card){
       const lv = c.level||0;
       h += `<div class="lv">${[1,2,3].map(i=>`<span class="${i<=lv?'on':''}"></span>`).join('')}</div>`;
-      const card = W.cards[c.card]||{}; const S = card.sections||{};
+      const card = W.cards[c.card]||{}; const S = card.sections||{}; const ph = card.photos||{};
+      if(ph.hero&&ph.hero.img) h += `<figure class="hero"><img src="${esc(ph.hero.img)}" alt="${esc(ph.hero.cap||'')}" loading="lazy"><figcaption>${esc(ph.hero.cap||'')}${ph.hero.credit?` <span class="cr">（${esc(ph.hero.credit)}）</span>`:''}</figcaption></figure>`;
       for(const k of ['①','②','③','④']){ if(S[k]) h += `<div class="sec"><h3>${k} ${esc(S[k].h.replace(/（.*?）/,''))}</h3><div class="body">${md(S[k].body)}</div></div>`; }
       h += `<div class="sec"><h3>⑤ 仕入れた情報（時系列）</h3>`;
       if(c.items && c.items.length){ h += '<div class="tl">'+c.items.map(it=>`<div class="it"><div class="d">${esc(it.date||'—')}<span class="s">${esc(it.src)}</span></div><div>${inline(it.text)}</div></div>`).join('')+'</div>'; }

@@ -1342,7 +1342,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-21.5';
+const APP_VERSION = '2026-09-21.6';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4840,9 +4840,14 @@ function laMd(src){ // 地図カードの Markdown（最小限）→ 紙面HTML
   if(inList) out+='</ul>'; return out;
 }
 function laCardHtml(name, card){
-  const S = card.sections||{}; const body = ['①','②','③','④','⑤'].filter(k=>S[k]).map(k=>`<h2>${k} ${esc(S[k].h)}</h2>${laMd(S[k].body)}`).join('');
+  const S = card.sections||{}; const ph = card.photos||{};
+  const pic = f => f&&f.img ? `<figure class="ph"><img src="${esc(f.img)}" alt="${esc(f.cap||'')}" loading="lazy"><figcaption>${esc(f.cap||'')}${f.credit?` <span class="cr">（${esc(f.credit)}）</span>`:''}</figcaption></figure>` : '';
+  const figs = (ph.figs||[]).map(pic);
+  const keys = ['①','②','③','④','⑤'].filter(k=>S[k]);
+  const body = keys.map((k,i)=>`<h2>${k} ${esc(S[k].h)}</h2>${laMd(S[k].body)}${figs[i]||''}`).join('');   // 2枚目以降の写真は節の末尾に順に置く
+  const hero = ph.hero&&ph.hero.img ? `<figure class="hero"><img src="${esc(ph.hero.img)}" alt="${esc(ph.hero.cap||'')}"><figcaption>${esc(ph.hero.cap||'')}${ph.hero.credit?` <span class="cr">（${esc(ph.hero.credit)}）</span>`:''}</figcaption></figure>` : '';
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap"><style>${LA_PAPER_CSS} .main h2{margin-top:22px} .main ul{padding-left:1.3em} .main li{margin:4px 0}</style></head><body><div class="page"><div class="sheet">
-<div class="head"><div class="cl">図鑑 ・ 地図カード</div><div class="tm">${esc(card.title||name)}</div></div><h1>${esc(name)}</h1>
+<div class="head"><div class="cl">図鑑 ・ 地図カード</div><div class="tm">${esc(card.title||name)}</div></div><h1>${esc(name)}</h1>${hero}
 <div class="main" style="font-size:15px;line-height:1.9">${body}</div>
 <div class="foot"><span>正本: knowledge/学習/地図/${esc(name)}.md（古い行は消さず「→ 更新」で重ねる）</span></div></div></div></body></html>`;
 }
