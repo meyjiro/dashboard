@@ -276,6 +276,21 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .vprev[open]>summary{margin-bottom:8px}
 #tab-today .vprev[open]>summary::after{content:" ▴"}
 /* 🧬 カンブリア（学習ページ）2026-09-18 v1。計画: ~/学習/カンブリア_計画.html、仕様: claude-context/knowledge/学習/学習OS.md */
+#la-run{position:fixed;inset:0;z-index:9000;background:#efe6cf;color:#2b2418;display:flex;flex-direction:column;font-family:"Zen Kaku Gothic New",sans-serif}
+#la-run .lr-top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #cdbf9c;font-weight:700}
+#la-run .lr-body{flex:1;padding:24px 20px;display:flex;flex-direction:column;justify-content:center;text-align:center}
+#la-run .lr-no{font-size:12px;letter-spacing:.12em;color:#5c5040;margin-bottom:14px}
+#la-run .lr-q{font:700 26px/1.5 "Shippori Mincho",serif;text-wrap:balance}
+#la-run .lr-a{margin-top:18px;font-size:19px;line-height:1.6;color:#a3402b;font-weight:700}
+#la-run .lr-cd{margin-top:14px;font:800 40px "Shippori Mincho",serif;color:#8c8069;min-height:50px}
+#la-run .lr-ctl{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;padding:14px;border-top:1px solid #cdbf9c}
+#la-run .lr-ctl select{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid #cdbf9c;background:#fff}
+#la-run .lr-ctl .btn{min-height:48px;font-size:16px}
+#la-run .lr-score{overflow:auto;max-height:55vh;padding:10px 16px 30px;border-top:1px solid #cdbf9c;background:#f7f1e3}
+#la-run .lr-sh{font-size:12.5px;color:#5c5040;margin:6px 0 10px}
+#la-run .lr-si{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px dashed #cdbf9c}
+#la-run .lr-si .t{flex:1;font-size:14px;line-height:1.5}#la-run .lr-si .ans{font-size:12px;color:#5c5040;margin-top:3px}
+#la-run .lr-si .sb{display:flex;gap:4px}#la-run .lr-si .sb button{width:40px;height:40px;border-radius:8px;border:1px solid #cdbf9c;background:#fff;font-weight:700}#la-run .lr-si .sb button.on{background:#4d6b3a;color:#fff;border-color:#4d6b3a}
 #la-reader{position:fixed;inset:0;z-index:9999;background:var(--bg,#f7f5f2);display:flex;flex-direction:column}#la-reader .lrh{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border2,#e6e0d6);padding-top:calc(10px + env(safe-area-inset-top))}#la-reader .lrt{font-size:13px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#la-reader .lrf{flex:1;width:100%;border:0;background:#fff}
 .learn-box{background:var(--card,#fff);border:1.5px dashed var(--accent,#0bb7ae);border-radius:12px;padding:12px 14px;margin:0 0 18px}.learn-box .lbx-h{font-size:14px;font-weight:700;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.learn-box .lbx-h span{font-size:11.5px;font-weight:500;color:var(--text2)}
 .learn-box textarea{width:100%;min-height:76px;margin-top:8px;font:inherit;font-size:14.5px;line-height:1.6;padding:8px 10px;border:1px solid var(--border2,#e6e0d6);border-radius:8px;background:var(--bg2,#f6f3ee);color:var(--text);resize:vertical}.learn-box input{width:100%;margin-top:6px;font:inherit;font-size:13.5px;padding:7px 10px;border:1px solid var(--border2,#e6e0d6);border-radius:8px;background:var(--bg2,#f6f3ee);color:var(--text)}
@@ -1342,7 +1357,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-21.6';
+const APP_VERSION = '2026-09-21.7';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4719,8 +4734,54 @@ function renderLearnTodayPaper(){
   const el = $('lp-today'); const qz = laQuiz; const {done,total} = laTestProgress();
   el.innerHTML = `<div class="lb" style="border-left:4px solid var(--pred,#a3402b)">${done>=total&&total>0?'<div class="stmp big">済</div>':''}<div class="lbh">🎓 ${esc(qz.mode==='easy'?'今日は軽い日':qz.mode==='sunday'?'日曜の出力':'朝の出力')} <span class="lbt">${esc(qz.date||'')} ・ ${done}/${total} 済</span></div>
     <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">答案用紙を開いて、上から順に。①浅い${(qz.quick||[]).length}問（確信度→答え→自分で点）②深い${(qz.items||[]).length}問（文字か🎤）覚えたいことは投げ込みタブの「🧬 覚えたい」箱へ（夜の授業に課として出る）。30分。</p>
-    <div class="lqb" style="margin-top:10px"><button class="btn btn-primary" id="la-open-test">📝 答案用紙を開く</button></div></div>`;
+    <div class="lqb" style="margin-top:10px;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" id="la-open-test">📝 答案用紙を開く</button><button class="btn" id="la-run-mode" title="問いを読み上げ→考える間→答えを読み上げ。イヤホンで走りながら">🏃 走りながら（音声）</button></div></div>`;
   $('la-open-test').addEventListener('click', ()=>{ laOpenReader(laTestHtml(qz, laDay, laScores), `朝の出力 ${qz.date||''}`); });
+  $('la-run-mode').addEventListener('click', ()=>laRunMode(qz));
+}
+// ── 🏃 走りながら（2026-09-21 メグ「ランニング中は暇。10問サクサク答えたい」。ゴッフルの「音声10問は過負荷」は本人が却下）──
+//    仕組み: 問いを読み上げ → 考える間（既定12秒・カウントダウン表示）→ 答えを読み上げ → 3秒 → 次。全部終わったら自己採点の一覧。
+//    🔴 iOSは画面を消すと読み上げが止まる。画面は点けたままポケットへ（wakeLockで消灯を止める）。読み上げはユーザー操作から始める必要があるので「開始」を押してから
+let laRunState = null;
+function laSpeak(text, rate){ return new Promise(res=>{ try{ const u=new SpeechSynthesisUtterance(text); u.lang='ja-JP'; u.rate=rate||1.0; const vs=speechSynthesis.getVoices().filter(v=>/ja/i.test(v.lang)); const kyoko=vs.find(v=>/Kyoko|O-ren|Hattori/i.test(v.name))||vs[0]; if(kyoko) u.voice=kyoko; u.onend=res; u.onerror=res; speechSynthesis.speak(u); }catch(e){ res(); } }); }
+function laSleep(ms){ return new Promise(res=>{ const t=setTimeout(res,ms); if(laRunState) laRunState.timer=t; }); }
+function laRunMode(qz){
+  const items = [...(qz.quick||[]).map(q=>({id:q.id,card:q.card,text:q.text,answer:q.answer_key||'',note:q.note||'',kind:'浅い'})), ...(qz.items||[]).map(q=>({id:q.id,card:q.card,text:q.text,answer:q.answer_key||'',note:q.note||'',kind:'深い'}))];
+  if(!items.length){ toast('今日の問いが無い'); return; }
+  let ov = document.getElementById('la-run');
+  if(!ov){ ov=document.createElement('div'); ov.id='la-run'; document.body.appendChild(ov); }
+  ov.hidden=false; document.body.style.overflow='hidden';
+  const pause = +(localStorage.getItem('la_run_pause')||12);
+  ov.innerHTML = `<div class="lr-top"><span>🏃 走りながら ・ ${items.length}問</span><button class="btn lr-x">閉じる ✕</button></div>
+    <div class="lr-body"><div class="lr-no" id="lr-no">開始を押すと、問い → 考える間（<span id="lr-pause-v">${pause}</span>秒）→ 答え、の順に読み上げる</div>
+      <div class="lr-q" id="lr-q">イヤホンをつけて、画面は点けたままポケットへ。声に出して答えると残りやすい。</div>
+      <div class="lr-a" id="lr-a" hidden></div><div class="lr-cd" id="lr-cd"></div></div>
+    <div class="lr-ctl"><label>考える間 <select id="lr-pause"><option value="8">8秒</option><option value="12">12秒</option><option value="20">20秒</option><option value="30">30秒</option></select></label>
+      <button class="btn btn-primary" id="lr-start">▶ 開始</button><button class="btn" id="lr-next" disabled>⏭ 次へ</button><button class="btn" id="lr-again" disabled>🔁 もう一度</button></div>
+    <div class="lr-score" id="lr-score" hidden></div>`;
+  ov.querySelector('#lr-pause').value=String(pause);
+  ov.querySelector('#lr-pause').onchange=e=>{ localStorage.setItem('la_run_pause', e.target.value); ov.querySelector('#lr-pause-v').textContent=e.target.value; };
+  const stop=()=>{ if(laRunState){ laRunState.stop=true; clearTimeout(laRunState.timer); } try{ speechSynthesis.cancel(); }catch(_){} if(laRunState&&laRunState.lock){ try{ laRunState.lock.release(); }catch(_){} } };
+  ov.querySelector('.lr-x').onclick=()=>{ stop(); ov.hidden=true; document.body.style.overflow=''; };
+  const showScore=()=>{ const sc=ov.querySelector('#lr-score'); sc.hidden=false; sc.innerHTML=`<div class="lr-sh">走り終わったら、自分で点を付ける（0=分からなかった 1=かすった 2=ほぼ 3=言えた）</div>`+items.map((q,i)=>`<div class="lr-si" data-id="${esc(q.id)}"><div class="t"><b>${i+1}</b> ${esc(q.text)}<div class="ans">${esc(q.answer||'（深い問い: 答えは夜に採点）')}</div></div><div class="sb">${[0,1,2,3].map(v=>`<button data-s="${v}">${v}</button>`).join('')}</div></div>`).join('');
+    sc.querySelectorAll('[data-s]').forEach(b=>b.onclick=async()=>{ const row=b.closest('.lr-si'); row.querySelectorAll('[data-s]').forEach(x=>x.classList.toggle('on',x===b)); try{ await laPut(laDate, j=>{ j.self=j.self||{}; j.self[row.dataset.id]=+b.dataset.s; }, `浅い問いの自己採点（走りながら） ${laDate}`); }catch(err){ toast('保存できなかった: '+err.message); } }); };
+  const run=async(from)=>{
+    laRunState={stop:false, i:from||0}; try{ laRunState.lock=await navigator.wakeLock.request('screen'); }catch(_){}
+    ov.querySelector('#lr-next').disabled=false; ov.querySelector('#lr-again').disabled=false;
+    for(let i=laRunState.i; i<items.length; i++){
+      if(laRunState.stop) return; laRunState.i=i; const q=items[i]; const p=+(localStorage.getItem('la_run_pause')||12);
+      ov.querySelector('#lr-no').textContent=`${i+1} / ${items.length} ・ ${q.kind} ・ ${q.card||''}`; ov.querySelector('#lr-q').textContent=q.text; const A=ov.querySelector('#lr-a'); A.hidden=true; A.textContent='';
+      await laSpeak(`第${i+1}問。${q.text}`); if(laRunState.stop) return;
+      for(let t=p; t>0; t--){ if(laRunState.stop||laRunState.skip) break; ov.querySelector('#lr-cd').textContent=`考える… ${t}`; await laSleep(1000); }
+      ov.querySelector('#lr-cd').textContent=''; if(laRunState.stop) return; laRunState.skip=false;
+      if(q.answer){ A.hidden=false; A.textContent='答え: '+q.answer; await laSpeak('答え。'+q.answer.replace(/[（(].*?[)）]/g,'')); }
+      else { A.hidden=false; A.textContent='（深い問い: 答えは夜に採点）'; await laSpeak('この問いは夜に採点する。'); }
+      if(laRunState.stop) return; await laSleep(2500);
+    }
+    ov.querySelector('#lr-no').textContent='おしまい'; ov.querySelector('#lr-q').textContent='全部終わった。下で点を付けるのだ'; await laSpeak('全部終わり。おつかれさま。'); showScore();
+  };
+  ov.querySelector('#lr-start').onclick=()=>{ stop(); ov.querySelector('#lr-start').disabled=true; run(0); };
+  ov.querySelector('#lr-next').onclick=()=>{ if(!laRunState) return; laRunState.skip=true; try{ speechSynthesis.cancel(); }catch(_){} clearTimeout(laRunState.timer); };
+  ov.querySelector('#lr-again').onclick=()=>{ if(!laRunState) return; const i=laRunState.i; stop(); run(i); };
 }
 // 答案用紙からの保存（postMessage）
 window.addEventListener('message', async e=>{
