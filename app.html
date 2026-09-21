@@ -1357,7 +1357,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-21.8';
+const APP_VERSION = '2026-09-21.9';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4747,7 +4747,9 @@ function renderLearnTodayPaper(){
 //    仕組み: 問いを読み上げ → 考える間（既定12秒・カウントダウン表示）→ 答えを読み上げ → 3秒 → 次。全部終わったら自己採点の一覧。
 //    🔴 iOSは画面を消すと読み上げが止まる。画面は点けたままポケットへ（wakeLockで消灯を止める）。読み上げはユーザー操作から始める必要があるので「開始」を押してから
 let laRunState = null;
-function laSpeak(text, rate){ return new Promise(res=>{ try{ const u=new SpeechSynthesisUtterance(text); u.lang='ja-JP'; u.rate=rate||1.0; const vs=speechSynthesis.getVoices().filter(v=>/ja/i.test(v.lang)); const kyoko=vs.find(v=>/Kyoko|O-ren|Hattori/i.test(v.name))||vs[0]; if(kyoko) u.voice=kyoko; u.onend=res; u.onerror=res; speechSynthesis.speak(u); }catch(e){ res(); } }); }
+// 🔴 iOS: 読み上げは「ユーザーの操作の中」で最初の speak() を呼ばないと以後ずっと無音になる → 開始ボタンの onclick で laSpeakUnlock() を同期で呼ぶ。onend が来ないことがあるので見張り時間で必ず解決する（2026-09-21 メグ「開始を押しても始まらない」）
+function laSpeakUnlock(){ try{ speechSynthesis.cancel(); speechSynthesis.resume(); const u=new SpeechSynthesisUtterance('。'); u.lang='ja-JP'; u.volume=0.01; speechSynthesis.speak(u); }catch(_){} }
+function laSpeak(text, rate){ return new Promise(res=>{ let done=false; const fin=()=>{ if(!done){ done=true; res(); } }; try{ const u=new SpeechSynthesisUtterance(text); u.lang='ja-JP'; u.rate=rate||1.0; const vs=speechSynthesis.getVoices().filter(v=>/ja/i.test(v.lang)); const kyoko=vs.find(v=>/Kyoko|O-ren|Hattori/i.test(v.name))||vs[0]; if(kyoko) u.voice=kyoko; u.onend=fin; u.onerror=fin; setTimeout(fin, Math.max(6000, String(text).length*400)); speechSynthesis.speak(u); }catch(e){ fin(); } }); }
 function laSleep(ms){ return new Promise(res=>{ const t=setTimeout(res,ms); if(laRunState) laRunState.timer=t; }); }
 function laRunMode(qz){
   const items = [...(qz.quick||[]).map(q=>({id:q.id,card:q.card,text:q.text,answer:q.answer_key||'',note:q.note||'',kind:'浅い'})), ...(qz.items||[]).map(q=>({id:q.id,card:q.card,text:q.text,answer:q.answer_key||'',note:q.note||'',kind:'深い'}))];
@@ -4758,7 +4760,7 @@ function laRunMode(qz){
   const pause = +(localStorage.getItem('la_run_pause')||12);
   ov.innerHTML = `<div class="lr-top"><span>🏃 走りながら ・ ${items.length}問</span><button class="btn lr-x">閉じる ✕</button></div>
     <div class="lr-body"><div class="lr-no" id="lr-no">開始を押すと、問い → 考える間（<span id="lr-pause-v">${pause}</span>秒）→ 答え、の順に読み上げる</div>
-      <div class="lr-q" id="lr-q">イヤホンをつけて、画面は点けたままポケットへ。声に出して答えると残りやすい。</div>
+      <div class="lr-q" id="lr-q">イヤホンをつけて、画面は点けたままポケットへ。声に出して答えると残りやすい。<br><small>🔇 声が出ないときは iPhone横のマナースイッチをオフに（読み上げは着信音と同じ扱いで消音される）。それでも出なければ「閉じる」→開き直して開始</small></div>
       <div class="lr-a" id="lr-a" hidden></div><div class="lr-cd" id="lr-cd"></div></div>
     <div class="lr-ctl"><label>考える間 <select id="lr-pause"><option value="8">8秒</option><option value="12">12秒</option><option value="20">20秒</option><option value="30">30秒</option></select></label>
       <button class="btn btn-primary" id="lr-start">▶ 開始</button><button class="btn" id="lr-next" disabled>⏭ 次へ</button><button class="btn" id="lr-again" disabled>🔁 もう一度</button></div>
@@ -4784,7 +4786,7 @@ function laRunMode(qz){
     }
     ov.querySelector('#lr-no').textContent='おしまい'; ov.querySelector('#lr-q').textContent='全部終わった。下で点を付けるのだ'; await laSpeak('全部終わり。おつかれさま。'); showScore();
   };
-  ov.querySelector('#lr-start').onclick=()=>{ stop(); ov.querySelector('#lr-start').disabled=true; run(0); };
+  ov.querySelector('#lr-start').onclick=()=>{ stop(); laSpeakUnlock(); const b=ov.querySelector('#lr-start'); b.disabled=true; b.textContent='▶ 再生中'; run(0).catch(err=>{ toast('走りながら: '+err.message); }).finally(()=>{ b.disabled=false; b.textContent='▶ 最初から'; }); };
   ov.querySelector('#lr-next').onclick=()=>{ if(!laRunState) return; laRunState.skip=true; try{ speechSynthesis.cancel(); }catch(_){} clearTimeout(laRunState.timer); };
   ov.querySelector('#lr-again').onclick=()=>{ if(!laRunState) return; const i=laRunState.i; stop(); run(i); };
 }
