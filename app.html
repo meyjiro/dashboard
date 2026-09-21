@@ -1333,7 +1333,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-21.2';
+const APP_VERSION = '2026-09-21.3';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1469,19 +1469,19 @@ const OPS = [
   { name:'為替',         why:'Macが1時間ごとに取得（土日は市場が閉まる）',
     repo:'meyjiro/personal', path:'money/fx.json', limit:0.5, weekend:3,
     read:t=>JSON.parse(t).updated },
-  { name:'IBKR',         why:'毎朝9:05に保有と取引',
+  { name:'IBKR',         why:'毎朝6:35に保有と取引',
     repo:'meyjiro/personal', path:'money/ibkr_summary.json', limit:2,
     read:t=>{ const j=JSON.parse(t); return j.updated||j.asof||j.date||j.generated_at; },
     verify:t=>{ const j=JSON.parse(t); return (+j.nav_end>0 && Array.isArray(j.positions)) ? null : '総資産か保有の中身が空'; } },
-  { name:'Wise残高',     why:'毎朝9:00にMacが記録',
+  { name:'Wise残高',     why:'毎朝6:30にMacが記録',
     repo:'meyjiro/personal', path:'money/wise_balances.csv', limit:1.5,
     read:t=>{ const r=t.trim().split('\n'); return r[r.length-1].split(',')[0]; } },
   // 🎓 2026-09-18 学習OS: 朝のメニューが quiz を毎朝書く（9/21開始）。開始前は正常扱い
-  { name:'今日の2問',   why:'朝のメニュー(9:00)が knowledge/学習/問い.jsonl から2問選んで morning.json の quiz に書く。答えは日記、採点は夜の巡回',
+  { name:'今日の2問',   why:'朝のメニュー(6:30)が knowledge/学習/問い.jsonl から2問選んで morning.json の quiz に書く。答えは日記、採点は夜の巡回',
     repo:'meyjiro/claude-context', path:'inbox/morning.json', limit:1.2,
     read:t=>{ const j=JSON.parse(t); const pre = Date.now()<new Date('2026-09-21T00:00:00+09:00').getTime(); if(pre) return new Date().toISOString(); return (j.quiz&&j.quiz.date) ? j.quiz.date : null; },   // 開講前（〜9/20）は常に正常（9/18に手で置いた quiz が古くなって赤くなった・9/19）
     verify:t=>{ const j=JSON.parse(t); if(!j.quiz) return Date.now()<new Date('2026-09-21T00:00:00+09:00').getTime() ? null : 'quiz が無い'; return (Array.isArray(j.quiz.items)&&j.quiz.items.length&&j.quiz.items.every(x=>x.text)) ? null : 'quiz の中身が空'; } },
-  { name:'朝の巡回',     why:'クラウドが毎朝ブリーフィングを作り、本流(main)にpushする',
+  { name:'朝の巡回',     why:'クラウドが毎朝6:00にブリーフィングを作り、本流(main)にpushする（〜6:25）',
     repo:'meyjiro/claude-context', path:'inbox/briefing.json', limit:1.2,
     read:t=>JSON.parse(t).generated_at,
     verify:t=>{ const j=JSON.parse(t); return (Array.isArray(j.today)&&Array.isArray(j.attention)) ? null : '中身の形が違う（today/attentionが無い）'; } },
@@ -1491,11 +1491,11 @@ const OPS = [
     limit:1.7,
     // 🔴 日記は新しい日が上に並ぶ。「最後の見出し」ではなく「いちばん新しい日付」を取る（2026-09-17 毎朝赤く出ていた原因）
     read:t=>{ const m=[...t.matchAll(/^## (\d{4}-\d{2}-\d{2})/gm)].map(x=>x[1]); return m.length?m.sort().pop():null; } },
-  { name:'ガチレズ巡回', why:'Macが8:20/14:20/20:20に3サイトを見る',
+  { name:'ガチレズ巡回', why:'Macが5:50/14:20/20:20に3サイトを見る',
     repo:'meyjiro/claude-context', path:'inbox/glz_snapshot.json', limit:0.6,
     read:t=>JSON.parse(t).generated_at,
     verify:t=>{ const j=JSON.parse(t); return (j.counts && ('本家' in j.counts)) ? null : '件数の中身が無い（取得失敗の疑い）'; } },   // キーの存在で見る（値が0でも正常）
-  { name:'メビウス巡回', why:'Macが8:25/14:25/20:25に草案と入金を見る',
+  { name:'メビウス巡回', why:'Macが5:55/14:25/20:25に草案と入金を見る',
     repo:'meyjiro/claude-context', path:'inbox/mbs_snapshot.json', limit:0.6,
     read:t=>JSON.parse(t).generated_at,
     verify:t=>{ const j=JSON.parse(t); return (j.counts && 'draft_ready' in j.counts) ? null : '件数の中身が無い（取得失敗の疑い）'; } },
@@ -1506,12 +1506,12 @@ const OPS = [
     read:t=>{ const e=JSON.parse(t).entries||[]; return e.length?e[e.length-1].date:null; } },
   // 🔴 2026-09-21: generated_at ではなく紙面の日付（paper.date）で見る。Macが quiz だけ手で書くと
   //    generated_at が今日になり、紙面が3日古くても🟢になっていた（9/19〜21の実例。評価の淵）
-  { name:'朝のメニュー', why:'クラウドが毎晩0:18に新聞・動画・世界の1本を集める（紙面の日付で判定）',
+  { name:'朝のメニュー', why:'クラウドが毎朝6:30に新聞・動画・世界の1本を集める（〜6:50。紙面の日付で判定）',
     repo:'meyjiro/claude-context', path:'inbox/morning.json', limit:1.2,
     read:t=>{ const j=JSON.parse(t); return (j.paper&&j.paper.date) ? j.paper.date+'T09:00:00+09:00' : j.generated_at; },
     verify:t=>{ const j=JSON.parse(t); const n=((j.paper&&j.paper.sections)||[]).reduce((a,s)=>a+((s.items||[]).length),0); return n>=5 ? null : `紙面が${n}本しか無い`; } },
   // 🔴 判例は「開廷待ちが無ければ止まっていて正常」。court_status.json（Macが7:15/12:15/18:15に書く）と合わせて判定する
-  { name:'裁判',         why:'検察意見書ができた銘柄を、クラウドが毎朝10時に裁く。意見書が無ければ何も出ないのが正常',
+  { name:'裁判',         why:'検察意見書ができた銘柄を、クラウドが毎晩22時に裁く。意見書が無ければ何も出ないのが正常',
     check: async ()=>{
       const cs = JSON.parse(await repoFile('meyjiro/claude-context','inbox/court_status.json') || '{}');
       const at = cs.at; const waiting = (cs.generated||[]).length + (cs.pending||[]).length;
