@@ -304,10 +304,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
   --cb-accent:#3346c9;--cb-accent-soft:#e6e9fb;--cb-world:#1d6fa8;--cb-world-soft:#e3f0f9;--cb-sci:#6a47b8;--cb-sci-soft:#efe9fa;--cb-inv:#16875a;--cb-inv-soft:#e2f4ec;
   --cb-pink:#e8738f;--cb-pink-soft:#fde8ee;--cb-shadow:0 1px 2px rgba(22,32,44,.06),0 6px 20px rgba(22,32,44,.06);--cb-stampbg:#fff;
   --cb-h:"Zen Kaku Gothic New","Noto Sans JP","Hiragino Sans",sans-serif;--cb-b:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;--cb-n:"IBM Plex Sans","Noto Sans JP",sans-serif}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #tab-learn,:root:not([data-theme="light"]) #cb-knows{
-  --cb-ink:#e8ecf3;--cb-ink2:#b3bccb;--cb-ink3:#8590a2;--cb-ground:#0f141b;--cb-paper:#171e28;--cb-line:#2a3443;--cb-soft:#1d2531;--cb-accent:#8b9bff;--cb-accent-soft:#232a4d;
-  --cb-world:#6cb4e6;--cb-world-soft:#15293a;--cb-sci:#b69cf0;--cb-sci-soft:#261f3c;--cb-inv:#5cc99a;--cb-inv-soft:#13302a;--cb-pink:#f59ab0;--cb-pink-soft:#3a1e27;
-  --cb-shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);--cb-stampbg:#f3f4f7;color-scheme:dark}}
+/* 🔴 暗い画面は使わない（2026-09-06 メグ指定。ダッシュボード全体と同じ）。9/23 作り替えで入った暗い配色を外した */
 :root[data-theme="dark"] #tab-learn,:root[data-theme="dark"] #cb-knows{--cb-ink:#e8ecf3;--cb-ink2:#b3bccb;--cb-ink3:#8590a2;--cb-ground:#0f141b;--cb-paper:#171e28;--cb-line:#2a3443;--cb-soft:#1d2531;--cb-accent:#8b9bff;--cb-accent-soft:#232a4d;
   --cb-world:#6cb4e6;--cb-world-soft:#15293a;--cb-sci:#b69cf0;--cb-sci-soft:#261f3c;--cb-inv:#5cc99a;--cb-inv-soft:#13302a;--cb-pink:#f59ab0;--cb-pink-soft:#3a1e27;--cb-shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);--cb-stampbg:#f3f4f7;color-scheme:dark}
 #tab-learn{margin:-12px -14px 0;padding:14px 16px 44px;min-height:calc(100dvh - 120px);background:var(--cb-ground);color:var(--cb-ink);font-family:var(--cb-b);font-size:15px;line-height:1.75}
@@ -443,7 +440,6 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #cb-knows .kgo{width:100%;margin-top:16px;background:var(--cb-accent);border-color:var(--cb-accent);color:#fff}
 #cb-knows .kres{margin-top:16px;font-size:14px;color:var(--cb-ink2)}
 #cb-knows .small{font-size:12.5px;color:var(--cb-ink3)}
-@media (prefers-color-scheme:dark){#la-reader{background:#0f141b}#la-reader .lrh{background:#171e28;color:#e8ecf3;border-color:#2a3443}}
 .lentry{display:flex;align-items:center;gap:12px;background:var(--card,#fff);border:1px solid var(--border2,#e6e0d6);border-left:4px solid var(--accent,#0bb7ae);border-radius:10px;padding:12px 14px;margin:0 0 12px;cursor:pointer}.lentry .le1{font-size:15px;font-weight:700}.lentry .le2{font-size:12px;color:var(--text2);margin-top:2px}.lentry .lego{margin-left:auto;font-size:13px;color:var(--accent,#0bb7ae);white-space:nowrap}
 .lb{background:var(--card,#fff);border:1px solid var(--border2,#e6e0d6);border-radius:10px;padding:12px 14px;margin:0 0 12px}.lb .lbh{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--text2);letter-spacing:.04em}.lb .lbh .lbt{margin-left:auto;font-weight:500;letter-spacing:0}.lb .lbh .ok{color:var(--accent,#0bb7ae)}
 #tab-today .vprev .nsbox{opacity:.86}
@@ -1462,7 +1458,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-23.5';
+const APP_VERSION = '2026-09-23.6';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -5078,7 +5074,6 @@ function laRunMode(qz){
 //    飾りの写真（hero）は出さない（中身を運ばないので。計画 3章）。本文の図（svg）は白い台紙に載せる（暗い画面でも図の色が読めるように）
 const LA_PAPER_CSS = `:root{--ink:#16202c;--ink2:#4a5566;--ink3:#7d8797;--ground:#f4f6f9;--paper:#fff;--line:#dfe4ec;--soft:#eef1f6;--accent:#3346c9;--accent-soft:#e6e9fb;--tc:#1d6fa8;--ts:#e3f0f9;--pink:#e8738f;--pink-soft:#fde8ee;--shadow:0 1px 2px rgba(22,32,44,.06),0 6px 20px rgba(22,32,44,.06)}
 body.s{--tc:#6a47b8;--ts:#efe9fa}body.i{--tc:#16875a;--ts:#e2f4ec}
-@media (prefers-color-scheme:dark){:root{--ink:#e8ecf3;--ink2:#b3bccb;--ink3:#8590a2;--ground:#0f141b;--paper:#171e28;--line:#2a3443;--soft:#1d2531;--accent:#8b9bff;--accent-soft:#232a4d;--tc:#6cb4e6;--ts:#15293a;--pink:#f59ab0;--pink-soft:#3a1e27;--shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);color-scheme:dark}body.s{--tc:#b69cf0;--ts:#261f3c}body.i{--tc:#5cc99a;--ts:#13302a}}
 *{box-sizing:border-box}html,body{background:var(--ground)}
 body{margin:0;color:var(--ink);font:16.5px/1.9 "Noto Sans JP","Hiragino Sans",sans-serif;-webkit-font-smoothing:antialiased}
 .page{max-width:760px;margin:12px auto 70px;padding:0 16px}
