@@ -63,6 +63,8 @@ const $ = id => document.getElementById(id);
 const pat = localStorage.getItem('gh_pat') || '';
 const REPO = 'meyjiro/claude-context', PATH = 'knowledge/学習/世界.json';
 const LV = ['rgba(255,255,255,.55)', '#e8c9a8', '#cf8a6a', '#a3402b'];   // Lv0〜3（古紙→朱）
+// 2026-09-23〜 level は図鑑の70マスのカード平均（0〜3の小数）。少しでも埋まっていれば1段目の色（0.2→Lv1色、1.4→Lv2色）
+const lvi = v => Math.min(3, Math.ceil(+v||0));
 const CAMP = {'米側':'#2f5a78','中露側':'#a3402b','どちらにも付かない':'#c9b27a'};
 const REGION = ['#2f5a78','#4d6b3a','#a3402b','#8b6b3d','#6b4c8a','#3b7f7a','#b0563a','#5a6f8a','#8a7a2f','#a05c7b','#5c8a5a'];
 const CARDC = {};
@@ -90,14 +92,14 @@ function inline(t){ return esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(
 
 function colorOf(id){
   const c = wc(id);
-  if(layer==='level'){ if(!c) return 'rgba(255,255,255,.25)'; return c.card ? LV[c.level||0] : 'rgba(255,255,255,.25)'; }
+  if(layer==='level'){ if(!c) return 'rgba(255,255,255,.25)'; return c.card ? LV[lvi(c.level)] : 'rgba(255,255,255,.25)'; }
   if(layer==='card'){ if(!c||!c.card) return 'rgba(255,255,255,.25)'; return CARDC[c.card]; }
   if(layer==='camp'){ if(!c||!c.camp) return 'rgba(255,255,255,.25)'; return CAMP[c.camp]; }
   if(layer==='region'){ if(!c) return 'rgba(255,255,255,.25)'; return REGION[W.regions.indexOf(c.region)%REGION.length]; }
 }
 function legend(){
   let h='';
-  if(layer==='level'){ h = '<div><b>語れる度</b>（配置テスト・白紙再現のLv）</div>'+[0,1,2,3].map(i=>`<div><i style="background:${LV[i]}"></i>Lv${i} ${['まだ','聞いたことがある','概要は言える','背景まで語れる'][i]}</div>`).join('')+'<div><i style="background:rgba(255,255,255,.25)"></i>塾のカードに無い国</div>'; }
+  if(layer==='level'){ h = '<div><b>語れる度</b>（世界図鑑の5枠の平均）</div>'+[0,1,2,3].map(i=>`<div><i style="background:${LV[i]}"></i>${['まだ','〜Lv1 見た','〜Lv2 思い出せる','〜Lv3 説明できる'][i]}</div>`).join('')+'<div><i style="background:rgba(255,255,255,.25)"></i>塾のカードに無い国</div>'; }
   else if(layer==='card'){ h='<div><b>塾のカード</b>（14枚のうち国のもの）</div>'+Object.keys(CARDC).map(k=>`<div><i style="background:${CARDC[k]}"></i>${esc(k)}</div>`).join(''); }
   else if(layer==='camp'){ h='<div><b>陣営</b>（2026-09 の整理・推定。週次で見直す）</div>'+Object.keys(CAMP).map(k=>`<div><i style="background:${CAMP[k]}"></i>${k}</div>`).join(''); }
   else { h='<div><b>地域</b></div>'+W.regions.map((r,i)=>`<div><i style="background:${REGION[i%REGION.length]}"></i>${r}</div>`).join(''); }
@@ -113,8 +115,8 @@ function openPanel(id){
   if(c){
     h += `<div>${c.region?`<span class="chip">${esc(c.region)}</span>`:''}${c.camp?`<span class="chip ${c.camp==='米側'?'blue':c.camp==='中露側'?'red':''}">${esc(c.camp)}・推定</span>`:''}${c.card?`<span class="chip green">塾: ${esc(c.card)}</span>`:''}</div>`;
     if(c.card){
-      const lv = c.level||0;
-      h += `<div class="lv">${[1,2,3].map(i=>`<span class="${i<=lv?'on':''}"></span>`).join('')}</div>`;
+      const lv = lvi(c.level);
+      h += `<div class="lv">${[1,2,3].map(i=>`<span class="${i<=lv?'on':''}"></span>`).join('')}<small style="flex:none;margin-left:8px;white-space:nowrap;font-size:11px;line-height:8px">Lv ${(+c.level||0).toFixed(1)}（図鑑の5枠の平均）</small></div>`;
       const card = W.cards[c.card]||{}; const S = card.sections||{}; const ph = card.photos||{};
       if(ph.hero&&ph.hero.img) h += `<figure class="hero"><img src="${esc(ph.hero.img)}" alt="${esc(ph.hero.cap||'')}" loading="lazy"><figcaption>${esc(ph.hero.cap||'')}${ph.hero.credit?` <span class="cr">（${esc(ph.hero.credit)}）</span>`:''}</figcaption></figure>`;
       for(const k of ['①','②','③','④']){ if(S[k]) h += `<div class="sec"><h3>${k} ${esc(S[k].h.replace(/（.*?）/,''))}</h3><div class="body">${md(S[k].body)}</div></div>`; }
@@ -149,7 +151,7 @@ async function main(){
   const path = d3.geoPath(proj);
   g.append('path').datum({type:'Sphere'}).attr('d', path).attr('fill','var(--sea)').attr('stroke','var(--rule)');
   g.selectAll('.country').data(feats).join('path').attr('class','country').attr('d', path)
-    .on('mousemove', (e,d)=>{ const c=wc(d.id); const t=$('tip'); t.style.display='block'; t.style.left=(e.clientX+12)+'px'; t.style.top=(e.clientY-8)+'px'; t.textContent = (c?c.ja:(d.properties.name||'')) + (c&&c.card?`　Lv${c.level||0}`:''); })
+    .on('mousemove', (e,d)=>{ const c=wc(d.id); const t=$('tip'); t.style.display='block'; t.style.left=(e.clientX+12)+'px'; t.style.top=(e.clientY-8)+'px'; t.textContent = (c?c.ja:(d.properties.name||'')) + (c&&c.card?`　Lv${(+c.level||0).toFixed(1)}`:''); })
     .on('mouseleave', ()=>{ $('tip').style.display='none'; })
     .on('click', (e,d)=>{ e.stopPropagation(); openPanel(d.id); });
   svg.call(d3.zoom().scaleExtent([1,8]).on('zoom', e=>g.attr('transform', e.transform)));

@@ -19,7 +19,9 @@
 <title>Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
+<!-- 🧬 カンブリア（2026-09-23 作り替え）: 本文 Noto Sans JP・数字 IBM Plex Sans。見出しは上の Zen Kaku Gothic New（角ゴシック） -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=IBM+Plex+Sans:wght@600;700&display=swap">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -276,67 +278,174 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-today .vprev[open]>summary{margin-bottom:8px}
 #tab-today .vprev[open]>summary::after{content:" ▴"}
 /* 🧬 カンブリア（学習ページ）2026-09-18 v1。計画: ~/学習/カンブリア_計画.html、仕様: claude-context/knowledge/学習/学習OS.md */
-#la-run{position:fixed;inset:0;z-index:9000;background:#efe6cf;color:#2b2418;display:flex;flex-direction:column;font-family:"Zen Kaku Gothic New",sans-serif}
-#la-run .lr-top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #cdbf9c;font-weight:700}
+#la-run{position:fixed;inset:0;z-index:9000;background:#f4f6f9;color:#16202c;display:flex;flex-direction:column;font-family:"Noto Sans JP","Hiragino Sans",sans-serif}
+#la-run .lr-top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top));border-bottom:1px solid #dfe4ec;font-weight:700;font-family:"Zen Kaku Gothic New",sans-serif;background:#fff}
 #la-run .lr-body{flex:1;padding:24px 20px;display:flex;flex-direction:column;justify-content:center;text-align:center}
-#la-run .lr-no{font-size:12px;letter-spacing:.12em;color:#5c5040;margin-bottom:14px}
-#la-run .lr-q{font:700 26px/1.5 "Shippori Mincho",serif;text-wrap:balance}
-#la-run .lr-a{margin-top:18px;font-size:19px;line-height:1.6;color:#a3402b;font-weight:700}
-#la-run .lr-cd{margin-top:14px;font:800 40px "Shippori Mincho",serif;color:#8c8069;min-height:50px}
-#la-run .lr-ctl{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;padding:14px;border-top:1px solid #cdbf9c}
-#la-run .lr-ctl select{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid #cdbf9c;background:#fff}
-#la-run .lr-ctl .btn{min-height:48px;font-size:16px}
-#la-run .lr-score{overflow:auto;max-height:55vh;padding:10px 16px 30px;border-top:1px solid #cdbf9c;background:#f7f1e3}
-#la-run .lr-sh{font-size:12.5px;color:#5c5040;margin:6px 0 10px}
-#la-run .lr-si{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px dashed #cdbf9c}
-#la-run .lr-si .t{flex:1;font-size:14px;line-height:1.5}#la-run .lr-si .ans{font-size:12px;color:#5c5040;margin-top:3px}
-#la-run .lr-si .sb{display:flex;gap:4px}#la-run .lr-si .sb button{width:40px;height:40px;border-radius:8px;border:1px solid #cdbf9c;background:#fff;font-weight:700}#la-run .lr-si .sb button.on{background:#4d6b3a;color:#fff;border-color:#4d6b3a}
+#la-run .lr-no{font-size:12px;letter-spacing:.12em;color:#7d8797;margin-bottom:14px}
+#la-run .lr-q{font:700 24px/1.5 "Zen Kaku Gothic New",sans-serif;text-wrap:balance}
+#la-run .lr-a{margin-top:18px;font-size:19px;line-height:1.6;color:#3346c9;font-weight:700}
+#la-run .lr-cd{margin-top:14px;font:700 40px "IBM Plex Sans",sans-serif;color:#7d8797;min-height:50px}
+#la-run .lr-ctl{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;padding:14px;border-top:1px solid #dfe4ec;background:#fff}
+#la-run .lr-ctl select{font:inherit;padding:6px 8px;border-radius:10px;border:1px solid #dfe4ec;background:#fff}
+#la-run .lr-ctl .btn{min-height:48px;font-size:16px;border-radius:12px}
+#la-run .lr-score{overflow:auto;max-height:55vh;padding:10px 16px 30px;border-top:1px solid #dfe4ec;background:#fff}
+#la-run .lr-sh{font-size:12.5px;color:#4a5566;margin:6px 0 10px}
+#la-run .lr-si{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #eef1f6}
+#la-run .lr-si .t{flex:1;font-size:14px;line-height:1.5}#la-run .lr-si .ans{font-size:12px;color:#4a5566;margin-top:3px}
+#la-run .lr-si .sb{display:flex;gap:4px}#la-run .lr-si .sb button{width:40px;height:40px;border-radius:10px;border:1px solid #dfe4ec;background:#fff;font-weight:700}#la-run .lr-si .sb button.on{background:#16202c;color:#fff;border-color:#16202c}
 #la-reader{position:fixed;inset:0;z-index:9999;background:var(--bg,#f7f5f2);display:flex;flex-direction:column}#la-reader .lrh{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border2,#e6e0d6);padding-top:calc(10px + env(safe-area-inset-top))}#la-reader .lrt{font-size:13px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#la-reader .lrf{flex:1;width:100%;border:0;background:#fff}
 .learn-box{background:var(--card,#fff);border:1.5px dashed var(--accent,#0bb7ae);border-radius:12px;padding:12px 14px;margin:0 0 18px}.learn-box .lbx-h{font-size:14px;font-weight:700;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.learn-box .lbx-h span{font-size:11.5px;font-weight:500;color:var(--text2)}
 .learn-box textarea{width:100%;min-height:76px;margin-top:8px;font:inherit;font-size:14.5px;line-height:1.6;padding:8px 10px;border:1px solid var(--border2,#e6e0d6);border-radius:8px;background:var(--bg2,#f6f3ee);color:var(--text);resize:vertical}.learn-box input{width:100%;margin-top:6px;font:inherit;font-size:13.5px;padding:7px 10px;border:1px solid var(--border2,#e6e0d6);border-radius:8px;background:var(--bg2,#f6f3ee);color:var(--text)}
 .learn-box .lbx-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.learn-box .lbx-chips button{font:inherit;font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--border2,#e6e0d6);background:var(--card,#fff);color:var(--text2)}.learn-box .lbx-chips button.on{background:var(--accent,#0bb7ae);color:#fff;border-color:var(--accent,#0bb7ae)}
-/* 🧬 カンブリアのページ全体を古紙の雰囲気に（2026-09-19 メグ「一覧も中身と合わせて」）。答案用紙・教科書と同じ色 */
-#tab-learn{--paper:#efe6cf;--pink:#2b2418;--pink2:#5c5040;--pink3:#8c8069;--prule:#cdbf9c;--pred:#a3402b;--pblue:#2f5a78;--pgreen:#4d6b3a;--pcard:#f7f1e3;
-  margin:-12px -12px 0;padding:14px 14px 40px;min-height:70vh;color:var(--pink);font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;
-  background-color:var(--paper);background-image:radial-gradient(ellipse at 12% 8%,rgba(120,90,40,.10),transparent 42%),radial-gradient(ellipse at 88% 92%,rgba(120,90,40,.12),transparent 40%),url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.28 0 0 0 0 0.16 0 0 0 .09 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
-#tab-learn .lp-head{border-bottom:0;padding-bottom:0;margin-bottom:10px}#tab-learn .lp-stats{display:flex;gap:6px;align-items:stretch;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}#tab-learn .lp-stats::-webkit-scrollbar{display:none}#tab-learn .ls{flex:none;min-width:78px;background:rgba(255,255,255,.5);border:1px solid var(--prule);border-radius:8px;padding:6px 10px;display:flex;flex-direction:column;gap:2px}#tab-learn .ls span{font-family:"Zen Kaku Gothic New",sans-serif;font-size:11px;color:var(--pink3);white-space:nowrap}#tab-learn .ls b{font-family:"Shippori Mincho",serif;font-size:20px;line-height:1.1;color:var(--pink);font-weight:800}#tab-learn .ls b small{font-size:12px;font-weight:500;color:var(--pink3);margin-left:2px}#tab-learn .ls-back{flex:none;align-self:center;font:inherit;font-family:"Zen Kaku Gothic New",sans-serif;font-size:12.5px;color:var(--pink3);background:transparent;border:0;padding:0 6px;white-space:nowrap}#tab-learn .lp-head .st{font-family:"Zen Kaku Gothic New",sans-serif;color:var(--pink2)}#tab-learn .lp-head .st b{font-family:"Shippori Mincho",serif;color:var(--pink);font-weight:800}
-/* タブは丸ボタンではなく、紙のインデックス（見出しタブ）に（2026-09-19 メグ「丸すぎて見づらい」） */
-#tab-learn .lp-nav{gap:6px;border-bottom:2px solid var(--pink);margin:0 -4px 16px;padding:0 4px;align-items:flex-end;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}#tab-learn .lp-nav::-webkit-scrollbar{display:none}
-#tab-learn .lp-nav button{font-family:"Zen Kaku Gothic New",sans-serif;font-size:13.5px;font-weight:700;height:38px;padding:0 12px;flex:none;border:1px solid var(--prule);border-bottom:0;border-radius:6px 6px 0 0;background:rgba(255,255,255,.35);color:var(--pink2);white-space:nowrap;transition:none}
-#tab-learn .zk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:8px}
-#tab-learn .zk-card{text-align:left;font:inherit;padding:10px 12px;border:1px solid var(--prule);border-radius:6px;background:rgba(255,255,255,.45);color:var(--text);cursor:pointer;display:flex;flex-direction:column;gap:2px}
-#tab-learn .zk-card b{font-family:"Shippori Mincho",serif;font-size:14px}#tab-learn .zk-card span{font-size:11px;color:var(--text3);letter-spacing:.06em}
-#tab-learn .ask-q{font-size:13.5px;white-space:pre-wrap;color:var(--text2);border-left:3px solid var(--prule);padding-left:10px;margin:6px 0}
-#tab-learn .ask-a{font-size:14px;line-height:1.85;background:rgba(255,255,255,.5);border:1px solid var(--prule);border-radius:6px;padding:10px 12px;margin-top:8px}
-#tab-learn #ask-text{width:100%;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--prule);border-radius:6px;background:rgba(255,255,255,.6)}
-#tab-learn .lp-nav button.on{background:var(--pcard);color:var(--pink);border-color:var(--pink);box-shadow:0 2px 0 var(--pcard)}
-#tab-learn .lp-nav button[data-lp="back"]{margin-left:auto;border:0;background:transparent;font-weight:500;font-size:12.5px;color:var(--pink3);padding:0 4px;box-shadow:none}
-#tab-learn .lb{background:var(--pcard);border:1px solid var(--prule);border-radius:8px;box-shadow:0 12px 30px -24px rgba(60,40,10,.5);color:var(--pink);position:relative}#tab-learn .lb .lbh{font-family:"Zen Kaku Gothic New",sans-serif;color:var(--pink2)}#tab-learn .lb .lbh .lbt{color:var(--pink3)}#tab-learn .lb p{color:var(--pink2)!important;font-family:"Zen Kaku Gothic New",sans-serif}
-#tab-learn .lq,#tab-learn .lk{background:rgba(255,255,255,.45);border:1px solid var(--prule);border-radius:6px;position:relative;color:var(--pink)}#tab-learn .lq b,#tab-learn .lk .kc{font-family:"Zen Kaku Gothic New",sans-serif;color:var(--pblue)}#tab-learn .lq .qt{font-size:15.5px;font-weight:700}#tab-learn .lq .qn,#tab-learn .lq .hint{font-family:"Zen Kaku Gothic New",sans-serif;color:var(--pink2)}
-#tab-learn .btn{font-family:"Zen Kaku Gothic New",sans-serif;border:1.5px solid var(--pink);background:transparent;color:var(--pink);border-radius:8px}#tab-learn .btn.btn-primary{background:var(--pink);color:var(--paper)}#tab-learn .btn[disabled]{opacity:.5}
-#tab-learn .lgd{border-top:1px dashed var(--prule)}#tab-learn .lgd .lgdh{font-family:"Zen Kaku Gothic New",sans-serif;color:var(--pblue);cursor:pointer;list-style:none;padding-right:56px}#tab-learn .lgd .lgdh::-webkit-details-marker{display:none}#tab-learn .lgd .lgs{font-weight:500;font-size:12.5px;color:var(--pink2)}#tab-learn .lgd .lgi{border-left-color:var(--prule)}#tab-learn .lgd .lgi .a{color:var(--pink2)}
-#tab-learn .strip7 i{background:var(--prule)}#tab-learn .strip7 i.s3{background:var(--pgreen);color:#fff}#tab-learn .strip7 i.s2{background:#cfe0c8}#tab-learn .strip7 i.s1{background:#f3e2b3}#tab-learn .strip7 i.s0{background:#e9b3a8}
-#tab-learn .lq textarea,#tab-learn .lc input{font-family:"Zen Kurenaido","Shippori Mincho",serif;background:rgba(255,255,255,.5);border-color:var(--prule);color:var(--pink)}
-/* 赤い「済」の判（一覧用） */
-#tab-learn .stmp{position:absolute;right:12px;top:10px;font-family:"Shippori Mincho",serif;font-weight:800;color:var(--pred);border:2.5px double var(--pred);border-radius:50%;width:46px;height:46px;line-height:42px;text-align:center;font-size:22px;transform:rotate(-12deg);opacity:.9;pointer-events:none;background:rgba(247,241,227,.6)}
-#tab-learn .stmp.big{width:78px;height:78px;line-height:72px;font-size:30px;right:16px;top:10px}#tab-learn .done{opacity:.8}
+/* 🧬 カンブリア 2026-09-23 作り替え。計画: カンブリア塾 立て直し計画（70マスに一本化・入口2つ）／デザイン: カンブリア塾 続くデザイン（design-src）。
+   白地・分野の色（世界=青 科学=紫 投資=緑 法則=ピンク）・見出しは角ゴシック Zen Kaku Gothic New（🔴丸ゴシック・丸文字は使わない 9/23 メグ）・本文 Noto Sans JP・数字 IBM Plex Sans。
+   暗い画面（端末のダークモード）でも読めるように色は変数で持つ。赤は勉強の画面に出さない（不具合と警告だけ） */
+#tab-learn,#cb-knows{--cb-ink:#16202c;--cb-ink2:#4a5566;--cb-ink3:#7d8797;--cb-ground:#f4f6f9;--cb-paper:#fff;--cb-line:#dfe4ec;--cb-soft:#eef1f6;
+  --cb-accent:#3346c9;--cb-accent-soft:#e6e9fb;--cb-world:#1d6fa8;--cb-world-soft:#e3f0f9;--cb-sci:#6a47b8;--cb-sci-soft:#efe9fa;--cb-inv:#16875a;--cb-inv-soft:#e2f4ec;
+  --cb-pink:#e8738f;--cb-pink-soft:#fde8ee;--cb-shadow:0 1px 2px rgba(22,32,44,.06),0 6px 20px rgba(22,32,44,.06);--cb-stampbg:#fff;
+  --cb-h:"Zen Kaku Gothic New","Noto Sans JP","Hiragino Sans",sans-serif;--cb-b:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;--cb-n:"IBM Plex Sans","Noto Sans JP",sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #tab-learn,:root:not([data-theme="light"]) #cb-knows{
+  --cb-ink:#e8ecf3;--cb-ink2:#b3bccb;--cb-ink3:#8590a2;--cb-ground:#0f141b;--cb-paper:#171e28;--cb-line:#2a3443;--cb-soft:#1d2531;--cb-accent:#8b9bff;--cb-accent-soft:#232a4d;
+  --cb-world:#6cb4e6;--cb-world-soft:#15293a;--cb-sci:#b69cf0;--cb-sci-soft:#261f3c;--cb-inv:#5cc99a;--cb-inv-soft:#13302a;--cb-pink:#f59ab0;--cb-pink-soft:#3a1e27;
+  --cb-shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);--cb-stampbg:#f3f4f7;color-scheme:dark}}
+:root[data-theme="dark"] #tab-learn,:root[data-theme="dark"] #cb-knows{--cb-ink:#e8ecf3;--cb-ink2:#b3bccb;--cb-ink3:#8590a2;--cb-ground:#0f141b;--cb-paper:#171e28;--cb-line:#2a3443;--cb-soft:#1d2531;--cb-accent:#8b9bff;--cb-accent-soft:#232a4d;
+  --cb-world:#6cb4e6;--cb-world-soft:#15293a;--cb-sci:#b69cf0;--cb-sci-soft:#261f3c;--cb-inv:#5cc99a;--cb-inv-soft:#13302a;--cb-pink:#f59ab0;--cb-pink-soft:#3a1e27;--cb-shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);--cb-stampbg:#f3f4f7;color-scheme:dark}
+#tab-learn{margin:-12px -14px 0;padding:14px 16px 44px;min-height:calc(100dvh - 120px);background:var(--cb-ground);color:var(--cb-ink);font-family:var(--cb-b);font-size:15px;line-height:1.75}
+#tab-learn h2,#tab-learn h3,#cb-knows h2,#cb-knows h3{font-family:var(--cb-h);line-height:1.35;margin:0;text-wrap:balance;color:var(--cb-ink)}
+#tab-learn h2{font-size:21px;font-weight:900}#tab-learn h3{font-size:16px;font-weight:700}
+#tab-learn .num,#cb-knows .num{font-family:var(--cb-n);font-weight:700;font-variant-numeric:tabular-nums}
+#tab-learn .cb-muted,#tab-learn .cb-small{color:var(--cb-ink3);font-size:12.5px;line-height:1.6}
+#tab-learn button{font-family:inherit;color:inherit}
+/* 入口2つ */
+#tab-learn .cb-top{display:flex;gap:10px;align-items:center;margin:0 0 16px}
+#tab-learn .cb-seg{flex:1;display:grid;grid-template-columns:1fr 1fr;background:var(--cb-soft);border-radius:12px;padding:4px;gap:4px}
+#tab-learn .cb-seg button{border:0;background:transparent;border-radius:9px;min-height:40px;font-family:var(--cb-h);font-weight:700;font-size:14.5px;color:var(--cb-ink2);cursor:pointer}
+#tab-learn .cb-seg button.on{background:var(--cb-paper);color:var(--cb-ink);box-shadow:var(--cb-shadow)}
+#tab-learn .cb-back{border:0;background:none;color:var(--cb-ink3);font-size:12.5px;padding:6px 2px;white-space:nowrap;cursor:pointer}
+#tab-learn .cb-card{background:var(--cb-paper);border:1px solid var(--cb-line);border-radius:16px;padding:16px;box-shadow:var(--cb-shadow);margin:0 0 14px}
+#tab-learn .cb-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:2px 2px 10px}
+#tab-learn .cb-head .cb-small{white-space:nowrap}
+#tab-learn .cb-eyebrow{font-size:11.5px;letter-spacing:.14em;color:var(--cb-ink3);font-weight:700}
+/* 分野の色の札 */
+#tab-learn .cb-tag,#cb-knows .cb-tag{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:99px;font-weight:700;font-size:12px;line-height:1.7;white-space:nowrap}
+#tab-learn .cb-tag i,#cb-knows .cb-tag i{width:8px;height:8px;border-radius:50%;flex:none}
+#tab-learn .t-w,#cb-knows .t-w{background:var(--cb-world-soft);color:var(--cb-world)}#tab-learn .t-w i,#cb-knows .t-w i{background:var(--cb-world)}
+#tab-learn .t-s,#cb-knows .t-s{background:var(--cb-sci-soft);color:var(--cb-sci)}#tab-learn .t-s i,#cb-knows .t-s i{background:var(--cb-sci)}
+#tab-learn .t-i,#cb-knows .t-i{background:var(--cb-inv-soft);color:var(--cb-inv)}#tab-learn .t-i i,#cb-knows .t-i i{background:var(--cb-inv)}
+#tab-learn .t-l{background:var(--cb-pink-soft);color:var(--cb-pink)}#tab-learn .t-l i{background:var(--cb-pink)}
+#tab-learn .tc-w{--tc:var(--cb-world);--ts:var(--cb-world-soft)}#tab-learn .tc-s{--tc:var(--cb-sci);--ts:var(--cb-sci-soft)}#tab-learn .tc-i{--tc:var(--cb-inv);--ts:var(--cb-inv-soft)}
+/* 今日の一本道 */
+#tab-learn .cb-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:0 2px 12px}#tab-learn .cb-bar i{height:5px;border-radius:3px;background:var(--cb-line)}#tab-learn .cb-bar i.on{background:var(--cb-accent)}
+#tab-learn .cb-go{display:flex;justify-content:center;align-items:center;gap:8px;width:100%;min-height:52px;border:0;border-radius:14px;background:var(--cb-accent);color:#fff;font-family:var(--cb-h);font-weight:700;font-size:16px;margin:0 0 14px;cursor:pointer;box-shadow:0 6px 18px -8px var(--cb-accent)}
+#tab-learn .cb-step{display:grid;grid-template-columns:34px 1fr;gap:12px;background:var(--cb-paper);border:1px solid var(--cb-line);border-radius:16px;padding:14px 14px 14px 12px;margin:0 0 10px}
+#tab-learn .cb-step.now{border:2px solid var(--cb-accent);padding:13px 13px 13px 11px;box-shadow:0 0 0 4px var(--cb-accent-soft)}
+#tab-learn .cb-step>div,#tab-learn .cb-verdict>div,#tab-learn .cb-slot-h>div,#tab-learn .cb-mine>div{min-width:0}
+#tab-learn .cb-tag,#tab-learn .cb-chip,#tab-learn .cb-pill{white-space:normal;max-width:100%}
+#tab-learn .cb-step .sub,#tab-learn .cb-step .ttl,#tab-learn .cb-qa .q{overflow-wrap:anywhere}
+#tab-learn .cb-step .n{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--cb-soft);color:var(--cb-ink2);font-family:var(--cb-n);font-weight:700;font-size:14px}
+#tab-learn .cb-step.now .n{background:var(--cb-accent);color:#fff}
+#tab-learn .cb-step.done .n{background:var(--cb-inv-soft);color:var(--cb-inv)}
+#tab-learn .cb-step.done h3{color:var(--cb-ink2)}
+#tab-learn .cb-step .sub{font-size:13px;color:var(--cb-ink2);margin-top:2px;line-height:1.6}
+#tab-learn .cb-step .ttl{font-family:var(--cb-h);font-weight:700;font-size:16.5px;line-height:1.45;margin:6px 0 2px}
+#tab-learn .cb-step .note{font-size:12.5px;color:var(--cb-ink3);border-left:3px solid var(--cb-line);padding-left:9px;margin:6px 0 0;line-height:1.6}
+#tab-learn .cb-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+#tab-learn .cb-btn{min-height:44px;padding:0 16px;border-radius:12px;border:1.5px solid var(--cb-line);background:var(--cb-paper);color:var(--cb-ink);font-weight:700;font-size:14px;cursor:pointer;font-family:var(--cb-h)}
+#tab-learn .cb-btn.p{background:var(--cb-ink);border-color:var(--cb-ink);color:var(--cb-paper)}
+#tab-learn .cb-btn.a{background:var(--cb-accent);border-color:var(--cb-accent);color:#fff}
+#tab-learn .cb-btn[disabled]{opacity:.5}
+#tab-learn .cb-btn.on{background:var(--cb-pink-soft);border-color:var(--cb-pink);color:var(--cb-ink)}
+#tab-learn .cb-link{border:0;background:none;color:var(--cb-accent);font-weight:700;font-size:13px;padding:6px 0;cursor:pointer}
+#tab-learn textarea.cb-ta{width:100%;min-height:96px;margin-top:10px;font:inherit;font-size:15.5px;line-height:1.7;padding:10px 12px;border:1px solid var(--cb-line);border-radius:12px;background:var(--cb-soft);color:var(--cb-ink);resize:vertical}
+#tab-learn .cb-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+#tab-learn .cb-chip{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;padding:3px 10px 3px 4px;border-radius:99px;background:var(--cb-soft);color:var(--cb-ink2)}
+#tab-learn .cb-chip b{width:18px;height:18px;border-radius:5px;display:inline-block}
+/* レベルの色（70マス共通）。l0=まだ（点線）→ l3=説明できる（分野の色そのもの） */
+#tab-learn .l0{background:var(--cb-paper);border:1.5px dashed var(--cb-line)}
+#tab-learn .l1{background:var(--ts);border:1.5px solid color-mix(in srgb,var(--tc) 30%,transparent)}
+#tab-learn .l2{background:color-mix(in srgb,var(--tc) 55%,var(--cb-paper));border:1.5px solid transparent}
+#tab-learn .l3{background:var(--tc);border:1.5px solid transparent}
+/* 採点カード */
+#tab-learn .cb-qa{background:var(--cb-paper);border:1px solid var(--cb-line);border-radius:14px;padding:12px 14px;margin-top:10px}
+#tab-learn .cb-qa .q{font-weight:700;font-size:14.5px;line-height:1.6;margin-top:6px}
+#tab-learn .cb-qa .me{margin-top:8px;background:var(--cb-soft);border-radius:12px;padding:8px 11px;font-size:13.5px;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+#tab-learn .cb-qa .me small{display:block;color:var(--cb-ink3);font-size:11.5px}
+#tab-learn .cb-verdict{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;margin-top:10px}
+#tab-learn .cb-verdict img{width:58px;height:58px;background:var(--cb-stampbg);border-radius:50%;transform:rotate(-8deg);border:2px solid var(--cb-pink);object-fit:contain}
+#tab-learn .cb-verdict .cb-sc{font-size:26px;color:var(--cb-pink);line-height:1}#tab-learn .cb-verdict .cb-sc small{font-size:13px;color:var(--cb-ink3)}
+#tab-learn .cb-verdict .miss{font-size:13px;color:var(--cb-ink2);line-height:1.55;margin-top:3px}
+#tab-learn .cb-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+#tab-learn .cb-pill{font-size:12px;font-weight:700;padding:2px 10px;border-radius:99px;background:var(--cb-soft);color:var(--cb-ink2);white-space:nowrap}
+#tab-learn .cb-cap{font-size:12px;color:var(--cb-ink3);margin:14px 2px 6px;font-weight:700;letter-spacing:.06em}
+/* スタンプカード（日付の欄は無い。何日空いても減らない） */
+#tab-learn .cb-stamps{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+#tab-learn .cb-stamps .s{aspect-ratio:1;border-radius:50%;border:2px dashed var(--cb-line);display:grid;place-items:center;background:var(--cb-paper);font-family:var(--cb-n);font-size:11px;color:var(--cb-ink3);overflow:hidden}
+#tab-learn .cb-stamps .s.on{border:2px solid var(--cb-pink-soft);background:var(--cb-stampbg)}
+#tab-learn .cb-stamps .s img{width:100%;height:100%;object-fit:contain}
+#tab-learn .cb-foot{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:10px}
+/* もっとやる */
+#tab-learn .cb-shelf{display:grid;gap:8px}
+#tab-learn .cb-shelf button{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;border:1px solid var(--cb-line);background:var(--cb-paper);border-radius:12px;padding:12px 14px;cursor:pointer;min-height:52px}
+#tab-learn .cb-shelf b{font-family:var(--cb-h);font-size:14.5px;display:block}#tab-learn .cb-shelf span{font-size:12px;color:var(--cb-ink3);display:block;line-height:1.5}
+#tab-learn .cb-shelf i{font-style:normal;color:var(--cb-ink3)}
+/* 世界図鑑（70マス） */
+#tab-learn .cb-legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--cb-ink2);margin:8px 2px 12px}
+#tab-learn .cb-legend span{display:inline-flex;align-items:center;gap:5px}#tab-learn .cb-legend b{width:16px;height:16px;border-radius:4px;display:inline-block}
+#tab-learn .cb-grid{display:grid;grid-template-columns:minmax(96px,1.5fr) repeat(5,minmax(0,1fr));gap:5px;align-items:center}
+#tab-learn .cb-grid .gh{display:flex;flex-direction:column;align-items:center;gap:1px;font-size:10.5px;white-space:nowrap;color:var(--cb-ink3);font-weight:700}
+#tab-learn .cb-grid .gh svg{width:18px;height:18px}
+#tab-learn .cb-grid .gn{border:0;background:none;text-align:left;padding:4px 2px;font-family:var(--cb-h);font-weight:700;font-size:13px;line-height:1.3;cursor:pointer;color:var(--cb-ink);display:flex;align-items:center;gap:6px;min-height:34px}
+#tab-learn .cb-grid .gn i{width:7px;height:7px;border-radius:50%;background:var(--tc);flex:none}
+#tab-learn .cb-grid .gc{height:30px;border-radius:7px;cursor:pointer;padding:0}
+#tab-learn .cb-worldbtn{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;border:1px solid var(--cb-line);background:var(--cb-world-soft);color:var(--cb-world);border-radius:14px;padding:12px 14px;font-family:var(--cb-h);font-weight:700;font-size:14.5px;cursor:pointer;margin:0 0 14px}
+#tab-learn .cb-worldbtn span{font-family:var(--cb-b);font-weight:400;font-size:12px;color:var(--cb-ink2)}
+/* カードの5枠 */
+#tab-learn .cb-mini{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:10px 0 2px}#tab-learn .cb-mini b{height:10px;border-radius:4px}
+#tab-learn .cb-slot{background:var(--cb-paper);border:1px solid var(--cb-line);border-radius:16px;padding:14px;margin:0 0 12px}
+#tab-learn .cb-slot-h{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center}
+#tab-learn .cb-ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--ts);color:var(--tc)}#tab-learn .cb-ic svg{width:24px;height:24px}
+#tab-learn .cb-slot-h b{font-family:var(--cb-h);font-size:15.5px;display:block}#tab-learn .cb-slot-h small{font-size:12px;color:var(--cb-ink3);display:block;line-height:1.45}
+#tab-learn .cb-lv{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap;color:var(--cb-ink2)}
+#tab-learn .cb-lv.l3{color:#fff}
+#tab-learn details.cb-fact{margin-top:10px;border-top:1px solid var(--cb-line);padding-top:8px}
+#tab-learn details.cb-fact>summary{cursor:pointer;list-style:none;font-size:13px;color:var(--cb-ink2);line-height:1.6}
+#tab-learn details.cb-fact>summary::-webkit-details-marker{display:none}
+#tab-learn details.cb-fact>summary b{color:var(--tc);font-size:12px;margin-right:6px}
+#tab-learn .cb-factbody{font-size:13.5px;line-height:1.8;color:var(--cb-ink);margin-top:6px}
+#tab-learn .cb-factbody ul{margin:0;padding-left:1.2em}#tab-learn .cb-factbody li{margin:3px 0}#tab-learn .cb-factbody p{margin:0 0 6px}
+#tab-learn .cb-mine{display:grid;grid-template-columns:40px 1fr;gap:10px;align-items:start;margin-top:10px;font-size:13px}
+#tab-learn .cb-mine img{width:40px;height:40px;border-radius:50%;background:var(--cb-stampbg);border:1.5px solid var(--cb-pink);object-fit:contain}
+#tab-learn .cb-mine .nost{width:40px;height:40px;border-radius:50%;border:1.5px dashed var(--cb-line);display:grid;place-items:center;font-size:10px;color:var(--cb-ink3)}
+#tab-learn .cb-mine .mq{color:var(--cb-ink2);line-height:1.55}#tab-learn .cb-mine .ma{margin-top:2px;line-height:1.55}#tab-learn .cb-mine .mm{color:var(--cb-ink3);font-size:12px;line-height:1.5;margin-top:2px}
+#tab-learn .cb-lessons{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+#tab-learn .cb-lessons button{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;border:1px solid var(--cb-line);background:var(--cb-soft);border-radius:10px;padding:8px 12px;font-size:13px;cursor:pointer;min-height:40px}
+#tab-learn .cb-lessons button span{color:var(--cb-ink3);font-size:12px;white-space:nowrap}
+/* 聞きたい（旧部品をそのまま新デザインで） */
+#tab-learn .lb{background:var(--cb-paper);border:1px solid var(--cb-line);border-radius:14px;padding:14px;margin:0 0 12px;box-shadow:var(--cb-shadow)}
+#tab-learn .lb .lbh{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-family:var(--cb-h);font-weight:700;font-size:14.5px}#tab-learn .lb .lbh .lbt{margin-left:auto;font-family:var(--cb-b);font-weight:400;font-size:12px;color:var(--cb-ink3)}
+#tab-learn .lb p{color:var(--cb-ink2)!important}
+#tab-learn .ask-q{font-size:13.5px;white-space:pre-wrap;color:var(--cb-ink2);border-left:3px solid var(--cb-line);padding-left:10px;margin:6px 0}
+#tab-learn .ask-a{font-size:14px;line-height:1.85;background:var(--cb-soft);border-radius:12px;padding:10px 12px;margin-top:8px}
+#tab-learn #ask-text{width:100%;font:inherit;font-size:15px;padding:10px 12px;border:1px solid var(--cb-line);border-radius:12px;background:var(--cb-soft);color:var(--cb-ink)}
+#tab-learn .lb .row{display:flex;gap:8px;flex-wrap:wrap}#tab-learn .lb .btn{font-family:var(--cb-h);border:1.5px solid var(--cb-line);background:var(--cb-paper);color:var(--cb-ink);border-radius:12px;min-height:44px}#tab-learn .lb .btn.btn-primary{background:var(--cb-ink);border-color:var(--cb-ink);color:var(--cb-paper)}
+#tab-learn .lb .hint{font-size:12px;color:var(--cb-ink3)}#tab-learn .empty{font-size:13px;color:var(--cb-ink3)}
+/* 知ってる（飛び級の3問） */
+#cb-knows{position:fixed;inset:0;z-index:9500;background:var(--cb-ground);color:var(--cb-ink);font-family:var(--cb-b);overflow:auto;padding:calc(14px + env(safe-area-inset-top)) 16px 40px}
+#cb-knows .kh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+#cb-knows .kx{border:0;background:none;color:var(--cb-ink3);font-size:14px;min-height:44px;padding:0 4px;cursor:pointer}
+#cb-knows h2{font-size:20px;font-weight:900}
+#cb-knows .kq{background:var(--cb-paper);border:1px solid var(--cb-line);border-radius:14px;padding:14px;margin-top:12px}
+#cb-knows .kq .t{font-weight:700;font-size:15.5px;line-height:1.6;margin-top:4px}
+#cb-knows .kq .ans{margin-top:10px;background:var(--cb-soft);border-radius:10px;padding:8px 11px;font-size:14px;line-height:1.6}
+#cb-knows .kr{display:flex;gap:8px;margin-top:10px}
+#cb-knows .kr button,#cb-knows .kgo{flex:1;min-height:46px;border-radius:12px;border:1.5px solid var(--cb-line);background:var(--cb-paper);color:var(--cb-ink);font-family:var(--cb-h);font-weight:700;font-size:14.5px;cursor:pointer}
+#cb-knows .kr button.on{background:var(--cb-ink);color:var(--cb-paper);border-color:var(--cb-ink)}
+#cb-knows .kgo{width:100%;margin-top:16px;background:var(--cb-accent);border-color:var(--cb-accent);color:#fff}
+#cb-knows .kres{margin-top:16px;font-size:14px;color:var(--cb-ink2)}
+#cb-knows .small{font-size:12.5px;color:var(--cb-ink3)}
+@media (prefers-color-scheme:dark){#la-reader{background:#0f141b}#la-reader .lrh{background:#171e28;color:#e8ecf3;border-color:#2a3443}}
 .lentry{display:flex;align-items:center;gap:12px;background:var(--card,#fff);border:1px solid var(--border2,#e6e0d6);border-left:4px solid var(--accent,#0bb7ae);border-radius:10px;padding:12px 14px;margin:0 0 12px;cursor:pointer}.lentry .le1{font-size:15px;font-weight:700}.lentry .le2{font-size:12px;color:var(--text2);margin-top:2px}.lentry .lego{margin-left:auto;font-size:13px;color:var(--accent,#0bb7ae);white-space:nowrap}
-.lp-head{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;margin:0 0 10px}.lp-head .st{font-size:12px;color:var(--text2)}.lp-head .st b{display:block;font-size:20px;font-weight:600;color:var(--text)}
-.lp-nav{display:flex;gap:6px;margin:0 0 14px}.lp-nav button{font:inherit;font-size:13px;padding:5px 14px;border-radius:999px;border:1px solid var(--border2,#e6e0d6);background:var(--card,#fff);color:var(--text2)}.lp-nav button.on{background:var(--accent,#0bb7ae);color:#fff;border-color:var(--accent,#0bb7ae)}
 .lb{background:var(--card,#fff);border:1px solid var(--border2,#e6e0d6);border-radius:10px;padding:12px 14px;margin:0 0 12px}.lb .lbh{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--text2);letter-spacing:.04em}.lb .lbh .lbt{margin-left:auto;font-weight:500;letter-spacing:0}.lb .lbh .ok{color:var(--accent,#0bb7ae)}
-.lq{margin:10px 0 0;padding:10px 12px;background:var(--bg2,#f6f3ee);border-radius:8px}.lq b{display:block;font-size:12px;color:var(--text2);margin-bottom:2px}.lq .qt{font-size:14.5px;line-height:1.6}.lq .qn{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.6}
-.lq textarea{width:100%;min-height:84px;margin-top:8px;font:inherit;font-size:14px;line-height:1.6;padding:8px 10px;border:1px solid var(--border2,#e6e0d6);border-radius:8px;background:var(--card,#fff);color:var(--text);resize:vertical}
-.lq .lqb{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}#tab-learn .lqb{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#tab-learn .lqb .btn{min-height:44px;white-space:nowrap}.lq .lqb .hint{font-size:12px;color:var(--text2)}.lq .lqb button.rec.on{background:#e9b3a8}
-.lq .sc{margin-top:8px;padding:8px 10px;border-left:3px solid var(--accent,#0bb7ae);background:var(--card,#fff);border-radius:6px;font-size:13px}.lq .sc b{display:inline;font-size:15px;color:var(--text)}.lq .sc .miss{color:#8a6a1f}
-.lk{margin:8px 0 0;padding:8px 10px;border:1px solid var(--border2,#e6e0d6);border-radius:8px;font-size:13.5px;line-height:1.55}.lk .kc{font-size:11px;color:var(--text2)}.lk .ka{margin-top:6px;padding:6px 8px;background:var(--bg2,#f6f3ee);border-radius:6px;font-size:13px}.lk .ks{display:flex;gap:6px;margin-top:6px;align-items:center;font-size:12px;color:var(--text2);flex-wrap:wrap}.lk .ks button{font:inherit;font-size:12px;padding:2px 10px;border-radius:6px;border:1px solid var(--border2,#e6e0d6);background:var(--card,#fff);color:var(--text)}.lk .ks button.on{background:var(--accent,#0bb7ae);color:#fff;border-color:var(--accent,#0bb7ae)}.lk.done{opacity:.6}
-.lc input{width:100%;font:inherit;font-size:13.5px;padding:7px 10px;margin-top:6px;border:1px solid var(--border2,#e6e0d6);border-radius:8px;background:var(--card,#fff);color:var(--text)}
-.strip7{display:flex;gap:4px;align-items:center;font-size:11px;color:var(--text2)}.strip7 i{display:inline-block;width:18px;height:18px;border-radius:4px;background:var(--border2,#e6e0d6);font-style:normal;font-size:10px;line-height:18px;text-align:center}.strip7 i.s3{background:var(--accent,#0bb7ae);color:#fff}.strip7 i.s2{background:#cfe9e5}.strip7 i.s1{background:#f3e2b3}.strip7 i.s0{background:#e9b3a8}
-.lgd{border-top:1px solid var(--border2,#e6e0d6);padding:10px 0}.lgd .lgdh{font-size:13px;font-weight:700}.lgd .lgi{font-size:13px;margin:6px 0 0;padding-left:10px;border-left:2px solid var(--border2,#e6e0d6)}.lgd .lgi .a{color:var(--text2);white-space:pre-wrap}.lgd .lgi .s{font-weight:600}
-.quiz{background:var(--card,#fff);border:1px solid var(--border2,#e6e0d6);border-left:4px solid var(--accent,#0bb7ae);border-radius:10px;padding:14px 16px;margin:0 0 14px}
-.quiz .qh{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--text2);letter-spacing:.04em}.quiz .qh .qs{margin-left:auto;font-weight:500;letter-spacing:0}
-.quiz .qi{margin:10px 0 0;padding:10px 12px;background:var(--bg2,#f6f3ee);border-radius:8px}.quiz .qi b{display:block;font-size:12px;color:var(--text2);margin-bottom:2px}.quiz .qi .qt{font-size:14.5px;line-height:1.6}.quiz .qi .qn{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.6}
-.quiz .qk{margin:8px 0 0;padding:8px 10px;border:1px solid var(--border2,#e6e0d6);border-radius:8px;font-size:13.5px;line-height:1.55}.quiz .qk .kc{font-size:11px;color:var(--text2)}.quiz .qk .ka{margin-top:6px;padding:6px 8px;background:var(--bg2,#f6f3ee);border-radius:6px;font-size:13px}.quiz .qk .ks{display:flex;gap:6px;margin-top:6px;align-items:center;font-size:12px;color:var(--text2)}.quiz .qk .ks button{font:inherit;font-size:12px;padding:2px 10px;border-radius:6px;border:1px solid var(--border2,#e6e0d6);background:var(--card,#fff);color:var(--text)}.quiz .qk .ks button.on{background:var(--accent,#0bb7ae);color:#fff;border-color:var(--accent,#0bb7ae)}.quiz .qk.done{opacity:.6}.quiz .qkh{margin-top:12px;font-size:12px;font-weight:700;color:var(--text2);display:flex;gap:8px}.quiz .qkh .qkn{margin-left:auto;font-weight:500}
-.quiz .qb{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.quiz .strip{display:flex;gap:4px;align-items:center;margin-top:10px;font-size:11px;color:var(--text2)}.quiz .strip i{display:inline-block;width:18px;height:18px;border-radius:4px;background:var(--border2,#e6e0d6);font-style:normal;font-size:10px;line-height:18px;text-align:center}.quiz .strip i.s3{background:var(--accent,#0bb7ae);color:#fff}.quiz .strip i.s2{background:#cfe9e5}.quiz .strip i.s1{background:#f3e2b3}.quiz .strip i.s0{background:#e9b3a8}
 #tab-today .vprev .nsbox{opacity:.86}
 #tab-today .wtitle{display:block;font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;
   font-size:15px;line-height:1.7;color:var(--text);text-decoration:none;margin:0 0 8px;
@@ -1234,15 +1343,8 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
     <!-- コピペ帳 -->
     <div id="tab-learn" class="tab-panel">
-      <div class="lp-head" id="lp-head"></div>
-      <!-- 2026-09-21 改築v1: 表紙（世界地図）・図鑑・聞きたい（2段階の深掘り）を追加 -->
-      <div class="lp-nav"><button class="on" data-lp="today">☀️ 朝</button><button data-lp="night">📖 今夜の授業</button><button data-lp="zukan">📚 図鑑</button><button data-lp="ask">💬 聞きたい</button><button data-lp="log">📈 記録</button><button data-lp="world" title="表紙: 語れる国が色づく世界地図">🗺 世界地図</button><button data-lp="place" id="lp-place-btn" hidden>配置テスト</button></div>
-      <div id="lp-place" hidden></div>
-      <div id="lp-today"></div>
-      <div id="lp-night" hidden></div>
-      <div id="lp-zukan" hidden></div>
-      <div id="lp-ask" hidden></div>
-      <div id="lp-log" hidden></div>
+      <!-- 2026-09-23 作り替え: 入口は「今日の一本道」と「世界図鑑」の2つだけ（上の数字5つ・7つのタブは撤去）。描画は loadLearn → laRender -->
+      <div id="cb-root"></div>
     </div>
     <div id="tab-quick" class="tab-panel">
       <div class="hint" style="margin:2px 4px 10px">📋を押すとコピーされます。正本は personal リポ（変わったらClaudeが同期）</div>
@@ -1360,7 +1462,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-23.2';
+const APP_VERSION = '2026-09-23.4';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1553,6 +1655,12 @@ const OPS = [
       const withQ=c.quiz.filter(q=>q.qid).length; if(withQ<Math.min(5,c.quiz.length)) return `朝の浅い問いから作られていない（${withQ}/${c.quiz.length}問）`;
       const jst=new Date(Date.now()+9*3600e3); const today=jst.toISOString().slice(0,10); const d=String(c.src).slice(6);
       return (d!==today && (jst.getUTCHours()>7 || (jst.getUTCHours()===7 && jst.getUTCMinutes()>=30))) ? `今日の10問が${d}のまま` : null; } },
+  // 🎓 2026-09-23 カンブリア作り替え: 世界図鑑（70マス）と「今日の一本道」の課の順番は 図鑑.json（Mac の morning-quiz 直後・夜の巡回の最後に zukan-build.py）。
+  //    🔴 課の在庫（未読が3課以下）は画面に出さず、ここでおいら側が気づく（メグ「材料が切れると継続が止まる」・飛び級で先へ進めるので）
+  { name:'図鑑と課の在庫', why:'zukan-build.py が毎朝（morning-quiz の後）と毎晩（夜の巡回）図鑑.json を作る。一本道の未読の課が3課以下なら週次バッチを前倒し（nohup bash _tools/cambria-weekly.sh &）',
+    repo:'meyjiro/claude-context', path:'knowledge/学習/図鑑.json', limit:1.3,
+    read:t=>JSON.parse(t).generated,
+    verify:t=>{ const j=JSON.parse(t); if(!j.cards||Object.keys(j.cards).length!==14) return '図鑑のカードが14枚ない'; const un=(j.stock||{}).unread; return (typeof un==='number' && un<=3) ? `一本道の未読の課が${un}課（在庫切れが近い）` : null; } },
   { name:'朝の巡回',     why:'クラウドが毎朝6:00にブリーフィングを作り、本流(main)にpushする（〜6:25）',
     repo:'meyjiro/claude-context', path:'inbox/briefing.json', limit:1.2,
     read:t=>JSON.parse(t).generated_at,
@@ -4599,17 +4707,51 @@ function answerPending(i){
   }, 80);
 }
 
-// ══ 🧬 カンブリア（学習ページ）v1 ・ 2026-09-18 ══
-// 計画: ~/学習/カンブリア_計画.html ／ 仕様: claude-context/knowledge/学習/学習OS.md
-// 今日: 深い2問（その場で文字・🎤）・浅い8問（答えを見る→自己採点）・今日の1本を棚に置く・階段を読む
-// 記録: inbox/quiz_answers/YYYY-MM-DD.json（このページが書く）＋ knowledge/学習/成績.jsonl（夜の巡回が書く）
+// ══ 🧬 カンブリア（学習ページ）・ 2026-09-23 作り替え ══
+// 計画: カンブリア塾 立て直し計画（知識の置き場所を 14枚×5枠＝70マスに一本化）／デザイン: カンブリア塾 続くデザイン ／ 仕様: claude-context/knowledge/学習/学習OS.md
+// 入口は2つだけ: 「今日の一本道」（① 思い出す＝道場の10問 → ② 今日の1課 → ③ 説明する1問 → ④ マスに反映）と「世界図鑑」（70マスの表→カードの5枠）
+// 🔴 継続の鉄則（2026-09-23 メグ「リセットされました、0です、はやめて」「今日やってないよ、があって続いた試しがない」）:
+//    連続日数・時間割・「今日まだ」・未達の赤・1日の上限・「今日はここまで」を出さない。積み上がるのは日付の無いもの（スタンプカード20マス・図鑑70マス）。
+//    飛び級: 次の課へ上限なく進める／「知ってる」→ その課の浅い問い3つが全部言えればマスを埋めて飛ばす。課の在庫切れは画面に出さず見張り（OPS）で気づく
+// データ: knowledge/学習/図鑑.json（_tools/zukan-build.py）・inbox/morning.json の quiz・inbox/quiz_answers/<日付>.json（このページが書く）・成績.jsonl（夜の巡回・道場）
 const LA_DIR = 'inbox/quiz_answers';
 let laDate = null, laDay = null, laQuiz = null, laScores = null, laRecorder = null, laChunks = [];
+let laZ = null, laStampsCfg = null, laView = 'path', laCardSel = null, laDeepIdx = 0, laBound = false, laEditDeep = false;
 const laPath = d => `${LA_DIR}/${d}.json`;
 function laToday(){ return new Date().toLocaleDateString('sv-SE'); }
-// 日本時間の今日（2026-09-23: 読んだ課の完了は「読んだ日（JST）」のファイルに書く。夜の巡回 00:30 JST がその日のぶんを数える）
+// 日本時間の今日（読んだ課の完了は「読んだ日（JST）」のファイルに書く。夜の巡回 00:30 JST がその日のぶんを数える）
 function laTodayJST(){ return new Date().toLocaleDateString('sv-SE', {timeZone:'Asia/Tokyo'}); }
-// 読んだ課（直近7日のファイルを合わせたもの）。「済」の表示はここを見る（問いの日付のファイルだけ見ると、朝の問いが前日のままの日に済にならない）
+function laJstDate(iso){ try{ return new Date(iso).toLocaleDateString('sv-SE', {timeZone:'Asia/Tokyo'}); }catch(_){ return String(iso||'').slice(0,10); } }
+const laMD = d => { const m = String(d||'').match(/^\d{4}-(\d{2})-(\d{2})/); return m ? `${+m[1]}/${+m[2]}` : ''; };
+const laAttr = s => esc(s).replace(/"/g, '&quot;');   // esc() は引用符を逃がさないので、属性にはこちら
+const LA_SLOT = {1:'歴史', 2:'今', 3:'産業', 4:'損得', 5:'ニュース'};
+const LA_CIRC = ['', '①', '②', '③', '④', '⑤'];
+const LA_LVNAME = ['まだ', '見た', '思い出せる', '説明できる'];
+const LA_CARDS = ['中東','中国・台湾','米国','ロシア・ウクライナ・欧州','日本','東南アジア・タイ','インド','韓国','中南米・アフリカ','エネルギー','半導体・AI','バイオ・製薬','金融','量子・物理・宇宙'];
+const LA_DEEP = ['仕組み', '地図', '白紙地図', '予測'];
+function laTrack(card){ const c = laZ && laZ.cards && laZ.cards[card]; if(c && c.track) return c.track; return ['エネルギー','半導体・AI','バイオ・製薬','金融'].includes(card) ? 'inv' : card==='量子・物理・宇宙' ? 'sci' : 'world'; }
+const laTk = card => ({world:'w', sci:'s', inv:'i'}[laTrack(card)] || 'w');
+function laTag(card, slot){ if(!card) return ''; return `<span class="cb-tag t-${laTk(card)}"><i></i>${esc(card)}${slot?` ・ ${LA_CIRC[slot]||''}${esc(LA_SLOT[slot]||'')}`:''}</span>`; }
+// 記号の辞書（design-src の線画をそのまま。色は分野の色＝currentColor）: 1砂時計 2時計 3歯車 4天秤 5新聞
+function laIcon(k){
+  const a = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  return ({1:`<svg ${a}><path d="M7 3h10M7 21h10M8 3c0 5 8 5 8 9s-8 4-8 9M16 3c0 5-8 5-8 9"/></svg>`,
+           2:`<svg ${a}><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>`,
+           3:`<svg ${a}><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>`,
+           4:`<svg ${a}><path d="M12 3v18M5 21h14M4 7h16M7 7l-3 7a3 3 0 0 0 6 0zM17 7l-3 7a3 3 0 0 0 6 0z"/></svg>`,
+           5:`<svg ${a}><rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M7 9h10M7 12.5h10M7 16h6"/></svg>`})[k] || '';
+}
+// ハンコ: 点数ごとの候補（img/stamps/stamps.json）から、問いIDと日付で1つに決める（開き直しても同じ子）。点が無い（読んだだけ）は extra の子
+function laStampSrc(score, seed){
+  const cfg = laStampsCfg || {score:{}, extra:[]}; const list = score==null ? (cfg.extra||[]) : ((cfg.score||{})[String(score)]||[]);
+  if(!list.length) return ''; let h = 0; for(const ch of String(seed)) h = (h*31 + ch.charCodeAt(0)) >>> 0; return `img/stamps/${list[h % list.length]}.png`;
+}
+function laStampImg(score, seed){ const s = laStampSrc(score, seed); return s ? `<img src="${s}" alt="${score==null?'読んだ':score+'点'}のハンコ" loading="lazy">` : ''; }
+function laNextDue(id, date, score){ const q = laZ && laZ.qdue && laZ.qdue[id]; if(q) return q; if(score==null||!date) return ''; const d = new Date(date+'T12:00:00+09:00'); d.setDate(d.getDate() + ({0:1,1:1,2:7,3:21}[score]||1)); return d.toLocaleDateString('sv-SE'); }
+function laSlotOf(id, fb){ const q = laZ && laZ.qindex && laZ.qindex[id]; if(q) return {card:q[0], slot:q[1]}; if(fb && LA_CARDS.includes(fb.card)) return {card:fb.card, slot:fb.slot||null}; return {card:fb&&fb.card||'', slot:null}; }
+function laLevel(card, slot){ const c = laZ && laZ.cards && laZ.cards[card]; return c && c.slots && c.slots[String(slot)] ? c.slots[String(slot)].level||0 : 0; }
+
+// 読んだ課（直近7日のファイルを合わせたもの）。図鑑.json（夜・朝に作る）より新しい「いま読んだ」をここで拾う
 let laLessons = {};
 async function laLoadLessons(){
   const out = {}; const days = []; for(let i=6;i>=0;i--){ const d=new Date(Date.now()-i*864e5); days.push(d.toLocaleDateString('sv-SE',{timeZone:'Asia/Tokyo'})); }
@@ -4623,7 +4765,7 @@ async function laPut(d, mutate, message){
     const f = await getFileWithSha(laPath(d));
     let j = { date:d, quiz:null, answers:{}, self:{}, connect:{}, audio:[] };
     if(f){ try{ j = Object.assign(j, JSON.parse(f.text)); }catch(_){} }
-    if(!j.quiz && laQuiz && laQuiz.date===d) j.quiz = laQuiz;   // 朝のメニューは毎日上書きされるので、問いの写しをここに残す（記録用）。別の日のファイルには写さない
+    if(!j.quiz && laQuiz && laQuiz.date===d) j.quiz = laQuiz;   // 朝の問いは毎日上書きされるので、写しをここに残す（記録用）。別の日のファイルには写さない
     mutate(j); j.at = new Date().toISOString();
     try{ await api(`/repos/${REPO}/contents/${encodeURIComponent(laPath(d)).replace(/%2F/g,'/')}`,'PUT',{message, content:enc(JSON.stringify(j,null,1)), branch:BRANCH, ...(f?{sha:f.sha}:{})}); if(d===laDate) laDay = j; return j; }
     catch(e){ if(a===1||!String(e.message).includes('409')) throw e; }
@@ -4633,192 +4775,27 @@ async function laLoadScores(){
   try{ const g = await repoFile('meyjiro/claude-context','knowledge/学習/成績.jsonl'); if(!g) return [];
        return g.trim().split('\n').filter(Boolean).map(l=>{try{return JSON.parse(l)}catch(_){return null}}).filter(Boolean); }catch(_){ return []; }
 }
-function laStreak(rows, days){
-  const set = new Set(rows.filter(r=>r.score!=null).map(r=>r.date)); days.forEach(d=>set.add(d));
-  let n=0; const d=new Date(); if(!set.has(d.toLocaleDateString('sv-SE'))) d.setDate(d.getDate()-1);
-  while(set.has(d.toLocaleDateString('sv-SE'))){ n++; d.setDate(d.getDate()-1); }
-  return n;
-}
-function laStrip(rows){
-  const by={}; rows.forEach(r=>{ if(r.score!=null){ (by[r.date]=by[r.date]||[]).push(r.score); } });
-  return Object.keys(by).sort().slice(-7).map(k=>{ const a=by[k]; const avg=a.reduce((x,y)=>x+y,0)/a.length; const c=avg>=2.5?3:avg>=1.5?2:avg>=0.5?1:0; return `<i class="s${c}" title="${k}">${Math.round(avg)}</i>`; }).join('');
-}
+// 今日タブの入口（2026-09-23: 「今日の問いはまだ届いていない」の赤字をやめた。未達は出さない）
 function renderLearnEntry(qz){
   const el = $('learn-entry'); if(!el) return;
-  const n = qz ? ((qz.items||[]).length + (qz.quick||[]).length) : 0;
-  const stale = qz && qz.date && qz.date !== laTodayJST();
-  const lbl = !qz ? '今日の問いはまだ届いていない' : stale ? `今日の問いはまだ届いていない（${qz.date.slice(5).replace('-','/')}の分）` : qz.mode==='easy' ? '今日は軽い日 ・ 道場の10問だけ' : qz.mode==='sunday' ? '日曜 ・ 白紙から地図＋Yパパ予測' : `🏃 道場の10問 ＋ 🗣 深い${(qz.items||[]).length}問`;
-  el.innerHTML = `<div class="lentry" id="learn-entry-btn"><div><div class="le1">🧬 カンブリア</div><div class="le2"${stale?' style="color:var(--red,#c0392b);font-weight:700"':''}>${esc(lbl)}${qz&&qz.stairs?' ・ 📖 '+esc(qz.stairs.theme||'')+'の階段 第'+esc(String(qz.stairs.step||''))+'段':''}</div></div><div class="lego">開く →</div></div>`;
+  el.innerHTML = `<div class="lentry" id="learn-entry-btn"><div><div class="le1">🧬 カンブリア</div><div class="le2">今日の一本道 ・ 世界図鑑</div></div><div class="lego">開く →</div></div>`;
   $('learn-entry-btn').addEventListener('click', ()=>switchTab('learn'));
 }
 async function loadLearn(){
-  const head = $('lp-head'), today = $('lp-today'); head.innerHTML = '<span class="st">読み込み中…</span>';
-  let m=null; try{ const t = await repoFile('meyjiro/claude-context','inbox/morning.json'); if(t) m = JSON.parse(t); }catch(_){}
-  laQuiz = (m&&m.quiz)||null; laDate = (laQuiz&&laQuiz.date)||laToday();
-  laScores = await laLoadScores();
-  laDay = await laGet(laDate);
-  if(laDay && laDay.quiz && !laQuiz) laQuiz = laDay.quiz;
-  const [, nLessons] = await Promise.all([laDojoLoad(), laCountLessons()]);
-  // 物差し・図鑑（v3で夜の巡回が積む。無ければ0）
-  const answeredDays = []; if(laDay && (Object.keys(laDay.answers||{}).length||Object.keys(laDay.self||{}).length)) answeredDays.push(laDate);
-  if(laDojo) laDojo.all.forEach(h=>{ const d=(h.at||'').slice(0,10); if(d && !answeredDays.includes(d)) answeredDays.push(d); });
-  const streak = laStreak(laScores, answeredDays);
-  const dj = laDojo; const dojoLbl = dj ? (dj.todayRun.length ? `${dj.best}/${dj.n}` : 'まだ') : '—';
-  const {done:dDone, total:dTotal} = laTestProgress();
-  const wk = laScores.filter(r=>r.date>=new Date(Date.now()-6*864e5).toLocaleDateString('sv-SE')); const wkDays = new Set(wk.map(r=>r.date)).size;
-  head.innerHTML = `<div class="lp-stats"><div class="ls"><span>🔥 連続</span><b>${streak}<small>日</small></b></div><div class="ls"><span>🏃 今日の10問</span><b>${esc(dojoLbl)}</b></div><div class="ls"><span>🗣 深い問い</span><b>${dDone}<small>/${dTotal}</small></b></div><div class="ls"><span>📚 読んだ課</span><b>${nLessons!=null?nLessons:'—'}<small>課</small></b></div><div class="ls"><span>📅 今週</span><b>${wkDays}<small>日</small></b></div><button class="ls-back" data-lp="back">← 今日</button></div>`;
-  head.querySelector('.ls-back').onclick = ()=>switchTab('today');
-  renderLearnToday();
-  document.querySelectorAll('.lp-nav button').forEach(b=>{ b.onclick = ()=>{ const k=b.dataset.lp; if(k==='back'){ switchTab('today'); return; }
-    if(k==='world'){ window.open('world.html', '_blank'); return; }
-    document.querySelectorAll('.lp-nav button').forEach(x=>x.classList.toggle('on', x===b)); ['today','night','log','place','zukan','ask'].forEach(n=>{ const e=$('lp-'+n); if(e) e.hidden = k!==n; }); if(k==='log') renderLearnLog(); if(k==='night') renderLearnNight(); if(k==='place') renderPlacement(); if(k==='zukan') renderZukan(); if(k==='ask') renderAsk(); }; });
-  // 配置テストは開講前日（時間割の placement 日）と、未受験の間だけ出す
-  try{ if(!laTT){ const t = await repoFile('meyjiro/claude-context','knowledge/学習/時間割.json'); laTT = t ? JSON.parse(t) : null; }
-       const pl = laTT && laTT.placement; const pd = pl ? await laGet(pl) : null; const done = pd && pd.placement && pd.placement.done;
-       $('lp-place-btn').hidden = !(pl && !done); }catch(_){}
+  const root = $('cb-root'); if(!root) return;
+  if(!root.innerHTML) root.innerHTML = '<p class="cb-muted" style="padding:20px 4px">読み込み中…</p>';
+  laBind();
+  const [m, z, sc, cfg] = await Promise.all([
+    repoFile('meyjiro/claude-context','inbox/morning.json').then(t=>t?JSON.parse(t):null).catch(()=>null),
+    repoFile('meyjiro/claude-context','knowledge/学習/図鑑.json').then(t=>t?JSON.parse(t):null).catch(()=>null),
+    laLoadScores(),
+    fetch('img/stamps/stamps.json?v='+APP_VERSION).then(r=>r.ok?r.json():null).catch(()=>null)]);
+  laQuiz = (m&&m.quiz)||null; laDate = (laQuiz&&laQuiz.date)||laTodayJST(); laZ = z; laScores = sc||[]; laStampsCfg = cfg;
+  const [day] = await Promise.all([laGet(laDate).catch(()=>null), laLoadLessons().catch(()=>({})), laDojoLoad()]);
+  laDay = day; if(laDay && laDay.quiz && !laQuiz) laQuiz = laDay.quiz;
+  laRender();
 }
-// 読んだ課の数 = 物差し.jsonl の「授業」（夜の巡回が数える）＋ まだ数えられていない直近の完了（2026-09-23: 道場の章数を出していた）
-async function laCountLessons(){
-  try{ const t = await repoFile('meyjiro/claude-context','knowledge/学習/物差し.jsonl'); const keys = new Set();
-       (t||'').split('\n').forEach(l=>{ try{ const r=JSON.parse(l); if(r.kind==='授業') keys.add(r.key); }catch(_){} });
-       await laLoadLessons(); Object.entries(laLessons).forEach(([k,v])=>{ if(v&&v.done) keys.add(k); });
-       return keys.size; }catch(_){ return null; }
-}
-function laScoreOf(id){ return (laScores||[]).find(r=>r.date===laDate && r.id===id) || null; }
-function renderLearnToday(){
-  const el = $('lp-today'); const qz = laQuiz;
-  if(qz && Array.isArray(qz.items) && qz.items.length && !window.__laOldToday){ return renderLearnTodayPaper(); }
-  if(!qz){ el.innerHTML = `<div class="lb"><div class="lbh">今日の問い</div><p style="margin:8px 0 0;font-size:13.5px;color:var(--text2)">まだ届いていない。毎朝6:50（タイ4:50）にMacが置くのだ。</p></div>`; return; }
-  const ans = (laDay&&laDay.answers)||{}, selfS = (laDay&&laDay.self)||{}, con = (laDay&&laDay.connect)||{};
-  const items = qz.items||[], quick = qz.quick||[];
-  const deepDone = items.filter(it=>ans[it.id]&&ans[it.id].text).length, quickDone = quick.filter(k=>selfS[k.id]!=null).length;
-  const modeLbl = qz.mode==='easy' ? '今日は軽い日' : qz.mode==='sunday' ? '日曜の2問（白紙地図＋Yパパ予測）' : '今日の問い';
-  const parts = [];
-  // ① 浅い問い
-  if(quick.length) parts.push(`<div class="lb"><div class="lbh">⚡ 思い出す ・ 浅い${quick.length}問 <span class="lbt">${quickDone}/${quick.length} 済 ・ 5分</span></div>
-    ${quick.map((k,i)=>{ const sc=selfS[k.id]; const done=sc!=null; return `<div class="lk${done?' done':''}" data-id="${esc(k.id)}"><div class="kc">${i+1}. ${esc(k.card||'')}</div><div>${esc(k.text||'')}</div>
-      <div class="ks"><button class="btn-reveal" ${done?'hidden':''}>答えを見る</button></div>
-      <div class="ka" ${done?'':'hidden'}>${esc(k.answer_key||'')}</div>
-      <div class="ks" ${done?'':'hidden'}>自分で点: ${[0,1,2,3].map(v=>`<button data-s="${v}" class="${sc===v?'on':''}">${v} ${['分からなかった','かすった','ほぼ','言えた'][v]}</button>`).join('')}</div></div>`; }).join('')}</div>`);
-  // ② 深い問い
-  parts.push(`<div class="lb"><div class="lbh">🗣 説明する ・ 深い${items.length}問 <span class="lbt">${deepDone}/${items.length} 済 ・ 10分</span></div>
-    ${items.map((it,i)=>{ const a=ans[it.id]||{}; const sc=laScoreOf(it.id); return `<div class="lq" data-id="${esc(it.id)}"><b>問${i+1} ${esc(it.kind||'')}${it.card?' ・ '+esc(it.card):''}</b><div class="qt">${esc(it.text||'')}</div>${it.note?`<div class="qn">${esc(it.note)}</div>`:''}
-      <textarea class="la-text" placeholder="30秒でちょっちに説明するつもりで。話し言葉でいい">${esc(a.text||'')}</textarea>
-      <div class="lqb"><button class="btn btn-primary la-save">保存</button><button class="btn rec la-rec">🎤 録音</button><span class="hint">${a.at?'保存済み '+esc(String(a.at).slice(11,16)):''}${a.audio?` ・ <span class="amark" data-atag="${esc(it.id)}" data-adate="${esc(qz.date||laDate||'')}" data-adone="${a.raw_voice?'1':'0'}">🎤 確認中…</span>`:''}</span></div>
-      ${sc?`<div class="sc">モッフルの採点 <b>${sc.score}／3</b>${sc.miss?`<div class="miss">抜け: ${esc(sc.miss)}</div>`:''}</div>`:(a.text?`<div class="sc" style="border-color:var(--border2)">夜（22:30）に採点して、ここと手紙に戻すのだ</div>`:'')}</div>`; }).join('')}</div>`);
-  // ③ つなげる（今日の1本を棚に置く）
-  parts.push(`<div class="lb lc"><div class="lbh">🔗 つなげる ・ 今日の1本を棚に置く <span class="lbt">${con.shelf?'済':'—'} ・ 10分</span></div>
-    <p style="margin:6px 0 0;font-size:13px;color:var(--text2)">今日タブの「🌍 今日の1本」か「チェンマイ日報」の1本を、3行で。</p>
-    <input class="la-c" data-k="title" placeholder="どの記事（見出しをコピペでOK）" value="${esc(con.title||'')}">
-    <input class="la-c" data-k="background" placeholder="① 背景: これはどういう経緯の続き？" value="${esc(con.background||'')}">
-    <input class="la-c" data-k="who" placeholder="② 誰が得して誰が困る？" value="${esc(con.who||'')}">
-    <input class="la-c" data-k="shelf" placeholder="③ どの棚に置く？（例: エネルギー②、中東④）" value="${esc(con.shelf||'')}">
-    <div class="lqb" style="margin-top:8px"><button class="btn btn-primary la-csave">棚に置く</button><span class="hint">${con.at?'保存済み '+esc(String(con.at).slice(11,16)):''}</span></div></div>`);
-  // ④ 階段・深掘り
-  if(qz.stairs||qz.report) parts.push(`<div class="lb"><div class="lbh">📖 戻る ・ 読む <span class="lbt">5分</span></div><div class="lqb" style="margin-top:8px">
-    ${qz.stairs&&qz.stairs.path?`<button class="btn" data-openhtml="${esc(qz.stairs.path)}">📖 ${esc(qz.stairs.theme||'')}の階段 第${esc(String(qz.stairs.step||''))}段: ${esc(qz.stairs.title||'')}</button>`:''}
-    ${qz.report&&qz.report.path?`<button class="btn" data-openhtml="${esc(qz.report.path)}">🔍 深掘り: ${esc(qz.report.title||'')}</button>`:''}</div></div>`);
-  el.innerHTML = `<div class="lb" style="border-left:4px solid var(--accent,#0bb7ae)"><div class="lbh">🎓 ${esc(modeLbl)} <span class="lbt">${esc(qz.date||'')}</span></div></div>` + parts.join('');
-  // ── handlers（1回だけ結ぶ。再描画のたびに足すと二重保存になる）──
-  if(el.dataset.bound) return; el.dataset.bound='1';
-  el.addEventListener('click', async e=>{
-    const r = e.target.closest('.btn-reveal'); if(r){ const k=r.closest('.lk'); k.querySelector('.ka').hidden=false; k.querySelectorAll('.ks')[1].hidden=false; r.hidden=true; return; }
-    const b = e.target.closest('.lk [data-s]'); if(b){ const k=b.closest('.lk'); const id=k.dataset.id, v=+b.dataset.s;
-      k.querySelectorAll('[data-s]').forEach(x=>x.classList.toggle('on', x===b)); k.classList.add('done');
-      try{ await laPut(laDate, j=>{ j.self[id]=v; }, `浅い問いの自己採点 ${laDate}`); renderLearnToday(); }catch(err){ toast('保存できなかった: '+err.message); } return; }
-    const sv = e.target.closest('.la-save'); if(sv){ const q=sv.closest('.lq'); const id=q.dataset.id, text=q.querySelector('.la-text').value.trim(); if(!text){ toast('ひとことでも書いてね'); return; }
-      sv.disabled=true; try{ await laPut(laDate, j=>{ j.answers[id]=Object.assign(j.answers[id]||{}, {text, at:new Date().toISOString()}); }, `深い問いの答え ${laDate}`); toast('保存した。夜に採点するのだ'); renderLearnToday(); }catch(err){ toast('保存できなかった: '+err.message); } sv.disabled=false; return; }
-    const rc = e.target.closest('.la-rec'); if(rc){ laToggleRec(rc, rc.closest('.lq').dataset.id); return; }
-    const cs = e.target.closest('.la-csave'); if(cs){ const box=cs.closest('.lc'); const c={}; box.querySelectorAll('.la-c').forEach(i=>c[i.dataset.k]=i.value.trim()); if(!c.shelf&&!c.background){ toast('背景か棚を1つは書いてね'); return; }
-      cs.disabled=true; try{ await laPut(laDate, j=>{ j.connect=Object.assign({}, c, {at:new Date().toISOString()}); }, `今日の1本を棚に置く ${laDate}`); toast('棚に置いた。夜にカードへ入るのだ'); renderLearnToday(); }catch(err){ toast('保存できなかった: '+err.message); } cs.disabled=false; return; }
-    const oh = e.target.closest('[data-openhtml]'); if(oh){ oh.disabled=true;
-      // 🔴 iPhoneは読み込み後の window.open を止める（2026-09-19 メグ報告）→ ページ内に重ねて表示する
-      try{ const h = await repoFile('meyjiro/claude-context', oh.dataset.openhtml); if(!h){ toast('まだファイルが無い（'+oh.dataset.openhtml+'）'); return; }
-           laOpenReader(h, oh.textContent.trim()); }
-      catch(err){ toast('開けなかった: '+err.message); } finally{ oh.disabled=false; } }
-  });
-}
-// 📖 階段・深掘りのHTMLをページ内に重ねて表示（iframe srcdoc。窓を開かない）
-function laOpenReader(html, title){
-  let ov = document.getElementById('la-reader');
-  if(!ov){ ov = document.createElement('div'); ov.id='la-reader'; ov.innerHTML = '<div class="lrh"><span class="lrt"></span><button class="btn lrx">閉じる ✕</button></div><iframe class="lrf" sandbox="allow-same-origin allow-scripts allow-popups"></iframe>'; document.body.appendChild(ov);
-    ov.querySelector('.lrx').addEventListener('click', ()=>{ ov.hidden=true; ov.querySelector('.lrf').srcdoc=''; document.body.style.overflow=''; }); }
-  ov.querySelector('.lrt').textContent = title||''; ov.querySelector('.lrf').srcdoc = html; ov.hidden=false; document.body.style.overflow='hidden';
-}
-
-
-// ══ 朝の答案用紙（古紙・1問ずつ）── 見本: ~/学習/テスト_見本.html。順番を崩さない: 確信度→答えを見る→自分で点 ══
-const LA_TEST_CSS = `:root{--paper:#efe6cf;--ink:#2b2418;--ink2:#5c5040;--ink3:#8c8069;--rule:#cdbf9c;--red:#a3402b;--blue:#2f5a78;--green:#4d6b3a;--card:#f7f1e3}
-*{box-sizing:border-box}html{background:#d9cfb5}
-body{margin:0;color:var(--ink);font:16.5px/1.85 "Shippori Mincho","Hiragino Mincho ProN",serif;background-color:var(--paper);background-image:radial-gradient(ellipse at 10% 10%,rgba(120,90,40,.10),transparent 40%),radial-gradient(ellipse at 90% 90%,rgba(120,90,40,.12),transparent 40%),url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.28 0 0 0 0 0.16 0 0 0 .09 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");background-attachment:fixed}
-.page{max-width:640px;margin:14px auto 90px;padding:0 14px}
-.top{display:flex;justify-content:space-between;align-items:center;font-family:"Zen Kaku Gothic New",-apple-system,sans-serif;font-size:12.5px;color:var(--ink2);margin-bottom:8px}.top b{color:var(--red);letter-spacing:.12em}
-.prog{height:6px;background:rgba(0,0,0,.08);border-radius:3px;overflow:hidden;margin-bottom:14px}.prog i{display:block;height:100%;background:var(--red);transition:width .25s}
-.sec{font-family:"Zen Kaku Gothic New",sans-serif;font-size:11.5px;letter-spacing:.16em;color:var(--ink3);margin:22px 0 8px;font-weight:700}
-.card{background:var(--card);border:1px solid var(--rule);border-radius:8px;box-shadow:0 14px 34px -24px rgba(60,40,10,.5);padding:20px 20px 18px;position:relative;margin-bottom:14px}.card.done{opacity:.55}
-.no{font-family:"Shippori Mincho",serif;font-weight:800;font-size:40px;line-height:1;color:rgba(43,36,24,.16);position:absolute;right:16px;top:10px}
-.tag{font-family:"Zen Kaku Gothic New",sans-serif;font-size:11.5px;letter-spacing:.14em;color:var(--blue);font-weight:700}
-.q{font-size:20px;font-weight:700;line-height:1.55;margin:8px 0 6px;text-wrap:balance}
-.note{font-family:"Zen Kaku Gothic New",sans-serif;font-size:13px;color:var(--ink2);border-left:3px solid var(--rule);padding-left:10px;margin:8px 0 12px}
-.conf{font-family:"Zen Kaku Gothic New",sans-serif;font-size:12.5px;color:var(--ink2);margin:12px 0 6px}
-.opts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.opts button{min-height:46px;font:600 14px "Zen Kaku Gothic New",sans-serif;border:1.5px solid var(--rule);background:rgba(255,255,255,.5);border-radius:10px;color:var(--ink)}.opts button.on{border-color:var(--ink);background:var(--ink);color:var(--paper)}
-.reveal{margin-top:12px;width:100%;min-height:48px;font:700 15px "Zen Kaku Gothic New",sans-serif;background:var(--ink);color:var(--paper);border:0;border-radius:10px}.reveal[disabled]{opacity:.45}
-.ans{margin-top:14px;border-top:1px dashed var(--rule);padding-top:10px}.ans .ah{font-family:"Zen Kaku Gothic New",sans-serif;font-size:11.5px;letter-spacing:.14em;color:var(--red);font-weight:700}.ans .at{font-size:17px;font-weight:700;margin:4px 0 4px}.ans .ax{font-family:"Zen Kaku Gothic New",sans-serif;font-size:13px;color:var(--ink2)}
-.score{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}.score button{min-height:52px;font:600 12.5px "Zen Kaku Gothic New",sans-serif;border:1.5px solid var(--rule);background:rgba(255,255,255,.5);border-radius:10px;color:var(--ink);line-height:1.3}.score button b{display:block;font-size:18px;font-family:"Shippori Mincho",serif}.score button.on{border-color:var(--green);background:var(--green);color:#fff}
-textarea,input{width:100%;font:16px/1.75 "Zen Kurenaido","Shippori Mincho",serif;color:var(--ink);background:repeating-linear-gradient(transparent,transparent 27px,rgba(47,90,120,.25) 28px);border:0;border-bottom:1px solid var(--rule);padding:4px 6px}textarea{min-height:110px;resize:vertical}input{background:none;margin-top:8px}
-.row{display:flex;gap:8px;margin-top:10px}.row button{min-height:46px;flex:1;font:700 14px "Zen Kaku Gothic New",sans-serif;border:1.5px solid var(--ink);background:transparent;border-radius:10px;color:var(--ink)}.row button.p{background:var(--ink);color:var(--paper)}.row button.on{background:#e9b3a8;border-color:#e9b3a8}
-.sc{margin-top:10px;padding:8px 10px;border-left:3px solid var(--green);background:rgba(255,255,255,.5);border-radius:6px;font-family:"Zen Kaku Gothic New",sans-serif;font-size:13px}.sc b{font-size:16px}.sc .miss{color:#8a6a1f}
-.hint{font-family:"Zen Kaku Gothic New",sans-serif;font-size:12px;color:var(--ink3);margin-top:6px}
-.done-box{margin-top:26px;text-align:center;font-family:"Zen Kaku Gothic New",sans-serif;font-size:13px;color:var(--ink2)}
-.stamp{display:inline-block;margin-top:8px;font-family:"Shippori Mincho",serif;font-weight:800;color:var(--red);border:3px double var(--red);border-radius:50%;width:86px;height:86px;line-height:80px;font-size:36px;transform:rotate(-8deg);opacity:.9}
-.stmp{position:absolute;right:14px;top:10px;font-family:"Shippori Mincho",serif;font-weight:800;color:var(--red);border:3px double var(--red);border-radius:50%;width:54px;height:54px;line-height:48px;text-align:center;font-size:26px;transform:rotate(-12deg);opacity:.92;pointer-events:none;background:rgba(247,241,227,.7)}.card.done{opacity:.78}.card.done .no{opacity:.4}
-.open{width:100%;min-height:46px;font:700 14px "Zen Kaku Gothic New",sans-serif;border:1.5px solid var(--ink);background:transparent;border-radius:10px;color:var(--ink);margin-top:6px}`;
-function laTestHtml(qz, day, scores){
-  const ans=(day&&day.answers)||{}, selfS=(day&&day.self)||{}, conf=(day&&day.conf)||{}, con=(day&&day.connect)||{};
-  const quick=qz.quick||[], items=qz.items||[];
-  const qDone=quick.filter(k=>selfS[k.id]!=null).length, dDone=items.filter(it=>ans[it.id]&&ans[it.id].text).length;
-  const total=quick.length+items.length, done=qDone+dDone;   // 棚に置くは任意（2026-09-19 メグ）
-  const modeLbl = qz.mode==='easy'?'軽い日':qz.mode==='sunday'?'日曜':'朝の出力';
-  const quickHtml = quick.map((k,i)=>{ const sc=selfS[k.id]; const cf=conf[k.id]; const isDone=sc!=null; return `<div class="card${isDone?' done':''}" data-id="${esc(k.id)}" data-kind="quick">${isDone?'<div class="stmp">済</div>':''}<div class="no">${String(i+1).padStart(2,'0')}</div><div class="tag">浅い ・ ${esc(k.card||'')}${k.src?' ・ '+esc(k.src):''}</div><div class="q">${esc(k.text||'')}</div>${k.note?`<div class="note">${esc(k.note)}</div>`:''}
-    <div class="conf">答える前に、どのくらい自信がある？</div><div class="opts">${['分からない','たぶん','確信'].map((t,v)=>`<button data-conf="${v}" class="${cf===v?'on':''}">${t}</button>`).join('')}</div>
-    <button class="reveal" ${isDone?'hidden':''}>答えを見る</button>
-    <div class="ans" ${isDone?'':'hidden'}><div class="ah">答え</div><div class="at">${esc(k.answer_key||k.answer||'')}</div>${k.shelf?`<div class="ax">→ ${esc(k.shelf)}</div>`:''}
-    <div class="score">${[0,1,2,3].map(v=>`<button data-s="${v}" class="${sc===v?'on':''}"><b>${v}</b>${['分からなかった','かすった','ほぼ','言えた'][v]}</button>`).join('')}</div></div></div>`; }).join('');
-  const deepHtml = items.map((it,i)=>{ const a=ans[it.id]||{}; const s=(scores||[]).find(r=>r.date===qz.date&&r.id===it.id); return `<div class="card${a.text?' done':''}" data-id="${esc(it.id)}" data-kind="deep">${a.text?'<div class="stmp">済</div>':''}<div class="no">問${i+1}</div><div class="tag">深い ・ ${esc(it.kind||'')}${it.card?' ・ '+esc(it.card):''}</div><div class="q">${esc(it.text||'')}</div>${it.note?`<div class="note">${esc(it.note)}</div>`:''}
-    <textarea class="dtext" placeholder="30秒でちょっちに説明するつもりで。話し言葉でいい。🎤でもいい。">${esc(a.text||'')}</textarea>
-    <div class="row"><button class="rec">🎤 録音</button><button class="p save">保存 → 夜に採点</button></div><div class="hint">${a.at?'保存済み '+esc(String(a.at).slice(11,16)):''}${a.audio?` ・ <span class="amark" data-atag="${esc(it.id)}" data-adate="${esc(qz.date||laDate||'')}" data-adone="${a.raw_voice?'1':'0'}">🎤 確認中…</span>`:''}</div>
-    ${s?`<div class="sc">モッフルの採点 <b>${s.score}／3</b>${s.miss?`<div class="miss">抜け: ${esc(s.miss)}</div>`:''}</div>`:''}</div>`; }).join('');
-  const conHtml = `<div class="card${con.shelf?' done':''}" data-kind="connect"><div class="no">棚</div><div class="tag">つなげる ・ 今日の1本を棚に置く</div><div class="q" style="font-size:17px">朝の1本を3行で。背景／誰が得して誰が困る／どの棚</div>
-    <input class="c" data-k="title" placeholder="どの記事（見出しをコピペでOK）" value="${esc(con.title||'')}"><input class="c" data-k="background" placeholder="① 背景: どういう経緯の続き？" value="${esc(con.background||'')}"><input class="c" data-k="who" placeholder="② 誰が得して誰が困る？" value="${esc(con.who||'')}"><input class="c" data-k="shelf" placeholder="③ どの棚？（例: エネルギー②、中東④）" value="${esc(con.shelf||'')}">
-    <div class="row"><button class="p csave">棚に置く</button></div><div class="hint">${con.at?'保存済み '+esc(String(con.at).slice(11,16)):''}</div></div>`;
-  const extra = (qz.stairs&&qz.stairs.path)||(qz.report&&qz.report.path) ? `${qz.stairs&&qz.stairs.path?`<button class="open" data-open="${esc(qz.stairs.path)}">📖 ${esc(qz.stairs.theme||'')}の階段 第${esc(String(qz.stairs.step||''))}段: ${esc(qz.stairs.title||'')}</button>`:''}${qz.report&&qz.report.path?`<button class="open" data-open="${esc(qz.report.path)}">🔍 深掘り: ${esc(qz.report.title||'')}</button>`:''}` : '';
-  return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@500;700&family=Zen+Kurenaido&display=swap"><style>${LA_TEST_CSS}</style></head><body><div class="page">
-<div class="top"><span><b>${esc(modeLbl)}</b> ・ ${esc(qz.date||'')}</span><span id="cnt">${done} / ${total}</span></div><div class="prog"><i id="bar" style="width:${Math.round(done/total*100)}%"></i></div>
-${quick.length?`<div class="sec">① 思い出す ・ 浅い${quick.length}問 ・ 5分</div>${quickHtml}`:''}
-${items.length?`<div class="sec">② 説明する ・ 深い${items.length}問 ・ 10分</div>${deepHtml}`:''}
-${extra?`<div class="sec">読む</div>`:''}${extra}
-<div class="done-box">${done>=total?'<span class="stamp">済</span><br>夜に採点が戻る。今夜の授業は「今夜の授業」タブに':'全部終わると「本日済」の印が出る'}</div>
-</div><script>
-const post=m=>parent.postMessage(Object.assign({src:'la-test'},m),'*');
-const stamp=k=>{ if(!k.querySelector('.stmp')){ const d=document.createElement('div'); d.className='stmp'; d.textContent='済'; k.appendChild(d); } };
-document.addEventListener('click',e=>{
-  const c=e.target.closest('[data-conf]'); if(c){ const k=c.closest('.card'); k.querySelectorAll('[data-conf]').forEach(x=>x.classList.toggle('on',x===c)); post({type:'conf',id:k.dataset.id,v:+c.dataset.conf}); return; }
-  const r=e.target.closest('.reveal'); if(r){ const k=r.closest('.card'); k.querySelector('.ans').hidden=false; r.hidden=true; return; }
-  const s=e.target.closest('[data-s]'); if(s){ const k=s.closest('.card'); k.querySelectorAll('[data-s]').forEach(x=>x.classList.toggle('on',x===s)); k.classList.add('done'); stamp(k); post({type:'self',id:k.dataset.id,v:+s.dataset.s}); return; }
-  const sv=e.target.closest('.save'); if(sv){ const k=sv.closest('.card'); const t=k.querySelector('.dtext').value.trim(); if(!t){ alert('ひとことでも書いてね'); return; } sv.disabled=true; post({type:'deep',id:k.dataset.id,text:t}); return; }
-  const rc=e.target.closest('.rec'); if(rc){ const k=rc.closest('.card'); rc.classList.toggle('on'); rc.textContent=rc.classList.contains('on')?'⏹ 停止':'🎤 録音'; post({type:'rec',id:k.dataset.id}); return; }
-  const cs=e.target.closest('.csave'); if(cs){ const k=cs.closest('.card'); const o={}; k.querySelectorAll('.c').forEach(i=>o[i.dataset.k]=i.value.trim()); if(!o.shelf&&!o.background){ alert('背景か棚を1つは書いてね'); return; } cs.disabled=true; post({type:'connect',data:o}); return; }
-  const op=e.target.closest('[data-open]'); if(op){ post({type:'open',path:op.dataset.open}); }
-});
-window.addEventListener('message',e=>{ const d=e.data||{}; if(d.type==='progress'){ document.getElementById('cnt').textContent=d.done+' / '+d.total; document.getElementById('bar').style.width=Math.round(d.done/d.total*100)+'%'; if(d.done>=d.total){ document.querySelector('.done-box').innerHTML='<span class="stamp">済</span><br>夜に採点が戻る。今夜の授業は「今夜の授業」タブに'; } }
-  if(d.type==='saved'&&d.id){ const k=document.querySelector('.card[data-id="'+d.id+'"]'); if(k){ const b=k.querySelector('.save'); if(b) b.disabled=false; const h=k.querySelector('.hint'); if(h) h.textContent='保存した '+new Date().toTimeString().slice(0,5)+(d.audio?' ・ 🎤あり':''); k.classList.add('done'); stamp(k); } }
-  if(d.type==='saved'&&d.kind==='connect'){ const k=document.querySelector('.card[data-kind="connect"]'); const b=k.querySelector('.csave'); if(b) b.disabled=false; k.querySelector('.hint').textContent='棚に置いた '+new Date().toTimeString().slice(0,5); k.classList.add('done'); }
-  if(d.type==='rec-state'){ const k=document.querySelector('.card[data-id="'+d.id+'"]'); if(k){ const b=k.querySelector('.rec'); b.classList.toggle('on',!!d.on); b.textContent=d.on?'⏹ 停止':'🎤 録音'; } } });
-<\/script></body></html>`;
-}
-function laTestProgress(){ const qz=laQuiz||{}; const ans=(laDay&&laDay.answers)||{}, selfS=(laDay&&laDay.self)||{}, con=(laDay&&laDay.connect)||{}; const quick=qz.quick||[], items=qz.items||[];
-  const total=items.length, done=items.filter(it=>ans[it.id]&&ans[it.id].text).length; return {done,total}; }   // 浅い問いは道場（2026-09-22）
-// ── 道場の今日の結果（2026-09-22 メグ「道場を浅い問いの正式な場に」）: 成績はXserverの sync.php にある。鍵＝sha256('megu-dojo:megu')
+// ── 道場の今日の結果（成績は Xserver の sync.php。鍵＝sha256('megu-dojo:megu')）
 let laDojo = null;
 async function laDojoLoad(){
   try{
@@ -4826,27 +4803,228 @@ async function laDojoLoad(){
     const [cloud, data] = await Promise.all([fetch('https://gachirezu.com/dojo/sync.php?k='+key, {cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null), fetch('dojo/data.json?v='+Date.now()).then(r=>r.ok?r.json():null).catch(()=>null)]);
     const t = laToday(); const runs = ((cloud&&cloud.history)||[]).filter(h=>(h.at||'').slice(0,10)===t);
     const todayRun = runs.filter(h=>h.mode==='chapter'&&h.ch===0); const best = todayRun.reduce((a,h)=>Math.max(a,h.ok),0);
-    const qt = {}; if(data) data.chapters.forEach(c=>c.quiz.forEach((q,i)=>{ qt[q.id||`${c.id}-${i}`]=q.q; }));   // 今日の10問のキーは「日付:問いID」（2026-09-23〜）
+    const qt = {}; if(data) data.chapters.forEach(c=>c.quiz.forEach((q,i)=>{ qt[q.id||`${c.id}-${i}`]=q.q; }));   // 今日の10問のキーは「日付:問いID」
     const missed = Object.entries((cloud&&cloud.mastery)||{}).filter(([k,v])=>v.at===t&&!v.last).map(([k])=>qt[k]||k);
     const ch0 = data && data.chapters.find(c=>c.id===0);
-    laDojo = { runs, todayRun, best, n: ch0?ch0.quiz.length:10, missed, lead: ch0?ch0.lead:'', title: ch0?ch0.title:'', lessons: data?data.chapters.filter(c=>c.id>0&&!c.hidden).length:0, all: (cloud&&cloud.history)||[] };
+    laDojo = { runs, todayRun, best, n: ch0?ch0.quiz.length:10, missed, lead: ch0?ch0.lead:'', title: ch0?ch0.title:'', all: (cloud&&cloud.history)||[] };
   }catch(e){ laDojo = null; }
   return laDojo;
 }
-function renderLearnTodayPaper(){
-  const el = $('lp-today'); const qz = laQuiz; const {done,total} = laTestProgress();
-  const dj = laDojo; const dojoDone = dj && dj.todayRun.length>0;
-  el.innerHTML = `<div class="lb" style="border-left:4px solid var(--accent,#0bb7ae)">${dojoDone?'<div class="stmp big">済</div>':''}<div class="lbh">🏃 今日の10問 ・ 道場 <span class="lbt">${esc(qz.date||'')} ・ ${dojoDone?`${dj.best}/${dj.n}`:'まだ'}</span></div>
-    <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">${dj&&dj.lead?esc(dj.lead):'ずんだもんが読み上げ、番号を言って答える。今朝の浅い問い10問（期日が来た復習＋昨夜の課）。'}${dj&&dj.missed.length?`<br>落とした: ${dj.missed.map(esc).join('／')}`:''}</p>
-    <div class="lqb" style="margin-top:10px"><button class="btn btn-primary" id="la-dojo" style="flex:1">🏃 道場を開く</button></div>${dj?'':'<p class="hint" style="margin:6px 0 0;font-size:12px">（成績の取得に失敗。電波を確認）</p>'}</div>
-  <div class="lb" style="border-left:4px solid var(--pred,#a3402b)">${done>=total&&total>0?'<div class="stmp big">済</div>':''}<div class="lbh">🗣 説明する ・ 深い${(qz.items||[]).length}問 <span class="lbt">${done}/${total} 済</span></div>
-    <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">答案用紙を開いて、文字か🎤で30秒の説明。夜に採点して手紙に戻る。覚えたいことは投げ込みタブの「🧬 覚えたい」箱へ。</p>
-    <div class="lqb" style="margin-top:10px"><button class="btn btn-primary" id="la-open-test" style="flex:1">📝 答案用紙を開く</button></div>
-    <p style="margin:8px 0 0;font-size:12px;text-align:right"><a href="#" id="la-run-mode" style="color:var(--pink3)">🔈 端末の声で読み上げる（旧）</a></p></div>`;
-  $('la-open-test').addEventListener('click', ()=>{ laOpenReader(laTestHtml(Object.assign({}, qz, {quick: []}), laDay, laScores), `朝の出力 ${qz.date||''}`); });
-  $('la-dojo').addEventListener('click', ()=>{ window.open('dojo.html', '_blank'); });
-  $('la-run-mode').addEventListener('click', (e)=>{ e.preventDefault(); laRunMode(qz); });
+
+// ── 課の在庫と「読んだ」
+function laLessonInfo(key){ return ((laZ&&laZ.lessons)||[]).find(x=>x.key===key) || ((laZ&&laZ.stories)||[]).find(x=>x.key===key) || null; }
+function laIsRead(key){ const v = laLessons[key]; if(v && v.done) return true; const x = laLessonInfo(key); if(x && x.read) return true; return laLessonDone(laLessons, key); }
+function laNextLesson(exclude){ return ((laZ&&laZ.lessons)||[]).find(x=>!laIsRead(x.key) && x.key!==exclude) || null; }
+function laReadToday(){ const t = laTodayJST(); return Object.entries(laLessons).filter(([k,v])=>v&&v.done&&laJstDate(v.at)===t).map(([k,v])=>Object.assign({key:k}, v, laLessonInfo(k)||{})); }
+function laOpenKey(key){ if(!key) return; if(String(key).includes('/')) return laOpenLessonPath(key); const m = String(key).match(/^([A-Z])(\d+)$/); if(m) laOpenLesson(m[1], +m[2]); }
+function laDeepItem(){
+  const items = (laQuiz&&laQuiz.items)||[]; if(!items.length) return null; const ans = (laDay&&laDay.answers)||{};
+  const open = items.filter(it=>!(ans[it.id]&&(ans[it.id].text||ans[it.id].audio)));
+  return open.length ? open[Math.min(laDeepIdx, open.length-1)] : items[0];
 }
+function laStampList(){
+  const base = ((laZ&&laZ.stamps)||[]).map(s=>Object.assign({}, s)); const keys = new Set(base.map(s=>s.key));
+  Object.entries(laLessons).sort((a,b)=>String(a[1]&&a[1].at).localeCompare(String(b[1]&&b[1].at))).forEach(([k,v])=>{
+    if(!v||!v.done||keys.has(k)||(v.path&&keys.has(v.path))) return; base.push({key:k, date:laJstDate(v.at), score:v.skip?3:null}); keys.add(k); });
+  return base;
+}
+
+// ── 描画
+function laRender(scrollTop){
+  const root = $('cb-root'); if(!root) return;
+  const zk = laView==='zukan'||laView==='card';
+  const top = `<div class="cb-top"><div class="cb-seg"><button data-v="path" class="${zk?'':'on'}">今日の一本道</button><button data-v="zukan" class="${zk?'on':''}">世界図鑑</button></div><button class="cb-back" data-v="home">← 今日</button></div>`;
+  let body = '';
+  try{
+    body = laView==='zukan' ? laZukanHtml() : laView==='card' ? laCardHtml2(laCardSel) : laView==='stories' ? laStoriesHtml() : laView==='stairs' ? '<div id="cb-stairs"><p class="cb-muted">読み込み中…</p></div>' : laView==='ask' ? `<button class="cb-link" data-v="path">← 一本道に戻る</button><div id="lp-ask"></div>` : laPathHtml();
+  }catch(e){ body = `<div class="cb-card">表示できなかった: ${esc(e.message)}</div>`; }
+  root.innerHTML = top + body;
+  if(laView==='ask') renderAsk();
+  if(laView==='stairs') laStairsRender();
+  laAudioMarks(root);
+  if(scrollTop){ const tc = document.querySelector('.tab-content'); if(tc) tc.scrollTop = 0; }
+}
+function laQaCard(o, noTag){ // 採点カード: 問い・自分の答え・ハンコ・抜け1行・次に出る日（design-src の部品見本）
+  const sl = laSlotOf(o.id, o); const nd = laNextDue(o.id, o.date, o.score); const lv = sl.slot ? laLevel(sl.card, sl.slot) : null;
+  return `<div class="cb-qa tc-${laTk(sl.card)}">${noTag?'':laTag(sl.card, sl.slot)}${o.q?`<div class="q">${esc(o.q)}</div>`:''}
+    ${o.a?`<div class="me"><small>自分の答え ${esc(laMD(o.date))}</small>${esc(o.a)}</div>`:''}
+    ${o.score!=null?`<div class="cb-verdict">${laStampImg(o.score, o.id+':'+o.date)}<div><div class="cb-sc num">${o.score}<small> / 3</small></div>${o.miss?`<div class="miss">抜け: ${esc(o.miss)}</div>`:''}</div></div>`:''}
+    <div class="cb-pills">${nd?`<span class="cb-pill">次に出る日 ${esc(laMD(nd))}</span>`:''}${lv!=null?`<span class="cb-pill">マス: ${esc(LA_LVNAME[lv])}</span>`:''}</div></div>`;
+}
+function laPathHtml(){
+  const qz = laQuiz; const dj = laDojo; const ans = (laDay&&laDay.answers)||{};
+  const s1 = !!(dj && dj.todayRun.length);
+  const readT = laReadToday(); const s2 = readT.length > 0;
+  const it = laDeepItem(); const a = it ? ans[it.id] : null; const s3 = !it || !!(a && (a.text||a.audio));
+  const cur = !s1 ? 1 : !s2 ? 2 : !s3 ? 3 : 0;
+  const next = laNextLesson();
+  const d = new Date(); const dl = `${d.getMonth()+1}/${d.getDate()}（${'日月火水木金土'[d.getDay()]}）`;
+  // 「続きから」は1つだけ
+  const goLbl = cur===1 ? '① 思い出す 10問' : cur===2 ? (next?'② 今日の1課を読む':'') : cur===3 ? '③ 説明する1問' : (next?'次の課へ進む':'');
+  const goAct = cur===1 ? 'dojo' : cur===2 ? 'read' : cur===3 ? 'deep' : 'read';
+  const go = goLbl ? `<button class="cb-go" data-act="go" data-go="${goAct}" data-key="${laAttr(next?next.key:'')}">${cur?'続きから ・ ':''}${esc(goLbl)} →</button>` : '';
+  // ① 思い出す
+  const st1 = `<div class="cb-step ${s1?'done':cur===1?'now':''}"><div class="n">${s1?'✓':'1'}</div><div><h3>思い出す 10問</h3>
+    <div class="sub">${s1?`道場 <span class="num">${dj.best}/${dj.n}</span>${dj.missed.length?` ・ 落とした: ${dj.missed.slice(0,3).map(esc).join('／')}`:''}`:'声で答える4択。期日が来た復習と、読んだ課から'}</div>
+    <div class="cb-row"><button class="cb-btn" data-act="dojo">${s1?'もう一度':'道場を開く'}</button></div></div></div>`;
+  // ② 今日の1課（読んだら「次の課へ進む」で上限なく先へ）
+  let b2 = '';
+  if(s2){ b2 = `<div class="sub">読んだ: ${readT.map(x=>esc(x.title||x.key)).join('／')}</div>` + (next ? `<div class="cb-row"><button class="cb-btn" data-act="read" data-key="${laAttr(next.key)}">次の課へ進む</button><button class="cb-link" data-act="knows" data-key="${laAttr(next.key)}">次の課を知ってる</button></div><div class="note">次: ${esc(next.title)}</div>` : ''); }
+  else if(next){ b2 = `<div style="margin-top:6px">${laTag(next.card, next.slot)}</div><div class="ttl">${esc(next.title)}</div>${next.minutes?`<div class="sub">${esc(String(next.minutes))}分</div>`:''}
+    <div class="cb-row"><button class="cb-btn" data-act="read" data-key="${laAttr(next.key)}">読む</button><button class="cb-btn" data-act="knows" data-key="${laAttr(next.key)}">知ってる</button></div>`; }
+  else b2 = `<div class="sub">次の課を用意している。読み返しは世界図鑑から</div>`;
+  const st2 = `<div class="cb-step ${s2?'done':cur===2?'now':''}"><div class="n">${s2?'✓':'2'}</div><div><h3>今日の1課</h3>${b2}</div></div>`;
+  // ③ 説明する1問（文字か🎤。夜に採点が付くと、この問いの下に採点カード）
+  let b3 = '';
+  if(it){
+    const sl = laSlotOf(it.id, it); const sc = (laScores||[]).find(r=>r.id===it.id && r.date===(qz&&qz.date) && r.score!=null);
+    b3 = `<div style="margin-top:6px">${laTag(sl.card, sl.slot)}</div><div class="ttl">${esc(it.text||'')}</div>${it.note?`<div class="note">${esc(it.note)}</div>`:''}`;
+    if(sc) b3 += laQaCard({id:it.id, date:sc.date, q:'', a:(a&&a.text)||sc.answer||'', score:sc.score, miss:sc.miss, card:sl.card, slot:sl.slot}, true);
+    else if(s3 && a) b3 += `<div class="cb-qa"><div class="me" style="margin-top:0"><small>自分の答え${a.at?' '+esc(laMD(laJstDate(a.at))):''}</small>${a.text?esc(a.text):'🎤 録音'}${a.audio&&!a.raw_voice?` <span class="amark" data-atag="${laAttr(it.id)}" data-adate="${laAttr((qz&&qz.date)||laDate||'')}" data-adone="0"></span>`:''}</div><div class="cb-pills"><span class="cb-pill">夜に採点が付く</span></div></div><div class="cb-row"><button class="cb-link" data-act="edit-deep">書き直す</button></div>`;
+    if(!s3 || laEditDeep){ b3 += `<textarea class="cb-ta" id="cb-deep" placeholder="30秒でちょっちに説明するつもりで。話し言葉でいい">${esc((a&&a.text)||'')}</textarea>
+      <div class="cb-row"><button class="cb-btn p" data-act="save-deep" data-id="${laAttr(it.id)}">保存</button><button class="cb-btn" data-act="rec" data-id="${laAttr(it.id)}">🎤 録音</button></div>`; }
+    const rest = ((qz&&qz.items)||[]).filter(x=>x.id!==it.id && !(ans[x.id]&&(ans[x.id].text||ans[x.id].audio)));
+    if(s3 && rest.length) b3 += `<div class="cb-row"><button class="cb-link" data-act="deep-next">もう1問ある</button></div>`;
+    if(qz && qz.date && qz.date!==laTodayJST()) b3 += `<div class="cb-small" style="margin-top:8px">今日の問いの用意が遅れているので、前回（${esc(laMD(qz.date))}）の問いを出している</div>`;
+  } else b3 = `<div class="sub">問いの用意が遅れている。先に課を進めてOK</div>`;
+  // 前回の説明（最新の採点済みの深い問い）
+  const prev = (laScores||[]).filter(r=>r.score!=null && LA_DEEP.includes(r.kind) && !(it && r.id===it.id && r.date===(qz&&qz.date))).sort((x,y)=>String(y.date).localeCompare(String(x.date)))[0];
+  if(prev) b3 += `<div class="cb-cap">前回の説明</div>` + laQaCard({id:prev.id, date:prev.date, q:laQText(prev.id), a:prev.answer||'', score:prev.score, miss:prev.miss, card:prev.card});
+  const st3 = `<div class="cb-step ${s3&&it?'done':cur===3?'now':''}"><div class="n">${s3&&it?'✓':'3'}</div><div><h3>説明する1問</h3>${b3}</div></div>`;
+  // ④ マスに反映（今日さわったマス。読んだ直後に色が変わる）
+  const touched = []; const addT = (card, slot)=>{ if(card&&slot&&LA_CARDS.includes(card)&&!touched.some(t=>t.card===card&&t.slot===slot)) touched.push({card, slot}); };
+  readT.forEach(x=>addT(x.card, x.slot)); if(it && a && (a.text||a.audio)){ const sl = laSlotOf(it.id, it); addT(sl.card, sl.slot); }
+  const b4 = touched.length ? `<div class="cb-chips">${touched.map(t=>{ const lv = Math.max(1, laLevel(t.card, t.slot)); return `<span class="cb-chip tc-${laTk(t.card)}"><b class="l${lv}"></b>${esc(t.card)} ${LA_CIRC[t.slot]}${esc(LA_SLOT[t.slot])} ・ ${esc(LA_LVNAME[lv])}</span>`; }).join('')}</div><div class="cb-row"><button class="cb-link" data-v="zukan">世界図鑑で見る</button></div>` : `<div class="sub">読んだ課と説明した問いのマスが、ここに並ぶ</div>`;
+  const st4 = `<div class="cb-step ${cur===0?'done':''}"><div class="n">${cur===0?'✓':'4'}</div><div><h3>マスに反映</h3>${b4}</div></div>`;
+  const bar = `<div class="cb-bar">${[s1,s2,s3&&!!it].map(x=>`<i class="${x?'on':''}"></i>`).join('')}</div>`;
+  return `<div class="cb-head"><h2>今日の一本道</h2><span class="cb-small num">${esc(dl)}</span></div>${bar}${go}${st1}${st2}${st3}${st4}${laStampCardHtml()}${laShelfHtml()}`;
+}
+function laQText(id){ const q = (((laQuiz&&laQuiz.items)||[]).concat((laQuiz&&laQuiz.quick)||[])).find(x=>x.id===id); if(q) return q.text;
+  for(const c of Object.values((laZ&&laZ.cards)||{})) for(const s of Object.values(c.slots||{})) for(const x of (s.answers||[])) if(x.id===id && x.q) return x.q; return ''; }
+function laStampCardHtml(){
+  const L = laStampList(); const n = L.length; const no = n===0 ? 1 : Math.floor((n-1)/20)+1; const inCard = n - (no-1)*20; const cur = L.slice((no-1)*20);
+  const cells = Array.from({length:20}, (_,i)=>{ const s = cur[i]; return s ? `<div class="s on" title="${laAttr(s.title||s.key)}">${laStampImg(s.score, s.key+':'+s.date)}</div>` : `<div class="s">${i+1}</div>`; }).join('');
+  return `<div class="cb-card" style="margin-top:18px"><div class="cb-head" style="margin:0"><h3>スタンプカード <span class="num">No.${no}</span></h3><span class="cb-small">20マスで1枚</span></div>
+    <div class="cb-stamps">${cells}</div><div class="cb-foot"><span class="cb-small">課を1つ読むごとに1個。顔はその課の点${no>1?` ・ 完成 <span class="num">${no-1}</span>枚`:''}</span><span><span class="num" style="font-size:20px">${inCard}</span><span class="cb-small"> / 20</span></span></div></div>`;
+}
+function laShelfHtml(){
+  const ns = ((laZ&&laZ.stories)||[]).length; const qz = laQuiz||{};
+  return `<div class="cb-cap" style="margin-top:22px">もっとやる</div><div class="cb-shelf">
+    <button data-v="stories"><div><b>会社の物語</b><span>1社1話・5分。決断で覚える${ns?` ・ ${ns}話`:''}</span></div><i>→</i></button>
+    <button data-v="stairs"><div><b>宇宙の階段</b><span>宇宙 → 量子 → 物理を1段ずつ</span></div><i>→</i></button>
+    <button data-v="ask"><div><b>聞きたい</b><span>気になったことを聞く → 読んで、覚えるか決める</span></div><i>→</i></button>
+    <button data-act="run"><div><b>走りながら</b><span>今日の問いを読み上げる（音声）</span></div><i>→</i></button>
+    ${qz.report&&qz.report.path?`<button data-act="open-html" data-path="${laAttr(qz.report.path)}"><div><b>深掘り</b><span>${esc(qz.report.title||'')}</span></div><i>→</i></button>`:''}</div>`;
+}
+function laZukanHtml(){
+  if(!laZ || !laZ.cards) return `<div class="cb-card">図鑑のデータ（図鑑.json）をまだ読めない。少し待って開き直す</div>`;
+  const colored = 70 - (+((laZ.counts||{})['0'])||0);
+  const legend = `<div class="cb-legend tc-w">${[0,1,2,3].map(l=>`<span><b class="l${l}"></b>${LA_LVNAME[l]}</span>`).join('')}</div>`;
+  const head = `<div></div>${[1,2,3,4,5].map(s=>`<div class="gh">${laIcon(s)}${LA_SLOT[s]}</div>`).join('')}`;
+  const rows = (laZ.order||LA_CARDS).map(c=>{ const C = laZ.cards[c]; if(!C) return ''; const tk = laTk(c);
+    return `<button class="gn tc-${tk}" data-act="card" data-card="${laAttr(c)}"><i></i>${esc(c)}</button>${[1,2,3,4,5].map(s=>{ const lv = (C.slots[String(s)]||{}).level||0; return `<button class="gc l${lv} tc-${tk}" data-act="card" data-card="${laAttr(c)}" aria-label="${laAttr(c+' '+LA_SLOT[s]+' '+LA_LVNAME[lv])}"></button>`; }).join('')}`; }).join('');
+  return `<div class="cb-head"><h2>世界図鑑</h2><span class="cb-small">14枚 × 5枠</span></div>
+    <div class="cb-card"><div class="cb-head" style="margin:0 0 4px"><span class="cb-eyebrow">色の付いたマス</span><span><span class="num" style="font-size:24px">${colored}</span><span class="cb-small"> / 70</span></span></div>${legend}<div class="cb-grid">${head}${rows}</div>
+    <p class="cb-small" style="margin:12px 0 0">見た＝そのマスの課を読んだ・問いに触れた ／ 思い出せる＝そのマスの問いで2点以上 ／ 説明できる＝別の日に3点を2回、または白紙から説明できた</p></div>
+    <button class="cb-worldbtn" data-act="world"><div>世界地図で見る<span style="display:block">国の色＝そのカードの5枠の平均</span></div><span>→</span></button>`;
+}
+function laCardHtml2(name){
+  const C = laZ && laZ.cards && laZ.cards[name]; if(!C) return `<div class="cb-card">カードが見つからない</div>`;
+  const tk = laTk(name);
+  const mini = `<div class="cb-mini tc-${tk}">${[1,2,3,4,5].map(s=>`<b class="l${(C.slots[String(s)]||{}).level||0}"></b>`).join('')}</div>`;
+  const Ls = ((laZ.lessons)||[]).concat((laZ.stories)||[]);
+  const slots = [1,2,3,4,5].map(s=>{ const S = C.slots[String(s)]||{}; const lv = S.level||0;
+    const h = String(S.h||'').replace(/（[^）]*時点[^）]*）/g,'').trim();
+    const body = String(S.body||'').replace(/[🔴🟢🟡🟠]\s*/gu,'').trim();   // 地図カードの印（🔴など）は画面に出さない const first = (body.split('\n').find(l=>l.trim() && !/^（/.test(l.trim()))||'').replace(/^\s*(?:[-・]|\d+\.)\s*/,'').replace(/\*\*/g,'');
+    const fact = body && !/^（夜の巡回が/.test(body) ? `<details class="cb-fact"><summary><b>事実</b>${esc(first.length>70?first.slice(0,70)+'…':first)}</summary><div class="cb-factbody">${laMd(body)}</div></details>` : `<div class="cb-small" style="margin-top:8px">事実はまだ無い。夜の巡回がニュースから足していく</div>`;
+    const mine = (S.answers||[]).map(x=>`<div class="cb-mine">${x.score!=null?laStampImg(x.score, x.id+':'+x.date):'<div class="nost">採点前</div>'}<div><div class="mq">${esc(laMD(x.date))} ・ ${esc(x.q||'')}</div>${x.a?`<div class="ma">${String(x.id).startsWith('dojo:')?'道場 '+esc(String(x.a).replace(/\s*\d+秒$/,'')):esc(String(x.a).slice(0,120))}</div>`:''}<div class="mm">${x.score!=null?`<span class="num">${x.score}</span> / 3`:''}${x.miss?` ・ 抜け: ${esc(x.miss)}`:''}</div></div></div>`).join('');
+    const les = Ls.filter(x=>x.card===name && +x.slot===s);
+    const lesH = les.length ? `<div class="cb-lessons">${les.map(x=>`<button data-act="read" data-key="${laAttr(x.key)}"><div>${esc(x.title)}</div><span>${laIsRead(x.key)?'読んだ':'読む'}</span></button>`).join('')}</div>` : '';
+    return `<section class="cb-slot tc-${tk}"><div class="cb-slot-h"><div class="cb-ic">${laIcon(s)}</div><div><b>${LA_CIRC[s]} ${LA_SLOT[s]}</b>${h?`<small>${esc(h)}</small>`:''}</div><span class="cb-lv l${lv}">${LA_LVNAME[lv]}</span></div>
+      ${fact}${mine?`<div class="cb-cap" style="margin:12px 0 0">自分の答え</div>${mine}`:''}${lesH}
+      <div class="cb-pills">${S.next?`<span class="cb-pill">次に出る日 ${esc(laMD(S.next < laTodayJST() ? laTodayJST() : S.next))}</span>`:''}</div></section>`; }).join('');
+  return `<button class="cb-link" data-v="zukan">← 世界図鑑</button><div class="cb-head" style="margin-top:4px"><h2>${esc(name)}</h2><span class="cb-small">Lv <span class="num">${esc((+C.level||0).toFixed(1))}</span> ・ 5枠の平均</span></div>
+    <div style="margin:0 2px 6px">${laTag(name)}</div>${mini}<div style="height:10px"></div>${slots}`;
+}
+function laStoriesHtml(){
+  const S = (laZ&&laZ.stories)||[];
+  return `<button class="cb-link" data-v="path">← 一本道に戻る</button><div class="cb-head" style="margin-top:4px"><h2>会社の物語</h2><span class="cb-small">1社1話・5分</span></div>
+    <div class="cb-shelf">${S.length?S.map(x=>`<button data-act="read" data-key="${laAttr(x.key)}"><div><b>${esc(String(x.title).split(' — ')[0])}</b><span>${esc(String(x.title).split(' — ')[1]||'')}</span><span style="margin-top:4px">${laTag(x.card, x.slot)}</span></div><i>${laIsRead(x.key)?'読んだ':'読む'}</i></button>`).join(''):'<p class="cb-muted">まだ無い。週次バッチが書く</p>'}</div>`;
+}
+async function laStairsRender(){
+  const el = $('cb-stairs'); if(!el) return; const out = [];
+  for(const th of ['宇宙','量子','物理']){
+    let files = []; try{ files = (await listDir(`knowledge/学習/階段/${th}`)).filter(f=>/\.html$/.test(f.name)).map(f=>f.name).sort(); }catch(_){}
+    let titles = {}; try{ const md = await repoFile('meyjiro/claude-context', `knowledge/学習/階段/${th}.md`); (md||'').split('\n').forEach(r=>{ const c = r.split('|').map(x=>x.trim()); if(c.length>3 && /^\d+$/.test(c[1])) titles[+c[1]] = c[2]; }); }catch(_){}
+    if(files.length) out.push(`<div class="cb-cap">${esc(th)}</div><div class="cb-shelf">${files.map(f=>{ const n = parseInt(f,10); return `<button data-act="open-html" data-path="${laAttr(`knowledge/学習/階段/${th}/${f}`)}"><div><b>第${n}段</b><span>${esc(titles[n]||'')}</span></div><i>→</i></button>`; }).join('')}</div>`);
+  }
+  if($('cb-stairs')) $('cb-stairs').innerHTML = `<button class="cb-link" data-v="path">← 一本道に戻る</button><div class="cb-head" style="margin-top:4px"><h2>宇宙の階段</h2><span class="cb-small">1段5分</span></div>${out.join('')||'<p class="cb-muted">まだ段が無い。日曜に1段ずつ増える</p>'}`;
+}
+
+// ── 操作（#cb-root に1回だけ結ぶ）
+function laBind(){
+  if(laBound) return; const root = $('cb-root'); if(!root) return; laBound = true;
+  root.addEventListener('click', async e=>{
+    const v = e.target.closest('[data-v]');
+    if(v){ const k = v.dataset.v; if(k==='home'){ switchTab('today'); return; } laView = k; if(k==='path') laDeepIdx = 0; laRender(true); return; }
+    const b = e.target.closest('[data-act]'); if(!b) return; const act = b.dataset.act;
+    if(act==='go'){ const g = b.dataset.go; if(g==='dojo') return laOpenDojo(); if(g==='read') return laOpenKey(b.dataset.key); if(g==='deep'){ const t = $('cb-deep'); if(t){ t.scrollIntoView({block:'center', behavior:'smooth'}); setTimeout(()=>t.focus(), 300); } } return; }
+    if(act==='dojo') return laOpenDojo();
+    if(act==='read') return laOpenKey(b.dataset.key);
+    if(act==='knows') return laKnowsOpen(b.dataset.key);
+    if(act==='card'){ laCardSel = b.dataset.card; laView = 'card'; laRender(true); return; }
+    if(act==='world'){ window.open('world.html', '_blank'); return; }
+    if(act==='run'){ if(laQuiz) laRunMode(laQuiz); else toast('問いがまだ無い'); return; }
+    if(act==='deep-next'){ laDeepIdx++; laRender(); return; }
+    if(act==='edit-deep'){ laEditDeep = true; laRender(); const t = $('cb-deep'); if(t) t.focus(); return; }
+    if(act==='save-deep'){ const id = b.dataset.id, text = ($('cb-deep')||{}).value; if(!text||!text.trim()){ toast('ひとことでも書いてね'); return; }
+      b.disabled = true; try{ await laPut(laDate, j=>{ j.answers[id] = Object.assign(j.answers[id]||{}, {text:text.trim(), at:new Date().toISOString()}); }, `深い問いの答え ${laDate}`); toast('保存した。夜に採点が付く'); laEditDeep = false; laRender(); }catch(err){ toast('保存できなかった: '+err.message); b.disabled = false; } return; }
+    if(act==='rec'){ laToggleRec(b, b.dataset.id); return; }
+    if(act==='open-html'){ b.disabled = true; try{ const h = await repoFile('meyjiro/claude-context', b.dataset.path); if(!h){ toast('まだファイルが無い'); return; } laOpenReader(h, (b.querySelector('b')||b).textContent.trim()); }catch(err){ toast('開けなかった: '+err.message); } finally{ b.disabled = false; } return; }
+  });
+}
+function laOpenDojo(){ window.open('dojo.html', '_blank'); }
+// 📖 階段・深掘り・課をページ内に重ねて表示（iframe srcdoc。🔴 iPhoneは読み込み後の window.open を止めるので窓を開かない）
+function laOpenReader(html, title){
+  let ov = document.getElementById('la-reader');
+  if(!ov){ ov = document.createElement('div'); ov.id='la-reader'; ov.innerHTML = '<div class="lrh"><span class="lrt"></span><button class="btn lrx">閉じる ✕</button></div><iframe class="lrf" sandbox="allow-same-origin allow-scripts allow-popups"></iframe>'; document.body.appendChild(ov);
+    ov.querySelector('.lrx').addEventListener('click', laCloseReader); }
+  ov.querySelector('.lrt').textContent = title||''; ov.querySelector('.lrf').srcdoc = html; ov.hidden=false; document.body.style.overflow='hidden';
+}
+function laCloseReader(){ const ov = document.getElementById('la-reader'); if(!ov) return; ov.hidden=true; ov.querySelector('.lrf').srcdoc=''; document.body.style.overflow=''; }
+
+// ── 知ってる（飛び級）: その課の浅い問い3つ。答えを見て「言えた／まだ」。全部言えたら課を「読んだ」にしてマスを埋め、スタンプ（3点の顔）を押す
+let laKnows = null;
+function laKnowsOpen(key){
+  const L = laLessonInfo(key); const qs = (L&&L.check)||[]; if(!qs.length){ toast('この課には確かめる問いが無い。読んで進めよう'); return; }
+  laKnows = {key, L, qs, res:{}, open:{}};
+  let ov = document.getElementById('cb-knows'); if(!ov){ ov = document.createElement('div'); ov.id = 'cb-knows'; document.body.appendChild(ov);
+    ov.addEventListener('click', laKnowsClick); }
+  ov.hidden = false; document.body.style.overflow = 'hidden'; laKnowsDraw();
+}
+function laKnowsDraw(){
+  const ov = document.getElementById('cb-knows'); const K = laKnows; if(!ov||!K) return;
+  const done = K.qs.every(q=>K.res[q.id]!=null); const pass = done && K.qs.every(q=>K.res[q.id]===true);
+  ov.innerHTML = `<div class="kh"><span class="small">知ってる課を飛ばす</span><button class="kx" data-k="close">閉じる ✕</button></div>
+    <h2>${esc(K.L.title)}</h2><div style="margin-top:8px">${laTag(K.L.card, K.L.slot)}</div><p class="small" style="margin:8px 0 0">3問、頭の中で答えてから答えを見る。全部言えたら、この課は読んだことにしてマスを埋める。</p>
+    ${K.qs.map((q,i)=>`<div class="kq"><div class="small num">${i+1} / ${K.qs.length}</div><div class="t">${esc(q.text)}</div>
+      ${K.open[q.id]?`<div class="ans">${esc(q.answer||'')}</div><div class="kr"><button data-k="ok" data-id="${laAttr(q.id)}" class="${K.res[q.id]===true?'on':''}">言えた</button><button data-k="ng" data-id="${laAttr(q.id)}" class="${K.res[q.id]===false?'on':''}">まだ</button></div>`:`<div class="kr"><button data-k="show" data-id="${laAttr(q.id)}">答えを見る</button></div>`}</div>`).join('')}
+    ${done ? (pass ? `<div class="kres">3問とも言えた。</div><button class="kgo" data-k="pass">マスを埋めて進む</button>` : `<div class="kres">この課は読むと埋まる。</div><button class="kgo" data-k="read">この課を読む</button>`) : ''}`;
+}
+async function laKnowsClick(e){
+  const b = e.target.closest('[data-k]'); if(!b||!laKnows) return; const k = b.dataset.k, K = laKnows; const ov = document.getElementById('cb-knows');
+  const close = ()=>{ ov.hidden = true; document.body.style.overflow = ''; };
+  if(k==='close'){ close(); return; }
+  if(k==='show'){ K.open[b.dataset.id] = true; laKnowsDraw(); return; }
+  if(k==='ok'||k==='ng'){ K.res[b.dataset.id] = k==='ok'; laKnowsDraw(); return; }
+  if(k==='read'){ close(); laOpenKey(K.key); return; }
+  if(k==='pass'){ b.disabled = true; b.textContent = '保存しています…';
+    const L = K.L; const rec = {track:L.track, no:L.no, done:true, skip:true, at:new Date().toISOString()}; if(String(K.key).includes('/')) rec.path = K.key;
+    try{ await laPut(laTodayJST(), j=>{ j.lessons = j.lessons||{}; j.lessons[K.key] = rec; j.self = j.self||{}; K.qs.forEach(q=>{ j.self[q.id] = 3; }); }, `知ってる（飛び級） ${K.key}`);
+         laLessons[K.key] = rec; close(); laView = 'path'; laRender(true); toast('マスを埋めた'); }
+    catch(err){ toast('保存できなかった: '+err.message); b.disabled = false; b.textContent = 'マスを埋めて進む'; } }
+}
+
 // ── 🏃 走りながら（2026-09-21 メグ「ランニング中は暇。10問サクサク答えたい」。ゴッフルの「音声10問は過負荷」は本人が却下）──
 //    仕組み: 問いを読み上げ → 考える間（既定12秒・カウントダウン表示）→ 答えを読み上げ → 3秒 → 次。全部終わったら自己採点の一覧。
 //    🔴 iOSは画面を消すと読み上げが止まる。画面は点けたままポケットへ（wakeLockで消灯を止める）。読み上げはユーザー操作から始める必要があるので「開始」を押してから
@@ -4894,108 +5072,87 @@ function laRunMode(qz){
   ov.querySelector('#lr-next').onclick=()=>{ if(!laRunState) return; laRunState.skip=true; try{ speechSynthesis.cancel(); }catch(_){} clearTimeout(laRunState.timer); };
   ov.querySelector('#lr-again').onclick=()=>{ if(!laRunState) return; const i=laRunState.i; stop(); run(i); };
 }
-// 答案用紙からの保存（postMessage）
-window.addEventListener('message', async e=>{
-  const d = e.data; if(!d || d.src!=='la-test') return;
-  const fr = document.querySelector('#la-reader .lrf'); const reply = m=>{ if(fr&&fr.contentWindow) fr.contentWindow.postMessage(m,'*'); };
-  try{
-    if(d.type==='conf'){ await laPut(laDate, j=>{ j.conf=j.conf||{}; j.conf[d.id]=d.v; }, `確信度 ${laDate}`); }
-    else if(d.type==='self'){ await laPut(laDate, j=>{ j.self[d.id]=d.v; }, `浅い問いの自己採点 ${laDate}`); }
-    else if(d.type==='deep'){ await laPut(laDate, j=>{ j.answers[d.id]=Object.assign(j.answers[d.id]||{}, {text:d.text, at:new Date().toISOString()}); }, `深い問いの答え ${laDate}`); reply({type:'saved', id:d.id}); }
-    else if(d.type==='connect'){ await laPut(laDate, j=>{ j.connect=Object.assign({}, d.data, {at:new Date().toISOString()}); }, `今日の1本を棚に置く ${laDate}`); reply({type:'saved', kind:'connect'}); }
-    else if(d.type==='rec'){ const fake={classList:{add(){reply({type:'rec-state',id:d.id,on:true})},remove(){reply({type:'rec-state',id:d.id,on:false})}}, set textContent(v){}}; laToggleRec(fake, d.id); return; }
-    else if(d.type==='open'){ const h = await repoFile('meyjiro/claude-context', d.path); if(h) laOpenReader(h, d.path.split('/').pop()); else toast('まだファイルが無い'); return; }
-    reply(Object.assign({type:'progress'}, laTestProgress())); renderLearnTodayPaper();
-  }catch(err){ toast('保存できなかった: '+err.message); }
-});
 
-// ══ 📖 教科書（古紙・コーネル式）── JSON（knowledge/学習/教科書/<track>/NN.json）を紙のHTMLにして la-reader に出す ══
-// 見本: ~/学習/教科書_見本.html。根拠: 1行36〜40字・行間1.95・左に手がかり列・下に要約・事前テスト・図は本文直後
-const LA_PAPER_CSS = `:root{--paper:#efe6cf;--ink:#2b2418;--ink2:#5c5040;--ink3:#8c8069;--rule:#cdbf9c;--red:#a3402b;--blue:#2f5a78;--green:#4d6b3a;--card:#f7f1e3}
-*{box-sizing:border-box}html{background:#d9cfb5}
-body{margin:0;color:var(--ink);font:17px/1.95 "Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;background-color:var(--paper);background-image:radial-gradient(ellipse at 12% 8%,rgba(120,90,40,.10),transparent 42%),radial-gradient(ellipse at 88% 92%,rgba(120,90,40,.12),transparent 40%),radial-gradient(ellipse at 70% 20%,rgba(255,255,255,.35),transparent 50%),url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.28 0 0 0 0 0.16 0 0 0 .09 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");background-attachment:fixed}
-.page{max-width:900px;margin:14px auto 70px;padding:0 14px}
-.sheet{background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0) 60px),var(--card);border:1px solid var(--rule);box-shadow:0 1px 0 #fff inset,0 18px 40px -24px rgba(60,40,10,.45);border-radius:6px;padding:24px 26px 30px;position:relative}
-.sheet::before{content:"";position:absolute;inset:8px;border:1px solid rgba(160,140,100,.25);border-radius:3px;pointer-events:none}
-.head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:6px;font-family:"Zen Kaku Gothic New",-apple-system,sans-serif}
-.head .cl{font-size:12px;letter-spacing:.18em;color:var(--ink2)}.head .cl b{color:var(--red)}.head .tm{font-size:12px;color:var(--ink3)}
-h1{font-family:"Shippori Mincho",serif;font-weight:800;font-size:26px;line-height:1.35;margin:10px 0 4px;text-wrap:balance}
-.aim{font-family:"Zen Kaku Gothic New",sans-serif;font-size:13.5px;color:var(--ink2);margin:0 0 18px;border-left:4px solid var(--red);padding-left:10px;line-height:1.7}
-.pre{background:rgba(163,64,43,.06);border:1px dashed var(--red);border-radius:8px;padding:12px 14px;margin:0 0 22px;font-family:"Zen Kaku Gothic New",sans-serif}
-.pre .ph{font-size:12px;letter-spacing:.14em;color:var(--red);font-weight:700}.pre ol{margin:6px 0 0;padding-left:1.4em;font-size:14.5px}.pre li{margin:3px 0}.pre .pn{font-size:12.5px;color:var(--ink2);margin-top:6px}
-.cornell{display:grid;grid-template-columns:172px 1fr;gap:0 22px}
-.cue{font-family:"Zen Kaku Gothic New",sans-serif;font-size:12.5px;line-height:1.6;color:var(--ink2);border-right:1px solid var(--rule);padding-right:14px}
-.cue .c{margin:0 0 14px}.cue .c b{display:block;color:var(--ink);font-size:12.5px}.cue .c.q{color:var(--blue)}.cue .c.q b{color:var(--blue)}.cue .c.term b{color:var(--green)}
-.main p{margin:0 0 14px;max-width:40em;text-align:justify}
-.main h2{font-family:"Zen Kaku Gothic New",sans-serif;font-size:15px;letter-spacing:.06em;margin:22px 0 8px;padding-left:10px;border-left:4px solid var(--ink)}
-.main .term{border-bottom:2px solid rgba(47,90,120,.45);padding-bottom:1px}.main .num{font-family:"Zen Kaku Gothic New",sans-serif;font-weight:700;color:var(--red)}
-.main .mn{font-family:"Zen Kurenaido",cursive;color:var(--blue);font-size:15px;display:inline-block;transform:rotate(-1deg)}
-figure{margin:12px 0 18px;padding:12px 12px 8px;background:rgba(255,255,255,.45);border:1px solid var(--rule);border-radius:6px}figure svg{width:100%;height:auto;display:block;font-family:"Zen Kaku Gothic New",sans-serif}figcaption{font-family:"Zen Kaku Gothic New",sans-serif;font-size:12.5px;color:var(--ink2);margin-top:6px}
-.sum{margin-top:22px;border-top:2px solid var(--ink);padding-top:12px;font-family:"Zen Kaku Gothic New",sans-serif}.sum .sh{font-size:12px;letter-spacing:.14em;color:var(--ink2);font-weight:700}.sum ol{margin:8px 0 0;padding-left:1.4em;font-size:15.5px;font-family:"Shippori Mincho",serif;font-weight:700;line-height:1.8}
-.me{margin-top:18px;background:rgba(77,107,58,.07);border:1px solid rgba(77,107,58,.35);border-radius:8px;padding:12px 14px;font-family:"Zen Kaku Gothic New",sans-serif}
-.me .mh{font-size:12px;letter-spacing:.14em;color:var(--green);font-weight:700}.me textarea,.me input{width:100%;font:15px/1.7 "Zen Kurenaido","Shippori Mincho",serif;color:var(--ink);background:repeating-linear-gradient(transparent,transparent 27px,rgba(77,107,58,.25) 28px);border:0;border-bottom:1px solid var(--rule);padding:4px 6px;resize:vertical}.me textarea{min-height:88px}.me label{font-size:12.5px;color:var(--ink2);display:block;margin-top:8px}
-.me .btn{margin-top:10px;font:700 14px "Zen Kaku Gothic New",sans-serif;background:var(--ink);color:var(--paper);border:0;border-radius:8px;padding:10px 18px;min-height:44px}.me .btn[disabled]{opacity:.5}.me .ok{margin-top:8px;font-size:13px;color:var(--green)}
-.foot{display:flex;justify-content:space-between;gap:12px;font-family:"Zen Kaku Gothic New",sans-serif;font-size:12px;color:var(--ink3);margin-top:16px;flex-wrap:wrap}
-@media (max-width:640px){.sheet{padding:18px 16px 26px}.cornell{grid-template-columns:1fr}.cue{border-right:0;border-bottom:1px solid var(--rule);padding:0 0 10px;margin-bottom:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}.cue .c{margin:0}body{font-size:16.5px}h1{font-size:23px}.main p{text-align:left}} figure.ph img,figure.hero img{width:100%;height:auto;display:block;border-radius:6px;border:1px solid var(--rule);filter:sepia(.18) contrast(.98)} figure.hero{margin:10px 0 6px} figure.hero img{max-height:260px;object-fit:cover} figcaption .cr{color:var(--ink3);font-size:11px}`;
+// ══ 📖 課の読み画面（2026-09-23 新デザイン: 白地・角ゴシック見出し・分野の色。古紙はやめた）──
+//    JSON（knowledge/学習/教科書/<track>/NN.json）を la-reader（ページ内に重ねる iframe）に出す。コーネル式の手がかり列・事前テスト・覚える3行はそのまま
+//    飾りの写真（hero）は出さない（中身を運ばないので。計画 3章）。本文の図（svg）は白い台紙に載せる（暗い画面でも図の色が読めるように）
+const LA_PAPER_CSS = `:root{--ink:#16202c;--ink2:#4a5566;--ink3:#7d8797;--ground:#f4f6f9;--paper:#fff;--line:#dfe4ec;--soft:#eef1f6;--accent:#3346c9;--accent-soft:#e6e9fb;--tc:#1d6fa8;--ts:#e3f0f9;--pink:#e8738f;--pink-soft:#fde8ee;--shadow:0 1px 2px rgba(22,32,44,.06),0 6px 20px rgba(22,32,44,.06)}
+body.s{--tc:#6a47b8;--ts:#efe9fa}body.i{--tc:#16875a;--ts:#e2f4ec}
+@media (prefers-color-scheme:dark){:root{--ink:#e8ecf3;--ink2:#b3bccb;--ink3:#8590a2;--ground:#0f141b;--paper:#171e28;--line:#2a3443;--soft:#1d2531;--accent:#8b9bff;--accent-soft:#232a4d;--tc:#6cb4e6;--ts:#15293a;--pink:#f59ab0;--pink-soft:#3a1e27;--shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);color-scheme:dark}body.s{--tc:#b69cf0;--ts:#261f3c}body.i{--tc:#5cc99a;--ts:#13302a}}
+*{box-sizing:border-box}html,body{background:var(--ground)}
+body{margin:0;color:var(--ink);font:16.5px/1.9 "Noto Sans JP","Hiragino Sans",sans-serif;-webkit-font-smoothing:antialiased}
+.page{max-width:760px;margin:12px auto 70px;padding:0 16px}
+.sheet{background:var(--paper);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:20px 20px 26px}
+.head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--ink3)}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:99px;background:var(--ts);color:var(--tc);font-weight:700;font-size:12px}.tag i{width:8px;height:8px;border-radius:50%;background:var(--tc)}
+.num{font-family:"IBM Plex Sans","Noto Sans JP",sans-serif;font-weight:700;font-variant-numeric:tabular-nums}
+h1{font-family:"Zen Kaku Gothic New","Noto Sans JP",sans-serif;font-weight:900;font-size:25px;line-height:1.35;margin:12px 0 6px;text-wrap:balance}
+.aim{font-size:14px;color:var(--ink2);margin:0 0 16px;border-left:4px solid var(--tc);padding-left:10px;line-height:1.7}.aim b{color:var(--ink)}
+.knows{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--soft);border-radius:12px;padding:8px 8px 8px 12px;margin:0 0 16px;font-size:13px;color:var(--ink2)}
+.knows button{flex:none;min-height:40px;border-radius:10px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);font:700 13.5px "Zen Kaku Gothic New",sans-serif;padding:0 12px}
+.pre{background:var(--accent-soft);border-radius:14px;padding:12px 14px;margin:0 0 20px}
+.pre .ph{font-size:12px;letter-spacing:.1em;color:var(--accent);font-weight:700}.pre ol{margin:6px 0 0;padding-left:1.4em;font-size:15px}.pre li{margin:3px 0}.pre .pn{font-size:12.5px;color:var(--ink2);margin-top:6px}
+.cornell{display:grid;grid-template-columns:170px 1fr;gap:0 22px}
+.cue{font-size:12.5px;line-height:1.6;color:var(--ink2);border-right:1px solid var(--line);padding-right:14px}
+.cue .c{margin:0 0 14px}.cue .c b{display:block;color:var(--ink);font-size:12.5px}.cue .c.q b{color:var(--accent)}.cue .c.term b{color:var(--tc)}
+.main p{margin:0 0 14px;max-width:40em}
+.main h2{font-family:"Zen Kaku Gothic New","Noto Sans JP",sans-serif;font-size:17px;font-weight:700;margin:22px 0 8px;padding-left:10px;border-left:4px solid var(--tc);line-height:1.45}
+.main .term{border-bottom:2px solid color-mix(in srgb,var(--tc) 45%,transparent);padding-bottom:1px}.main .num{color:var(--tc)}
+.main .mn{color:var(--ink3);font-size:13.5px}
+figure{margin:12px 0 18px;padding:12px 12px 8px;background:#fff;border:1px solid var(--line);border-radius:12px}figure svg{width:100%;height:auto;display:block;font-family:"Noto Sans JP",sans-serif}figcaption{font-size:12.5px;color:#4a5566;margin-top:6px}
+figure.ph img{width:100%;height:auto;display:block;border-radius:8px}figcaption .cr{color:#7d8797;font-size:11px}
+.sum{margin-top:22px;border-top:2px solid var(--ink);padding-top:12px}.sum .sh{font-size:12px;letter-spacing:.1em;color:var(--ink2);font-weight:700}.sum ol{margin:8px 0 0;padding-left:1.4em;font-size:16px;font-weight:700;line-height:1.8;font-family:"Zen Kaku Gothic New","Noto Sans JP",sans-serif}
+.me{margin-top:18px;background:var(--soft);border-radius:14px;padding:12px 14px}
+.me .mh{font-size:12px;letter-spacing:.1em;color:var(--ink2);font-weight:700}.me textarea,.me input{width:100%;font:15.5px/1.7 "Noto Sans JP",sans-serif;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:8px 10px;resize:vertical;margin-top:6px}.me textarea{min-height:88px}.me label{font-size:12.5px;color:var(--ink2);display:block;margin-top:10px}
+.btn{margin-top:12px;width:100%;font:700 15px "Zen Kaku Gothic New",sans-serif;background:var(--accent);color:#fff;border:0;border-radius:12px;min-height:50px}.btn[disabled]{opacity:.55}.btn.sec{background:var(--paper);color:var(--ink);border:1.5px solid var(--line)}.ok{margin-top:8px;font-size:13px;color:var(--ink2)}
+.foot{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--ink3);margin-top:16px;flex-wrap:wrap}
+@media (max-width:640px){.sheet{padding:16px 14px 22px;border-radius:14px}.page{padding:0 10px}.cornell{grid-template-columns:1fr}.cue{border-right:0;border-bottom:1px solid var(--line);padding:0 0 10px;margin-bottom:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}.cue .c{margin:0}body{font-size:16px}h1{font-size:22px}}`;
 function laInline(t){ return esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\[\[(.+?)\]\]/g,'<span class="num">$1</span>').replace(/\{\{(.+?)\}\}/g,'<span class="term">$1</span>').replace(/\(\((.+?)\)\)/g,' <span class="mn">← $1</span>'); }
-const LA_TRACK = { A:{name:'教科書A 世界の見取り図', total:60}, B:{name:'教科書B 宇宙・量子・物理', total:60}, C:{name:'教科書C 投資の物差し', total:36}, X:{name:'投げ込みからの課', total:''}, K:{name:'図鑑 会社の物語', total:''} };
+const LA_TRACK = { A:{name:'世界の見取り図', total:60}, B:{name:'宇宙・量子・物理', total:60}, C:{name:'投資の物差し', total:36}, X:{name:'投げ込みからの課', total:''}, K:{name:'会社の物語', total:''} };
 function laLessonHtml(L, saved){
   const tr = LA_TRACK[L.track]||{name:L.track,total:''};
-  const cue = (L.cue||[]).map(c=>`<div class="c ${esc(c.t||'')}"><b>${esc(c.h||'')}</b>${laInline(c.b||'')}</div>`).join('');
-  // 2026-09-21 メグ「図鑑に図・グラフ・写真を」: fig は svg（自前の図）か img（Wikimedia Commons など許諾つき写真。credit 必須）
-  const figHtml = f => !f ? '' : f.svg ? `<figure>${f.svg}<figcaption>${esc(f.cap||'')}</figcaption></figure>` : f.img ? `<figure class="ph"><img src="${esc(f.img)}" alt="${esc(f.cap||'')}" loading="lazy"><figcaption>${esc(f.cap||'')}${f.credit?` <span class="cr">（${esc(f.credit)}）</span>`:''}</figcaption></figure>` : '';
+  const cue = (L.cue||[]).map(c=>`<div class="c ${laAttr(c.t||'')}"><b>${esc(c.h||'')}</b>${laInline(c.b||'')}</div>`).join('');
+  // fig は svg（自前の図）か img（許諾つき写真・credit 必須）。冒頭の飾りの写真（hero）は出さない
+  const figHtml = f => !f ? '' : f.svg ? `<figure>${f.svg}<figcaption>${esc(f.cap||'')}</figcaption></figure>` : f.img ? `<figure class="ph"><img src="${laAttr(f.img)}" alt="${laAttr(f.cap||'')}" loading="lazy"><figcaption>${esc(f.cap||'')}${f.credit?` <span class="cr">（${esc(f.credit)}）</span>`:''}</figcaption></figure>` : '';
   const secs = (L.sections||[]).map(sc=>`<h2>${esc(sc.h||'')}</h2>${(sc.p||[]).map(x=>`<p>${laInline(x)}</p>`).join('')}${figHtml(sc.fig)}${(sc.figs||[]).map(figHtml).join('')}`).join('');
-  const hero = L.hero&&L.hero.img ? `<figure class="hero"><img src="${esc(L.hero.img)}" alt="${esc(L.hero.cap||'')}"><figcaption>${esc(L.hero.cap||'')}${L.hero.credit?` <span class="cr">（${esc(L.hero.credit)}）</span>`:''}</figcaption></figure>` : '';
-  const sv = saved||{};
-  return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700;800&family=Zen+Kaku+Gothic+New:wght@500;700&family=Zen+Kurenaido&display=swap"><style>${LA_PAPER_CSS}</style></head><body><div class="page"><div class="sheet">
-<div class="head"><div class="cl">${esc(tr.name)} ・ 第<b>${esc(String(L.no||''))}</b>課／${tr.total}${L.unit?' ・ '+esc(L.unit):''}</div><div class="tm">読了 ${esc(String(L.minutes||8))}分 ・ 新しい事実 ${esc(String(L.facts||''))}個</div></div>
-<h1>${esc(L.title||'')}</h1>${hero}<p class="aim">この課でできるようになること: ${laInline(L.aim||'')}</p>
-${(L.pretest||[]).length?`<div class="pre"><div class="ph">読む前に答える ・ 事前テスト（外れてOK）</div><ol>${L.pretest.map(x=>`<li>${laInline(x)}</li>`).join('')}</ol><div class="pn">自分の答えを頭に置いてから読む。読み終わったら「覚える3行」で答え合わせ。</div></div>`:''}
+  const sv = saved||{}; const tk = laTk(L.card); const tag = L.card ? `<span class="tag"><i></i>${esc(L.card)}${L.slot?` ・ ${LA_CIRC[L.slot]||''}${esc(LA_SLOT[L.slot]||'')}`:''}</span>` : '';
+  const nx = laNextLesson(L.key);
+  return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=IBM+Plex+Sans:wght@600;700&display=swap"><style>${LA_PAPER_CSS}</style></head><body class="${tk==='w'?'w':tk}"><div class="page"><div class="sheet">
+<div class="head">${tag}<span>${esc(tr.name)} ・ 第<span class="num">${esc(String(typeof L.no==='number'?L.no:''))}</span>課 ・ ${esc(String(L.minutes||8))}分</span></div>
+<h1>${esc(L.title||'')}</h1><p class="aim"><b>なぜ学ぶ:</b> ${laInline(L.aim||'')}</p>
+${sv.done?'':`<div class="knows"><span>もう知っている課なら、3問で確かめて飛ばせる</span><button id="knows">知ってる</button></div>`}
+${(L.pretest||[]).length?`<div class="pre"><div class="ph">読む前に答える（外れてOK）</div><ol>${L.pretest.map(x=>`<li>${laInline(x)}</li>`).join('')}</ol><div class="pn">自分の答えを頭に置いてから読む。読み終わったら「覚える3行」で答え合わせ。</div></div>`:''}
 <div class="cornell"><aside class="cue">${cue}</aside><div class="main">${secs}</div></div>
-<div class="sum"><div class="sh">覚える3行（モッフル版）</div><ol>${(L.summary||[]).map(x=>`<li>${laInline(x)}</li>`).join('')}</ol></div>
-<div class="me"><div class="mh">自分の3行 ・ 自分の言葉で（写さない）</div><textarea id="my3" placeholder="1. &#10;2. &#10;3. ">${esc(sv.my3||'')}</textarea><label>明日の自分に出す問いを1つ（翌朝の浅い問いに混ざる）</label><input id="myq" value="${esc(sv.myq||'')}" placeholder="例: 太陽が消えたと分かるのは何分後？"><button class="btn" id="done" ${sv.done?'disabled':''}>${sv.done?'この課は終えた ✓':'この課を終える → 物差し +1'}</button><div class="ok" id="ok">${sv.done?'保存済み '+esc(String(sv.at||'').slice(0,16)):''}</div></div>
-<div class="foot"><span>出典: ${esc(L.sources||'')}</span><span>${L.next?'次: '+esc(L.next):''}</span></div>
-</div></div><script>document.getElementById('done').addEventListener('click',()=>{parent.postMessage({type:'lesson-done',key:${JSON.stringify(L.key||'')},track:${JSON.stringify(L.track)},no:${JSON.stringify(L.no)},my3:document.getElementById('my3').value,myq:document.getElementById('myq').value},'*');document.getElementById('done').disabled=true;document.getElementById('ok').textContent='保存しています…';});window.addEventListener('message',e=>{if(e.data&&e.data.type==='lesson-saved'){document.getElementById('ok').textContent='保存した。物差し +1 ・ 明日の朝にこの課から5問出るのだ';document.getElementById('done').textContent='この課は終えた ✓';}});<\/script></body></html>`;
+<div class="sum"><div class="sh">覚える3行</div><ol>${(L.summary||[]).map(x=>`<li>${laInline(x)}</li>`).join('')}</ol></div>
+<div class="me"><div class="mh">自分の3行（自分の言葉で。写さない）</div><textarea id="my3" placeholder="1. &#10;2. &#10;3. ">${esc(sv.my3||'')}</textarea><label>明日の自分に出す問いを1つ（翌朝の問いに混ざる）</label><input id="myq" value="${laAttr(sv.myq||'')}" placeholder="例: 太陽が消えたと分かるのは何分後？">
+<button class="btn" id="done" ${sv.done?'disabled':''}>${sv.done?'この課は読んだ':'読んだ → スタンプ +1'}</button><div class="ok" id="ok">${sv.done?'保存済み '+esc(laMD(laJstDate(sv.at))):''}</div>
+<button class="btn sec" id="next" ${sv.done&&nx?'':'hidden'}>次の課へ進む${nx?'：'+esc(nx.title):''}</button></div>
+<div class="foot"><span>出典: ${esc(L.sources||'')}</span></div>
+</div></div><script>const K=${JSON.stringify(L.key||'').replace(/</g,'\\u003c')};
+document.getElementById('done').addEventListener('click',()=>{parent.postMessage({type:'lesson-done',key:K,track:${JSON.stringify(L.track)},no:${JSON.stringify(L.no)},my3:document.getElementById('my3').value,myq:document.getElementById('myq').value},'*');document.getElementById('done').disabled=true;document.getElementById('ok').textContent='保存しています…';});
+document.getElementById('next').addEventListener('click',()=>parent.postMessage({type:'lesson-next',key:K},'*'));
+const kn=document.getElementById('knows'); if(kn) kn.addEventListener('click',()=>parent.postMessage({type:'lesson-knows',key:K},'*'));
+window.addEventListener('message',e=>{if(e.data&&e.data.type==='lesson-saved'){document.getElementById('ok').textContent='保存した。スタンプ +1 ・ 明日の朝、この課から問いが出る';document.getElementById('done').textContent='この課は読んだ';const n=document.getElementById('next');if(e.data.next){n.textContent='次の課へ進む：'+e.data.next;n.hidden=false;}}});<\/script></body></html>`;
 }
 async function laOpenLesson(track, no){
   const path = `knowledge/学習/教科書/${track}/${String(no).padStart(2,'0')}.json`;
-  const t = await repoFile('meyjiro/claude-context', path); if(!t){ toast('この課はまだ書かれていない（'+path+'）'); return; }
+  const t = await repoFile('meyjiro/claude-context', path); if(!t){ toast('この課はまだ書かれていない'); return; }
   let L; try{ L = JSON.parse(t); }catch(e){ toast('課のJSONが壊れている'); return; }
   L.key = `${track}${no}`;
-  const saved = laLessons[L.key];
-  laOpenReader(laLessonHtml(L, saved), `${LA_TRACK[track]?LA_TRACK[track].name:track} 第${no}課`);
+  laOpenReader(laLessonHtml(L, laLessons[L.key]), `${LA_TRACK[track]?LA_TRACK[track].name:track} 第${no}課`);
 }
 window.addEventListener('message', async e=>{
-  const d = e.data; if(!d || d.type!=='lesson-done') return;
-  // 🔴 保存キー: 投げ込みの課（path で開く）は path。JSONに no:1 が入っていると String(d.no)="1" で保存され、
-  //    一覧は lessons[path] を見るので永久に「済」にならなかった（2026-09-23 メグ報告・半導体後工程）
+  const d = e.data; if(!d || !['lesson-done','lesson-next','lesson-knows'].includes(d.type)) return;
+  if(d.type==='lesson-next'){ const nx = laNextLesson(d.key); laCloseReader(); if(nx) laOpenKey(nx.key); return; }
+  if(d.type==='lesson-knows'){ laCloseReader(); laKnowsOpen(d.key); return; }
+  // 🔴 保存キー: 投げ込み・会社の物語（path で開く）は path、A/B/C は "A2"。読んだ日（JST）のファイルに書く（朝の問いの日付ではない）
   const key = d.key || (d.track==='X' ? String(d.no) : `${d.track}${d.no}`);
-  // 🔴 2026-09-23: 以前は laDate（＝朝の問いの日付）のファイルに書いていた。朝の問いが前日のままだと、読んだ課が前日に記録された
-  const rec = {track:d.track, no:d.no, my3:d.my3, myq:d.myq, done:true, at:new Date().toISOString()}; if(d.track==='X'||d.track==='K'){ if(String(key).includes('/')) rec.path = key; }
-  try{ await laPut(laTodayJST(), j=>{ j.lessons = j.lessons||{}; j.lessons[key] = rec; }, `授業を終えた ${key}`); laLessons[key] = rec;
-       const fr = document.querySelector('#la-reader .lrf'); if(fr&&fr.contentWindow) fr.contentWindow.postMessage({type:'lesson-saved'},'*'); renderLearnNight(); }
+  const rec = {track:d.track, no:d.no, my3:d.my3, myq:d.myq, done:true, at:new Date().toISOString()}; if(String(key).includes('/')) rec.path = key;
+  try{ await laPut(laTodayJST(), j=>{ j.lessons = j.lessons||{}; j.lessons[key] = rec; }, `課を読んだ ${key}`); laLessons[key] = rec;
+       const nx = laNextLesson(key); const fr = document.querySelector('#la-reader .lrf'); if(fr&&fr.contentWindow) fr.contentWindow.postMessage({type:'lesson-saved', next: nx?nx.title:''},'*'); laRender(); }
   catch(err){ toast('保存できなかった: '+err.message); }
 });
-// 今夜の授業: knowledge/学習/時間割.json の今日の行
-let laTT = null;
-async function renderLearnNight(){
-  const el = $('lp-night'); el.innerHTML = '<div class="lb">読み込み中…</div>';
-  if(!laTT){ try{ const t = await repoFile('meyjiro/claude-context','knowledge/学習/時間割.json'); laTT = t ? JSON.parse(t) : null; }catch(_){} }
-  const today = laToday(); const row = laTT && (laTT.days||[]).find(r=>r.date===today);
-  const done = laLessons||{};
-  const opening = laTT && today < laTT.start;
-  if(!row){ el.innerHTML = `<div class="lb"><div class="lbh">📖 今夜の授業</div><p style="margin:8px 0 0;font-size:13.5px;color:var(--text2)">${opening?'開講は '+esc(laTT.start)+'（月）。それまでは「先読み」で第1課を読めるのだ。':'今日は時間割に無い日。'}</p>${opening?'<div class="lqb" style="margin-top:8px"><button class="btn" data-lesson="B:1">📖 宇宙 第1課を先読み</button><button class="btn" data-lesson="A:1">📖 世界 第1課を先読み</button></div>':''}</div>`; }
-  else if(row.lessons && row.lessons.length){
-    el.innerHTML = `<div class="lb"><div class="lbh">📖 今夜の授業 <span class="lbt">第${esc(String(row.week))}週 ・ ${esc(row.unit||'')} ・ 20分</span></div>
-      <p style="margin:6px 0 0;font-size:13px;color:var(--text2)">読む前に事前テスト3問 → 本文 → 自分の3行と問いを1つ。寝て、明日の朝に思い出す。</p>
-      ${row.lessons.map(l=>{ const k=`${l.track}${l.no}`; const dn=done[k]&&done[k].done; return `<div class="lq${dn?' done':''}">${dn?'<div class="stmp">済</div>':''}<b>${esc(LA_TRACK[l.track]?LA_TRACK[l.track].name:l.track)} ・ 第${esc(String(l.no))}課</b><div class="qt">${esc(l.title||'')}</div><div class="lqb"><button class="btn ${dn?'':'btn-primary'}" data-lesson="${esc(l.track)}:${esc(String(l.no))}">${dn?'もう一度読む':'📖 読む'}</button></div></div>`; }).join('')}</div>`;
-  } else if(row.saturday){ el.innerHTML = `<div class="lb"><div class="lbh">🗣 土曜 ・ 口頭説明</div><p style="margin:8px 0 0;font-size:13.5px">${esc(row.saturday)}。どこで詰まったかだけ、朝のページの深い問いの欄に書いておくのだ。</p></div>`; }
-  else if(row.sunday){ el.innerHTML = `<div class="lb"><div class="lbh">🗺 日曜 ・ 白紙テスト</div><p style="margin:8px 0 0;font-size:13.5px">「${esc(row.sunday.blank_map||'')}」を白紙から。朝のページの問いに出ている。${row.sunday.midterm?'<b>今日は中間テスト。</b>':''}</p></div>`; }
-  const ex = (laQuiz && Array.isArray(laQuiz.extra)) ? laQuiz.extra.filter(x=>x&&x.path) : [];
-  if(ex.length){ const dn0=laLessons||{}; el.insertAdjacentHTML('beforeend', `<div class="lb"><div class="lbh">🧬 投げ込みからの1課 <span class="lbt">読むかどうかは自由 ・ 5分</span></div>${ex.map(x=>{ const dn=laLessonDone(dn0, x.path); return `<div class="lq${dn?' done':''}">${dn?'<div class="stmp">済</div>':''}<b>${esc(x.from||'投げ込み')}</b><div class="qt">${esc(x.title||x.path)}</div><div class="lqb"><button class="btn ${dn?'':'btn-primary'}" data-lesson-path="${esc(x.path)}">${dn?'もう一度':'📖 読む'}</button></div></div>`; }).join('')}</div>`); }
-  el.querySelectorAll('[data-lesson]').forEach(b=>b.addEventListener('click', ()=>{ const [t,n]=b.dataset.lesson.split(':'); laOpenLesson(t, +n); }));
-  el.querySelectorAll('[data-lesson-path]').forEach(b=>b.addEventListener('click', ()=>laOpenLessonPath(b.dataset.lessonPath)));
-}
+
 // 投げ込みの課が「済」かどうか。path が正しいキー。2026-09-22 以前は JSON の no（"1" 等）で保存されていたので両方見る
 function laLessonDone(lessons, path){
   const L = lessons||{};
@@ -5013,10 +5170,8 @@ async function laOpenLessonPath(path){
 }
 
 
-// ══ 配置テスト（開講前日）: 14枚を1枚1分で🎤 or 文字。Lv0〜3 を自分で付ける → inbox/quiz_answers/<配置日>.json の placement ══
-const LA_CARDS = ['中東','中国・台湾','米国','ロシア・ウクライナ・欧州','日本','東南アジア・タイ','インド','韓国','中南米・アフリカ','エネルギー','半導体・AI','バイオ・製薬','金融','量子・物理・宇宙'];
-// ── 📚 図鑑（2026-09-21 改築v1）: 地図カード14枚と「会社の物語」を古紙の紙面で読む ──
-function laMd(src){ // 地図カードの Markdown（最小限）→ 紙面HTML
+// 地図カードの Markdown（最小限）→ HTML（世界図鑑の「事実」）
+function laMd(src){ 
   const lines = String(src||'').split('\n'); let out='', inList=false;
   for(let l of lines){ l=l.replace(/\r/,''); const li=l.match(/^\s*(?:[-・]|\d+\.)\s+(.*)$/);
     if(li){ if(!inList){ out+='<ul>'; inList=true; } out+='<li>'+laInline(li[1])+'</li>'; continue; }
@@ -5024,36 +5179,7 @@ function laMd(src){ // 地図カードの Markdown（最小限）→ 紙面HTML
     if(/^## /.test(l)) out+='<h2>'+esc(l.replace(/^## /,''))+'</h2>'; else if(l.trim()) out+='<p>'+laInline(l)+'</p>'; }
   if(inList) out+='</ul>'; return out;
 }
-function laCardHtml(name, card){
-  const S = card.sections||{}; const ph = card.photos||{};
-  const pic = f => f&&f.img ? `<figure class="ph"><img src="${esc(f.img)}" alt="${esc(f.cap||'')}" loading="lazy"><figcaption>${esc(f.cap||'')}${f.credit?` <span class="cr">（${esc(f.credit)}）</span>`:''}</figcaption></figure>` : '';
-  const figs = (ph.figs||[]).map(pic);
-  const keys = ['①','②','③','④','⑤'].filter(k=>S[k]);
-  const body = keys.map((k,i)=>`<h2>${k} ${esc(S[k].h)}</h2>${laMd(S[k].body)}${figs[i]||''}`).join('');   // 2枚目以降の写真は節の末尾に順に置く
-  const hero = ph.hero&&ph.hero.img ? `<figure class="hero"><img src="${esc(ph.hero.img)}" alt="${esc(ph.hero.cap||'')}"><figcaption>${esc(ph.hero.cap||'')}${ph.hero.credit?` <span class="cr">（${esc(ph.hero.credit)}）</span>`:''}</figcaption></figure>` : '';
-  return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap"><style>${LA_PAPER_CSS} .main h2{margin-top:22px} .main ul{padding-left:1.3em} .main li{margin:4px 0}</style></head><body><div class="page"><div class="sheet">
-<div class="head"><div class="cl">図鑑 ・ 地図カード</div><div class="tm">${esc(card.title||name)}</div></div><h1>${esc(name)}</h1>${hero}
-<div class="main" style="font-size:15px;line-height:1.9">${body}</div>
-<div class="foot"><span>正本: knowledge/学習/地図/${esc(name)}.md（古い行は消さず「→ 更新」で重ねる）</span></div></div></div></body></html>`;
-}
-let laWorld = null;
-async function renderZukan(){
-  const el = $('lp-zukan'); el.innerHTML = '<div class="lb">読み込み中…</div>';
-  try{
-    if(!laWorld){ const t = await repoFile('meyjiro/claude-context','knowledge/学習/世界.json'); laWorld = t ? JSON.parse(t) : null; }
-    const cards = (laWorld&&laWorld.cards)||{};
-    const names = LA_CARDS.filter(n=>cards[n]).concat(Object.keys(cards).filter(n=>!LA_CARDS.includes(n)));
-    let stories = [];
-    try{ stories = (await listDir('knowledge/学習/教科書/K')).filter(f=>f.name.endsWith('.json')).map(f=>f.name); }catch(_){}
-    el.innerHTML = `<div class="lb"><div class="lbh">📚 図鑑 <span class="lbt">地図カード ${names.length}枚 ・ 会社の物語 ${stories.length}話</span></div>
-      <p style="margin:6px 0 10px;font-size:13px;color:var(--text2)">読むだけの棚。カードは「①歴史 ②今 ③産業 ④誰が得して誰が困る ⑤最近のニュース」。表紙の🗺で国を押しても同じものが出る。</p>
-      <div class="zk-grid">${names.map(n=>{ const c=cards[n]; const lv=c.level||0; return `<button class="zk-card" data-zk="${esc(n)}"><b>${esc(n)}</b><span>${'●'.repeat(lv)}${'○'.repeat(3-lv)} ・ 時系列${c.n_items||0}</span></button>`; }).join('')}</div></div>
-      <div class="lb"><div class="lbh">📖 会社の物語 <span class="lbt">1社1話・5分・寝る前に</span></div>
-      ${stories.length?`<div class="zk-grid">${stories.map(f=>`<button class="zk-card" data-story="${esc(f)}"><b>${esc(f.replace(/^\d+_?/,'').replace(/\.json$/,''))}</b><span>読む</span></button>`).join('')}</div>`:'<p class="empty">まだ無い。今夜の巡回から1社ずつ増える</p>'}</div>`;
-    el.querySelectorAll('.zk-card[data-zk]').forEach(b=>b.onclick=()=>laOpenReader(laCardHtml(b.dataset.zk, cards[b.dataset.zk]), '図鑑 ・ '+b.dataset.zk));
-    el.querySelectorAll('.zk-card[data-story]').forEach(b=>b.onclick=()=>laOpenLessonPath('knowledge/学習/教科書/K/'+b.dataset.story));
-  }catch(e){ el.innerHTML = `<div class="lb">図鑑を読めなかった: ${esc(e.message)}</div>`; }
-}
+
 // ── 💬 聞きたい（2026-09-21 改築v1・2段階の深掘り）──
 //    メグ「深掘りボタンだけでなく、自分でテキストで聞ける状態に。ただ知りたいだけの時もある。
 //         読んだ後に覚えるかどうかを決める2段階に」
@@ -5092,31 +5218,7 @@ async function renderAsk(){
     const done=card.querySelector('.ask-done'); if(done) done.onclick=async ()=>{ done.disabled=true; try{ d.status='done'; d.updated=new Date().toISOString(); d.thread=d.thread||[]; d.thread.push({who:'megu',at:d.updated,text:'読んだ・そのまま'}); if(!(await bdWrite(d, `聞きたい 済 ${d.id}`))) throw new Error('板の更新に失敗'); await renderAsk(); }catch(e){ toast('保存できなかった: '+e.message); done.disabled=false; } };
   });
 }
-async function renderPlacement(){
-  const el = $('lp-place'); const pl = laTT && laTT.placement; if(!pl){ el.innerHTML='<div class="lb">配置テストの日が時間割に無い</div>'; return; }
-  const day = await laGet(pl) || {}; const P = day.placement || { cards:{} }; const VA = day.answers||{};
-  const doneN = Object.values(P.cards||{}).filter(c=>c.level!=null).length;
-  el.innerHTML = `<div class="lb" style="border-left:4px solid var(--accent,#0bb7ae)"><div class="lbh">🗺 配置テスト ・ ${esc(pl)} <span class="lbt">${doneN}/14 済</span></div>
-    <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">1枚1分。「①歴史 ②今 ③産業 ④誰が得して誰が困る」の順で、知ってることを喋る（🎤）か書く。終わったら自分でLvを付ける: 0=ほぼ知らない／1=単語が出る／2=2枠は言える／3=4枠言える。Lv2以上の週は飛び級（深掘り週）になる。</p></div>
-    ${LA_CARDS.map((c,i)=>{ const r=(P.cards||{})[c]||{}; return `<div class="lq${r.level!=null?' done':''}" data-card="${esc(c)}">${r.level!=null?'<div class="stmp">済</div>':''}<b>${i+1}／14</b><div class="qt">${esc(c)}</div>
-      <textarea class="pl-text" placeholder="知ってることを、順番に。①歴史 ②今 ③産業 ④誰が得して誰が困る">${esc(r.text||'')}</textarea>
-      <div class="lqb"><button class="btn rec pl-rec">🎤 録音</button><span class="hint">${r.at?'保存 '+esc(String(r.at).slice(11,16)):''}${r.audio?` ・ <span class="amark" data-atag="placement_${i+1}" data-adate="${esc(pl)}" data-adone="${VA['placement_'+(i+1)]&&VA['placement_'+(i+1)].text?'1':'0'}">🎤 確認中…</span>`:''}</span></div>${VA['placement_'+(i+1)]&&VA['placement_'+(i+1)].text?`<div class="qn" style="margin-top:6px;font-size:12.5px;color:var(--text2)">🎤 文字起こし: ${esc(VA['placement_'+(i+1)].text)}</div>`:''}
-      <div class="ks" style="margin-top:6px">Lv: ${[0,1,2,3].map(v=>`<button data-lv="${v}" class="${r.level===v?'on':''}">${v} ${['知らない','単語が出る','2枠','4枠'][v]}</button>`).join('')}</div></div>`; }).join('')}
-    <div class="lb"><button class="btn btn-primary" id="pl-done" ${doneN<14?'disabled':''}>配置テストを終える（14枚にLvを付けたら押せる）</button><span class="hint" style="font-size:12px;color:var(--text2);margin-left:8px">${P.done?'済 ・ 飛び級の判定は明朝の手紙で':''}</span></div>`;
-  if(el.dataset.bound) return; el.dataset.bound='1';
-  el.addEventListener('click', async e=>{
-    const lv = e.target.closest('[data-lv]'); if(lv){ const q=lv.closest('.lq'); const card=q.dataset.card; const text=q.querySelector('.pl-text').value.trim(); const v=+lv.dataset.lv;
-      q.querySelectorAll('[data-lv]').forEach(x=>x.classList.toggle('on', x===lv));
-      try{ await laPut(pl, j=>{ j.placement=j.placement||{cards:{}}; j.placement.cards[card]=Object.assign(j.placement.cards[card]||{}, {text, level:v, at:new Date().toISOString()}); }, `配置テスト ${card} Lv${v}`); renderPlacement(); }catch(err){ toast('保存できなかった: '+err.message); } return; }
-    const rc = e.target.closest('.pl-rec'); if(rc){ const card=rc.closest('.lq').dataset.card; laToggleRecTo(rc, `placement_${LA_CARDS.indexOf(card)+1}`, pl, async ()=>{ await laPut(pl, j=>{ j.placement=j.placement||{cards:{}}; j.placement.cards[card]=Object.assign(j.placement.cards[card]||{}, {audio:true, at:new Date().toISOString()}); }, `配置テスト 録音 ${card}`); renderPlacement(); }); return; }
-    const dn = e.target.closest('#pl-done'); if(dn){ dn.disabled=true; try{ await laPut(pl, j=>{ j.placement=j.placement||{cards:{}}; j.placement.done=true; j.placement.done_at=new Date().toISOString(); }, '配置テスト 完了'); toast('配置テスト完了。飛び級の判定は明朝の手紙に出るのだ'); $('lp-place-btn').hidden=true; renderPlacement(); }catch(err){ toast('保存できなかった: '+err.message); dn.disabled=false; } }
-  });
-}
-// 🎙️ 描画のあとに録音の印（📼待ち／✅文字になった）を実状態で埋める（2026-09-22）
-for (const fn of ['renderLearnToday','renderLearnTodayPaper','renderPlacement']) {
-  const orig = window[fn]; if (typeof orig !== 'function') continue;
-  window[fn] = function(...a){ const r = orig.apply(this, a); Promise.resolve(r).then(()=>laAudioMarks($('lp-today')), ()=>{}); Promise.resolve(r).then(()=>laAudioMarks($('lp-place')), ()=>{}); return r; };
-}
+
 // 録音の汎用版: ファイル名 inbox/audio/<ts>_quiz_<tag>.<ext>（Macの書き起こしが quiz_answers/<date>.json の answers[tag].text に足す）
 async function laToggleRecTo(btn, tag, date, after){
   if(laRecorder && laRecorder.state==='recording'){ laRecorder.stop(); return; }
@@ -5152,43 +5254,18 @@ async function laToggleRec(btn, id){
            const path = `inbox/audio/${ts()}_quiz_${id}.${ext}`;
            await putFile(path, btoa(bin), `問いの録音 ${laDate} ${id}`, true);
            await laPut(laDate, j=>{ j.answers[id]=Object.assign(j.answers[id]||{}, {audio:true, at:new Date().toISOString()}); (j.audio=j.audio||[]).push({id, path}); }, `問いの録音 ${laDate}`);
-           toast('録音を預かった。30分以内に文字になるのだ'); renderLearnToday(); }
+           toast('録音を預かった。30分以内に文字になるのだ'); laRender(); }
       catch(e){ toast('送れなかった: '+e.message); }
     };
     laRecorder.start(); btn.classList.add('on'); btn.textContent='⏹ 停止';
   }catch(e){ toast('マイクが使えなかった'); }
-}
-async function renderLearnLog(){
-  const el = $('lp-log'); el.innerHTML = '<div class="lb">読み込み中…</div>';
-  const files = (await listDir(LA_DIR)).filter(f=>/^\d{4}-\d{2}-\d{2}\.json$/.test(f.name)).map(f=>f.name.slice(0,10)).sort().reverse().slice(0,30);
-  const scores = laScores || await laLoadScores();
-  const days = []; for(const d of files){ const j = await laGet(d); if(j) days.push(j); }
-  if(!days.length){ el.innerHTML = '<div class="lb">まだ記録がない。今日の問いに答えると、ここに溜まっていくのだ。</div>'; return; }
-  // 一覧は1日1行の概要だけ（2026-09-19 メグ「積み重なるから、どういう問題が出たかの概要だけ」）。押すと中身
-  el.innerHTML = days.map(j=>{ const q=j.quiz||{}; const items=q.items||[], quick=q.quick||[]; const ans=j.answers||{}, self=j.self||{};
-    const sc = scores.filter(r=>r.date===j.date);
-    const qDone=quick.filter(k=>self[k.id]!=null||sc.some(r=>r.id===k.id&&r.score!=null)).length, dDone=items.filter(it=>ans[it.id]&&ans[it.id].text).length;
-    const allDone = (quick.length+items.length)>0 && qDone===quick.length && dDone===items.length;
-    const cards=[...new Set(quick.map(k=>k.card).filter(Boolean))]; const deepT=items.map(it=>(it.card?it.card+'：':'')+String(it.text||'').replace(/[。？?].*$/,'').slice(0,22)).join('／');
-    // 浅い問いの点: 答案用紙の自己採点か、道場の結果（成績.jsonl の via:道場）。平均は浅い問いだけで割る（2026-09-23: 深い問いの自己点も足して浅い問いの数で割っていた）
-    const qScore = k => self[k.id]!=null ? self[k.id] : ((sc.find(r=>r.id===k.id&&r.score!=null)||{}).score);
-    const qScored = quick.map(qScore).filter(v=>v!=null);
-    const selfAvg = qScored.length? (qScored.reduce((x,y)=>x+y,0)/qScored.length).toFixed(1) : null;
-    const moff = sc.filter(r=>r.score!=null); const moffAvg = moff.length? (moff.reduce((x,r)=>x+r.score,0)/moff.length).toFixed(1) : null;
-    const lessons = Object.values(j.lessons||{}).filter(l=>l.done).map(l=>(l.track==='X'?'投げ込み':l.track)+(l.track==='X'?'':l.no)).join('・');
-    // 道場: 今日の10問だけでなく、課・ランダム・落とした問いの回も全部数える（2026-09-23）
-    const dj = (laDojo&&laDojo.all||[]).filter(h=>(h.at||'').slice(0,10)===j.date); const djOk = dj.reduce((a,h)=>a+(h.ok||0),0), djN = dj.reduce((a,h)=>a+(h.n||0),0); const djTxt = dj.length? `🏃道場 ${djOk}/${djN}問（${dj.length}回）` : '';
-    const summary = `<span class="lgs">${djTxt?djTxt+' ・ ':''}浅い${quick.length}${cards.length?'（'+esc(cards.slice(0,4).join('・'))+(cards.length>4?'…':'')+'）':''}${items.length?' ・ 深い'+items.length+'（'+esc(deepT)+'）':''}${selfAvg!=null?' ・ 自己'+selfAvg:''}${moffAvg!=null?' ・ 採点'+moffAvg:''}${lessons?' ・ 授業 '+esc(lessons):''}</span>`;
-    const deep = items.map(it=>{ const a=ans[it.id]||{}; const s=sc.find(r=>r.id===it.id); return `<div class="lgi"><div>${esc(it.text||it.id)}</div>${a.text?`<div class="a">${esc(a.text)}</div>`:'<div class="a">（未回答）</div>'}${s?`<div><span class="s">${s.score}／3</span>${s.miss?' ・ 抜け: '+esc(s.miss):''}</div>`:''}</div>`; }).join('');
-    const qk = quick.map(k=>{ const v=qScore(k); return `<div class="lgi" style="font-size:12.5px">${esc(k.text||'')}<span style="color:var(--pink3)"> → ${esc(k.answer_key||k.answer||'')}${v!=null?' ・ '+v+'点':''}</span></div>`; }).join('');
-    return `<details class="lgd" style="position:relative">${allDone?'<div class="stmp">済</div>':''}<summary class="lgdh">${esc(j.date)}${q.mode==='easy'?' ・ 軽い日':q.mode==='sunday'?' ・ 日曜':''}<br>${summary}</summary>${deep}${qk}</details>`; }).join('');
 }
 
 function switchTab(tab) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   $('tab-' + tab).classList.add('active');
-  $('page-title').innerHTML = { today:`今日<span class="sub" id="today-date"></span>`, cal:'予定', inbox:'投げ込み', invest:'投資', health:'健康', diary:'日記', quick:'コピペ帳', learn:'🧬 カンブリア' }[tab];
+  $('page-title').innerHTML = { today:`今日<span class="sub" id="today-date"></span>`, cal:'予定', inbox:'投げ込み', invest:'投資', health:'健康', diary:'日記', quick:'コピペ帳', learn:'カンブリア' }[tab];
   if (tab === 'learn') loadLearn();
   if (tab === 'today') setToday();
   if (tab === 'quick') loadQuick();

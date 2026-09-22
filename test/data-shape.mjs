@@ -22,6 +22,32 @@ try {
   must(Array.isArray(qz.quick) && qz.quick.length && qz.quick.every(x => x.id && x.text && x.answer_key), 'morning.json: quiz.quick（浅い問い）が空か id/text/answer_key が無い');
   if (m.thai_none && n > 0) console.log('⚠️ morning.json: thai_none=true なのに記事がある（フラグの付け間違い。画面には影響なし）');
 } catch (e) { errs.push('morning.json: ' + e.message); }
+// 🧬 世界図鑑（2026-09-23 カンブリア作り替え）: 画面が読む 図鑑.json の形。70マス＝14枚×5枠で level 0〜3、一本道の課の順番、スタンプ
+try {
+  const z = J(C + 'knowledge/学習/図鑑.json');
+  const names = Object.keys(z.cards || {});
+  must(names.length === 14, `図鑑.json: カードが${names.length}枚（14枚のはず）`);
+  must(Array.isArray(z.order) && z.order.length === 14 && z.order.every(n => z.cards[n]), '図鑑.json: order が14枚のカード名になっていない');
+  for (const n of names) {
+    const c = z.cards[n];
+    must(['world', 'sci', 'inv'].includes(c.track), `図鑑.json: ${n} の track が不明（${c.track}）`);
+    for (const k of ['1', '2', '3', '4', '5']) {
+      const sl = (c.slots || {})[k];
+      must(sl && [0, 1, 2, 3].includes(sl.level) && Array.isArray(sl.answers) && typeof sl.body === 'string', `図鑑.json: ${n} の枠${k} の形が違う（level 0〜3・answers[]・body）`);
+    }
+  }
+  must(Array.isArray(z.lessons) && z.lessons.every(x => x.key && x.title && names.includes(x.card) && x.slot >= 1 && x.slot <= 5 && Array.isArray(x.check)), '図鑑.json: lessons（一本道の課）に key/title/card/slot/check が無いものがある');
+  must(Array.isArray(z.stamps) && z.stamps.every(x => x.key && (x.score === null || [0, 1, 2, 3].includes(x.score))), '図鑑.json: stamps の形が違う');
+  must(z.qindex && Object.values(z.qindex).every(v => Array.isArray(v) && names.includes(v[0]) && v[1] >= 1 && v[1] <= 5), '図鑑.json: qindex（問い→マス）の形が違う');
+  must(z.stock && typeof z.stock.unread === 'number', '図鑑.json: stock.unread が無い');
+  // 問い.jsonl の全問に 70マスの札（card は14枚のどれか・slot 1〜5）
+  const bank = fs.readFileSync(C + 'knowledge/学習/問い.jsonl', 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
+  const bad = bank.filter(q => !names.includes(q.card) || !(q.slot >= 1 && q.slot <= 5)).map(q => q.id);
+  must(!bad.length, `問い.jsonl: 70マスの札（card/slot）が無い問い ${bad.length}件: ${bad.slice(0, 5).join(' ')}`);
+  const st = J(path.join(os.homedir(), 'repos/dashboard/img/stamps/stamps.json'));
+  must([0, 1, 2, 3].every(k => (st.score[String(k)] || []).length) && (st.extra || []).length, 'stamps.json: 点数0〜3と extra の候補がそろっていない');
+  for (const f of Object.values(st.score).flat().concat(st.extra)) must(fs.existsSync(path.join(os.homedir(), `repos/dashboard/img/stamps/${f}.png`)), `stamps.json: ${f}.png が無い`);
+} catch (e) { errs.push('図鑑.json: ' + e.message); }
 try {
   const b = J(C + 'inbox/briefing.json');
   must(Array.isArray(b.today) && Array.isArray(b.attention), 'briefing.json: today/attention が配列でない');
