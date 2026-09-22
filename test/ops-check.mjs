@@ -9,7 +9,7 @@ const app = fs.readFileSync(path.join(HOME, 'repos/dashboard/app.html'), 'utf8')
 const slice = (a, b) => app.slice(app.indexOf(a), app.indexOf(b));
 const parseCsvSrc = slice('function parseCsv', 'function sparkBars');
 const opsSrc = slice('const OPS = [', '// ══ 📊 今日の数字');
-const base = { 'meyjiro/personal': path.join(HOME, 'repos/personal/'), 'meyjiro/claude-context': path.join(HOME, 'repos/claude-context/') };
+const base = { 'meyjiro/personal': path.join(HOME, 'repos/personal/'), 'meyjiro/claude-context': path.join(HOME, 'repos/claude-context/'), 'meyjiro/dashboard': path.join(HOME, 'repos/dashboard/') };
 const REPO = 'meyjiro/claude-context';
 async function repoFile(repo, p) { try { return fs.readFileSync(base[repo] + p, 'utf8'); } catch { return null; } }
 const rows = await new Function('fs', 'repoFile', 'REPO', `${parseCsvSrc}\n${opsSrc}\nreturn (async()=>{

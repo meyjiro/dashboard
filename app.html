@@ -1360,7 +1360,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-23.1';
+const APP_VERSION = '2026-09-23.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1536,10 +1536,23 @@ const OPS = [
     repo:'meyjiro/personal', path:'money/wise_balances.csv', limit:1.5,
     read:t=>{ const r=t.trim().split('\n'); return r[r.length-1].split(',')[0]; } },
   // 🎓 2026-09-18 学習OS: 朝のメニューが quiz を毎朝書く（9/21開始）。開始前は正常扱い
-  { name:'今日の2問',   why:'朝のメニュー(6:30)が knowledge/学習/問い.jsonl から2問選んで morning.json の quiz に書く。答えは日記、採点は夜の巡回',
+  // 🔴 2026-09-23: 更新日（quiz.date を昼12時とみなして1.2日）だと前日の問いでも朝は🟢のままだった。中身＝「quiz.date が今日（JST）か」「浅い問いに答えがあるか」で見る
+  { name:'今日の2問',   why:'Macの morning-quiz.py（6:50 JST・タイ4:50）が時間割と問い.jsonl から深い問い＋浅い10問を組んで morning.json の quiz に書く。浅い問いは道場で答え、深い問いは答案用紙。採点は夜の巡回',
     repo:'meyjiro/claude-context', path:'inbox/morning.json', limit:1.2,
     read:t=>{ const j=JSON.parse(t); const pre = Date.now()<new Date('2026-09-21T00:00:00+09:00').getTime(); if(pre) return new Date().toISOString(); return (j.quiz&&j.quiz.date) ? j.quiz.date : null; },   // 開講前（〜9/20）は常に正常（9/18に手で置いた quiz が古くなって赤くなった・9/19）
-    verify:t=>{ const j=JSON.parse(t); if(!j.quiz) return Date.now()<new Date('2026-09-21T00:00:00+09:00').getTime() ? null : 'quiz が無い'; return (Array.isArray(j.quiz.items)&&j.quiz.items.length&&j.quiz.items.every(x=>x.text)) ? null : 'quiz の中身が空'; } },
+    verify:t=>{ const j=JSON.parse(t); if(!j.quiz) return Date.now()<new Date('2026-09-21T00:00:00+09:00').getTime() ? null : 'quiz が無い';
+      const q=j.quiz; if(!(Array.isArray(q.items)&&q.items.length&&q.items.every(x=>x.text))) return 'quiz の深い問いが空';
+      if(!(Array.isArray(q.quick)&&q.quick.length&&q.quick.every(x=>x.id&&x.text&&x.answer_key))) return 'quiz の浅い問いが空か、答えが無い';
+      const jst=new Date(Date.now()+9*3600e3); const today=jst.toISOString().slice(0,10);
+      return (q.date!==today && jst.getUTCHours()>=7) ? `今日の問いが無い（quiz.date=${q.date}）` : null; } },
+  // 🎓 2026-09-23: 浅い問いは道場の「今日の10問」1本で答える。章0が今日の朝の浅い問い（qid つき）から作られているかを中身で見る
+  { name:'道場の10問',   why:'朝の問いの直後（6:50〜7:00 JST・タイ5:00前）に run-dojo.sh が朝の浅い問いを4択にして dojo/data.json の章0に置く',
+    repo:'meyjiro/dashboard', path:'dojo/data.json', limit:1.2,
+    read:t=>{ const j=JSON.parse(t); const c=(j.chapters||[]).find(x=>x.id===0); const m=c&&String(c.src||'').match(/^today:(\d{4}-\d{2}-\d{2})$/); return m?m[1]:null; },
+    verify:t=>{ const j=JSON.parse(t); const c=(j.chapters||[]).find(x=>x.id===0); if(!c||!(c.quiz||[]).length) return '今日の10問が空';
+      const withQ=c.quiz.filter(q=>q.qid).length; if(withQ<Math.min(5,c.quiz.length)) return `朝の浅い問いから作られていない（${withQ}/${c.quiz.length}問）`;
+      const jst=new Date(Date.now()+9*3600e3); const today=jst.toISOString().slice(0,10); const d=String(c.src).slice(6);
+      return (d!==today && (jst.getUTCHours()>7 || (jst.getUTCHours()===7 && jst.getUTCMinutes()>=30))) ? `今日の10問が${d}のまま` : null; } },
   { name:'朝の巡回',     why:'クラウドが毎朝6:00にブリーフィングを作り、本流(main)にpushする（〜6:25）',
     repo:'meyjiro/claude-context', path:'inbox/briefing.json', limit:1.2,
     read:t=>JSON.parse(t).generated_at,
@@ -2007,7 +2020,7 @@ function markSetDone(id){
 }
 
 // ══ 🆕 新しく入ってきたもの（朝のメニュー【3】・2026-08-30）══
-// クラウドroutine「☕ 朝のメニュー: 新しいもの」が毎朝9時に inbox/morning.json を作る。
+// クラウドroutine「☕ 朝のメニュー: 新しいもの」が毎朝6:30に inbox/morning.json を作る（quiz だけは Mac の morning-quiz.py が6:50に書く）。
 // ここは表示するだけ。中身の作り方は workflows/朝のメニュー.md が正本。
 async function loadNewStuff(){
   const el = $('today-new'); if(!el) return;
@@ -4594,15 +4607,25 @@ const LA_DIR = 'inbox/quiz_answers';
 let laDate = null, laDay = null, laQuiz = null, laScores = null, laRecorder = null, laChunks = [];
 const laPath = d => `${LA_DIR}/${d}.json`;
 function laToday(){ return new Date().toLocaleDateString('sv-SE'); }
+// 日本時間の今日（2026-09-23: 読んだ課の完了は「読んだ日（JST）」のファイルに書く。夜の巡回 00:30 JST がその日のぶんを数える）
+function laTodayJST(){ return new Date().toLocaleDateString('sv-SE', {timeZone:'Asia/Tokyo'}); }
+// 読んだ課（直近7日のファイルを合わせたもの）。「済」の表示はここを見る（問いの日付のファイルだけ見ると、朝の問いが前日のままの日に済にならない）
+let laLessons = {};
+async function laLoadLessons(){
+  const out = {}; const days = []; for(let i=6;i>=0;i--){ const d=new Date(Date.now()-i*864e5); days.push(d.toLocaleDateString('sv-SE',{timeZone:'Asia/Tokyo'})); }
+  const js = await Promise.all(days.map(d=>laGet(d).catch(()=>null)));
+  js.forEach(j=>{ if(j&&j.lessons) Object.assign(out, j.lessons); });
+  laLessons = out; return out;
+}
 async function laGet(d){ const f = await getFileWithSha(laPath(d)); if(!f) return null; try{ return JSON.parse(f.text); }catch(_){ return null; } }
 async function laPut(d, mutate, message){
   for(let a=0;a<2;a++){
     const f = await getFileWithSha(laPath(d));
     let j = { date:d, quiz:null, answers:{}, self:{}, connect:{}, audio:[] };
     if(f){ try{ j = Object.assign(j, JSON.parse(f.text)); }catch(_){} }
-    if(!j.quiz && laQuiz) j.quiz = laQuiz;   // 朝のメニューは毎日上書きされるので、問いの写しをここに残す（記録用）
+    if(!j.quiz && laQuiz && laQuiz.date===d) j.quiz = laQuiz;   // 朝のメニューは毎日上書きされるので、問いの写しをここに残す（記録用）。別の日のファイルには写さない
     mutate(j); j.at = new Date().toISOString();
-    try{ await api(`/repos/${REPO}/contents/${encodeURIComponent(laPath(d)).replace(/%2F/g,'/')}`,'PUT',{message, content:enc(JSON.stringify(j,null,1)), branch:BRANCH, ...(f?{sha:f.sha}:{})}); laDay = j; return j; }
+    try{ await api(`/repos/${REPO}/contents/${encodeURIComponent(laPath(d)).replace(/%2F/g,'/')}`,'PUT',{message, content:enc(JSON.stringify(j,null,1)), branch:BRANCH, ...(f?{sha:f.sha}:{})}); if(d===laDate) laDay = j; return j; }
     catch(e){ if(a===1||!String(e.message).includes('409')) throw e; }
   }
 }
@@ -4623,8 +4646,9 @@ function laStrip(rows){
 function renderLearnEntry(qz){
   const el = $('learn-entry'); if(!el) return;
   const n = qz ? ((qz.items||[]).length + (qz.quick||[]).length) : 0;
-  const lbl = !qz ? '今日の問いはまだ届いていない（9/21から毎朝9時）' : qz.mode==='easy' ? '今日は軽い日 ・ 道場の10問だけ' : qz.mode==='sunday' ? '日曜 ・ 白紙から地図＋Yパパ予測' : `🏃 道場の10問 ＋ 🗣 深い${(qz.items||[]).length}問`;
-  el.innerHTML = `<div class="lentry" id="learn-entry-btn"><div><div class="le1">🧬 カンブリア</div><div class="le2">${esc(lbl)}${qz&&qz.stairs?' ・ 📖 '+esc(qz.stairs.theme||'')+'の階段 第'+esc(String(qz.stairs.step||''))+'段':''}</div></div><div class="lego">開く →</div></div>`;
+  const stale = qz && qz.date && qz.date !== laTodayJST();
+  const lbl = !qz ? '今日の問いはまだ届いていない' : stale ? `今日の問いはまだ届いていない（${qz.date.slice(5).replace('-','/')}の分）` : qz.mode==='easy' ? '今日は軽い日 ・ 道場の10問だけ' : qz.mode==='sunday' ? '日曜 ・ 白紙から地図＋Yパパ予測' : `🏃 道場の10問 ＋ 🗣 深い${(qz.items||[]).length}問`;
+  el.innerHTML = `<div class="lentry" id="learn-entry-btn"><div><div class="le1">🧬 カンブリア</div><div class="le2"${stale?' style="color:var(--red,#c0392b);font-weight:700"':''}>${esc(lbl)}${qz&&qz.stairs?' ・ 📖 '+esc(qz.stairs.theme||'')+'の階段 第'+esc(String(qz.stairs.step||''))+'段':''}</div></div><div class="lego">開く →</div></div>`;
   $('learn-entry-btn').addEventListener('click', ()=>switchTab('learn'));
 }
 async function loadLearn(){
@@ -4634,7 +4658,7 @@ async function loadLearn(){
   laScores = await laLoadScores();
   laDay = await laGet(laDate);
   if(laDay && laDay.quiz && !laQuiz) laQuiz = laDay.quiz;
-  await laDojoLoad();
+  const [, nLessons] = await Promise.all([laDojoLoad(), laCountLessons()]);
   // 物差し・図鑑（v3で夜の巡回が積む。無ければ0）
   const answeredDays = []; if(laDay && (Object.keys(laDay.answers||{}).length||Object.keys(laDay.self||{}).length)) answeredDays.push(laDate);
   if(laDojo) laDojo.all.forEach(h=>{ const d=(h.at||'').slice(0,10); if(d && !answeredDays.includes(d)) answeredDays.push(d); });
@@ -4642,7 +4666,7 @@ async function loadLearn(){
   const dj = laDojo; const dojoLbl = dj ? (dj.todayRun.length ? `${dj.best}/${dj.n}` : 'まだ') : '—';
   const {done:dDone, total:dTotal} = laTestProgress();
   const wk = laScores.filter(r=>r.date>=new Date(Date.now()-6*864e5).toLocaleDateString('sv-SE')); const wkDays = new Set(wk.map(r=>r.date)).size;
-  head.innerHTML = `<div class="lp-stats"><div class="ls"><span>🔥 連続</span><b>${streak}<small>日</small></b></div><div class="ls"><span>🏃 今日の10問</span><b>${esc(dojoLbl)}</b></div><div class="ls"><span>🗣 深い問い</span><b>${dDone}<small>/${dTotal}</small></b></div><div class="ls"><span>📚 読んだ課</span><b>${dj?dj.lessons:'—'}<small>課</small></b></div><div class="ls"><span>📅 今週</span><b>${wkDays}<small>日</small></b></div><button class="ls-back" data-lp="back">← 今日</button></div>`;
+  head.innerHTML = `<div class="lp-stats"><div class="ls"><span>🔥 連続</span><b>${streak}<small>日</small></b></div><div class="ls"><span>🏃 今日の10問</span><b>${esc(dojoLbl)}</b></div><div class="ls"><span>🗣 深い問い</span><b>${dDone}<small>/${dTotal}</small></b></div><div class="ls"><span>📚 読んだ課</span><b>${nLessons!=null?nLessons:'—'}<small>課</small></b></div><div class="ls"><span>📅 今週</span><b>${wkDays}<small>日</small></b></div><button class="ls-back" data-lp="back">← 今日</button></div>`;
   head.querySelector('.ls-back').onclick = ()=>switchTab('today');
   renderLearnToday();
   document.querySelectorAll('.lp-nav button').forEach(b=>{ b.onclick = ()=>{ const k=b.dataset.lp; if(k==='back'){ switchTab('today'); return; }
@@ -4653,11 +4677,18 @@ async function loadLearn(){
        const pl = laTT && laTT.placement; const pd = pl ? await laGet(pl) : null; const done = pd && pd.placement && pd.placement.done;
        $('lp-place-btn').hidden = !(pl && !done); }catch(_){}
 }
+// 読んだ課の数 = 物差し.jsonl の「授業」（夜の巡回が数える）＋ まだ数えられていない直近の完了（2026-09-23: 道場の章数を出していた）
+async function laCountLessons(){
+  try{ const t = await repoFile('meyjiro/claude-context','knowledge/学習/物差し.jsonl'); const keys = new Set();
+       (t||'').split('\n').forEach(l=>{ try{ const r=JSON.parse(l); if(r.kind==='授業') keys.add(r.key); }catch(_){} });
+       await laLoadLessons(); Object.entries(laLessons).forEach(([k,v])=>{ if(v&&v.done) keys.add(k); });
+       return keys.size; }catch(_){ return null; }
+}
 function laScoreOf(id){ return (laScores||[]).find(r=>r.date===laDate && r.id===id) || null; }
 function renderLearnToday(){
   const el = $('lp-today'); const qz = laQuiz;
   if(qz && Array.isArray(qz.items) && qz.items.length && !window.__laOldToday){ return renderLearnTodayPaper(); }
-  if(!qz){ el.innerHTML = `<div class="lb"><div class="lbh">今日の問い</div><p style="margin:8px 0 0;font-size:13.5px;color:var(--text2)">まだ届いていない。9/22（月）から毎朝9時に朝のメニューが置くのだ。</p></div>`; return; }
+  if(!qz){ el.innerHTML = `<div class="lb"><div class="lbh">今日の問い</div><p style="margin:8px 0 0;font-size:13.5px;color:var(--text2)">まだ届いていない。毎朝6:50（タイ4:50）にMacが置くのだ。</p></div>`; return; }
   const ans = (laDay&&laDay.answers)||{}, selfS = (laDay&&laDay.self)||{}, con = (laDay&&laDay.connect)||{};
   const items = qz.items||[], quick = qz.quick||[];
   const deepDone = items.filter(it=>ans[it.id]&&ans[it.id].text).length, quickDone = quick.filter(k=>selfS[k.id]!=null).length;
@@ -4795,7 +4826,7 @@ async function laDojoLoad(){
     const [cloud, data] = await Promise.all([fetch('https://gachirezu.com/dojo/sync.php?k='+key, {cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null), fetch('dojo/data.json?v='+Date.now()).then(r=>r.ok?r.json():null).catch(()=>null)]);
     const t = laToday(); const runs = ((cloud&&cloud.history)||[]).filter(h=>(h.at||'').slice(0,10)===t);
     const todayRun = runs.filter(h=>h.mode==='chapter'&&h.ch===0); const best = todayRun.reduce((a,h)=>Math.max(a,h.ok),0);
-    const qt = {}; if(data) data.chapters.forEach(c=>c.quiz.forEach((q,i)=>{ qt[`${c.id}-${i}`]=q.q; }));
+    const qt = {}; if(data) data.chapters.forEach(c=>c.quiz.forEach((q,i)=>{ qt[q.id||`${c.id}-${i}`]=q.q; }));   // 今日の10問のキーは「日付:問いID」（2026-09-23〜）
     const missed = Object.entries((cloud&&cloud.mastery)||{}).filter(([k,v])=>v.at===t&&!v.last).map(([k])=>qt[k]||k);
     const ch0 = data && data.chapters.find(c=>c.id===0);
     laDojo = { runs, todayRun, best, n: ch0?ch0.quiz.length:10, missed, lead: ch0?ch0.lead:'', title: ch0?ch0.title:'', lessons: data?data.chapters.filter(c=>c.id>0&&!c.hidden).length:0, all: (cloud&&cloud.history)||[] };
@@ -4806,7 +4837,7 @@ function renderLearnTodayPaper(){
   const el = $('lp-today'); const qz = laQuiz; const {done,total} = laTestProgress();
   const dj = laDojo; const dojoDone = dj && dj.todayRun.length>0;
   el.innerHTML = `<div class="lb" style="border-left:4px solid var(--accent,#0bb7ae)">${dojoDone?'<div class="stmp big">済</div>':''}<div class="lbh">🏃 今日の10問 ・ 道場 <span class="lbt">${esc(qz.date||'')} ・ ${dojoDone?`${dj.best}/${dj.n}`:'まだ'}</span></div>
-    <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">${dj&&dj.lead?esc(dj.lead):'ずんだもんが読み上げ、番号を言って答える。新しい問い5＋復習5。'}${dj&&dj.missed.length?`<br>落とした: ${dj.missed.map(esc).join('／')}`:''}</p>
+    <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">${dj&&dj.lead?esc(dj.lead):'ずんだもんが読み上げ、番号を言って答える。今朝の浅い問い10問（期日が来た復習＋昨夜の課）。'}${dj&&dj.missed.length?`<br>落とした: ${dj.missed.map(esc).join('／')}`:''}</p>
     <div class="lqb" style="margin-top:10px"><button class="btn btn-primary" id="la-dojo" style="flex:1">🏃 道場を開く</button></div>${dj?'':'<p class="hint" style="margin:6px 0 0;font-size:12px">（成績の取得に失敗。電波を確認）</p>'}</div>
   <div class="lb" style="border-left:4px solid var(--pred,#a3402b)">${done>=total&&total>0?'<div class="stmp big">済</div>':''}<div class="lbh">🗣 説明する ・ 深い${(qz.items||[]).length}問 <span class="lbt">${done}/${total} 済</span></div>
     <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">答案用紙を開いて、文字か🎤で30秒の説明。夜に採点して手紙に戻る。覚えたいことは投げ込みタブの「🧬 覚えたい」箱へ。</p>
@@ -4931,7 +4962,7 @@ async function laOpenLesson(track, no){
   const t = await repoFile('meyjiro/claude-context', path); if(!t){ toast('この課はまだ書かれていない（'+path+'）'); return; }
   let L; try{ L = JSON.parse(t); }catch(e){ toast('課のJSONが壊れている'); return; }
   L.key = `${track}${no}`;
-  const saved = laDay && laDay.lessons && laDay.lessons[L.key];
+  const saved = laLessons[L.key];
   laOpenReader(laLessonHtml(L, saved), `${LA_TRACK[track]?LA_TRACK[track].name:track} 第${no}課`);
 }
 window.addEventListener('message', async e=>{
@@ -4939,7 +4970,9 @@ window.addEventListener('message', async e=>{
   // 🔴 保存キー: 投げ込みの課（path で開く）は path。JSONに no:1 が入っていると String(d.no)="1" で保存され、
   //    一覧は lessons[path] を見るので永久に「済」にならなかった（2026-09-23 メグ報告・半導体後工程）
   const key = d.key || (d.track==='X' ? String(d.no) : `${d.track}${d.no}`);
-  try{ await laPut(laDate||laToday(), j=>{ j.lessons = j.lessons||{}; j.lessons[key] = {track:d.track, no:d.no, my3:d.my3, myq:d.myq, done:true, at:new Date().toISOString()}; }, `授業を終えた ${key}`);
+  // 🔴 2026-09-23: 以前は laDate（＝朝の問いの日付）のファイルに書いていた。朝の問いが前日のままだと、読んだ課が前日に記録された
+  const rec = {track:d.track, no:d.no, my3:d.my3, myq:d.myq, done:true, at:new Date().toISOString()}; if(d.track==='X'||d.track==='K'){ if(String(key).includes('/')) rec.path = key; }
+  try{ await laPut(laTodayJST(), j=>{ j.lessons = j.lessons||{}; j.lessons[key] = rec; }, `授業を終えた ${key}`); laLessons[key] = rec;
        const fr = document.querySelector('#la-reader .lrf'); if(fr&&fr.contentWindow) fr.contentWindow.postMessage({type:'lesson-saved'},'*'); renderLearnNight(); }
   catch(err){ toast('保存できなかった: '+err.message); }
 });
@@ -4949,7 +4982,7 @@ async function renderLearnNight(){
   const el = $('lp-night'); el.innerHTML = '<div class="lb">読み込み中…</div>';
   if(!laTT){ try{ const t = await repoFile('meyjiro/claude-context','knowledge/学習/時間割.json'); laTT = t ? JSON.parse(t) : null; }catch(_){} }
   const today = laToday(); const row = laTT && (laTT.days||[]).find(r=>r.date===today);
-  const done = (laDay&&laDay.lessons)||{};
+  const done = laLessons||{};
   const opening = laTT && today < laTT.start;
   if(!row){ el.innerHTML = `<div class="lb"><div class="lbh">📖 今夜の授業</div><p style="margin:8px 0 0;font-size:13.5px;color:var(--text2)">${opening?'開講は '+esc(laTT.start)+'（月）。それまでは「先読み」で第1課を読めるのだ。':'今日は時間割に無い日。'}</p>${opening?'<div class="lqb" style="margin-top:8px"><button class="btn" data-lesson="B:1">📖 宇宙 第1課を先読み</button><button class="btn" data-lesson="A:1">📖 世界 第1課を先読み</button></div>':''}</div>`; }
   else if(row.lessons && row.lessons.length){
@@ -4959,7 +4992,7 @@ async function renderLearnNight(){
   } else if(row.saturday){ el.innerHTML = `<div class="lb"><div class="lbh">🗣 土曜 ・ 口頭説明</div><p style="margin:8px 0 0;font-size:13.5px">${esc(row.saturday)}。どこで詰まったかだけ、朝のページの深い問いの欄に書いておくのだ。</p></div>`; }
   else if(row.sunday){ el.innerHTML = `<div class="lb"><div class="lbh">🗺 日曜 ・ 白紙テスト</div><p style="margin:8px 0 0;font-size:13.5px">「${esc(row.sunday.blank_map||'')}」を白紙から。朝のページの問いに出ている。${row.sunday.midterm?'<b>今日は中間テスト。</b>':''}</p></div>`; }
   const ex = (laQuiz && Array.isArray(laQuiz.extra)) ? laQuiz.extra.filter(x=>x&&x.path) : [];
-  if(ex.length){ const dn0=(laDay&&laDay.lessons)||{}; el.insertAdjacentHTML('beforeend', `<div class="lb"><div class="lbh">🧬 投げ込みからの1課 <span class="lbt">読むかどうかは自由 ・ 5分</span></div>${ex.map(x=>{ const dn=laLessonDone(dn0, x.path); return `<div class="lq${dn?' done':''}">${dn?'<div class="stmp">済</div>':''}<b>${esc(x.from||'投げ込み')}</b><div class="qt">${esc(x.title||x.path)}</div><div class="lqb"><button class="btn ${dn?'':'btn-primary'}" data-lesson-path="${esc(x.path)}">${dn?'もう一度':'📖 読む'}</button></div></div>`; }).join('')}</div>`); }
+  if(ex.length){ const dn0=laLessons||{}; el.insertAdjacentHTML('beforeend', `<div class="lb"><div class="lbh">🧬 投げ込みからの1課 <span class="lbt">読むかどうかは自由 ・ 5分</span></div>${ex.map(x=>{ const dn=laLessonDone(dn0, x.path); return `<div class="lq${dn?' done':''}">${dn?'<div class="stmp">済</div>':''}<b>${esc(x.from||'投げ込み')}</b><div class="qt">${esc(x.title||x.path)}</div><div class="lqb"><button class="btn ${dn?'':'btn-primary'}" data-lesson-path="${esc(x.path)}">${dn?'もう一度':'📖 読む'}</button></div></div>`; }).join('')}</div>`); }
   el.querySelectorAll('[data-lesson]').forEach(b=>b.addEventListener('click', ()=>{ const [t,n]=b.dataset.lesson.split(':'); laOpenLesson(t, +n); }));
   el.querySelectorAll('[data-lesson-path]').forEach(b=>b.addEventListener('click', ()=>laOpenLessonPath(b.dataset.lessonPath)));
 }
@@ -4974,7 +5007,7 @@ async function laOpenLessonPath(path){
   let L; try{ L = JSON.parse(t); }catch(e){ toast('課のJSONが壊れている'); return; }
   L.track = L.track||'X'; L.no = L.no||path; L.key = path;
   // 旧: JSONの no（例 1）で保存されてしまった記録も拾う（2026-09-22 以前のぶん）
-  const LS = (laDay && laDay.lessons) || {};
+  const LS = laLessons || {};
   const saved = LS[path] || (L.no!=null && LS[String(L.no)] && LS[String(L.no)].track==='X' ? LS[String(L.no)] : null);
   laOpenReader(laLessonHtml(L, saved), L.title||path);
 }
@@ -5134,16 +5167,20 @@ async function renderLearnLog(){
   // 一覧は1日1行の概要だけ（2026-09-19 メグ「積み重なるから、どういう問題が出たかの概要だけ」）。押すと中身
   el.innerHTML = days.map(j=>{ const q=j.quiz||{}; const items=q.items||[], quick=q.quick||[]; const ans=j.answers||{}, self=j.self||{};
     const sc = scores.filter(r=>r.date===j.date);
-    const qDone=quick.filter(k=>self[k.id]!=null).length, dDone=items.filter(it=>ans[it.id]&&ans[it.id].text).length;
+    const qDone=quick.filter(k=>self[k.id]!=null||sc.some(r=>r.id===k.id&&r.score!=null)).length, dDone=items.filter(it=>ans[it.id]&&ans[it.id].text).length;
     const allDone = (quick.length+items.length)>0 && qDone===quick.length && dDone===items.length;
     const cards=[...new Set(quick.map(k=>k.card).filter(Boolean))]; const deepT=items.map(it=>(it.card?it.card+'：':'')+String(it.text||'').replace(/[。？?].*$/,'').slice(0,22)).join('／');
-    const selfAvg = qDone? (Object.values(self).reduce((x,y)=>x+y,0)/qDone).toFixed(1) : null;
+    // 浅い問いの点: 答案用紙の自己採点か、道場の結果（成績.jsonl の via:道場）。平均は浅い問いだけで割る（2026-09-23: 深い問いの自己点も足して浅い問いの数で割っていた）
+    const qScore = k => self[k.id]!=null ? self[k.id] : ((sc.find(r=>r.id===k.id&&r.score!=null)||{}).score);
+    const qScored = quick.map(qScore).filter(v=>v!=null);
+    const selfAvg = qScored.length? (qScored.reduce((x,y)=>x+y,0)/qScored.length).toFixed(1) : null;
     const moff = sc.filter(r=>r.score!=null); const moffAvg = moff.length? (moff.reduce((x,r)=>x+r.score,0)/moff.length).toFixed(1) : null;
     const lessons = Object.values(j.lessons||{}).filter(l=>l.done).map(l=>(l.track==='X'?'投げ込み':l.track)+(l.track==='X'?'':l.no)).join('・');
-    const dj = (laDojo&&laDojo.all||[]).filter(h=>(h.at||'').slice(0,10)===j.date); const djBest = dj.filter(h=>h.mode==='chapter'&&h.ch===0).reduce((a,h)=>Math.max(a,h.ok),0); const djTxt = dj.length? `🏃道場 ${djBest}/10（${dj.length}回）` : '';
+    // 道場: 今日の10問だけでなく、課・ランダム・落とした問いの回も全部数える（2026-09-23）
+    const dj = (laDojo&&laDojo.all||[]).filter(h=>(h.at||'').slice(0,10)===j.date); const djOk = dj.reduce((a,h)=>a+(h.ok||0),0), djN = dj.reduce((a,h)=>a+(h.n||0),0); const djTxt = dj.length? `🏃道場 ${djOk}/${djN}問（${dj.length}回）` : '';
     const summary = `<span class="lgs">${djTxt?djTxt+' ・ ':''}浅い${quick.length}${cards.length?'（'+esc(cards.slice(0,4).join('・'))+(cards.length>4?'…':'')+'）':''}${items.length?' ・ 深い'+items.length+'（'+esc(deepT)+'）':''}${selfAvg!=null?' ・ 自己'+selfAvg:''}${moffAvg!=null?' ・ 採点'+moffAvg:''}${lessons?' ・ 授業 '+esc(lessons):''}</span>`;
     const deep = items.map(it=>{ const a=ans[it.id]||{}; const s=sc.find(r=>r.id===it.id); return `<div class="lgi"><div>${esc(it.text||it.id)}</div>${a.text?`<div class="a">${esc(a.text)}</div>`:'<div class="a">（未回答）</div>'}${s?`<div><span class="s">${s.score}／3</span>${s.miss?' ・ 抜け: '+esc(s.miss):''}</div>`:''}</div>`; }).join('');
-    const qk = quick.map(k=>`<div class="lgi" style="font-size:12.5px">${esc(k.text||'')}<span style="color:var(--pink3)"> → ${esc(k.answer_key||k.answer||'')}${self[k.id]!=null?' ・ '+self[k.id]+'点':''}</span></div>`).join('');
+    const qk = quick.map(k=>{ const v=qScore(k); return `<div class="lgi" style="font-size:12.5px">${esc(k.text||'')}<span style="color:var(--pink3)"> → ${esc(k.answer_key||k.answer||'')}${v!=null?' ・ '+v+'点':''}</span></div>`; }).join('');
     return `<details class="lgd" style="position:relative">${allDone?'<div class="stmp">済</div>':''}<summary class="lgdh">${esc(j.date)}${q.mode==='easy'?' ・ 軽い日':q.mode==='sunday'?' ・ 日曜':''}<br>${summary}</summary>${deep}${qk}</details>`; }).join('');
 }
 
@@ -5420,6 +5457,9 @@ try{ fetch('./app.html?v='+Date.now(),{cache:'no-store'}).then(r=>r.text())
        .then(t=>{ try{ localStorage.setItem('app_html_backup', t); }catch(e){} }); }catch(e){}
 document.querySelectorAll('a[href^="./court.html"]').forEach(a => a.href = './court.html?v=' + APP_VERSION);
 if (!pat) $('auth-modal').classList.remove('hidden'); else loadAll();
+// #learn（world.html の「← カンブリアへ」・dojo の戻る）で開いたらカンブリアを出す（2026-09-23: 今日タブに戻っていた）
+function openFromHash(){ const h=(location.hash||'').slice(1); if(h==='learn' && pat) switchTab('learn'); }
+openFromHash(); window.addEventListener('hashchange', openFromHash);
 </script>
 </body>
 </html>

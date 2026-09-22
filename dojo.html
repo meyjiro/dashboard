@@ -401,15 +401,17 @@ function table(t){ if(!t) return ''; return `<div class="tbl"><table><caption>�
 const fmtT = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-function allQ(){ return DATA.chapters.filter(c => !c.hidden).flatMap(c => c.quiz.map((q,i) => ({...q, ch:c.id, chTitle:c.title, key:`${c.id}-${i}`}))); }
+// 成績のキー: 問いに id があればそれ（今日の10問は「日付:問いID」。2026-09-23 まで「0-番号」を毎日使い回して前日の成績と混ざっていた）。録音の名前は章_番号のまま
+const qKey = (c, q, i) => q.id || `${c.id}-${i}`;
+function allQ(){ return DATA.chapters.filter(c => !c.hidden).flatMap(c => c.quiz.map((q,i) => ({...q, ch:c.id, chTitle:c.title, key:qKey(c,q,i), clip:`${c.id}_${i}`}))); }
 function mastery(){ return S.get('mastery', {}); }  // key -> {ok, ng}
-function chapterScore(ch){ const m = mastery(); let ok=0, n=0; DATA.chapters.find(c=>c.id===ch).quiz.forEach((q,i)=>{ const r = m[`${ch}-${i}`]; if(r){ n++; if(r.last) ok++; } }); return {ok, n}; }
+function chapterScore(ch){ const m = mastery(); let ok=0, n=0; const c = DATA.chapters.find(c=>c.id===ch); c.quiz.forEach((q,i)=>{ const r = m[qKey(c,q,i)]; if(r){ n++; if(r.last) ok++; } }); return {ok, n}; }
 
 /* ========== 画面 ========== */
 function setTab(t){ TAB = t; VIEW = null; stopSpeak(); [...tabs.querySelectorAll('button')].forEach(b => b.classList.toggle('on', b.dataset.tab===t)); render(); window.scrollTo(0,0); }
 tabs.addEventListener('click', e => { const b = e.target.closest('button'); if(b) setTab(b.dataset.tab); });
 
-function header(){ return `<div class="top"><a href="app.html" style="text-decoration:none;color:var(--ink2);font-size:13px;margin-right:6px">‹ 戻る</a><img class="bean" src="dojo/img/bean_smile.png" alt=""><h1>${esc(DATA.title)}${TEST?' <span class="pill" style="vertical-align:middle">テスト用</span>':''}</h1><div class="sub">${esc(DATA.sub)}<br>本番: ${DATA.exam.questions}問・${DATA.exam.minutes}分・${DATA.exam.pass}%合格</div></div>`; }
+function header(){ return `<div class="top"><a href="./#learn" style="text-decoration:none;color:var(--ink2);font-size:13px;margin-right:6px">‹ 戻る</a><img class="bean" src="dojo/img/bean_smile.png" alt=""><h1>${esc(DATA.title)}${TEST?' <span class="pill" style="vertical-align:middle">テスト用</span>':''}</h1><div class="sub">${esc(DATA.sub)}<br>本番: ${DATA.exam.questions}問・${DATA.exam.minutes}分・${DATA.exam.pass}%合格</div></div>`; }
 
 function render(){
   if(TAB==='home') return VIEW && VIEW.type==='run' ? null : renderHome();
@@ -480,7 +482,7 @@ function pickQuestions(opt){
 }
 function startRun(opt){
   audio(); if(voiceOn){ speakUnlock(); unlockPlayer(); } else stopSpeak(); stopClip();
-  const qs = pickQuestions(opt).map(q => { const idx = (q.order && q.order.length===4) ? q.order.slice() : shuffle([0,1,2,3]); return { ...q, order: idx, answer: idx.indexOf(q.a), clip: q.key.replace('-','_') }; });
+  const qs = pickQuestions(opt).map(q => { const idx = (q.order && q.order.length===4) ? q.order.slice() : shuffle([0,1,2,3]); return { ...q, order: idx, answer: idx.indexOf(q.a), clip: q.clip || q.key.replace('-','_') }; });
   if(!qs.length) return;
   RUN = { opt, qs, i:0, results:[], start:Date.now(), exam: opt.mode==='exam', limit: opt.mode==='exam' ? DATA.exam.minutes*60 : null, timer:null };
   VIEW = { type:'run' };

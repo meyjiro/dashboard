@@ -16,6 +16,10 @@ try {
   const n = okShape ? pp.sections.reduce((a, s) => a + s.items.length, 0) : KEYS.reduce((a, k) => a + ((pp[k] || []).length), 0);
   must(n >= 3, `morning.json: 新聞の記事が${n}本しか無い`);
   must(m.world && m.world.title && m.world.note, 'morning.json: 今日の1本（world）が欠けている');
+  // 🎓 朝の問い（2026-09-23）: 深い問いに text、浅い問いに id・text・answer_key（道場の4択と間隔反復がこれを使う）
+  const qz = m.quiz || {};
+  must(Array.isArray(qz.items) && qz.items.length && qz.items.every(x => x.id && x.text), 'morning.json: quiz.items（深い問い）が空か id/text が無い');
+  must(Array.isArray(qz.quick) && qz.quick.length && qz.quick.every(x => x.id && x.text && x.answer_key), 'morning.json: quiz.quick（浅い問い）が空か id/text/answer_key が無い');
   if (m.thai_none && n > 0) console.log('⚠️ morning.json: thai_none=true なのに記事がある（フラグの付け間違い。画面には影響なし）');
 } catch (e) { errs.push('morning.json: ' + e.message); }
 try {
