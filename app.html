@@ -1462,7 +1462,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-23.4';
+const APP_VERSION = '2026-09-23.5';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4935,7 +4935,7 @@ function laCardHtml2(name){
   const Ls = ((laZ.lessons)||[]).concat((laZ.stories)||[]);
   const slots = [1,2,3,4,5].map(s=>{ const S = C.slots[String(s)]||{}; const lv = S.level||0;
     const h = String(S.h||'').replace(/（[^）]*時点[^）]*）/g,'').trim();
-    const body = String(S.body||'').replace(/[🔴🟢🟡🟠]\s*/gu,'').trim();   // 地図カードの印（🔴など）は画面に出さない const first = (body.split('\n').find(l=>l.trim() && !/^（/.test(l.trim()))||'').replace(/^\s*(?:[-・]|\d+\.)\s*/,'').replace(/\*\*/g,'');
+    const body = String(S.body||'').replace(/[🔴🟢🟡🟠]\s*/gu,'').trim();   /* 地図カードの印（🔴など）は画面に出さない */ const first = (body.split('\n').find(l=>l.trim() && !/^（/.test(l.trim()))||'').replace(/^\s*(?:[-・]|\d+\.)\s*/,'').replace(/\*\*/g,'');
     const fact = body && !/^（夜の巡回が/.test(body) ? `<details class="cb-fact"><summary><b>事実</b>${esc(first.length>70?first.slice(0,70)+'…':first)}</summary><div class="cb-factbody">${laMd(body)}</div></details>` : `<div class="cb-small" style="margin-top:8px">事実はまだ無い。夜の巡回がニュースから足していく</div>`;
     const mine = (S.answers||[]).map(x=>`<div class="cb-mine">${x.score!=null?laStampImg(x.score, x.id+':'+x.date):'<div class="nost">採点前</div>'}<div><div class="mq">${esc(laMD(x.date))} ・ ${esc(x.q||'')}</div>${x.a?`<div class="ma">${String(x.id).startsWith('dojo:')?'道場 '+esc(String(x.a).replace(/\s*\d+秒$/,'')):esc(String(x.a).slice(0,120))}</div>`:''}<div class="mm">${x.score!=null?`<span class="num">${x.score}</span> / 3`:''}${x.miss?` ・ 抜け: ${esc(x.miss)}`:''}</div></div></div>`).join('');
     const les = Ls.filter(x=>x.card===name && +x.slot===s);
