@@ -1357,7 +1357,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-22.1';
+const APP_VERSION = '2026-09-22.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4585,11 +4585,13 @@ async function loadLearn(){
   laScores = await laLoadScores();
   laDay = await laGet(laDate);
   if(laDay && laDay.quiz && !laQuiz) laQuiz = laDay.quiz;
+  await laDojoLoad();
   // 物差し・図鑑（v3で夜の巡回が積む。無ければ0）
   let mono=0, zukan=0;
   try{ const t=await repoFile('meyjiro/claude-context','knowledge/学習/物差し.jsonl'); if(t) mono=t.trim().split('\n').filter(Boolean).length; }catch(_){}
   try{ const t=await repoFile('meyjiro/claude-context','knowledge/学習/図鑑.jsonl'); if(t) zukan=t.trim().split('\n').filter(Boolean).length; }catch(_){}
   const answeredDays = []; if(laDay && (Object.keys(laDay.answers||{}).length||Object.keys(laDay.self||{}).length)) answeredDays.push(laDate);
+  if(laDojo) laDojo.all.forEach(h=>{ const d=(h.at||'').slice(0,10); if(d && !answeredDays.includes(d)) answeredDays.push(d); });
   const streak = laStreak(laScores, answeredDays);
   head.innerHTML = `<span class="st">物差し<b>${mono}本</b></span><span class="st">図鑑<b>${zukan}/300</b></span><span class="st">連続<b>${streak}日</b></span><span class="st"><span class="strip7">${laStrip(laScores)||'<i>·</i>'}</span></span>`;
   renderLearnToday();
@@ -4734,15 +4736,34 @@ window.addEventListener('message',e=>{ const d=e.data||{}; if(d.type==='progress
 <\/script></body></html>`;
 }
 function laTestProgress(){ const qz=laQuiz||{}; const ans=(laDay&&laDay.answers)||{}, selfS=(laDay&&laDay.self)||{}, con=(laDay&&laDay.connect)||{}; const quick=qz.quick||[], items=qz.items||[];
-  const total=quick.length+items.length, done=quick.filter(k=>selfS[k.id]!=null).length+items.filter(it=>ans[it.id]&&ans[it.id].text).length; return {done,total}; }
+  const total=items.length, done=items.filter(it=>ans[it.id]&&ans[it.id].text).length; return {done,total}; }   // 浅い問いは道場（2026-09-22）
+// ── 道場の今日の結果（2026-09-22 メグ「道場を浅い問いの正式な場に」）: 成績はXserverの sync.php にある。鍵＝sha256('megu-dojo:megu')
+let laDojo = null;
+async function laDojoLoad(){
+  try{
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('megu-dojo:megu')); const key = [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+    const [cloud, data] = await Promise.all([fetch('https://gachirezu.com/dojo/sync.php?k='+key, {cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null), fetch('dojo/data.json?v='+Date.now()).then(r=>r.ok?r.json():null).catch(()=>null)]);
+    const t = laToday(); const runs = ((cloud&&cloud.history)||[]).filter(h=>(h.at||'').slice(0,10)===t);
+    const todayRun = runs.filter(h=>h.mode==='chapter'&&h.ch===0); const best = todayRun.reduce((a,h)=>Math.max(a,h.ok),0);
+    const qt = {}; if(data) data.chapters.forEach(c=>c.quiz.forEach((q,i)=>{ qt[`${c.id}-${i}`]=q.q; }));
+    const missed = Object.entries((cloud&&cloud.mastery)||{}).filter(([k,v])=>v.at===t&&!v.last).map(([k])=>qt[k]||k);
+    const ch0 = data && data.chapters.find(c=>c.id===0);
+    laDojo = { runs, todayRun, best, n: ch0?ch0.quiz.length:10, missed, lead: ch0?ch0.lead:'', title: ch0?ch0.title:'', lessons: data?data.chapters.filter(c=>c.id>0&&!c.hidden).length:0, all: (cloud&&cloud.history)||[] };
+  }catch(e){ laDojo = null; }
+  return laDojo;
+}
 function renderLearnTodayPaper(){
   const el = $('lp-today'); const qz = laQuiz; const {done,total} = laTestProgress();
-  el.innerHTML = `<div class="lb" style="border-left:4px solid var(--pred,#a3402b)">${done>=total&&total>0?'<div class="stmp big">済</div>':''}<div class="lbh">🎓 ${esc(qz.mode==='easy'?'今日は軽い日':qz.mode==='sunday'?'日曜の出力':'朝の出力')} <span class="lbt">${esc(qz.date||'')} ・ ${done}/${total} 済</span></div>
-    <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">答案用紙を開いて、上から順に。①浅い${(qz.quick||[]).length}問（確信度→答え→自分で点）②深い${(qz.items||[]).length}問（文字か🎤）覚えたいことは投げ込みタブの「🧬 覚えたい」箱へ（夜の授業に課として出る）。30分。</p>
-    <div class="lqb" style="margin-top:10px;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" id="la-open-test">📝 答案用紙を開く</button><button class="btn" id="la-run-mode" title="走りながら道場（ずんだもんが読み上げ・番号を言って答える）を開く。旧モードはShift＋クリック">🏃 走りながら（音声）</button></div></div>`;
-  $('la-open-test').addEventListener('click', ()=>{ laOpenReader(laTestHtml(qz, laDay, laScores), `朝の出力 ${qz.date||''}`); });
-  // 2026-09-22 メグ「走りながらはこの形（道場）で」→ 読み上げ＋番号で答える道場を開く。旧モードは Shift+クリック で残す
-  $('la-run-mode').addEventListener('click', (e)=>{ if(e.shiftKey) return laRunMode(qz); window.open('https://meyjiro.github.io/barista-dojo/run/', '_blank'); });
+  const dj = laDojo; const dojoDone = dj && dj.todayRun.length>0;
+  el.innerHTML = `<div class="lb" style="border-left:4px solid var(--accent,#0bb7ae)">${dojoDone?'<div class="stmp big">済</div>':''}<div class="lbh">🏃 今日の10問 ・ 道場 <span class="lbt">${esc(qz.date||'')} ・ ${dojoDone?`${dj.best}/${dj.n}`:'まだ'}</span></div>
+    <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">${dj&&dj.lead?esc(dj.lead):'ずんだもんが読み上げ、番号を言って答える。新しい問い5＋復習5。'}${dj&&dj.missed.length?`<br>落とした: ${dj.missed.map(esc).join('／')}`:''}</p>
+    <div class="lqb" style="margin-top:10px;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" id="la-dojo">🏃 道場を開く</button><span class="hint">${dj?`読んだ課 ${dj.lessons}課 ・ 道場 ${dj.all.length}回`:'（成績の取得に失敗）'}</span></div></div>
+  <div class="lb" style="border-left:4px solid var(--pred,#a3402b)">${done>=total&&total>0?'<div class="stmp big">済</div>':''}<div class="lbh">🗣 説明する ・ 深い${(qz.items||[]).length}問 <span class="lbt">${done}/${total} 済</span></div>
+    <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">答案用紙を開いて、文字か🎤で30秒の説明。夜に採点して手紙に戻る。覚えたいことは投げ込みタブの「🧬 覚えたい」箱へ。</p>
+    <div class="lqb" style="margin-top:10px;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" id="la-open-test">📝 答案用紙を開く</button><button class="btn" id="la-run-mode" title="旧の読み上げモード（浅い問いも読む）">🔈 旧モード</button></div></div>`;
+  $('la-open-test').addEventListener('click', ()=>{ laOpenReader(laTestHtml(Object.assign({}, qz, {quick: []}), laDay, laScores), `朝の出力 ${qz.date||''}`); });
+  $('la-dojo').addEventListener('click', ()=>{ window.open('dojo.html', '_blank'); });
+  $('la-run-mode').addEventListener('click', ()=>laRunMode(qz));
 }
 // ── 🏃 走りながら（2026-09-21 メグ「ランニング中は暇。10問サクサク答えたい」。ゴッフルの「音声10問は過負荷」は本人が却下）──
 //    仕組み: 問いを読み上げ → 考える間（既定12秒・カウントダウン表示）→ 答えを読み上げ → 3秒 → 次。全部終わったら自己採点の一覧。
@@ -5052,7 +5073,8 @@ async function renderLearnLog(){
     const selfAvg = qDone? (Object.values(self).reduce((x,y)=>x+y,0)/qDone).toFixed(1) : null;
     const moff = sc.filter(r=>r.score!=null); const moffAvg = moff.length? (moff.reduce((x,r)=>x+r.score,0)/moff.length).toFixed(1) : null;
     const lessons = Object.values(j.lessons||{}).filter(l=>l.done).map(l=>(l.track==='X'?'投げ込み':l.track)+(l.track==='X'?'':l.no)).join('・');
-    const summary = `<span class="lgs">浅い${quick.length}${cards.length?'（'+esc(cards.slice(0,4).join('・'))+(cards.length>4?'…':'')+'）':''}${items.length?' ・ 深い'+items.length+'（'+esc(deepT)+'）':''}${selfAvg!=null?' ・ 自己'+selfAvg:''}${moffAvg!=null?' ・ 採点'+moffAvg:''}${lessons?' ・ 授業 '+esc(lessons):''}</span>`;
+    const dj = (laDojo&&laDojo.all||[]).filter(h=>(h.at||'').slice(0,10)===j.date); const djBest = dj.filter(h=>h.mode==='chapter'&&h.ch===0).reduce((a,h)=>Math.max(a,h.ok),0); const djTxt = dj.length? `🏃道場 ${djBest}/10（${dj.length}回）` : '';
+    const summary = `<span class="lgs">${djTxt?djTxt+' ・ ':''}浅い${quick.length}${cards.length?'（'+esc(cards.slice(0,4).join('・'))+(cards.length>4?'…':'')+'）':''}${items.length?' ・ 深い'+items.length+'（'+esc(deepT)+'）':''}${selfAvg!=null?' ・ 自己'+selfAvg:''}${moffAvg!=null?' ・ 採点'+moffAvg:''}${lessons?' ・ 授業 '+esc(lessons):''}</span>`;
     const deep = items.map(it=>{ const a=ans[it.id]||{}; const s=sc.find(r=>r.id===it.id); return `<div class="lgi"><div>${esc(it.text||it.id)}</div>${a.text?`<div class="a">${esc(a.text)}</div>`:'<div class="a">（未回答）</div>'}${s?`<div><span class="s">${s.score}／3</span>${s.miss?' ・ 抜け: '+esc(s.miss):''}</div>`:''}</div>`; }).join('');
     const qk = quick.map(k=>`<div class="lgi" style="font-size:12.5px">${esc(k.text||'')}<span style="color:var(--pink3)"> → ${esc(k.answer_key||k.answer||'')}${self[k.id]!=null?' ・ '+self[k.id]+'点':''}</span></div>`).join('');
     return `<details class="lgd" style="position:relative">${allDone?'<div class="stmp">済</div>':''}<summary class="lgdh">${esc(j.date)}${q.mode==='easy'?' ・ 軽い日':q.mode==='sunday'?' ・ 日曜':''}<br>${summary}</summary>${deep}${qk}</details>`; }).join('');

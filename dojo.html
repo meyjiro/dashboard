@@ -401,7 +401,7 @@ function table(t){ if(!t) return ''; return `<div class="tbl"><table><caption>�
 const fmtT = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-function allQ(){ return DATA.chapters.flatMap(c => c.quiz.map((q,i) => ({...q, ch:c.id, chTitle:c.title, key:`${c.id}-${i}`}))); }
+function allQ(){ return DATA.chapters.filter(c => !c.hidden).flatMap(c => c.quiz.map((q,i) => ({...q, ch:c.id, chTitle:c.title, key:`${c.id}-${i}`}))); }
 function mastery(){ return S.get('mastery', {}); }  // key -> {ok, ng}
 function chapterScore(ch){ const m = mastery(); let ok=0, n=0; DATA.chapters.find(c=>c.id===ch).quiz.forEach((q,i)=>{ const r = m[`${ch}-${i}`]; if(r){ n++; if(r.last) ok++; } }); return {ok, n}; }
 
@@ -421,7 +421,7 @@ function renderHome(){
   const t0 = DATA.chapters.find(c => c.id===0); const tr = todayRuns().filter(h => h.mode==='chapter' && h.ch===0);
   const best = tr.reduce((a,h)=>Math.max(a,h.ok),0);
   const wrong = allQ().filter(q => m[q.key] && !m[q.key].last).length;
-  const lessons = DATA.chapters.filter(c => c.id>0);
+  const lessons = DATA.chapters.filter(c => c.id>0 && !c.hidden);
   app.innerHTML = header() + `
   <div class="hero"><div class="hz"><h2>☀️ 今日の10問</h2><p>${t0 ? esc(t0.lead||'') : 'まだ届いていない（朝7:40に入る）'}</p>
     ${tr.length ? `<p style="margin-top:8px">今日 <span class="num">${best}</span><span style="font-size:13px"> / ${t0?t0.quiz.length:10}　${tr.length}回</span></p>` : ''}</div>
@@ -575,7 +575,7 @@ function renderStats(){
   ${last.length ? `<div class="hist">${last.map(h=>`<div class="c ${h.mode==='exam'?'exam':''}" style="height:${Math.max(6,h.pct)}%"><span class="num">${h.pct}</span></div>`).join('')}</div>` : '<p class="muted">まだ記録なし。問題を解くとここに出る。</p>'}
   <div class="hlist">${hist.slice(-8).reverse().map(h=>`<div><span>${h.at.replace('T',' ')} ${h.mode==='exam'?'🏆週テスト':h.mode==='chapter'?(h.ch===0?'☀️今日の10問':((DATA.chapters.find(c=>c.id===h.ch)||{}).title||'').slice(0,12)):h.mode==='wrong'?'🔁落とした問い':'🎲ランダム'}</span><span class="num">${h.ok}/${h.n}　${fmtT(h.sec)}</span></div>`).join('')}</div></div>
   <h3 style="margin:18px 0 8px;font-size:15px">課ごとの定着（最後に解いたときの正解率）</h3>
-  <div class="card"><div class="mastery">${DATA.chapters.filter(c=>c.id>0).map(c=>{ const s = chapterScore(c.id); const p = s.n? Math.round(s.ok/c.quiz.length*100):0; return `<div class="mrow"><span>${c.emoji}</span><div><div style="font-size:13px">第${c.id}章 ${esc(c.title)}</div><div class="b"><i style="width:${p}%"></i></div></div><span class="num" style="text-align:right">${s.n?p+'%':'—'}</span></div>`; }).join('')}</div></div>
+  <div class="card"><div class="mastery">${DATA.chapters.filter(c=>c.id>0 && !c.hidden).map(c=>{ const s = chapterScore(c.id); const p = s.n? Math.round(s.ok/c.quiz.length*100):0; return `<div class="mrow"><span>${c.emoji}</span><div><div style="font-size:13px">第${c.id}章 ${esc(c.title)}</div><div class="b"><i style="width:${p}%"></i></div></div><span class="num" style="text-align:right">${s.n?p+'%':'—'}</span></div>`; }).join('')}</div></div>
   <p class="muted" id="sync-st" style="margin-top:14px">${syncLabel()}　— 端末を替えても記録は続く</p>
   <div class="row" style="margin-top:8px"><button class="btn sub" id="reset">記録を消す</button></div>`;
   app.querySelector('#reset').onclick = () => { if(confirm('成績と記録を全部消す？（クラウドの分も消える）')){ S._quiet = true; S.set('history', []); S.set('mastery', {}); S.set('read', {}); S._quiet = false; syncPush(); renderStats(); } };
