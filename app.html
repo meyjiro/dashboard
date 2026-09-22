@@ -299,10 +299,10 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 #tab-learn{--paper:#efe6cf;--pink:#2b2418;--pink2:#5c5040;--pink3:#8c8069;--prule:#cdbf9c;--pred:#a3402b;--pblue:#2f5a78;--pgreen:#4d6b3a;--pcard:#f7f1e3;
   margin:-12px -12px 0;padding:14px 14px 40px;min-height:70vh;color:var(--pink);font-family:"Shippori Mincho","Hiragino Mincho ProN",serif;
   background-color:var(--paper);background-image:radial-gradient(ellipse at 12% 8%,rgba(120,90,40,.10),transparent 42%),radial-gradient(ellipse at 88% 92%,rgba(120,90,40,.12),transparent 40%),url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.28 0 0 0 0 0.16 0 0 0 .09 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
-#tab-learn .lp-head{border-bottom:2px solid var(--pink);padding-bottom:8px;margin-bottom:12px}#tab-learn .lp-head .st{font-family:"Zen Kaku Gothic New",sans-serif;color:var(--pink2)}#tab-learn .lp-head .st b{font-family:"Shippori Mincho",serif;color:var(--pink);font-weight:800}
+#tab-learn .lp-head{border-bottom:0;padding-bottom:0;margin-bottom:10px}#tab-learn .lp-stats{display:flex;gap:6px;align-items:stretch;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}#tab-learn .lp-stats::-webkit-scrollbar{display:none}#tab-learn .ls{flex:none;min-width:78px;background:rgba(255,255,255,.5);border:1px solid var(--prule);border-radius:8px;padding:6px 10px;display:flex;flex-direction:column;gap:2px}#tab-learn .ls span{font-family:"Zen Kaku Gothic New",sans-serif;font-size:11px;color:var(--pink3);white-space:nowrap}#tab-learn .ls b{font-family:"Shippori Mincho",serif;font-size:20px;line-height:1.1;color:var(--pink);font-weight:800}#tab-learn .ls b small{font-size:12px;font-weight:500;color:var(--pink3);margin-left:2px}#tab-learn .ls-back{flex:none;align-self:center;font:inherit;font-family:"Zen Kaku Gothic New",sans-serif;font-size:12.5px;color:var(--pink3);background:transparent;border:0;padding:0 6px;white-space:nowrap}#tab-learn .lp-head .st{font-family:"Zen Kaku Gothic New",sans-serif;color:var(--pink2)}#tab-learn .lp-head .st b{font-family:"Shippori Mincho",serif;color:var(--pink);font-weight:800}
 /* タブは丸ボタンではなく、紙のインデックス（見出しタブ）に（2026-09-19 メグ「丸すぎて見づらい」） */
-#tab-learn .lp-nav{gap:4px;border-bottom:2px solid var(--pink);margin:0 0 16px;align-items:flex-end;flex-wrap:wrap}
-#tab-learn .lp-nav button{font-family:"Zen Kaku Gothic New",sans-serif;font-size:14px;font-weight:700;height:40px;padding:0 16px;border:1px solid var(--prule);border-bottom:0;border-radius:6px 6px 0 0;background:rgba(255,255,255,.35);color:var(--pink2);white-space:nowrap;transition:none}
+#tab-learn .lp-nav{gap:6px;border-bottom:2px solid var(--pink);margin:0 -4px 16px;padding:0 4px;align-items:flex-end;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}#tab-learn .lp-nav::-webkit-scrollbar{display:none}
+#tab-learn .lp-nav button{font-family:"Zen Kaku Gothic New",sans-serif;font-size:13.5px;font-weight:700;height:38px;padding:0 12px;flex:none;border:1px solid var(--prule);border-bottom:0;border-radius:6px 6px 0 0;background:rgba(255,255,255,.35);color:var(--pink2);white-space:nowrap;transition:none}
 #tab-learn .zk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:8px}
 #tab-learn .zk-card{text-align:left;font:inherit;padding:10px 12px;border:1px solid var(--prule);border-radius:6px;background:rgba(255,255,255,.45);color:var(--text);cursor:pointer;display:flex;flex-direction:column;gap:2px}
 #tab-learn .zk-card b{font-family:"Shippori Mincho",serif;font-size:14px}#tab-learn .zk-card span{font-size:11px;color:var(--text3);letter-spacing:.06em}
@@ -326,7 +326,7 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 .lb{background:var(--card,#fff);border:1px solid var(--border2,#e6e0d6);border-radius:10px;padding:12px 14px;margin:0 0 12px}.lb .lbh{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--text2);letter-spacing:.04em}.lb .lbh .lbt{margin-left:auto;font-weight:500;letter-spacing:0}.lb .lbh .ok{color:var(--accent,#0bb7ae)}
 .lq{margin:10px 0 0;padding:10px 12px;background:var(--bg2,#f6f3ee);border-radius:8px}.lq b{display:block;font-size:12px;color:var(--text2);margin-bottom:2px}.lq .qt{font-size:14.5px;line-height:1.6}.lq .qn{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.6}
 .lq textarea{width:100%;min-height:84px;margin-top:8px;font:inherit;font-size:14px;line-height:1.6;padding:8px 10px;border:1px solid var(--border2,#e6e0d6);border-radius:8px;background:var(--card,#fff);color:var(--text);resize:vertical}
-.lq .lqb{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}.lq .lqb .hint{font-size:12px;color:var(--text2)}.lq .lqb button.rec.on{background:#e9b3a8}
+.lq .lqb{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}#tab-learn .lqb{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#tab-learn .lqb .btn{min-height:44px;white-space:nowrap}.lq .lqb .hint{font-size:12px;color:var(--text2)}.lq .lqb button.rec.on{background:#e9b3a8}
 .lq .sc{margin-top:8px;padding:8px 10px;border-left:3px solid var(--accent,#0bb7ae);background:var(--card,#fff);border-radius:6px;font-size:13px}.lq .sc b{display:inline;font-size:15px;color:var(--text)}.lq .sc .miss{color:#8a6a1f}
 .lk{margin:8px 0 0;padding:8px 10px;border:1px solid var(--border2,#e6e0d6);border-radius:8px;font-size:13.5px;line-height:1.55}.lk .kc{font-size:11px;color:var(--text2)}.lk .ka{margin-top:6px;padding:6px 8px;background:var(--bg2,#f6f3ee);border-radius:6px;font-size:13px}.lk .ks{display:flex;gap:6px;margin-top:6px;align-items:center;font-size:12px;color:var(--text2);flex-wrap:wrap}.lk .ks button{font:inherit;font-size:12px;padding:2px 10px;border-radius:6px;border:1px solid var(--border2,#e6e0d6);background:var(--card,#fff);color:var(--text)}.lk .ks button.on{background:var(--accent,#0bb7ae);color:#fff;border-color:var(--accent,#0bb7ae)}.lk.done{opacity:.6}
 .lc input{width:100%;font:inherit;font-size:13.5px;padding:7px 10px;margin-top:6px;border:1px solid var(--border2,#e6e0d6);border-radius:8px;background:var(--card,#fff);color:var(--text)}
@@ -1233,7 +1233,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
     <div id="tab-learn" class="tab-panel">
       <div class="lp-head" id="lp-head"></div>
       <!-- 2026-09-21 改築v1: 表紙（世界地図）・図鑑・聞きたい（2段階の深掘り）を追加 -->
-      <div class="lp-nav"><button class="on" data-lp="today">朝</button><button data-lp="night">今夜の授業</button><button data-lp="zukan">図鑑</button><button data-lp="ask">聞きたい</button><button data-lp="log">記録</button><button data-lp="place" id="lp-place-btn" hidden>配置テスト</button><button data-lp="world" title="表紙: 語れる国が色づく世界地図">🗺 世界地図</button><button data-lp="back">← 今日タブへ</button></div>
+      <div class="lp-nav"><button class="on" data-lp="today">☀️ 朝</button><button data-lp="night">📖 今夜の授業</button><button data-lp="zukan">📚 図鑑</button><button data-lp="ask">💬 聞きたい</button><button data-lp="log">📈 記録</button><button data-lp="world" title="表紙: 語れる国が色づく世界地図">🗺 世界地図</button><button data-lp="place" id="lp-place-btn" hidden>配置テスト</button></div>
       <div id="lp-place" hidden></div>
       <div id="lp-today"></div>
       <div id="lp-night" hidden></div>
@@ -1357,7 +1357,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-22.2';
+const APP_VERSION = '2026-09-22.3';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4587,13 +4587,14 @@ async function loadLearn(){
   if(laDay && laDay.quiz && !laQuiz) laQuiz = laDay.quiz;
   await laDojoLoad();
   // 物差し・図鑑（v3で夜の巡回が積む。無ければ0）
-  let mono=0, zukan=0;
-  try{ const t=await repoFile('meyjiro/claude-context','knowledge/学習/物差し.jsonl'); if(t) mono=t.trim().split('\n').filter(Boolean).length; }catch(_){}
-  try{ const t=await repoFile('meyjiro/claude-context','knowledge/学習/図鑑.jsonl'); if(t) zukan=t.trim().split('\n').filter(Boolean).length; }catch(_){}
   const answeredDays = []; if(laDay && (Object.keys(laDay.answers||{}).length||Object.keys(laDay.self||{}).length)) answeredDays.push(laDate);
   if(laDojo) laDojo.all.forEach(h=>{ const d=(h.at||'').slice(0,10); if(d && !answeredDays.includes(d)) answeredDays.push(d); });
   const streak = laStreak(laScores, answeredDays);
-  head.innerHTML = `<span class="st">物差し<b>${mono}本</b></span><span class="st">図鑑<b>${zukan}/300</b></span><span class="st">連続<b>${streak}日</b></span><span class="st"><span class="strip7">${laStrip(laScores)||'<i>·</i>'}</span></span>`;
+  const dj = laDojo; const dojoLbl = dj ? (dj.todayRun.length ? `${dj.best}/${dj.n}` : 'まだ') : '—';
+  const {done:dDone, total:dTotal} = laTestProgress();
+  const wk = laScores.filter(r=>r.date>=new Date(Date.now()-6*864e5).toLocaleDateString('sv-SE')); const wkDays = new Set(wk.map(r=>r.date)).size;
+  head.innerHTML = `<div class="lp-stats"><div class="ls"><span>🔥 連続</span><b>${streak}<small>日</small></b></div><div class="ls"><span>🏃 今日の10問</span><b>${esc(dojoLbl)}</b></div><div class="ls"><span>🗣 深い問い</span><b>${dDone}<small>/${dTotal}</small></b></div><div class="ls"><span>📚 読んだ課</span><b>${dj?dj.lessons:'—'}<small>課</small></b></div><div class="ls"><span>📅 今週</span><b>${wkDays}<small>日</small></b></div><button class="ls-back" data-lp="back">← 今日</button></div>`;
+  head.querySelector('.ls-back').onclick = ()=>switchTab('today');
   renderLearnToday();
   document.querySelectorAll('.lp-nav button').forEach(b=>{ b.onclick = ()=>{ const k=b.dataset.lp; if(k==='back'){ switchTab('today'); return; }
     if(k==='world'){ window.open('world.html', '_blank'); return; }
@@ -4757,13 +4758,14 @@ function renderLearnTodayPaper(){
   const dj = laDojo; const dojoDone = dj && dj.todayRun.length>0;
   el.innerHTML = `<div class="lb" style="border-left:4px solid var(--accent,#0bb7ae)">${dojoDone?'<div class="stmp big">済</div>':''}<div class="lbh">🏃 今日の10問 ・ 道場 <span class="lbt">${esc(qz.date||'')} ・ ${dojoDone?`${dj.best}/${dj.n}`:'まだ'}</span></div>
     <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">${dj&&dj.lead?esc(dj.lead):'ずんだもんが読み上げ、番号を言って答える。新しい問い5＋復習5。'}${dj&&dj.missed.length?`<br>落とした: ${dj.missed.map(esc).join('／')}`:''}</p>
-    <div class="lqb" style="margin-top:10px;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" id="la-dojo">🏃 道場を開く</button><span class="hint">${dj?`読んだ課 ${dj.lessons}課 ・ 道場 ${dj.all.length}回`:'（成績の取得に失敗）'}</span></div></div>
+    <div class="lqb" style="margin-top:10px"><button class="btn btn-primary" id="la-dojo" style="flex:1">🏃 道場を開く</button></div>${dj?'':'<p class="hint" style="margin:6px 0 0;font-size:12px">（成績の取得に失敗。電波を確認）</p>'}</div>
   <div class="lb" style="border-left:4px solid var(--pred,#a3402b)">${done>=total&&total>0?'<div class="stmp big">済</div>':''}<div class="lbh">🗣 説明する ・ 深い${(qz.items||[]).length}問 <span class="lbt">${done}/${total} 済</span></div>
     <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">答案用紙を開いて、文字か🎤で30秒の説明。夜に採点して手紙に戻る。覚えたいことは投げ込みタブの「🧬 覚えたい」箱へ。</p>
-    <div class="lqb" style="margin-top:10px;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" id="la-open-test">📝 答案用紙を開く</button><button class="btn" id="la-run-mode" title="旧の読み上げモード（浅い問いも読む）">🔈 旧モード</button></div></div>`;
+    <div class="lqb" style="margin-top:10px"><button class="btn btn-primary" id="la-open-test" style="flex:1">📝 答案用紙を開く</button></div>
+    <p style="margin:8px 0 0;font-size:12px;text-align:right"><a href="#" id="la-run-mode" style="color:var(--pink3)">🔈 端末の声で読み上げる（旧）</a></p></div>`;
   $('la-open-test').addEventListener('click', ()=>{ laOpenReader(laTestHtml(Object.assign({}, qz, {quick: []}), laDay, laScores), `朝の出力 ${qz.date||''}`); });
   $('la-dojo').addEventListener('click', ()=>{ window.open('dojo.html', '_blank'); });
-  $('la-run-mode').addEventListener('click', ()=>laRunMode(qz));
+  $('la-run-mode').addEventListener('click', (e)=>{ e.preventDefault(); laRunMode(qz); });
 }
 // ── 🏃 走りながら（2026-09-21 メグ「ランニング中は暇。10問サクサク答えたい」。ゴッフルの「音声10問は過負荷」は本人が却下）──
 //    仕組み: 問いを読み上げ → 考える間（既定12秒・カウントダウン表示）→ 答えを読み上げ → 3秒 → 次。全部終わったら自己採点の一覧。
