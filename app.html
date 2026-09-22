@@ -1360,7 +1360,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-22.5';
+const APP_VERSION = '2026-09-23.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4924,18 +4924,21 @@ ${(L.pretest||[]).length?`<div class="pre"><div class="ph">読む前に答える
 <div class="sum"><div class="sh">覚える3行（モッフル版）</div><ol>${(L.summary||[]).map(x=>`<li>${laInline(x)}</li>`).join('')}</ol></div>
 <div class="me"><div class="mh">自分の3行 ・ 自分の言葉で（写さない）</div><textarea id="my3" placeholder="1. &#10;2. &#10;3. ">${esc(sv.my3||'')}</textarea><label>明日の自分に出す問いを1つ（翌朝の浅い問いに混ざる）</label><input id="myq" value="${esc(sv.myq||'')}" placeholder="例: 太陽が消えたと分かるのは何分後？"><button class="btn" id="done" ${sv.done?'disabled':''}>${sv.done?'この課は終えた ✓':'この課を終える → 物差し +1'}</button><div class="ok" id="ok">${sv.done?'保存済み '+esc(String(sv.at||'').slice(0,16)):''}</div></div>
 <div class="foot"><span>出典: ${esc(L.sources||'')}</span><span>${L.next?'次: '+esc(L.next):''}</span></div>
-</div></div><script>document.getElementById('done').addEventListener('click',()=>{parent.postMessage({type:'lesson-done',track:${JSON.stringify(L.track)},no:${JSON.stringify(L.no)},my3:document.getElementById('my3').value,myq:document.getElementById('myq').value},'*');document.getElementById('done').disabled=true;document.getElementById('ok').textContent='保存しています…';});window.addEventListener('message',e=>{if(e.data&&e.data.type==='lesson-saved'){document.getElementById('ok').textContent='保存した。物差し +1 ・ 明日の朝にこの課から5問出るのだ';document.getElementById('done').textContent='この課は終えた ✓';}});<\/script></body></html>`;
+</div></div><script>document.getElementById('done').addEventListener('click',()=>{parent.postMessage({type:'lesson-done',key:${JSON.stringify(L.key||'')},track:${JSON.stringify(L.track)},no:${JSON.stringify(L.no)},my3:document.getElementById('my3').value,myq:document.getElementById('myq').value},'*');document.getElementById('done').disabled=true;document.getElementById('ok').textContent='保存しています…';});window.addEventListener('message',e=>{if(e.data&&e.data.type==='lesson-saved'){document.getElementById('ok').textContent='保存した。物差し +1 ・ 明日の朝にこの課から5問出るのだ';document.getElementById('done').textContent='この課は終えた ✓';}});<\/script></body></html>`;
 }
 async function laOpenLesson(track, no){
   const path = `knowledge/学習/教科書/${track}/${String(no).padStart(2,'0')}.json`;
   const t = await repoFile('meyjiro/claude-context', path); if(!t){ toast('この課はまだ書かれていない（'+path+'）'); return; }
   let L; try{ L = JSON.parse(t); }catch(e){ toast('課のJSONが壊れている'); return; }
-  const saved = laDay && laDay.lessons && laDay.lessons[`${track}${no}`];
+  L.key = `${track}${no}`;
+  const saved = laDay && laDay.lessons && laDay.lessons[L.key];
   laOpenReader(laLessonHtml(L, saved), `${LA_TRACK[track]?LA_TRACK[track].name:track} 第${no}課`);
 }
 window.addEventListener('message', async e=>{
   const d = e.data; if(!d || d.type!=='lesson-done') return;
-  const key = d.track==='X' ? String(d.no) : `${d.track}${d.no}`;
+  // 🔴 保存キー: 投げ込みの課（path で開く）は path。JSONに no:1 が入っていると String(d.no)="1" で保存され、
+  //    一覧は lessons[path] を見るので永久に「済」にならなかった（2026-09-23 メグ報告・半導体後工程）
+  const key = d.key || (d.track==='X' ? String(d.no) : `${d.track}${d.no}`);
   try{ await laPut(laDate||laToday(), j=>{ j.lessons = j.lessons||{}; j.lessons[key] = {track:d.track, no:d.no, my3:d.my3, myq:d.myq, done:true, at:new Date().toISOString()}; }, `授業を終えた ${key}`);
        const fr = document.querySelector('#la-reader .lrf'); if(fr&&fr.contentWindow) fr.contentWindow.postMessage({type:'lesson-saved'},'*'); renderLearnNight(); }
   catch(err){ toast('保存できなかった: '+err.message); }
@@ -4956,15 +4959,23 @@ async function renderLearnNight(){
   } else if(row.saturday){ el.innerHTML = `<div class="lb"><div class="lbh">🗣 土曜 ・ 口頭説明</div><p style="margin:8px 0 0;font-size:13.5px">${esc(row.saturday)}。どこで詰まったかだけ、朝のページの深い問いの欄に書いておくのだ。</p></div>`; }
   else if(row.sunday){ el.innerHTML = `<div class="lb"><div class="lbh">🗺 日曜 ・ 白紙テスト</div><p style="margin:8px 0 0;font-size:13.5px">「${esc(row.sunday.blank_map||'')}」を白紙から。朝のページの問いに出ている。${row.sunday.midterm?'<b>今日は中間テスト。</b>':''}</p></div>`; }
   const ex = (laQuiz && Array.isArray(laQuiz.extra)) ? laQuiz.extra.filter(x=>x&&x.path) : [];
-  if(ex.length){ const dn0=(laDay&&laDay.lessons)||{}; el.insertAdjacentHTML('beforeend', `<div class="lb"><div class="lbh">🧬 投げ込みからの1課 <span class="lbt">読むかどうかは自由 ・ 5分</span></div>${ex.map(x=>{ const dn=dn0[x.path]&&dn0[x.path].done; return `<div class="lq${dn?' done':''}">${dn?'<div class="stmp">済</div>':''}<b>${esc(x.from||'投げ込み')}</b><div class="qt">${esc(x.title||x.path)}</div><div class="lqb"><button class="btn ${dn?'':'btn-primary'}" data-lesson-path="${esc(x.path)}">${dn?'もう一度':'📖 読む'}</button></div></div>`; }).join('')}</div>`); }
+  if(ex.length){ const dn0=(laDay&&laDay.lessons)||{}; el.insertAdjacentHTML('beforeend', `<div class="lb"><div class="lbh">🧬 投げ込みからの1課 <span class="lbt">読むかどうかは自由 ・ 5分</span></div>${ex.map(x=>{ const dn=laLessonDone(dn0, x.path); return `<div class="lq${dn?' done':''}">${dn?'<div class="stmp">済</div>':''}<b>${esc(x.from||'投げ込み')}</b><div class="qt">${esc(x.title||x.path)}</div><div class="lqb"><button class="btn ${dn?'':'btn-primary'}" data-lesson-path="${esc(x.path)}">${dn?'もう一度':'📖 読む'}</button></div></div>`; }).join('')}</div>`); }
   el.querySelectorAll('[data-lesson]').forEach(b=>b.addEventListener('click', ()=>{ const [t,n]=b.dataset.lesson.split(':'); laOpenLesson(t, +n); }));
   el.querySelectorAll('[data-lesson-path]').forEach(b=>b.addEventListener('click', ()=>laOpenLessonPath(b.dataset.lessonPath)));
+}
+// 投げ込みの課が「済」かどうか。path が正しいキー。2026-09-22 以前は JSON の no（"1" 等）で保存されていたので両方見る
+function laLessonDone(lessons, path){
+  const L = lessons||{};
+  if(L[path] && L[path].done) return true;
+  return Object.values(L).some(v=>v && v.done && v.track==='X' && (v.path===path || v.no===path));
 }
 async function laOpenLessonPath(path){
   const t = await repoFile('meyjiro/claude-context', path); if(!t){ toast('まだ書かれていない（'+path+'）'); return; }
   let L; try{ L = JSON.parse(t); }catch(e){ toast('課のJSONが壊れている'); return; }
-  L.track = L.track||'X'; L.no = L.no||path;
-  const saved = laDay && laDay.lessons && laDay.lessons[path];
+  L.track = L.track||'X'; L.no = L.no||path; L.key = path;
+  // 旧: JSONの no（例 1）で保存されてしまった記録も拾う（2026-09-22 以前のぶん）
+  const LS = (laDay && laDay.lessons) || {};
+  const saved = LS[path] || (L.no!=null && LS[String(L.no)] && LS[String(L.no)].track==='X' ? LS[String(L.no)] : null);
   laOpenReader(laLessonHtml(L, saved), L.title||path);
 }
 
