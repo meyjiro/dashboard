@@ -775,6 +775,8 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 /* 書いたもの */
 .dy-entries{margin-top:20px}
+.dy-audio{display:flex;flex-direction:column;gap:6px}.dy-audio:not(:empty){margin-top:14px}.dy-audio .wait,.dy-audio .done{font-size:13px;padding:8px 12px;border-radius:10px;border:1px dashed var(--border2,#ccc);color:var(--text2)}.dy-audio .done{border-style:solid}
+.amark{white-space:normal}
 .dy-entry{background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:13px 14px;margin-bottom:9px}
 .dy-entry .at{font-size:10.5px;color:var(--text3);font-weight:700;letter-spacing:.05em;margin-bottom:5px}
 .dy-entry .body{font-size:14.5px;line-height:1.9;white-space:pre-wrap;word-break:break-word}
@@ -1204,6 +1206,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
         <div class="dy-taglb">きょうを動かしたもの</div>
         <div class="dy-tagrow" id="dy-tags"></div>
 
+        <div class="dy-audio" id="dy-audio-state"></div>
         <div class="dy-entries" id="dy-entries"></div>
         <div class="dy-auto" id="dy-auto" hidden><h4>この日にあったこと</h4><p id="dy-auto-body"></p></div>
 
@@ -1357,7 +1360,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-22.4';
+const APP_VERSION = '2026-09-22.5';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1469,6 +1472,38 @@ async function putFile(path, content, message, isBase64 = false) {
 async function listDir(path) {
   const r = await api(`/repos/${REPO}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}?ref=${BRANCH}`);
   return (!r || r.__404 || !Array.isArray(r)) ? [] : r;
+}
+
+// 🎙️ 録音の受付状態（2026-09-22 メグ 9/21夜「録音できてたのか分からない」）。
+//   inbox/audio/ にまだファイルが在る＝📼 受付済み・文字起こし待ち（Macの transcribe-inbox.sh が30分ごと）
+//   inbox/audio/.transcribed に名前がある＝✅ 文字になった（音声そのものは文字起こし後に消える）
+//   古い録音（9/6より前）は消さずに .transcribed にも載っているので、両方見て「待ち」を出す
+let __audioSt = null, __audioStAt = 0;
+async function audioStatus(force) {
+  if (!force && __audioSt && Date.now() - __audioStAt < 60000) return __audioSt;
+  const [dir, done] = await Promise.all([listDir('inbox/audio').catch(() => []), getFile('inbox/audio/.transcribed').catch(() => null)]);
+  const doneSet = new Set((done || '').split('\n').map(x => x.trim()).filter(Boolean));
+  const files = dir.filter(f => f.type === 'file' && !f.name.startsWith('.')).map(f => f.name);
+  __audioSt = { pending: files.filter(n => !doneSet.has(n)), done: [...doneSet] }; __audioStAt = Date.now();
+  return __audioSt;
+}
+// ファイル名の絞り込み（pick）に合う録音の印。待ちが1件でもあれば📼、全部文字になっていれば✅、無ければ null
+function audioMark(st, pick) {
+  const p = st.pending.filter(pick), d = st.done.filter(pick);
+  if (p.length) return { cls: 'wait', text: `📼 受付済み・文字起こし待ち${p.length > 1 ? ` ${p.length}件` : ''}（Macが30分ごとに文字にする）` };
+  if (d.length) return { cls: 'done', text: '✅ 文字になった' };
+  return null;
+}
+// 学習ページの <span class="amark" data-atag data-adate> を、実際の受付状態で埋める
+async function laAudioMarks(root) {
+  const els = [...(root || document).querySelectorAll('.amark[data-atag]')]; if (!els.length) return;
+  let st; try { st = await audioStatus(); } catch (e) { return; }
+  els.forEach(el => {
+    if (el.dataset.adone === '1') { el.textContent = '✅ 文字になった'; return; }
+    const key = (el.dataset.adate || '').replace(/-/g, ''), tag = el.dataset.atag;
+    const m = audioMark(st, n => n.startsWith(key) && n.includes(`_quiz_${tag}.`));
+    el.textContent = m ? m.text : '⚠️ 録音が見つからない（送れていないかも。もう一度🎤）';
+  });
 }
 
 // ── 今日タブ ──
@@ -3682,6 +3717,7 @@ async function dyLoadDay(d) {
   dyScale('body', DY_BODY, day && day.body);
   dyRenderTags(day && day.tags);
   dyRenderEntries(day);
+  dyRenderAudioState();
   dyRenderAuto(d);
 }
 
@@ -3746,6 +3782,18 @@ function dyShots(e) {
   const list = e.imgs || (e.img ? [e.img] : []);
   if (!list.length) return '';
   return `<div class="dy-shots">` + list.map(p => `<img data-path="${esc(p)}" alt="">`).join('') + `</div>`;
+}
+// この日の録音の受付状態（📼 待ち／✅ 文字になった）。文字になったぶんは上の「話したぶん」として本文に入る
+async function dyRenderAudioState(force) {
+  const d = dySel, el = $('dy-audio-state'); if (!d || !el) return;
+  const key = d.replace(/-/g, '');
+  let st; try { st = await audioStatus(force); } catch (e) { return; }
+  if (dySel !== d) return;
+  const pick = n => n.startsWith(key) && n.includes('_diary');
+  const hhmm = n => n.slice(9, 11) + ':' + n.slice(11, 13);
+  const p = st.pending.filter(pick), dn = st.done.filter(pick);
+  el.innerHTML = p.map(n => `<div class="wait">📼 ${esc(hhmm(n))} 受付済み・文字起こし待ち（Macが30分ごとに文字にする）</div>`).join('')
+    + (dn.length && !p.length ? `<div class="done">✅ 話したぶん ${dn.length}件は文字になっている</div>` : '');
 }
 function dyRenderEntries(day) {
   const el = $('dy-entries');
@@ -3965,7 +4013,8 @@ async function dyToggleRec() {
         let bin = ''; const bytes = new Uint8Array(buf);
         for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
         await putFile(`inbox/audio/${ts()}_diary.${ext}`, btoa(bin), `日記の録音 ${dySel}`, true);
-        $('dy-hint').textContent = '録音を預かりました。文字にしてから、この日の日記に入ります（30分以内）';
+        $('dy-hint').textContent = '📼 録音を預かりました。文字にしてから、この日の日記に入ります（30分以内）';
+        dyRenderAudioState(true);
       } catch (e) { $('dy-hint').textContent = '送れませんでした: ' + e.message; }
     };
     dyRecorder.start();
@@ -4624,7 +4673,7 @@ function renderLearnToday(){
   parts.push(`<div class="lb"><div class="lbh">🗣 説明する ・ 深い${items.length}問 <span class="lbt">${deepDone}/${items.length} 済 ・ 10分</span></div>
     ${items.map((it,i)=>{ const a=ans[it.id]||{}; const sc=laScoreOf(it.id); return `<div class="lq" data-id="${esc(it.id)}"><b>問${i+1} ${esc(it.kind||'')}${it.card?' ・ '+esc(it.card):''}</b><div class="qt">${esc(it.text||'')}</div>${it.note?`<div class="qn">${esc(it.note)}</div>`:''}
       <textarea class="la-text" placeholder="30秒でちょっちに説明するつもりで。話し言葉でいい">${esc(a.text||'')}</textarea>
-      <div class="lqb"><button class="btn btn-primary la-save">保存</button><button class="btn rec la-rec">🎤 録音</button><span class="hint">${a.at?'保存済み '+esc(String(a.at).slice(11,16))+(a.audio?' ・ 🎤あり（文字にして足す）':''):''}</span></div>
+      <div class="lqb"><button class="btn btn-primary la-save">保存</button><button class="btn rec la-rec">🎤 録音</button><span class="hint">${a.at?'保存済み '+esc(String(a.at).slice(11,16)):''}${a.audio?` ・ <span class="amark" data-atag="${esc(it.id)}" data-adate="${esc(qz.date||laDate||'')}" data-adone="${a.raw_voice?'1':'0'}">🎤 確認中…</span>`:''}</span></div>
       ${sc?`<div class="sc">モッフルの採点 <b>${sc.score}／3</b>${sc.miss?`<div class="miss">抜け: ${esc(sc.miss)}</div>`:''}</div>`:(a.text?`<div class="sc" style="border-color:var(--border2)">夜（22:30）に採点して、ここと手紙に戻すのだ</div>`:'')}</div>`; }).join('')}</div>`);
   // ③ つなげる（今日の1本を棚に置く）
   parts.push(`<div class="lb lc"><div class="lbh">🔗 つなげる ・ 今日の1本を棚に置く <span class="lbt">${con.shelf?'済':'—'} ・ 10分</span></div>
@@ -4706,7 +4755,7 @@ function laTestHtml(qz, day, scores){
     <div class="score">${[0,1,2,3].map(v=>`<button data-s="${v}" class="${sc===v?'on':''}"><b>${v}</b>${['分からなかった','かすった','ほぼ','言えた'][v]}</button>`).join('')}</div></div></div>`; }).join('');
   const deepHtml = items.map((it,i)=>{ const a=ans[it.id]||{}; const s=(scores||[]).find(r=>r.date===qz.date&&r.id===it.id); return `<div class="card${a.text?' done':''}" data-id="${esc(it.id)}" data-kind="deep">${a.text?'<div class="stmp">済</div>':''}<div class="no">問${i+1}</div><div class="tag">深い ・ ${esc(it.kind||'')}${it.card?' ・ '+esc(it.card):''}</div><div class="q">${esc(it.text||'')}</div>${it.note?`<div class="note">${esc(it.note)}</div>`:''}
     <textarea class="dtext" placeholder="30秒でちょっちに説明するつもりで。話し言葉でいい。🎤でもいい。">${esc(a.text||'')}</textarea>
-    <div class="row"><button class="rec">🎤 録音</button><button class="p save">保存 → 夜に採点</button></div><div class="hint">${a.at?'保存済み '+esc(String(a.at).slice(11,16))+(a.audio?' ・ 🎤あり':''):''}</div>
+    <div class="row"><button class="rec">🎤 録音</button><button class="p save">保存 → 夜に採点</button></div><div class="hint">${a.at?'保存済み '+esc(String(a.at).slice(11,16)):''}${a.audio?` ・ <span class="amark" data-atag="${esc(it.id)}" data-adate="${esc(qz.date||laDate||'')}" data-adone="${a.raw_voice?'1':'0'}">🎤 確認中…</span>`:''}</div>
     ${s?`<div class="sc">モッフルの採点 <b>${s.score}／3</b>${s.miss?`<div class="miss">抜け: ${esc(s.miss)}</div>`:''}</div>`:''}</div>`; }).join('');
   const conHtml = `<div class="card${con.shelf?' done':''}" data-kind="connect"><div class="no">棚</div><div class="tag">つなげる ・ 今日の1本を棚に置く</div><div class="q" style="font-size:17px">朝の1本を3行で。背景／誰が得して誰が困る／どの棚</div>
     <input class="c" data-k="title" placeholder="どの記事（見出しをコピペでOK）" value="${esc(con.title||'')}"><input class="c" data-k="background" placeholder="① 背景: どういう経緯の続き？" value="${esc(con.background||'')}"><input class="c" data-k="who" placeholder="② 誰が得して誰が困る？" value="${esc(con.who||'')}"><input class="c" data-k="shelf" placeholder="③ どの棚？（例: エネルギー②、中東④）" value="${esc(con.shelf||'')}">
@@ -5007,7 +5056,7 @@ async function renderPlacement(){
     <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">1枚1分。「①歴史 ②今 ③産業 ④誰が得して誰が困る」の順で、知ってることを喋る（🎤）か書く。終わったら自分でLvを付ける: 0=ほぼ知らない／1=単語が出る／2=2枠は言える／3=4枠言える。Lv2以上の週は飛び級（深掘り週）になる。</p></div>
     ${LA_CARDS.map((c,i)=>{ const r=(P.cards||{})[c]||{}; return `<div class="lq${r.level!=null?' done':''}" data-card="${esc(c)}">${r.level!=null?'<div class="stmp">済</div>':''}<b>${i+1}／14</b><div class="qt">${esc(c)}</div>
       <textarea class="pl-text" placeholder="知ってることを、順番に。①歴史 ②今 ③産業 ④誰が得して誰が困る">${esc(r.text||'')}</textarea>
-      <div class="lqb"><button class="btn rec pl-rec">🎤 録音</button><span class="hint">${r.audio?'🎤あり ':''}${r.at?'保存 '+esc(String(r.at).slice(11,16)):''}</span></div>${VA['placement_'+(i+1)]&&VA['placement_'+(i+1)].text?`<div class="qn" style="margin-top:6px;font-size:12.5px;color:var(--text2)">🎤 文字起こし: ${esc(VA['placement_'+(i+1)].text)}</div>`:''}
+      <div class="lqb"><button class="btn rec pl-rec">🎤 録音</button><span class="hint">${r.at?'保存 '+esc(String(r.at).slice(11,16)):''}${r.audio?` ・ <span class="amark" data-atag="placement_${i+1}" data-adate="${esc(pl)}" data-adone="${VA['placement_'+(i+1)]&&VA['placement_'+(i+1)].text?'1':'0'}">🎤 確認中…</span>`:''}</span></div>${VA['placement_'+(i+1)]&&VA['placement_'+(i+1)].text?`<div class="qn" style="margin-top:6px;font-size:12.5px;color:var(--text2)">🎤 文字起こし: ${esc(VA['placement_'+(i+1)].text)}</div>`:''}
       <div class="ks" style="margin-top:6px">Lv: ${[0,1,2,3].map(v=>`<button data-lv="${v}" class="${r.level===v?'on':''}">${v} ${['知らない','単語が出る','2枠','4枠'][v]}</button>`).join('')}</div></div>`; }).join('')}
     <div class="lb"><button class="btn btn-primary" id="pl-done" ${doneN<14?'disabled':''}>配置テストを終える（14枚にLvを付けたら押せる）</button><span class="hint" style="font-size:12px;color:var(--text2);margin-left:8px">${P.done?'済 ・ 飛び級の判定は明朝の手紙で':''}</span></div>`;
   if(el.dataset.bound) return; el.dataset.bound='1';
@@ -5018,6 +5067,11 @@ async function renderPlacement(){
     const rc = e.target.closest('.pl-rec'); if(rc){ const card=rc.closest('.lq').dataset.card; laToggleRecTo(rc, `placement_${LA_CARDS.indexOf(card)+1}`, pl, async ()=>{ await laPut(pl, j=>{ j.placement=j.placement||{cards:{}}; j.placement.cards[card]=Object.assign(j.placement.cards[card]||{}, {audio:true, at:new Date().toISOString()}); }, `配置テスト 録音 ${card}`); renderPlacement(); }); return; }
     const dn = e.target.closest('#pl-done'); if(dn){ dn.disabled=true; try{ await laPut(pl, j=>{ j.placement=j.placement||{cards:{}}; j.placement.done=true; j.placement.done_at=new Date().toISOString(); }, '配置テスト 完了'); toast('配置テスト完了。飛び級の判定は明朝の手紙に出るのだ'); $('lp-place-btn').hidden=true; renderPlacement(); }catch(err){ toast('保存できなかった: '+err.message); dn.disabled=false; } }
   });
+}
+// 🎙️ 描画のあとに録音の印（📼待ち／✅文字になった）を実状態で埋める（2026-09-22）
+for (const fn of ['renderLearnToday','renderLearnTodayPaper','renderPlacement']) {
+  const orig = window[fn]; if (typeof orig !== 'function') continue;
+  window[fn] = function(...a){ const r = orig.apply(this, a); Promise.resolve(r).then(()=>laAudioMarks($('lp-today')), ()=>{}); Promise.resolve(r).then(()=>laAudioMarks($('lp-place')), ()=>{}); return r; };
 }
 // 録音の汎用版: ファイル名 inbox/audio/<ts>_quiz_<tag>.<ext>（Macの書き起こしが quiz_answers/<date>.json の answers[tag].text に足す）
 async function laToggleRecTo(btn, tag, date, after){
