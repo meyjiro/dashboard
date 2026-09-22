@@ -1357,7 +1357,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-21.9';
+const APP_VERSION = '2026-09-22.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4739,9 +4739,10 @@ function renderLearnTodayPaper(){
   const el = $('lp-today'); const qz = laQuiz; const {done,total} = laTestProgress();
   el.innerHTML = `<div class="lb" style="border-left:4px solid var(--pred,#a3402b)">${done>=total&&total>0?'<div class="stmp big">済</div>':''}<div class="lbh">🎓 ${esc(qz.mode==='easy'?'今日は軽い日':qz.mode==='sunday'?'日曜の出力':'朝の出力')} <span class="lbt">${esc(qz.date||'')} ・ ${done}/${total} 済</span></div>
     <p style="margin:6px 0 0;font-size:13.5px;color:var(--text2)">答案用紙を開いて、上から順に。①浅い${(qz.quick||[]).length}問（確信度→答え→自分で点）②深い${(qz.items||[]).length}問（文字か🎤）覚えたいことは投げ込みタブの「🧬 覚えたい」箱へ（夜の授業に課として出る）。30分。</p>
-    <div class="lqb" style="margin-top:10px;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" id="la-open-test">📝 答案用紙を開く</button><button class="btn" id="la-run-mode" title="問いを読み上げ→考える間→答えを読み上げ。イヤホンで走りながら">🏃 走りながら（音声）</button></div></div>`;
+    <div class="lqb" style="margin-top:10px;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" id="la-open-test">📝 答案用紙を開く</button><button class="btn" id="la-run-mode" title="走りながら道場（ずんだもんが読み上げ・番号を言って答える）を開く。旧モードはShift＋クリック">🏃 走りながら（音声）</button></div></div>`;
   $('la-open-test').addEventListener('click', ()=>{ laOpenReader(laTestHtml(qz, laDay, laScores), `朝の出力 ${qz.date||''}`); });
-  $('la-run-mode').addEventListener('click', ()=>laRunMode(qz));
+  // 2026-09-22 メグ「走りながらはこの形（道場）で」→ 読み上げ＋番号で答える道場を開く。旧モードは Shift+クリック で残す
+  $('la-run-mode').addEventListener('click', (e)=>{ if(e.shiftKey) return laRunMode(qz); window.open('https://meyjiro.github.io/barista-dojo/run/', '_blank'); });
 }
 // ── 🏃 走りながら（2026-09-21 メグ「ランニング中は暇。10問サクサク答えたい」。ゴッフルの「音声10問は過負荷」は本人が却下）──
 //    仕組み: 問いを読み上げ → 考える間（既定12秒・カウントダウン表示）→ 答えを読み上げ → 3秒 → 次。全部終わったら自己採点の一覧。
