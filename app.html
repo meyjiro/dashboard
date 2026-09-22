@@ -1357,7 +1357,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-22.3';
+const APP_VERSION = '2026-09-22.4';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4574,7 +4574,7 @@ function laStrip(rows){
 function renderLearnEntry(qz){
   const el = $('learn-entry'); if(!el) return;
   const n = qz ? ((qz.items||[]).length + (qz.quick||[]).length) : 0;
-  const lbl = !qz ? '今日の問いはまだ届いていない（9/21から毎朝9時）' : qz.mode==='easy' ? '今日は軽い日 ・ 浅い問いだけ' : qz.mode==='sunday' ? '日曜 ・ 白紙から地図＋Yパパ予測' : `今日の問い ${n}問 ・ 深い${(qz.items||[]).length}＋浅い${(qz.quick||[]).length}`;
+  const lbl = !qz ? '今日の問いはまだ届いていない（9/21から毎朝9時）' : qz.mode==='easy' ? '今日は軽い日 ・ 道場の10問だけ' : qz.mode==='sunday' ? '日曜 ・ 白紙から地図＋Yパパ予測' : `🏃 道場の10問 ＋ 🗣 深い${(qz.items||[]).length}問`;
   el.innerHTML = `<div class="lentry" id="learn-entry-btn"><div><div class="le1">🧬 カンブリア</div><div class="le2">${esc(lbl)}${qz&&qz.stairs?' ・ 📖 '+esc(qz.stairs.theme||'')+'の階段 第'+esc(String(qz.stairs.step||''))+'段':''}</div></div><div class="lego">開く →</div></div>`;
   $('learn-entry-btn').addEventListener('click', ()=>switchTab('learn'));
 }
