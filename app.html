@@ -1458,7 +1458,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-23.6';
+const APP_VERSION = '2026-09-25.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1648,7 +1648,7 @@ const OPS = [
     repo:'meyjiro/dashboard', path:'dojo/data.json', limit:1.2,
     read:t=>{ const j=JSON.parse(t); const c=(j.chapters||[]).find(x=>x.id===0); const m=c&&String(c.src||'').match(/^today:(\d{4}-\d{2}-\d{2})$/); return m?m[1]:null; },
     verify:t=>{ const j=JSON.parse(t); const c=(j.chapters||[]).find(x=>x.id===0); if(!c||!(c.quiz||[]).length) return '今日の10問が空';
-      const withQ=c.quiz.filter(q=>q.qid).length; if(withQ<Math.min(5,c.quiz.length)) return `朝の浅い問いから作られていない（${withQ}/${c.quiz.length}問）`;
+      /* 軽い日（浅い3問）は3問あればよい 2026-09-25 */ const withQ=c.quiz.filter(q=>q.qid).length; const p99=(j.chapters||[]).find(x=>x.id===99); const need=Math.min(5,c.quiz.length,(p99&&p99.src===`morning:${String(c.src).slice(6)}`)?(p99.quiz||[]).length:5); if(withQ<need) return `朝の浅い問いから作られていない（${withQ}/${c.quiz.length}問）`;
       const jst=new Date(Date.now()+9*3600e3); const today=jst.toISOString().slice(0,10); const d=String(c.src).slice(6);
       return (d!==today && (jst.getUTCHours()>7 || (jst.getUTCHours()===7 && jst.getUTCMinutes()>=30))) ? `今日の10問が${d}のまま` : null; } },
   // 🎓 2026-09-23 カンブリア作り替え: 世界図鑑（70マス）と「今日の一本道」の課の順番は 図鑑.json（Mac の morning-quiz 直後・夜の巡回の最後に zukan-build.py）。
