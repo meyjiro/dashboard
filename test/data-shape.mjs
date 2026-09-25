@@ -36,7 +36,7 @@ try {
       must(sl && [0, 1, 2, 3].includes(sl.level) && Array.isArray(sl.answers) && typeof sl.body === 'string', `図鑑.json: ${n} の枠${k} の形が違う（level 0〜3・answers[]・body）`);
     }
   }
-  must(Array.isArray(z.lessons) && z.lessons.every(x => x.key && x.title && names.includes(x.card) && x.slot >= 1 && x.slot <= 5 && Array.isArray(x.check)), '図鑑.json: lessons（一本道の課）に key/title/card/slot/check が無いものがある');
+  must(Array.isArray(z.lessons) && z.lessons.every(x => x.key && x.title && ['動画','基礎','学問','会社'].includes(x.lane) && (x.kind === 'html' ? x.path : (names.includes(x.card) && x.slot >= 1 && x.slot <= 5 && Array.isArray(x.check)))), '図鑑.json: lessons（道場の課）に key/title/lane、課なら card/slot/check、階段なら path が無いものがある');   // 2026-09-25 道場に一本化: lane（棚）と階段（kind:html）
   must(Array.isArray(z.stamps) && z.stamps.every(x => x.key && (x.score === null || [0, 1, 2, 3].includes(x.score))), '図鑑.json: stamps の形が違う');
   must(z.qindex && Object.values(z.qindex).every(v => Array.isArray(v) && names.includes(v[0]) && v[1] >= 1 && v[1] <= 5), '図鑑.json: qindex（問い→マス）の形が違う');
   must(z.stock && typeof z.stock.unread === 'number', '図鑑.json: stock.unread が無い');

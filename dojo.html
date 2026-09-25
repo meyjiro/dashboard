@@ -185,6 +185,41 @@ mark.ex{background:var(--ng-bg);color:var(--ng);font-weight:700;padding:1px 5px;
 .sd-card .bean{width:70px;float:right;margin:-6px 0 0 8px}
 .top .bean{width:34px;margin-right:2px}
 @media (prefers-reduced-motion:reduce){ .stamp.show{animation:none} .choice{transition:none} }
+/* 2026-09-25 道場に一本化（課・説明・図鑑） */
+.sec{display:flex;align-items:baseline;gap:8px;margin:22px 0 8px;font-size:16px;font-weight:900}
+.sec .muted{font-weight:400}
+.lane-h{display:flex;align-items:center;gap:8px;margin:20px 0 8px}
+.lane-h h3{font-size:17px;font-weight:900} .lane-h .muted{margin-left:auto}
+.chap .badge.read{background:var(--ok-bg);color:var(--ok);font-weight:700}
+.ta{width:100%;font:inherit;font-size:16px;line-height:1.7;padding:10px 12px;border-radius:12px;border:2px solid var(--line);background:var(--paper);color:var(--ink);min-height:110px;resize:vertical}
+.inp{width:100%;font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:2px solid var(--line);background:var(--paper);color:var(--ink)}
+.deep-q{font-size:17px;font-weight:700;line-height:1.6;margin:4px 0 6px;font-family:"Zen Maru Gothic","Noto Sans JP",sans-serif}
+.note{font-size:13px;color:var(--ink2);margin:0 0 10px}
+.mine{background:var(--bg);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:15px}
+.mine small{display:block;color:var(--ink2);font-size:12px}
+.scored{display:flex;gap:12px;align-items:center;margin-top:8px}
+.scored img{width:64px;height:64px;object-fit:contain}
+.scored .num{font-size:28px;font-weight:600}
+.stamps{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px}
+.stamps .s{aspect-ratio:1;border-radius:12px;border:1.5px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--ink2);overflow:hidden}
+.stamps .s.on{border:1.5px solid var(--gold);background:var(--paper)} .stamps .s img{width:92%;height:92%;object-fit:contain}
+.back{font-size:14px;color:var(--accent);font-weight:700;padding:10px 0;display:inline-block}
+.zk{display:grid;grid-template-columns:minmax(92px,1.4fr) repeat(5,1fr);gap:4px;align-items:center;font-size:12px}
+.zk .gh{text-align:center;color:var(--ink2);font-size:11px}
+.zk .gn{text-align:left;font-size:12.5px;font-weight:700;padding:4px 2px;line-height:1.3}
+.zk .gc{height:30px;border-radius:8px}
+.lv0{background:var(--line)} .lv1{background:#cfe6dc} .lv2{background:#6fb89a} .lv3{background:var(--accent)}
+:root[data-theme="dark"] .lv1{background:#28453a} @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .lv1{background:#28453a} }
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin:8px 0}
+.legend b{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:4px}
+.slot{margin:10px 0}
+.slot .sh{display:flex;align-items:center;gap:8px;font-weight:700}
+.slot .sh .lvb{margin-left:auto;font-size:12px;padding:2px 9px;border-radius:999px;color:#fff}
+.fact{font-size:14px;margin-top:6px} .fact summary{cursor:pointer;color:var(--ink2)} .fact ul{padding-left:18px;margin:6px 0}
+.vid .meta{font-size:13px;color:var(--ink2)}
+.vid h3{font-size:17px;margin:18px 0 6px;padding-left:10px;border-left:4px solid var(--gold)}
+.vid ul{padding-left:20px;margin:6px 0} .vid li{margin:4px 0}
+.lesson .fig svg{min-width:0}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -192,7 +227,9 @@ mark.ex{background:var(--ng-bg);color:var(--ng);font-weight:700;padding:1px 5px;
 <div class="wrap" id="app"></div>
 <div class="stamp" id="stamp"></div>
 <nav class="tabs" id="tabs" hidden>
-  <button data-tab="home"><span class="ic">🏃</span>道場</button>
+  <button data-tab="home"><span class="ic">🏃</span>今日</button>
+  <button data-tab="learn"><span class="ic">📖</span>課</button>
+  <button data-tab="zukan"><span class="ic">🗺️</span>図鑑</button>
   <button data-tab="stats"><span class="ic">📈</span>成績</button>
 </nav>
 <script>
@@ -411,10 +448,14 @@ function chapterScore(ch){ const m = mastery(); let ok=0, n=0; const c = DATA.ch
 function setTab(t){ TAB = t; VIEW = null; stopSpeak(); [...tabs.querySelectorAll('button')].forEach(b => b.classList.toggle('on', b.dataset.tab===t)); render(); window.scrollTo(0,0); }
 tabs.addEventListener('click', e => { const b = e.target.closest('button'); if(b) setTab(b.dataset.tab); });
 
-function header(){ return `<div class="top"><a href="./#learn" style="text-decoration:none;color:var(--ink2);font-size:13px;margin-right:6px">‹ 戻る</a><img class="bean" src="dojo/img/bean_smile.png" alt=""><h1>${esc(DATA.title)}${TEST?' <span class="pill" style="vertical-align:middle">テスト用</span>':''}</h1><div class="sub">${esc(DATA.sub)}<br>本番: ${DATA.exam.questions}問・${DATA.exam.minutes}分・${DATA.exam.pass}%合格</div></div>`; }
+function header(){ return `<div class="top"><a href="./" style="text-decoration:none;color:var(--ink2);font-size:13px;margin-right:6px">‹ ダッシュボード</a><img class="bean" src="dojo/img/bean_smile.png" alt=""><h1>${esc(DATA.title)}${TEST?' <span class="pill" style="vertical-align:middle">テスト用</span>':''}</h1><div class="sub">今日の10問・課・図鑑</div></div>`; }
 
 function render(){
-  if(TAB==='home') return VIEW && VIEW.type==='run' ? null : renderHome();
+  if(VIEW && VIEW.type==='run') return null;
+  if(VIEW && LV_VIEWS[VIEW.type]) return LV_VIEWS[VIEW.type]();
+  if(TAB==='home') return renderHome();
+  if(TAB==='learn') return renderLearn();
+  if(TAB==='zukan') return renderZukan();
   if(TAB==='stats') return renderStats();
 }
 function todayRuns(){ const t = today(); return S.get('history', []).filter(h => (h.at||'').slice(0,10)===t); }
@@ -435,7 +476,7 @@ function renderHome(){
   </div>
   <div class="opts" style="margin-top:14px"><button id="v-on" class="${voiceOn?'on':''}">🔊 読み上げ</button><button id="v-off" class="${!voiceOn?'on':''}">🔇</button><button id="m-on" class="${micOn?'on':''}" ${SR?'':'disabled'}>🎤 声で答える</button><button id="m-off" class="${!micOn?'on':''}">🎤 OFF</button></div>
   <p class="muted" style="margin:0 0 6px">${SR ? '🎧 イヤホンで。読み上げの途中でも「1」「2」「3」「4」と言えば答えになる。' : 'このブラウザは音声認識に対応していない（iPhoneはSafariで）'}</p>
-  <h3 style="margin:18px 0 8px;font-size:15px">📚 読んだ課で練習（${lessons.length}課）</h3>
+  ${homeLearnHtml()}<h3 style="margin:22px 0 8px;font-size:15px">📚 読んだ課ごとに練習（${lessons.length}課）</h3>
   <div class="grid">${lessons.map(c => { const sc = chapterScore(c.id); return `<button class="chap" data-ch="${c.id}"><span class="em">${c.emoji}</span><span><span class="t">${esc(c.title)}</span><br><span class="m">${esc((c.lead||'').replace(/[*=\[\]]/g,'').slice(0,40))}</span></span><span class="badge ${sc.ok===c.quiz.length&&sc.n?'gold':sc.n?'ok':''}">${sc.n?`${sc.ok}/${c.quiz.length}`:'—'}</span></button>`; }).join('') || '<p class="muted">課を「済」にすると翌朝ここに増える</p>'}</div>
   <p class="muted" style="margin-top:14px">🎧 声: 問題＝ずんだもん。結果はずんだもん／冥鳴ひまり。（VOICEVOX:ずんだもん／VOICEVOX:冥鳴ひまり）</p>`;
   const g = app.querySelector('#go-today'); if(g) g.onclick = () => startRun({ mode:'chapter', ch:0 });
@@ -444,7 +485,8 @@ function renderHome(){
   app.querySelector('#m-on').onclick = () => { micOn = true; S.set('mic', true); voiceOn = true; S.set('voice', true); renderHome(); };
   app.querySelector('#m-off').onclick = () => { micOn = false; S.set('mic', false); renderHome(); };
   app.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => startRun({ mode:b.dataset.mode }));
-  app.querySelectorAll('.chap').forEach(b => b.onclick = () => startDialog({ mode:'chapter', ch:+b.dataset.ch }, DATA.chapters.find(c=>c.id===+b.dataset.ch)));
+  app.querySelectorAll('.chap[data-ch]').forEach(b => b.onclick = () => startDialog({ mode:'chapter', ch:+b.dataset.ch }, DATA.chapters.find(c=>c.id===+b.dataset.ch)));
+  bindLearn();
 }
 /* ========== 開始前の設定画面（教科書から入るとき） ========== */
 function startDialog(opt, c){
@@ -583,12 +625,254 @@ function renderStats(){
   app.querySelector('#reset').onclick = () => { if(confirm('成績と記録を全部消す？（クラウドの分も消える）')){ S._quiet = true; S.set('history', []); S.set('mastery', {}); S.set('read', {}); S._quiet = false; syncPush(); renderStats(); } };
 }
 
+/* ========== 課・説明する1問・図鑑（2026-09-25 カンブリアを道場に一本化） ==========
+   メグ「道場のデザインが良かった。全部それに。カンブリアって名前やめて、道場に一本化して」
+   棚は4つ: 📺動画（Yパパ・太郎）／🌏基礎（世界・経済）／🔭学問（宇宙→物理→量子）／🏢会社（自分で頼んだ会社だけ）
+   データは claude-context（非公開）を GitHub API で読む。鍵はダッシュボードと同じ localStorage の gh_pat（同じ github.io なので共有される）
+   書くのは inbox/quiz_answers/<JSTの日付>.json（読んだ課・説明の答え）と inbox/queue（会社を頼む）だけ。仕様: knowledge/学習/学習OS.md */
+const GH = { repo:'meyjiro/claude-context', branch:'main' };
+const PAT = (() => { try{ return localStorage.getItem('gh_pat') || ''; }catch(e){ return ''; } })();
+const ghp = p => encodeURIComponent(p).replace(/%2F/g, '/');
+const ghEnc = t => btoa(unescape(encodeURIComponent(t)));
+const ghDec = b => decodeURIComponent(escape(atob(String(b).replace(/\n/g, ''))));
+async function ghApi(path, method, body, raw){
+  const o = { method: method||'GET', cache:'no-store', headers:{ Authorization:'token '+PAT, Accept: raw ? 'application/vnd.github.raw' : 'application/vnd.github.v3+json' } };
+  if(body){ o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(body); }
+  const r = await fetch('https://api.github.com' + path, o);
+  if(r.status === 404) return null;
+  if(!r.ok) throw new Error('GitHub ' + r.status);
+  return raw ? r.text() : r.json();
+}
+const ghText = (path, repo) => PAT ? ghApi(`/repos/${repo||GH.repo}/contents/${ghp(path)}`, 'GET', null, true).catch(() => null) : Promise.resolve(null);
+const ghJson = async (path, repo) => { const t = await ghText(path, repo); try{ return t ? JSON.parse(t) : null; }catch(e){ return null; } };
+const ghList = async (path, repo) => { if(!PAT) return []; const r = await ghApi(`/repos/${repo||GH.repo}/contents/${ghp(path)}`).catch(() => null); return Array.isArray(r) ? r : []; };
+async function ghPut(path, mutate, message){   // JSON を読み→直し→書く（同時に書かれたら1回だけやり直す）
+  for(let a=0; a<2; a++){
+    const f = await ghApi(`/repos/${GH.repo}/contents/${ghp(path)}?ref=${GH.branch}`);
+    let j = {}; if(f && f.content != null){ try{ j = JSON.parse(ghDec(f.content)); }catch(e){} }
+    mutate(j); j.at = new Date().toISOString();
+    try{ await ghApi(`/repos/${GH.repo}/contents/${ghp(path)}`, 'PUT', { message, content: ghEnc(JSON.stringify(j, null, 1)), branch: GH.branch, ...(f ? { sha: f.sha } : {}) }); return j; }
+    catch(e){ if(a===1 || !/409|422/.test(e.message)) throw e; }
+  }
+}
+const jst = () => new Date().toLocaleDateString('sv-SE', { timeZone:'Asia/Tokyo' });
+const md2 = d => { const m = String(d||'').match(/(\d{4})-?(\d{2})-?(\d{2})/); return m ? `${+m[2]}/${+m[3]}` : ''; };
+
+const LANES = [
+  { k:'動画', ic:'📺', d:'Yパパ・太郎の話。問いは今日の10問に混ざる' },
+  { k:'基礎', ic:'🌏', d:'世界と経済の土台。動画の話がわかるための地図' },
+  { k:'学問', ic:'🔭', d:'宇宙 → 物理 → 量子を順番に' },
+  { k:'会社', ic:'🏢', d:'自分で選んだ会社だけ深掘り' } ];
+const laneIc = k => (LANES.find(l => l.k===k) || {}).ic || '📘';
+function laneOf(x){ if(x.lane) return x.lane; const k = String(x.key||''); if(k.startsWith('stairs:') || x.track==='B') return '学問'; if(x.track==='K' || /教科書\/K\//.test(k)) return '会社'; return '基礎'; }
+const SLOT = {1:'歴史', 2:'今', 3:'産業', 4:'損得', 5:'ニュース'};
+const LVN = ['まだ', '見た', '思い出せる', '説明できる'];
+
+let L = { loaded:false, loading:null, zk:null, quiz:null, day:null, read:{}, scores:[], stamps:null, videos:[] };
+function learnLoad(){
+  if(L.loading) return L.loading;
+  if(!PAT){ L.loaded = true; return Promise.resolve(); }
+  L.loading = (async () => {
+    const days = []; for(let i=6; i>=0; i--) days.push(new Date(Date.now()-i*864e5).toLocaleDateString('sv-SE', { timeZone:'Asia/Tokyo' }));
+    const [zk, mj, sc, st, ...ds] = await Promise.all([
+      ghJson('knowledge/学習/図鑑.json'), ghJson('inbox/morning.json'),
+      ghText('knowledge/学習/成績.jsonl').then(t => (t||'').trim().split('\n').filter(Boolean).map(l => { try{ return JSON.parse(l); }catch(e){ return null; } }).filter(Boolean)),
+      fetch('img/stamps/stamps.json').then(r => r.ok ? r.json() : null).catch(() => null),
+      ...days.map(d => ghJson(`inbox/quiz_answers/${d}.json`)) ]);
+    L.zk = zk; L.quiz = (mj && mj.quiz) || null; L.scores = sc || []; L.stamps = st;
+    L.read = {}; ds.forEach(j => { if(j && j.lessons) Object.assign(L.read, j.lessons); });
+    const qd = (L.quiz && L.quiz.date) || jst(); L.day = ds[days.indexOf(qd)] || await ghJson(`inbox/quiz_answers/${qd}.json`) || {};
+    L.loaded = true;
+    // 動画は後から（索引 cards/index.jsonl が 800KB ある）。Yパパ・太郎の本編だけ、新しい順
+    ghText('cards/index.jsonl', 'meyjiro/toushi-data').then(t => {
+      L.videos = String(t||'').split('\n').map(l => { try{ return JSON.parse(l); }catch(e){ return null; } })
+        .filter(v => v && (v.ch==='ypapa' || v.ch==='monozukuri') && v.vid && v.date)
+        .map(v => ({ ch:v.ch, title:v.title, date:String(v.date), path:`cards/${v.ch}/${v.date}_${v.vid}.md` }))
+        .sort((a,b) => b.date.localeCompare(a.date));
+      if(!VIEW && (TAB==='learn' || TAB==='home')) render(); });
+  })().catch(e => { L.err = e.message; L.loaded = true; });
+  return L.loading;
+}
+function allLessons(){ const z = L.zk || {}; const seen = new Set(); return (z.lessons||[]).concat(z.stories||[]).filter(x => x && x.key && !seen.has(x.key) && seen.add(x.key)); }
+function isRead(x){ const r = L.read[x.key] || (x.path && L.read[x.path]); return !!((r && r.done) || x.read); }
+function nextIn(lane){ return allLessons().find(x => laneOf(x)===lane && !isRead(x) && x.kind!=='html'); }
+function stampSrc(score, seed){ const cfg = L.stamps || {}; const list = score==null ? (cfg.extra||[]) : ((cfg.score||{})[String(score)]||[]); if(!list.length) return ''; let h = 0; for(const c of String(seed)) h = (h*31 + c.charCodeAt(0)) >>> 0; return `img/stamps/${list[h % list.length]}.png`; }
+function stampList(){ const base = ((L.zk && L.zk.stamps)||[]).map(s => Object.assign({}, s)); const keys = new Set(base.map(s => s.key));
+  Object.entries(L.read).sort((a,b) => String(a[1]&&a[1].at).localeCompare(String(b[1]&&b[1].at))).forEach(([k,v]) => { if(!v || !v.done || keys.has(k) || (v.path && keys.has(v.path))) return; base.push({ key:k, date:jst(), score: v.skip ? 3 : null }); keys.add(k); });
+  return base; }
+function deepItem(){ const it = (L.quiz && L.quiz.items) || []; const ans = (L.day && L.day.answers) || {}; return it.find(x => !(ans[x.id] && (ans[x.id].text || ans[x.id].audio))) || it[0] || null; }
+
+/* ── 今日タブに差し込む部分 */
+function homeLearnHtml(){
+  if(!PAT) return `<div class="card" style="margin-top:18px"><b>📖 課・説明する1問・図鑑</b><p class="muted" style="margin:6px 0 0">この端末ではまだ読めない。<a href="./">ダッシュボード</a>を一度開いてから戻ると出る。</p></div>`;
+  if(!L.loaded){ learnLoad().then(() => { if(!VIEW && TAB==='home') render(); }); return `<p class="muted" style="margin-top:18px">📖 課と説明する1問を読み込み中…</p>`; }
+  const picks = ['基礎','学問','会社'].map(nextIn).filter(Boolean);
+  const v = L.videos[0];
+  const pickH = picks.map(x => lessonRow(x)).join('') + (v ? `<button class="chap" data-video="${esc(v.path)}"><span class="em">📺</span><span><span class="t">${esc(vTitle(v))}</span><br><span class="m">${v.ch==='ypapa'?'Yパパ':'ものづくり太郎'} ・ ${md2(v.date)} ・ 問いは10問に混ざる</span></span><span class="badge">見る</span></button>` : '');
+  const it = deepItem(); let deep = '';
+  if(it){
+    const qd = (L.quiz && L.quiz.date) || jst(); const a = ((L.day && L.day.answers) || {})[it.id]; const sc = L.scores.find(r => r.id===it.id && r.date===qd && r.score!=null);
+    deep = `<div class="deep-q">${esc(it.text||'')}</div>${it.note ? `<p class="note">${esc(it.note)}</p>` : ''}`;
+    if(sc) deep += `<div class="mine"><small>自分の答え</small>${esc((a&&a.text) || sc.answer || '')}</div><div class="scored">${stampSrc(sc.score, it.id+':'+qd) ? `<img src="${stampSrc(sc.score, it.id+':'+qd)}" alt="">` : ''}<div><span class="num">${sc.score}</span> / 3${sc.miss ? `<div class="muted">抜け: ${esc(sc.miss)}</div>` : ''}</div></div>`;
+    else if(a && (a.text || a.audio) && !L.editDeep) deep += `<div class="mine"><small>自分の答え</small>${a.text ? esc(a.text) : '🎤 録音'}</div><p class="muted">夜に採点が付く</p><button class="btn sub" id="deep-edit">書き直す</button>`;
+    else deep += `<textarea class="ta" id="deep-ta" placeholder="30秒でちょっちに説明するつもりで。話し言葉でいい">${esc((a&&a.text)||'')}</textarea><div class="row" style="margin-top:10px"><button class="btn" id="deep-save" data-id="${esc(it.id)}">保存</button></div>`;
+  } else deep = `<p class="muted">今日の問いはまだ届いていない</p>`;
+  const Ls = stampList(); const n = Ls.length; const no = n ? Math.floor((n-1)/20)+1 : 1; const cur = Ls.slice((no-1)*20);
+  const cells = Array.from({ length:20 }, (_, i) => { const s = cur[i]; const src = s && stampSrc(s.score, s.key+':'+s.date); return s ? `<div class="s on">${src ? `<img src="${src}" alt="">` : '✓'}</div>` : `<div class="s">${i+1}</div>`; }).join('');
+  return `<div class="sec">📖 今日の1課 <span class="muted">好きなのを1つ・何課でも</span></div><div class="grid">${pickH || '<p class="muted">次の課を用意している</p>'}</div>
+    <button class="btn sub" data-go="learn" style="margin-top:10px">課の棚を全部見る →</button>
+    <div class="sec">🗣 説明する1問</div><div class="card">${deep}</div>
+    <div class="sec">🎖 スタンプカード <span class="muted">No.${no} ・ 課を1つ読むと1個</span></div><div class="card"><div class="stamps">${cells}</div></div>`;
+}
+function lessonRow(x){
+  const r = isRead(x); const lane = laneOf(x);
+  return `<button class="chap" data-lesson="${esc(x.key)}"><span class="em">${laneIc(lane)}</span><span><span class="t">${esc(x.title||x.key)}</span><br><span class="m">${esc(lane)}${x.card ? ' ・ '+esc(x.card) : ''}${x.minutes ? ` ・ ${esc(String(x.minutes))}分` : ''}</span></span><span class="badge ${r?'read':''}">${r ? '読んだ' : '読む'}</span></button>`;
+}
+function vTitle(v){ return v.title || ((v.ch==='ypapa'?'Yパパ':'ものづくり太郎') + ' ' + md2(v.date)); }
+
+/* ── 課タブ（4つの棚） */
+function renderLearn(){
+  if(!PAT){ app.innerHTML = header() + homeLearnHtml(); return; }
+  if(!L.loaded){ app.innerHTML = header() + '<p class="muted">読み込み中…</p>'; learnLoad().then(() => { if(!VIEW && TAB==='learn') render(); }); return; }
+  const ls = allLessons();
+  const sec = LANES.map(ln => {
+    let rows = '';
+    if(ln.k === '動画'){ rows = L.videos.slice(0, 14).map(v => `<button class="chap" data-video="${esc(v.path)}"><span class="em">${v.ch==='ypapa'?'🎙️':'🏭'}</span><span><span class="t">${esc(v.title || (v.ch==='ypapa'?'Yパパ':'ものづくり太郎')+' '+md2(v.date))}</span><br><span class="m">${v.ch==='ypapa'?'Yパパ':'ものづくり太郎'} ・ ${md2(v.date)}</span></span><span class="badge">見る</span></button>`).join('') || '<p class="muted">読み込み中…</p>'; }
+    else { const xs = ls.filter(x => laneOf(x)===ln.k); rows = xs.map(x => x.kind==='html' ? `<button class="chap" data-html="${esc(x.path)}"><span class="em">${ln.ic}</span><span><span class="t">${esc(x.title||x.key)}</span><br><span class="m">${esc(ln.k)}</span></span><span class="badge">読む</span></button>` : lessonRow(x)).join('') || '<p class="muted">まだ無い</p>'; }
+    const extra = ln.k === '会社' ? `<div class="card" style="margin-top:10px"><b>🏢 調べたい会社を頼む</b><p class="muted" style="margin:4px 0 8px">名前を入れると、その会社だけ深掘りの課になる（細かい数字は覚えさせない）</p><input class="inp" id="co-name" placeholder="例: 東京エレクトロン"><button class="btn" id="co-send" style="margin-top:8px">頼む</button></div>` : '';
+    const read = ln.k==='動画' ? '' : `${ls.filter(x => laneOf(x)===ln.k && isRead(x)).length} / ${ls.filter(x => laneOf(x)===ln.k).length}`;
+    return `<div class="lane-h"><span style="font-size:24px">${ln.ic}</span><h3>${esc(ln.k)}</h3><span class="muted num">${read}</span></div><p class="muted" style="margin:-4px 0 8px">${esc(ln.d)}</p><div class="grid">${rows}</div>${extra}`;
+  }).join('');
+  app.innerHTML = header() + sec;
+  bindLearn();
+}
+
+/* ── 課を読む */
+const inl = t => esc(t).replace(/\*\*(.+?)\*\*/g, '<span class="hl">$1</span>').replace(/\[\[(.+?)\]\]/g, '<span class="nb">$1</span>').replace(/\{\{(.+?)\}\}/g, '<b>$1</b>').replace(/\(\((.+?)\)\)/g, ' <span class="muted">← $1</span>');
+async function openLesson(key){
+  const x = allLessons().find(y => y.key===key) || { key };
+  let path = x.path; if(!path){ const m = String(key).match(/^([A-Z])(\d+)$/); if(m) path = `knowledge/学習/教科書/${m[1]}/${String(m[2]).padStart(2,'0')}.json`; }
+  app.innerHTML = header() + '<p class="muted">読み込み中…</p>';
+  const J = path ? await ghJson(path) : null; if(!J){ app.innerHTML = header() + '<p class="muted">この課はまだ書かれていない</p><button class="back" data-back>‹ 戻る</button>'; bindLearn(); return; }
+  J.key = key; J.lane = laneOf(x); VIEW = { type:'lesson', L:J, x }; render(); window.scrollTo(0,0);
+}
+function viewLesson(){
+  const J = VIEW.L, x = VIEW.x; const sv = L.read[J.key] || (x.path && L.read[x.path]) || {};
+  const fig = f => !f ? '' : f.svg ? `<div class="fig">${f.svg}${f.cap ? `<div class="cap">${esc(f.cap)}</div>` : ''}</div>` : '';
+  const terms = (J.cue||[]).filter(c => c.t==='term');
+  app.innerHTML = header() + `<button class="back" data-back>‹ 戻る</button><div class="lesson">
+    <span class="pill on">${laneIc(J.lane)} ${esc(J.lane)}</span>${J.card ? ` <span class="pill">${esc(J.card)}</span>` : ''} <span class="muted">${esc(String(J.minutes||8))}分</span>
+    <h2>${esc(J.title||'')}</h2><p class="lead">${inl(J.aim||'')}</p>
+    ${sv.done ? '' : `<button class="btn sub" id="knows">もう知ってる（3問で確かめて飛ばす）</button>`}
+    ${(J.pretest||[]).length ? `<div class="co tip"><span class="ci">🤔</span><div><b>読む前に考える（外れてOK）</b>${J.pretest.map(p => inl(p)).join('<br>')}</div></div>` : ''}
+    ${(J.sections||[]).map(sc => `<h3>${esc(sc.h||'')}</h3>${(sc.p||[]).map(p => `<p>${inl(p)}</p>`).join('')}${fig(sc.fig)}${(sc.figs||[]).map(fig).join('')}`).join('')}
+    ${terms.length ? `<h3>ことば</h3><div class="terms">${terms.map(c => `<div class="term"><b>${esc(c.h)}</b>　${inl(c.b)}</div>`).join('')}</div>` : ''}
+    <div class="keys"><h4>覚える3行</h4><ol>${(J.summary||[]).map(s => `<li>${inl(s)}</li>`).join('')}</ol></div>
+    <div class="card"><b>自分の3行</b><p class="muted" style="margin:2px 0 6px">自分の言葉で。写さない</p><textarea class="ta" id="my3">${esc(sv.my3||'')}</textarea>
+      <p class="muted" style="margin:10px 0 4px">明日の自分に出す問いを1つ（なくてもいい）</p><input class="inp" id="myq" value="${esc(sv.myq||'')}">
+      <button class="btn" id="done" style="margin-top:12px" ${sv.done ? 'disabled' : ''}>${sv.done ? 'この課は読んだ' : '読んだ → スタンプ +1'}</button><p class="muted" id="done-st"></p></div>
+    ${J.sources ? `<p class="muted">出典: ${esc(J.sources)}</p>` : ''}</div>`;
+  bindLearn();
+}
+function lessonQid(J, i){ const q = (J.quick||[])[i] || {}; if(q.id) return q.id; return /^[ABCK]$/.test(J.track) && typeof J.no === 'number' ? `${J.track}${J.no}-q${i+1}` : `${J.key}#q${i+1}`; }
+async function saveLessonDone(J, extra){
+  const x = VIEW && VIEW.x || {}; const key = x.path && /\//.test(x.key) ? x.key : J.key;
+  const rec = Object.assign({ track:J.track, no:J.no, done:true, at:new Date().toISOString() }, extra); if(String(key).includes('/')) rec.path = key;
+  await ghPut(`inbox/quiz_answers/${jst()}.json`, j => { j.date = j.date || jst(); j.lessons = j.lessons || {}; j.lessons[key] = rec; if(extra && extra.self){ j.self = Object.assign(j.self||{}, extra.self); delete rec.self; } }, `課を読んだ ${key}`);
+  L.read[key] = rec;
+}
+function viewKnows(){
+  const J = VIEW.L; const qs = (J.quick||[]).slice(0,3); const i = VIEW.i||0;
+  if(i >= qs.length){ const ok = VIEW.ok||0;
+    app.innerHTML = header() + `<button class="back" data-back>‹ 戻る</button><div class="card" style="text-align:center"><h2 style="font-size:22px;font-weight:900">${ok===qs.length ? '全部言えた' : `${ok} / ${qs.length} 言えた`}</h2>
+      <p class="muted">${ok===qs.length ? '課を読んだことにして、スタンプを押した' : '1つでも「まだ」なら、読んでおくのがおすすめ'}</p>
+      <button class="btn" data-lesson="${esc(J.key)}">${ok===qs.length ? '課の棚に戻る' : '課を読む'}</button></div>`;
+    if(ok===qs.length && !VIEW.saved){ VIEW.saved = true; const self = {}; qs.forEach((_, k) => self[lessonQid(J,k)] = 3); saveLessonDone(J, { skip:true, self }).catch(e => alert('保存できなかった: '+e.message)); }
+    const b = app.querySelector('[data-lesson]'); b.onclick = () => { if(ok===qs.length){ VIEW = null; setTab('learn'); } else { VIEW = { type:'lesson', L:J, x:VIEW.x }; render(); } };
+    app.querySelector('[data-back]').onclick = () => { VIEW = null; render(); }; return; }
+  const q = qs[i];
+  app.innerHTML = header() + `<button class="back" data-back>‹ 戻る</button><div class="qtop"><span class="num">${i+1} / ${qs.length}</span><div class="bar"><i style="width:${i/qs.length*100}%"></i></div></div>
+    <div class="q">${esc(q.q || q.text || '')}</div>${VIEW.show ? `<div class="fb ok"><b>答え</b>${esc(q.a || q.answer_key || q.answer || '')}</div><div class="row"><button class="btn sub" id="k-no">まだ</button><button class="btn" id="k-ok">言えた</button></div>` : `<button class="btn" id="k-show">答えを見る</button>`}`;
+  const nx = ok => { VIEW.i = i+1; VIEW.show = false; VIEW.ok = (VIEW.ok||0) + (ok?1:0); render(); };
+  const sh = app.querySelector('#k-show'); if(sh) sh.onclick = () => { VIEW.show = true; render(); };
+  const ko = app.querySelector('#k-ok'); if(ko) ko.onclick = () => nx(true);
+  const kn = app.querySelector('#k-no'); if(kn) kn.onclick = () => nx(false);
+  app.querySelector('[data-back]').onclick = () => { VIEW = { type:'lesson', L:J, x:VIEW.x }; render(); };
+}
+
+/* ── 動画のまとめを読む（toushi-data/cards/*.md） */
+function mdLite(src){ let out = '', inL = false; for(let l of String(src).split('\n')){ const li = l.match(/^\s*[-*・]\s+(.*)$/);
+  if(li){ if(!inL){ out += '<ul>'; inL = true; } out += `<li>${inl(li[1])}</li>`; continue; } if(inL){ out += '</ul>'; inL = false; }
+  const h = l.match(/^#{1,4}\s+(.*)$/); if(h) out += `<h3>${esc(h[1])}</h3>`; else if(l.trim()) out += `<p>${inl(l)}</p>`; } if(inL) out += '</ul>'; return out; }
+async function openVideo(path){
+  app.innerHTML = header() + '<p class="muted">読み込み中…</p>';
+  const t = await ghText(path, 'meyjiro/toushi-data'); if(!t){ app.innerHTML = header() + '<p class="muted">読めなかった</p><button class="back" data-back>‹ 戻る</button>'; bindLearn(); return; }
+  const fm = {}; let body = t; const m = t.match(/^---\n([\s\S]*?)\n---\n?/); if(m){ body = t.slice(m[0].length); m[1].split('\n').forEach(l => { const k = l.match(/^(\w+):\s*(.*)$/); if(k) fm[k[1]] = k[2].replace(/^"|"$/g, ''); }); }
+  VIEW = { type:'video', fm, body }; render(); window.scrollTo(0,0);
+}
+function viewVideo(){ const { fm, body } = VIEW;
+  app.innerHTML = header() + `<button class="back" data-back>‹ 戻る</button><div class="vid"><span class="pill on">📺 動画</span> <span class="pill">${fm.channel==='ypapa'?'Yパパ':fm.channel==='monozukuri'?'ものづくり太郎':esc(fm.channel||'')}</span>
+    <h2 style="font-size:22px;font-weight:900;margin:8px 0 4px">${esc(fm.title||'')}</h2><p class="meta">${md2(fm.date)}${fm.url ? ` ・ <a href="${esc(fm.url)}" target="_blank" rel="noopener">YouTubeで見る</a>` : ''}</p>
+    <div class="co tip"><span class="ci">💡</span><div><b>この回の問い</b>根本の考え方だけを問いにして、今日の10問に混ぜる（細かい数字は出さない）</div></div>${mdLite(body)}</div>`;
+  bindLearn(); }
+
+/* ── 図鑑タブ（14枚×5枠） */
+function renderZukan(){
+  if(!PAT){ app.innerHTML = header() + homeLearnHtml(); return; }
+  if(!L.loaded){ app.innerHTML = header() + '<p class="muted">読み込み中…</p>'; learnLoad().then(() => { if(!VIEW && TAB==='zukan') render(); }); return; }
+  const z = L.zk; if(!z || !z.cards){ app.innerHTML = header() + '<p class="muted">図鑑のデータがまだ無い</p>'; return; }
+  const colored = 70 - (+((z.counts||{})['0'])||0);
+  const rows = (z.order||Object.keys(z.cards)).map(c => { const C = z.cards[c]; if(!C) return ''; return `<button class="gn" data-card="${esc(c)}">${esc(c)}</button>${[1,2,3,4,5].map(s => `<button class="gc lv${(C.slots[String(s)]||{}).level||0}" data-card="${esc(c)}" aria-label="${esc(c+' '+SLOT[s])}"></button>`).join('')}`; }).join('');
+  app.innerHTML = header() + `<div class="card"><div style="display:flex;align-items:baseline;gap:8px"><h2 style="font-size:20px;font-weight:900">🗺️ 図鑑</h2><span class="muted" style="margin-left:auto">色の付いたマス <span class="num" style="font-size:22px;color:var(--ink)">${colored}</span> / 70</span></div>
+    <div class="legend">${[0,1,2,3].map(l => `<span><b class="lv${l}"></b>${LVN[l]}</span>`).join('')}</div>
+    <div class="zk"><div></div>${[1,2,3,4,5].map(s => `<div class="gh">${SLOT[s]}</div>`).join('')}${rows}</div>
+    <p class="muted" style="margin:10px 0 0">見た＝課を読んだ・問いに触れた ／ 思い出せる＝2点以上 ／ 説明できる＝別の日に3点を2回</p></div>
+    <a class="btn sub" href="world.html" style="margin-top:12px;text-decoration:none">🌍 世界地図で見る</a>`;
+  app.querySelectorAll('[data-card]').forEach(b => b.onclick = () => { VIEW = { type:'card', name:b.dataset.card }; render(); window.scrollTo(0,0); });
+}
+function viewCard(){
+  const name = VIEW.name; const C = L.zk.cards[name]; const ls = allLessons();
+  const lvc = ['var(--ink2)', '#6fa58c', '#3e8e6c', 'var(--accent)'];
+  const slots = [1,2,3,4,5].map(s => { const S = C.slots[String(s)]||{}; const lv = S.level||0; const body = String(S.body||'').replace(/[🔴🟢🟡🟠]\s*/gu, '').trim();
+    const first = (body.split('\n').find(l => l.trim() && !/^（/.test(l.trim()))||'').replace(/^\s*(?:[-・]|\d+\.)\s*/, '').replace(/\*\*/g, '');
+    const mine = (S.answers||[]).map(x => `<div class="mine"><small>${md2(x.date)} ・ ${esc(x.q||'')}</small>${x.a ? esc(String(x.a).slice(0,120)) : ''}${x.score!=null ? ` ・ <b class="num">${x.score}</b>/3` : ''}</div>`).join('');
+    const les = ls.filter(x => x.card===name && +x.slot===s).map(lessonRow).join('');
+    return `<div class="card slot"><div class="sh"><span>${s}. ${SLOT[s]}</span><span class="lvb" style="background:${lvc[lv]}">${LVN[lv]}</span></div>
+      ${body && !/^（夜の巡回が/.test(body) ? `<details class="fact"><summary>${esc(first.length>70 ? first.slice(0,70)+'…' : first)}</summary>${mdLite(body)}</details>` : '<p class="muted">事実はまだ無い</p>'}
+      ${mine}${les ? `<div class="grid" style="margin-top:8px">${les}</div>` : ''}</div>`; }).join('');
+  app.innerHTML = header() + `<button class="back" data-back>‹ 図鑑</button><h2 style="font-size:22px;font-weight:900;margin:4px 0 10px">${esc(name)}</h2>${slots}`;
+  bindLearn();
+}
+const LV_VIEWS = { lesson: viewLesson, knows: viewKnows, video: viewVideo, card: viewCard };
+
+/* ── 操作 */
+function bindLearn(){
+  app.querySelectorAll('[data-lesson]').forEach(b => { if(!b.onclick) b.onclick = () => openLesson(b.dataset.lesson); });
+  app.querySelectorAll('[data-video]').forEach(b => b.onclick = () => openVideo(b.dataset.video));
+  app.querySelectorAll('[data-html]').forEach(b => b.onclick = async () => { const t = await ghText(b.dataset.html); if(!t) return alert('読めなかった'); const w = window.open('', '_blank'); if(w){ w.document.write(t); w.document.close(); } });
+  app.querySelectorAll('[data-go]').forEach(b => b.onclick = () => setTab(b.dataset.go));
+  app.querySelectorAll('[data-back]').forEach(b => b.onclick = () => { VIEW = null; render(); window.scrollTo(0,0); });
+  const ds = app.querySelector('#deep-save'); if(ds) ds.onclick = async () => { const text = (app.querySelector('#deep-ta').value||'').trim(); if(!text) return; ds.disabled = true; ds.textContent = '保存中…';
+    const qd = (L.quiz && L.quiz.date) || jst(); try{ L.day = await ghPut(`inbox/quiz_answers/${qd}.json`, j => { j.date = j.date || qd; if(!j.quiz && L.quiz) j.quiz = L.quiz; j.answers = j.answers || {}; j.answers[ds.dataset.id] = { text, at:new Date().toISOString() }; }, `説明する1問 ${ds.dataset.id}`); L.editDeep = false; render(); }
+    catch(e){ ds.disabled = false; ds.textContent = '保存'; alert('保存できなかった: '+e.message); } };
+  const de = app.querySelector('#deep-edit'); if(de) de.onclick = () => { L.editDeep = true; render(); };
+  const dn = app.querySelector('#done'); if(dn && VIEW && VIEW.type==='lesson') dn.onclick = async () => { dn.disabled = true; dn.textContent = '保存中…';
+    try{ await saveLessonDone(VIEW.L, { my3: app.querySelector('#my3').value, myq: app.querySelector('#myq').value }); dn.textContent = 'この課は読んだ'; app.querySelector('#done-st').textContent = 'スタンプ +1。明日から、この課の問いが10問に混ざる'; fanfare(); }
+    catch(e){ dn.disabled = false; dn.textContent = '読んだ → スタンプ +1'; alert('保存できなかった: '+e.message); } };
+  const kn = app.querySelector('#knows'); if(kn) kn.onclick = () => { VIEW = { type:'knows', L:VIEW.L, x:VIEW.x, i:0, ok:0 }; render(); window.scrollTo(0,0); };
+  const cs = app.querySelector('#co-send'); if(cs) cs.onclick = async () => { const name = (app.querySelector('#co-name').value||'').trim(); if(!name) return; cs.disabled = true;
+    const d = new Date(); const p2 = n => String(n).padStart(2,'0'); const stamp = `${d.getFullYear()}${p2(d.getMonth()+1)}${p2(d.getDate())}_${p2(d.getHours())}${p2(d.getMinutes())}${p2(d.getSeconds())}`;
+    try{ await ghApi(`/repos/${GH.repo}/contents/${ghp(`inbox/queue/${stamp}_company.md`)}`, 'PUT', { message:`会社を頼む ${name}`, branch:GH.branch, content: ghEnc(`at: ${d.toLocaleString('sv-SE',{timeZone:'Asia/Tokyo'}).slice(0,16)}\nkind: 学び\ntype: 会社\n\n${name} を会社の課にしてほしい（道場から）。深掘りするのはこの会社だけ。細かい数字は覚えさせない`) });
+      cs.textContent = '頼んだ（夜に課になる）'; }
+    catch(e){ cs.disabled = false; alert('送れなかった: '+e.message); } };
+}
+
 /* ========== 入口 ========== */
 async function boot(){
   try{ const r = await fetch('dojo/data.json?v=' + Date.now()); DATA = await r.json(); }catch(e){ app.innerHTML = `<div class="gate"><img class="bean" src="dojo/img/bean_shock.png" alt=""><p>データが読めなかった。電波を確認してもう一度開いて。</p></div>`; return; }
   await syncInit('megu'); await syncPull(); syncPush(); start();
 }
-function start(){ tabs.hidden = false; setTab('home'); }
+function start(){ tabs.hidden = false; const h = location.hash.slice(1); setTab(['learn','zukan','stats'].includes(h) ? h : 'home'); }   // #learn・#zukan で開ける（ダッシュボードから）
 boot();
 </script>
 </body>
