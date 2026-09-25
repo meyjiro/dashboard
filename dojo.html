@@ -664,7 +664,7 @@ const LANES = [
   { k:'学問', ic:'🔭', d:'宇宙 → 物理 → 量子を順番に' },
   { k:'会社', ic:'🏢', d:'自分で選んだ会社だけ深掘り' } ];
 const laneIc = k => (LANES.find(l => l.k===k) || {}).ic || '📘';
-function laneOf(x){ if(x.lane) return x.lane; const k = String(x.key||''); if(k.startsWith('stairs:') || x.track==='B') return '学問'; if(x.track==='K' || /教科書\/K\//.test(k)) return '会社'; return '基礎'; }
+function laneOf(x){ if(x.lane) return x.lane; if(x.track==='V') return '動画'; const k = String(x.key||''); if(k.startsWith('stairs:') || x.track==='B') return '学問'; if(x.track==='K' || /教科書\/K\//.test(k)) return '会社'; return '基礎'; }
 const SLOT = {1:'歴史', 2:'今', 3:'産業', 4:'損得', 5:'ニュース'};
 const LVN = ['まだ', '見た', '思い出せる', '説明できる'];
 
@@ -706,8 +706,8 @@ function deepItem(){ const it = (L.quiz && L.quiz.items) || []; const ans = (L.d
 function homeLearnHtml(){
   if(!PAT) return `<div class="card" style="margin-top:18px"><b>📖 課・説明する1問・図鑑</b><p class="muted" style="margin:6px 0 0">この端末ではまだ読めない。<a href="./">ダッシュボード</a>を一度開いてから戻ると出る。</p></div>`;
   if(!L.loaded){ learnLoad().then(() => { if(!VIEW && TAB==='home') render(); }); return `<p class="muted" style="margin-top:18px">📖 課と説明する1問を読み込み中…</p>`; }
-  const picks = ['基礎','学問','会社'].map(nextIn).filter(Boolean);
-  const v = L.videos[0];
+  const picks = ['動画','基礎','学問','会社'].map(nextIn).filter(Boolean);
+  const v = nextIn('動画') ? null : L.videos[0];   // 振り返りの課（Yパパの過去回を今につなぐ課・1日1本）があればそれ。無ければ最新の回
   const pickH = picks.map(x => lessonRow(x)).join('') + (v ? `<button class="chap" data-video="${esc(v.path)}"><span class="em">📺</span><span><span class="t">${esc(vTitle(v))}</span><br><span class="m">${v.ch==='ypapa'?'Yパパ':'ものづくり太郎'} ・ ${md2(v.date)} ・ 問いは10問に混ざる</span></span><span class="badge">見る</span></button>` : '');
   const it = deepItem(); let deep = '';
   if(it){
@@ -737,7 +737,7 @@ function renderLearn(){
   const ls = allLessons();
   const sec = LANES.map(ln => {
     let rows = '';
-    if(ln.k === '動画'){ rows = L.videos.slice(0, 14).map(v => `<button class="chap" data-video="${esc(v.path)}"><span class="em">${v.ch==='ypapa'?'🎙️':'🏭'}</span><span><span class="t">${esc(v.title || (v.ch==='ypapa'?'Yパパ':'ものづくり太郎')+' '+md2(v.date))}</span><br><span class="m">${v.ch==='ypapa'?'Yパパ':'ものづくり太郎'} ・ ${md2(v.date)}</span></span><span class="badge">見る</span></button>`).join('') || '<p class="muted">読み込み中…</p>'; }
+    if(ln.k === '動画'){ const vs = ls.filter(x => laneOf(x)==='動画'); rows = (vs.length ? `<p class="muted" style="margin:0">🔁 振り返りの課（昔の回を、今どうなったかまで追う・1日1本）</p>${vs.map(lessonRow).join('')}<p class="muted" style="margin:8px 0 0">🆕 最近の回</p>` : '') + L.videos.slice(0, 14).map(v => `<button class="chap" data-video="${esc(v.path)}"><span class="em">${v.ch==='ypapa'?'🎙️':'🏭'}</span><span><span class="t">${esc(v.title || (v.ch==='ypapa'?'Yパパ':'ものづくり太郎')+' '+md2(v.date))}</span><br><span class="m">${v.ch==='ypapa'?'Yパパ':'ものづくり太郎'} ・ ${md2(v.date)}</span></span><span class="badge">見る</span></button>`).join('') || '<p class="muted">読み込み中…</p>'; }
     else { const xs = ls.filter(x => laneOf(x)===ln.k); rows = xs.map(x => x.kind==='html' ? `<button class="chap" data-html="${esc(x.path)}"><span class="em">${ln.ic}</span><span><span class="t">${esc(x.title||x.key)}</span><br><span class="m">${esc(ln.k)}</span></span><span class="badge">読む</span></button>` : lessonRow(x)).join('') || '<p class="muted">まだ無い</p>'; }
     const extra = ln.k === '会社' ? `<div class="card" style="margin-top:10px"><b>🏢 調べたい会社を頼む</b><p class="muted" style="margin:4px 0 8px">名前を入れると、その会社だけ深掘りの課になる（細かい数字は覚えさせない）</p><input class="inp" id="co-name" placeholder="例: 東京エレクトロン"><button class="btn" id="co-send" style="margin-top:8px">頼む</button></div>` : '';
     const read = ln.k==='動画' ? '' : `${ls.filter(x => laneOf(x)===ln.k && isRead(x)).length} / ${ls.filter(x => laneOf(x)===ln.k).length}`;
@@ -763,6 +763,7 @@ function viewLesson(){
   app.innerHTML = header() + `<button class="back" data-back>‹ 戻る</button><div class="lesson">
     <span class="pill on">${laneIc(J.lane)} ${esc(J.lane)}</span>${J.card ? ` <span class="pill">${esc(J.card)}</span>` : ''} <span class="muted">${esc(String(J.minutes||8))}分</span>
     <h2>${esc(J.title||'')}</h2><p class="lead">${inl(J.aim||'')}</p>
+    ${J.video ? `<p class="muted" style="margin:-6px 0 12px">📺 元の動画: ${esc(J.video.title||'')}（${md2(J.video.date)}）${J.video.url ? ` ・ <a href="${esc(J.video.url)}" target="_blank" rel="noopener">YouTube</a>` : ''}${J.as_of ? ` ・ ${md2(J.as_of)}時点で確認` : ''}</p>` : ''}
     ${sv.done ? '' : `<button class="btn sub" id="knows">もう知ってる（3問で確かめて飛ばす）</button>`}
     ${(J.pretest||[]).length ? `<div class="co tip"><span class="ci">🤔</span><div><b>読む前に考える（外れてOK）</b>${J.pretest.map(p => inl(p)).join('<br>')}</div></div>` : ''}
     ${(J.sections||[]).map(sc => `<h3>${esc(sc.h||'')}</h3>${(sc.p||[]).map(p => `<p>${inl(p)}</p>`).join('')}${fig(sc.fig)}${(sc.figs||[]).map(fig).join('')}`).join('')}
