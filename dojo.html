@@ -190,6 +190,7 @@ mark.ex{background:var(--ng-bg);color:var(--ng);font-weight:700;padding:1px 5px;
 .sec .muted{font-weight:400}
 .lane-h{display:flex;align-items:center;gap:8px;margin:20px 0 8px}
 .lane-h h3{font-size:17px;font-weight:900} .lane-h .muted{margin-left:auto}
+.chap .xh{flex:none;margin-left:6px;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink2);font-size:14px;border:1px solid var(--line)}
 .chap .badge.read{background:var(--ok-bg);color:var(--ok);font-weight:700}
 .ta{width:100%;font:inherit;font-size:16px;line-height:1.7;padding:10px 12px;border-radius:12px;border:2px solid var(--line);background:var(--paper);color:var(--ink);min-height:110px;resize:vertical}
 .inp{width:100%;font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:2px solid var(--line);background:var(--paper);color:var(--ink)}
@@ -709,7 +710,7 @@ function homeLearnHtml(){
   if(!L.loaded){ learnLoad().then(() => { if(!VIEW && TAB==='home') render(); }); return `<p class="muted" style="margin-top:18px">📖 課と説明する1問を読み込み中…</p>`; }
   const picks = ['動画','基礎','学問','会社'].map(nextIn).filter(Boolean);
   const v = nextIn('動画') ? null : L.videos[0];   // 振り返りの課（Yパパの過去回を今につなぐ課・1日1本）があればそれ。無ければ最新の回
-  const pickH = picks.map(x => lessonRow(x)).join('') + (v ? `<button class="chap" data-video="${esc(v.path)}"><span class="em">📺</span><span><span class="t">${esc(vTitle(v))}</span><br><span class="m">${v.ch==='ypapa'?'Yパパ':'ものづくり太郎'} ・ ${md2(v.date)} ・ 問いは10問に混ざる</span></span><span class="badge">見る</span></button>` : '');
+  const pickH = picks.map(x => lessonRow(x)).join('') + (v ? `<button class="chap" data-video="${esc(v.path)}"><span class="em">📺</span><span><span class="t">${esc(vTitle(v))}</span><br><span class="m">${v.ch==='ypapa'?'Yパパ':'ものづくり太郎'} ・ ${md2(v.date)} ・ 問いは10問に混ざる</span></span><span class="badge">見る</span>${xh('video', v.path, v.title, v.vid)}</button>` : '');
   const it = deepItem(); let deep = '';
   if(it){
     const qd = (L.quiz && L.quiz.date) || jst(); const a = ((L.day && L.day.answers) || {})[it.id]; const sc = L.scores.find(r => r.id===it.id && r.date===qd && r.score!=null);
@@ -727,7 +728,7 @@ function homeLearnHtml(){
 }
 function lessonRow(x){
   const r = isRead(x); const lane = laneOf(x);
-  return `<button class="chap" data-lesson="${esc(x.key)}"><span class="em">${laneIc(lane)}</span><span><span class="t">${esc(x.title||x.key)}</span><br><span class="m">${esc(lane)}${x.card ? ' ・ '+esc(x.card) : ''}${x.minutes ? ` ・ ${esc(String(x.minutes))}分` : ''}</span></span><span class="badge ${r?'read':''}">${r ? '読んだ' : '読む'}</span></button>`;
+  return `<button class="chap" data-lesson="${esc(x.key)}"><span class="em">${laneIc(lane)}</span><span><span class="t">${esc(x.title||x.key)}</span><br><span class="m">${esc(lane)}${x.card ? ' ・ '+esc(x.card) : ''}${x.minutes ? ` ・ ${esc(String(x.minutes))}分` : ''}</span></span><span class="badge ${r?'read':''}">${r ? '読んだ' : '読む'}</span>${xh('lesson', x.key, x.title)}</button>`;
 }
 function vTitle(v){ return v.title || ((v.ch==='ypapa'?'Yパパ':'ものづくり太郎') + ' ' + md2(v.date)); }
 
@@ -738,7 +739,7 @@ function renderLearn(){
   const ls = allLessons();
   const sec = LANES.map(ln => {
     let rows = '';
-    if(ln.k === '動画'){ const vs = ls.filter(x => laneOf(x)==='動画'); rows = (vs.length ? `<p class="muted" style="margin:0">🔁 振り返りの課（昔の回を、今どうなったかまで追う・1日1本）</p>${vs.map(lessonRow).join('')}<p class="muted" style="margin:8px 0 0">🆕 最近の回</p>` : '') + L.videos.slice(0, 14).map(v => `<button class="chap" data-video="${esc(v.path)}"><span class="em">${v.ch==='ypapa'?'🎙️':'🏭'}</span><span><span class="t">${esc(v.title || (v.ch==='ypapa'?'Yパパ':'ものづくり太郎')+' '+md2(v.date))}</span><br><span class="m">${v.ch==='ypapa'?'Yパパ':'ものづくり太郎'} ・ ${md2(v.date)}</span></span><span class="badge">見る</span></button>`).join('') || '<p class="muted">読み込み中…</p>'; }
+    if(ln.k === '動画'){ const vs = ls.filter(x => laneOf(x)==='動画'); rows = (vs.length ? `<p class="muted" style="margin:0">🔁 振り返りの課（昔の回を、今どうなったかまで追う・1日1本）</p>${vs.map(lessonRow).join('')}<p class="muted" style="margin:8px 0 0">🆕 最近の回</p>` : '') + L.videos.slice(0, 14).map(v => `<button class="chap" data-video="${esc(v.path)}"><span class="em">${v.ch==='ypapa'?'🎙️':'🏭'}</span><span><span class="t">${esc(v.title || (v.ch==='ypapa'?'Yパパ':'ものづくり太郎')+' '+md2(v.date))}</span><br><span class="m">${v.ch==='ypapa'?'Yパパ':'ものづくり太郎'} ・ ${md2(v.date)}</span></span><span class="badge">見る</span>${xh('video', v.path, v.title, v.vid)}</button>`).join('') || '<p class="muted">読み込み中…</p>'; }
     else { const xs = ls.filter(x => laneOf(x)===ln.k); rows = xs.map(x => x.kind==='html' ? `<button class="chap" data-html="${esc(x.path)}"><span class="em">${ln.ic}</span><span><span class="t">${esc(x.title||x.key)}</span><br><span class="m">${esc(ln.k)}</span></span><span class="badge">読む</span></button>` : lessonRow(x)).join('') || '<p class="muted">まだ無い</p>'; }
     const extra = ln.k === '会社' ? `<div class="card" style="margin-top:10px"><b>🏢 調べたい会社を頼む</b><p class="muted" style="margin:4px 0 8px">名前を入れると、その会社だけ深掘りの課になる（細かい数字は覚えさせない）</p><input class="inp" id="co-name" placeholder="例: 東京エレクトロン"><button class="btn" id="co-send" style="margin-top:8px">頼む</button></div>` : '';
     const read = ln.k==='動画' ? '' : `${ls.filter(x => laneOf(x)===ln.k && isRead(x)).length} / ${ls.filter(x => laneOf(x)===ln.k).length}`;
@@ -845,6 +846,12 @@ function viewCard(){
   app.innerHTML = header() + `<button class="back" data-back>‹ 図鑑</button><h2 style="font-size:22px;font-weight:900;margin:4px 0 10px">${esc(name)}</h2>${slots}`;
   bindLearn();
 }
+const xh = (type, key, title, vid) => `<span class="xh" role="button" aria-label="棚から外す" data-hide="${esc(type)}" data-key="${esc(key||'')}" data-title="${esc(title||'')}" data-vid="${esc(vid||'')}">✕</span>`;
+async function hideItem(d){   // 棚から外す（外す.json に1件）。消すのではない
+  if(!confirm('「'+String(d.title||'').slice(0,40)+'」を棚から外す？\n（この問いも10問に出なくなる）')) return false;
+  await ghPut('knowledge/学習/外す.json', j => { j.items = j.items || []; if(!j.items.some(x => x.key===d.key)) j.items.push({ type:d.type, key:d.key, ...(d.vid ? { vid:d.vid } : {}), title:d.title, at:new Date().toISOString() }); }, `覚えなくていい: ${String(d.title||'').slice(0,30)}`);
+  L.hidden.add(d.key); L.videos = L.videos.filter(v => v.path !== d.key); return true;
+}
 function hideBtn(type, key, title, vid){ return `<button class="btn sub" id="hide-it" data-type="${esc(type)}" data-key="${esc(key||'')}" data-title="${esc(title||'')}" data-vid="${esc(vid||'')}" style="margin:22px 0 8px">🗑 覚えなくていい（棚から外す）</button><p class="muted" style="margin:0">外すと、この${type==='video'?'回':'課'}の問いも10問に出なくなる。消すわけではないので、モッフルに言えば戻せる</p>`; }
 const LV_VIEWS = { lesson: viewLesson, knows: viewKnows, video: viewVideo, card: viewCard };
 
@@ -863,10 +870,12 @@ function bindLearn(){
     try{ await saveLessonDone(VIEW.L, { my3: app.querySelector('#my3').value, myq: app.querySelector('#myq').value }); dn.textContent = 'この課は読んだ'; app.querySelector('#done-st').textContent = 'スタンプ +1。明日から、この課の問いが10問に混ざる'; fanfare(); }
     catch(e){ dn.disabled = false; dn.textContent = '読んだ → スタンプ +1'; alert('保存できなかった: '+e.message); } };
   const kn = app.querySelector('#knows'); if(kn) kn.onclick = () => { VIEW = { type:'knows', L:VIEW.L, x:VIEW.x, i:0, ok:0 }; render(); window.scrollTo(0,0); };
-  const hi = app.querySelector('#hide-it'); if(hi) hi.onclick = async () => { if(!confirm('「'+hi.dataset.title.slice(0,40)+'」を棚から外す？')) return; hi.disabled = true; hi.textContent = '外しています…';
-    try{ await ghPut('knowledge/学習/外す.json', j => { j.items = j.items || []; if(!j.items.some(x => x.key===hi.dataset.key)) j.items.push({ type:hi.dataset.type, key:hi.dataset.key, ...(hi.dataset.vid ? { vid:hi.dataset.vid } : {}), title:hi.dataset.title, at:new Date().toISOString() }); }, `覚えなくていい: ${hi.dataset.title.slice(0,30)}`);
-      L.hidden.add(hi.dataset.key); L.videos = L.videos.filter(v => v.path !== hi.dataset.key); VIEW = null; render(); window.scrollTo(0,0); }
-    catch(e){ hi.disabled = false; hi.textContent = '🗑 覚えなくていい（棚から外す）'; alert('外せなかった: '+e.message); } };
+  const hi = app.querySelector('#hide-it'); if(hi) hi.onclick = async () => { hi.disabled = true;
+    try{ if(await hideItem({ type:hi.dataset.type, key:hi.dataset.key, title:hi.dataset.title, vid:hi.dataset.vid })){ VIEW = null; render(); window.scrollTo(0,0); } else hi.disabled = false; }
+    catch(e){ hi.disabled = false; alert('外せなかった: '+e.message); } };
+  app.querySelectorAll('[data-hide]').forEach(b => b.onclick = async ev => { ev.stopPropagation(); ev.preventDefault();
+    try{ if(await hideItem({ type:b.dataset.hide, key:b.dataset.key, title:b.dataset.title, vid:b.dataset.vid })) render(); }
+    catch(e){ alert('外せなかった: '+e.message); } });
   const cs = app.querySelector('#co-send'); if(cs) cs.onclick = async () => { const name = (app.querySelector('#co-name').value||'').trim(); if(!name) return; cs.disabled = true;
     const d = new Date(); const p2 = n => String(n).padStart(2,'0'); const stamp = `${d.getFullYear()}${p2(d.getMonth()+1)}${p2(d.getDate())}_${p2(d.getHours())}${p2(d.getMinutes())}${p2(d.getSeconds())}`;
     try{ await ghApi(`/repos/${GH.repo}/contents/${ghp(`inbox/queue/${stamp}_company.md`)}`, 'PUT', { message:`会社を頼む ${name}`, branch:GH.branch, content: ghEnc(`at: ${d.toLocaleString('sv-SE',{timeZone:'Asia/Tokyo'}).slice(0,16)}\nkind: 学び\ntype: 会社\n\n${name} を会社の課にしてほしい（道場から）。深掘りするのはこの会社だけ。細かい数字は覚えさせない`) });

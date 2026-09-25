@@ -1458,7 +1458,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-25.2';
+const APP_VERSION = '2026-09-25.3';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4776,7 +4776,7 @@ function renderLearnEntry(qz){
   const el = $('learn-entry'); if(!el) return;
   // 2026-09-25 メグ「カンブリアって名前やめて、道場に一本化」→ 学習は dojo.html だけ（課・説明する1問・図鑑も道場の中）
   el.innerHTML = `<div class="lentry" id="learn-entry-btn"><div><div class="le1">🏃 道場</div><div class="le2">今日の10問 ・ 課 ・ 図鑑</div></div><div class="lego">開く →</div></div>`;
-  $('learn-entry-btn').addEventListener('click', ()=>{ location.href = 'dojo.html'; });
+  $('learn-entry-btn').addEventListener('click', ()=>{ location.href = 'dojo.html?v=' + Date.now(); });   // 古い道場が残らないように
 }
 async function loadLearn(){
   const root = $('cb-root'); if(!root) return;
@@ -5258,7 +5258,7 @@ async function laToggleRec(btn, id){
 }
 
 function switchTab(tab) {
-  if (tab === 'learn') { location.href = 'dojo.html'; return; }   // 2026-09-25 道場に一本化
+  if (tab === 'learn') { location.href = 'dojo.html?v=' + Date.now(); return; }   // 2026-09-25 道場に一本化
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   $('tab-' + tab).classList.add('active');
