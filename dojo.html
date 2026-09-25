@@ -186,6 +186,27 @@ mark.ex{background:var(--ng-bg);color:var(--ng);font-weight:700;padding:1px 5px;
 .top .bean{width:34px;margin-right:2px}
 @media (prefers-reduced-motion:reduce){ .stamp.show{animation:none} .choice{transition:none} }
 /* 2026-09-25 道場に一本化（課・説明・図鑑） */
+/* 一覧: 1枚の箱に行を並べる（行ごとの影つき箱はやめた。メグ「初心者が作ったみたい」） */
+.list{background:var(--paper);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.li{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 10px 12px 14px;border-top:1px solid var(--line);min-height:64px}
+.li:first-child{border-top:0}
+.li:active{background:var(--bg)}
+.li .ic{flex:none;width:26px;font-size:20px;text-align:center;line-height:1}
+.li .bd{flex:1;min-width:0}
+.li .tt{font-weight:700;font-size:15px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.li .mt{font-size:12px;color:var(--ink2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .st{flex:none;font-size:12px;color:var(--ink2)}
+.li .st.ok{color:var(--ok);font-weight:700}
+.li .st.gold{color:var(--gold-ink);background:var(--gold);padding:1px 8px;border-radius:999px;font-weight:700}
+.li .xh{flex:none;width:32px;height:32px;margin:-6px -2px -6px 0;display:flex;align-items:center;justify-content:center;color:var(--ink2);opacity:.55;font-size:13px;border-radius:50%}
+.li .xh:active{background:var(--line);opacity:1}
+.sub-h{font-size:12px;font-weight:700;color:var(--ink2);letter-spacing:.04em;margin:14px 2px 6px}
+.seg{display:flex;gap:4px;background:var(--line);padding:4px;border-radius:14px;margin:6px 0 12px}
+.seg button{flex:1;padding:8px 0;border-radius:10px;font-size:14px;font-weight:700;color:var(--ink2)}
+.seg button.on{background:var(--paper);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.tog{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border-top:1px solid var(--line)}
+.tog:first-child{border-top:0} .tog b{font-size:15px} .tog .muted{font-size:12px}
+
 .sec{display:flex;align-items:baseline;gap:8px;margin:22px 0 8px;font-size:16px;font-weight:900}
 .sec .muted{font-weight:400}
 .lane-h{display:flex;align-items:center;gap:8px;margin:20px 0 8px}
@@ -475,18 +496,16 @@ function renderHome(){
     <button class="btn gold" data-mode="wrong" ${wrong?'':'disabled'}>🔁 落とした問いだけ（${wrong}問）</button>
     <button class="btn sub" data-mode="exam">🏆 週テスト（${DATA.exam.questions}問・${DATA.exam.minutes}分）</button>
   </div>
-  <div class="opts" style="margin-top:14px"><button id="v-on" class="${voiceOn?'on':''}">🔊 読み上げ</button><button id="v-off" class="${!voiceOn?'on':''}">🔇</button><button id="m-on" class="${micOn?'on':''}" ${SR?'':'disabled'}>🎤 声で答える</button><button id="m-off" class="${!micOn?'on':''}">🎤 OFF</button></div>
-  <p class="muted" style="margin:0 0 6px">${SR ? '🎧 イヤホンで。読み上げの途中でも「1」「2」「3」「4」と言えば答えになる。' : 'このブラウザは音声認識に対応していない（iPhoneはSafariで）'}</p>
-  ${homeLearnHtml()}<h3 style="margin:22px 0 8px;font-size:15px">📚 読んだ課ごとに練習（${lessons.length}課）</h3>
-  <div class="grid">${lessons.map(c => { const sc = chapterScore(c.id); return `<button class="chap" data-ch="${c.id}"><span class="em">${c.emoji}</span><span><span class="t">${esc(c.title)}</span><br><span class="m">${esc((c.lead||'').replace(/[*=\[\]]/g,'').slice(0,40))}</span></span><span class="badge ${sc.ok===c.quiz.length&&sc.n?'gold':sc.n?'ok':''}">${sc.n?`${sc.ok}/${c.quiz.length}`:'—'}</span></button>`; }).join('') || '<p class="muted">課を「済」にすると翌朝ここに増える</p>'}</div>
+  <div class="list" style="margin-top:12px"><div class="tog"><div><b>🔊 読み上げ</b><div class="muted">問題と解説を声で読む</div></div><button class="sw ${voiceOn?'on':''}" id="t-voice"><i></i></button></div>
+    <div class="tog"><div><b>🎤 声で答える</b><div class="muted">${SR ? '読み上げの途中でも「1〜4」と言えば答えになる' : 'このブラウザは非対応（iPhoneはSafariで）'}</div></div><button class="sw ${micOn?'on':''}" id="t-mic" ${SR?'':'disabled'}><i></i></button></div></div>
+  ${homeLearnHtml()}<div class="sec">📚 読んだ課ごとに練習 <span class="muted">${lessons.length}課</span></div>
+  <div class="list">${lessons.map(c => { const sc = chapterScore(c.id); return row({ attr:`data-ch="${c.id}"`, ic:c.emoji, title:c.title, meta:'4択10問', st: sc.n ? `${sc.ok}/${c.quiz.length}` : '', stc: sc.ok===c.quiz.length&&sc.n ? 'gold' : 'ok' }); }).join('') || '<p class="muted" style="padding:12px 14px;margin:0">課を読むと翌朝ここに増える</p>'}</div>
   <p class="muted" style="margin-top:14px">🎧 声: 問題＝ずんだもん。結果はずんだもん／冥鳴ひまり。（VOICEVOX:ずんだもん／VOICEVOX:冥鳴ひまり）</p>`;
   const g = app.querySelector('#go-today'); if(g) g.onclick = () => startRun({ mode:'chapter', ch:0 });
-  app.querySelector('#v-on').onclick = () => { voiceOn = true; S.set('voice', true); renderHome(); };
-  app.querySelector('#v-off').onclick = () => { voiceOn = false; S.set('voice', false); micOn = false; S.set('mic', false); renderHome(); };
-  app.querySelector('#m-on').onclick = () => { micOn = true; S.set('mic', true); voiceOn = true; S.set('voice', true); renderHome(); };
-  app.querySelector('#m-off').onclick = () => { micOn = false; S.set('mic', false); renderHome(); };
+  app.querySelector('#t-voice').onclick = () => { voiceOn = !voiceOn; S.set('voice', voiceOn); if(!voiceOn){ micOn = false; S.set('mic', false); } renderHome(); };
+  app.querySelector('#t-mic').onclick = () => { micOn = !micOn; S.set('mic', micOn); if(micOn){ voiceOn = true; S.set('voice', true); } renderHome(); };
   app.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => startRun({ mode:b.dataset.mode }));
-  app.querySelectorAll('.chap[data-ch]').forEach(b => b.onclick = () => startDialog({ mode:'chapter', ch:+b.dataset.ch }, DATA.chapters.find(c=>c.id===+b.dataset.ch)));
+  app.querySelectorAll('[data-ch]').forEach(b => b.onclick = () => startDialog({ mode:'chapter', ch:+b.dataset.ch }, DATA.chapters.find(c=>c.id===+b.dataset.ch)));
   bindLearn();
 }
 /* ========== 開始前の設定画面（教科書から入るとき） ========== */
@@ -685,11 +704,13 @@ function learnLoad(){
     const qd = (L.quiz && L.quiz.date) || jst(); L.day = ds[days.indexOf(qd)] || await ghJson(`inbox/quiz_answers/${qd}.json`) || {};
     L.loaded = true;
     // 動画は後から（索引 cards/index.jsonl が 800KB ある）。Yパパ・太郎の本編だけ、新しい順
-    ghText('cards/index.jsonl', 'meyjiro/toushi-data').then(t => {
+    Promise.all([ghText('cards/index.jsonl', 'meyjiro/toushi-data'), ghText('knowledge/学習/動画_処理済み.jsonl')]).then(([t, dn]) => {
+      // 並べるのは「問いを作った回」＝投資に大事と判定した回だけ（雑談・AIの使い方・社会の話は出さない。メグ 9/25）
+      const okv = new Set(String(dn||'').split('\n').map(l => { try{ return JSON.parse(l); }catch(e){ return null; } }).filter(r => r && r.n > 0 && !r.skip).map(r => r.vid));
       L.videos = String(t||'').split('\n').map(l => { try{ return JSON.parse(l); }catch(e){ return null; } })
         .filter(v => v && (v.ch==='ypapa' || v.ch==='monozukuri') && v.vid && v.date && (!v.kind || v.kind==='本編'))   // 雑談・AI実務・ネタの回は棚に出さない
         .map(v => ({ ch:v.ch, vid:v.vid, title:v.title, date:String(v.date), path:`cards/${v.ch}/${v.date}_${v.vid}.md` }))
-        .filter(v => !L.hidden.has(v.path))
+        .filter(v => !L.hidden.has(v.path) && okv.has(v.vid))
         .sort((a,b) => b.date.localeCompare(a.date));
       if(!VIEW && (TAB==='learn' || TAB==='home')) render(); });
   })().catch(e => { L.err = e.message; L.loaded = true; });
@@ -710,7 +731,7 @@ function homeLearnHtml(){
   if(!L.loaded){ learnLoad().then(() => { if(!VIEW && TAB==='home') render(); }); return `<p class="muted" style="margin-top:18px">📖 課と説明する1問を読み込み中…</p>`; }
   const picks = ['動画','基礎','学問','会社'].map(nextIn).filter(Boolean);
   const v = nextIn('動画') ? null : L.videos[0];   // 振り返りの課（Yパパの過去回を今につなぐ課・1日1本）があればそれ。無ければ最新の回
-  const pickH = picks.map(x => lessonRow(x)).join('') + (v ? `<button class="chap" data-video="${esc(v.path)}"><span class="em">📺</span><span><span class="t">${esc(vTitle(v))}</span><br><span class="m">${v.ch==='ypapa'?'Yパパ':'ものづくり太郎'} ・ ${md2(v.date)} ・ 問いは10問に混ざる</span></span><span class="badge">見る</span>${xh('video', v.path, v.title, v.vid)}</button>` : '');
+  const pickH = picks.map(x => lessonRow(x)).join('') + (v ? videoRow(v) : '');
   const it = deepItem(); let deep = '';
   if(it){
     const qd = (L.quiz && L.quiz.date) || jst(); const a = ((L.day && L.day.answers) || {})[it.id]; const sc = L.scores.find(r => r.id===it.id && r.date===qd && r.score!=null);
@@ -721,31 +742,38 @@ function homeLearnHtml(){
   } else deep = `<p class="muted">今日の問いはまだ届いていない</p>`;
   const Ls = stampList(); const n = Ls.length; const no = n ? Math.floor((n-1)/20)+1 : 1; const cur = Ls.slice((no-1)*20);
   const cells = Array.from({ length:20 }, (_, i) => { const s = cur[i]; const src = s && stampSrc(s.score, s.key+':'+s.date); return s ? `<div class="s on">${src ? `<img src="${src}" alt="">` : '✓'}</div>` : `<div class="s">${i+1}</div>`; }).join('');
-  return `<div class="sec">📖 今日の1課 <span class="muted">好きなのを1つ・何課でも</span></div><div class="grid">${pickH || '<p class="muted">次の課を用意している</p>'}</div>
-    <button class="btn sub" data-go="learn" style="margin-top:10px">課の棚を全部見る →</button>
+  return `<div class="sec">📖 今日の1課 <span class="muted">好きなのを1つ・何課でも</span></div><div class="list">${pickH || '<p class="muted" style="padding:12px 14px;margin:0">次の課を用意している</p>'}${row({ attr:'data-go="learn"', ic:'📚', title:'課の棚を全部見る', st:'→' })}</div>
     <div class="sec">🗣 説明する1問</div><div class="card">${deep}</div>
     <div class="sec">🎖 スタンプカード <span class="muted">No.${no} ・ 課を1つ読むと1個</span></div><div class="card"><div class="stamps">${cells}</div></div>`;
 }
+// 一覧の1行（アイコン・題名2行まで・補足1行・右に状態と ✕）
+function row(o){ return `<button class="li" ${o.attr||''}><span class="ic">${o.ic||''}</span><span class="bd"><span class="tt">${esc(o.title||'')}</span>${o.meta ? `<span class="mt">${esc(o.meta)}</span>` : ''}</span>${o.st ? `<span class="st ${o.stc||''}">${esc(o.st)}</span>` : ''}${o.x||''}</button>`; }
 function lessonRow(x){
   const r = isRead(x); const lane = laneOf(x);
-  return `<button class="chap" data-lesson="${esc(x.key)}"><span class="em">${laneIc(lane)}</span><span><span class="t">${esc(x.title||x.key)}</span><br><span class="m">${esc(lane)}${x.card ? ' ・ '+esc(x.card) : ''}${x.minutes ? ` ・ ${esc(String(x.minutes))}分` : ''}</span></span><span class="badge ${r?'read':''}">${r ? '読んだ' : '読む'}</span>${xh('lesson', x.key, x.title)}</button>`;
+  return row({ attr:`data-lesson="${esc(x.key)}"`, ic:laneIc(lane), title:x.title||x.key, meta:[x.card, x.minutes ? x.minutes+'分' : ''].filter(Boolean).join(' ・ '), st: r ? '✓ 読んだ' : '', stc:'ok', x: xh('lesson', x.key, x.title) });
 }
+function videoRow(v){ return row({ attr:`data-video="${esc(v.path)}"`, ic: v.ch==='ypapa' ? '🎙️' : '🏭', title:vTitle(v), meta:`${v.ch==='ypapa'?'Yパパ':'ものづくり太郎'} ・ ${md2(v.date)}`, x: xh('video', v.path, v.title, v.vid) }); }
 function vTitle(v){ return v.title || ((v.ch==='ypapa'?'Yパパ':'ものづくり太郎') + ' ' + md2(v.date)); }
 
-/* ── 課タブ（4つの棚） */
+/* ── 課タブ（4つの棚を切り替え。全部を縦に並べない） */
 function renderLearn(){
   if(!PAT){ app.innerHTML = header() + homeLearnHtml(); return; }
   if(!L.loaded){ app.innerHTML = header() + '<p class="muted">読み込み中…</p>'; learnLoad().then(() => { if(!VIEW && TAB==='learn') render(); }); return; }
-  const ls = allLessons();
-  const sec = LANES.map(ln => {
-    let rows = '';
-    if(ln.k === '動画'){ const vs = ls.filter(x => laneOf(x)==='動画'); rows = (vs.length ? `<p class="muted" style="margin:0">🔁 振り返りの課（昔の回を、今どうなったかまで追う・1日1本）</p>${vs.map(lessonRow).join('')}<p class="muted" style="margin:8px 0 0">🆕 最近の回</p>` : '') + L.videos.slice(0, 14).map(v => `<button class="chap" data-video="${esc(v.path)}"><span class="em">${v.ch==='ypapa'?'🎙️':'🏭'}</span><span><span class="t">${esc(v.title || (v.ch==='ypapa'?'Yパパ':'ものづくり太郎')+' '+md2(v.date))}</span><br><span class="m">${v.ch==='ypapa'?'Yパパ':'ものづくり太郎'} ・ ${md2(v.date)}</span></span><span class="badge">見る</span>${xh('video', v.path, v.title, v.vid)}</button>`).join('') || '<p class="muted">読み込み中…</p>'; }
-    else { const xs = ls.filter(x => laneOf(x)===ln.k); rows = xs.map(x => x.kind==='html' ? `<button class="chap" data-html="${esc(x.path)}"><span class="em">${ln.ic}</span><span><span class="t">${esc(x.title||x.key)}</span><br><span class="m">${esc(ln.k)}</span></span><span class="badge">読む</span></button>` : lessonRow(x)).join('') || '<p class="muted">まだ無い</p>'; }
-    const extra = ln.k === '会社' ? `<div class="card" style="margin-top:10px"><b>🏢 調べたい会社を頼む</b><p class="muted" style="margin:4px 0 8px">名前を入れると、その会社だけ深掘りの課になる（細かい数字は覚えさせない）</p><input class="inp" id="co-name" placeholder="例: 東京エレクトロン"><button class="btn" id="co-send" style="margin-top:8px">頼む</button></div>` : '';
-    const read = ln.k==='動画' ? '' : `${ls.filter(x => laneOf(x)===ln.k && isRead(x)).length} / ${ls.filter(x => laneOf(x)===ln.k).length}`;
-    return `<div class="lane-h"><span style="font-size:24px">${ln.ic}</span><h3>${esc(ln.k)}</h3><span class="muted num">${read}</span></div><p class="muted" style="margin:-4px 0 8px">${esc(ln.d)}</p><div class="grid">${rows}</div>${extra}`;
-  }).join('');
-  app.innerHTML = header() + sec;
+  const ls = allLessons(); const cur = S.get('lane', '動画'); const ln = LANES.find(l => l.k===cur) || LANES[0];
+  const cnt = k => { const xs = ls.filter(x => laneOf(x)===k && x.kind!=='html'); return xs.length ? `${xs.filter(isRead).length}/${xs.length}` : ''; };
+  let body = '';
+  if(ln.k === '動画'){
+    const vs = ls.filter(x => laneOf(x)==='動画');
+    body = (vs.length ? `<div class="sub-h">🔁 振り返りの課 ・ 昔の回を、今どうなったかまで追う</div><div class="list">${vs.map(lessonRow).join('')}</div>` : '')
+      + `<div class="sub-h">🆕 最近の回</div><div class="list">${L.videos.slice(0, 14).map(videoRow).join('') || '<p class="muted" style="padding:12px 14px;margin:0">読み込み中…</p>'}</div>`;
+  } else {
+    const xs = ls.filter(x => laneOf(x)===ln.k);
+    body = `<div class="list">${xs.map(x => x.kind==='html' ? row({ attr:`data-html="${esc(x.path)}"`, ic:ln.ic, title:x.title||x.key, meta:'宇宙の階段' }) : lessonRow(x)).join('') || '<p class="muted" style="padding:12px 14px;margin:0">まだ無い</p>'}</div>`;
+    if(ln.k === '会社') body += `<div class="card" style="margin-top:14px"><b>🏢 調べたい会社を頼む</b><p class="muted" style="margin:4px 0 10px">その会社だけ深掘りの課になる（細かい数字は覚えさせない）</p><input class="inp" id="co-name" placeholder="例: 東京エレクトロン"><button class="btn" id="co-send" style="margin-top:10px">頼む</button></div>`;
+  }
+  app.innerHTML = header() + `<div class="seg">${LANES.map(l => `<button data-lane="${l.k}" class="${l.k===ln.k?'on':''}">${l.ic} ${l.k}</button>`).join('')}</div>
+    <p class="muted" style="margin:0 2px 10px">${esc(ln.d)}${cnt(ln.k) ? ` ・ 読んだ <span class="num">${cnt(ln.k)}</span>` : ''}</p>${body}`;
+  app.querySelectorAll('[data-lane]').forEach(b => b.onclick = () => { S.set('lane', b.dataset.lane); render(); });
   bindLearn();
 }
 
