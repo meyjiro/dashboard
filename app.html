@@ -1458,7 +1458,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-09-25.3';
+const APP_VERSION = '2026-09-26.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2181,12 +2181,16 @@ async function loadNewStuff(){
   const daysOld = ymd => { if(!ymd) return 0; const a=new Date(String(ymd).slice(0,10)+'T00:00:00'), b=new Date(ymdToday+'T00:00:00'); return Math.round((b-a)/86400000); };
   const staleTag = (ymd, okDays=0) => { const n=daysOld(ymd); return n>okDays ? `<span class="stale">🔴 ${n===1?'昨日':n+'日前'}の分（今日の分はまだ）</span>` : ''; };
   const vidCard = v => `<div class="nsbox">
-      <div class="nsh">${v.who==='太郎'?'🔧':'📺'} ${esc(v.who||'')}<span class="nstag">${esc(v.date||'')}</span>${staleTag(v.date,1)}</div>
+      <div class="nsh">${v.who==='太郎'?'🔧':'📺'} ${esc(v.who||'')}<span class="nstag">${esc(v.date||'')}</span>${vStale&&v===vNewest?staleTag(v.date,1):''}</div>
       <a class="nstitle" href="${esc(v.url||'#')}" target="_blank" rel="noopener">${esc(v.title||'')} ▶</a>
       <ul class="nsul">${(v.summary||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
       ${(v.names||[]).length?`<div class="nsl"><span>新しく出た銘柄</span>${v.names.map(esc).join('・')}</div>`:''}
       ${v.conflict?`<div class="nsflag">⚠️ ${esc(v.conflict)}</div>`:''}
     </div>`;
+  // 🔴 2026-09-26 メグ「9/24の動画に『2日前の分』と出る」→ 1本ずつではなく、今日届いた中でいちばん新しい動画が古いとき（＝朝の処理が止まっているとき）だけ印を出す。
+  //    少し前に公開された回を今朝拾っただけなら、正常なので印は出さない
+  const vNewest = (m.videos||[]).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];
+  const vStale = !!(vNewest && daysOld(vNewest.date) > 1);
   (m.videos||[]).forEach(v=>{ parts.push(vidCard(v)); });
 
   // 昨日の分。今日の下に畳んで置く。開いたままにしたいときは覚えておく
