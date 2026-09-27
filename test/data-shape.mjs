@@ -65,6 +65,13 @@ try {
 try {
   const md = fs.readFileSync(P + `diary/${new Date().toISOString().slice(0, 7)}.md`, 'utf8');
   must(/^## \d{4}-\d{2}-\d{2}/m.test(md), 'diary: 日付見出しが無い');
+  // 💌 の付いた日は、画面の手紙の読み取り（app.html dyLoadDay と同じ式）で本文が取れること（9/27 見出しのコロン無しで3日分が出ていなかった）
+  const re = /^## (\d{4}-\d{2}-\d{2})（.）💌/gm; let mm;
+  while ((mm = re.exec(md))) {
+    const i = md.indexOf(`## ${mm[1]}`), nx = md.indexOf('\n## ', i + 3), b = md.slice(i, nx < 0 ? undefined : nx);
+    const lt = b.match(/\*\*(?:モッフル|ぺっぺこ|鈴木さん)から\*\*[:：]?\s*([\s\S]*?)$/);
+    must(lt && lt[1].trim(), `diary: ${mm[1]} は💌なのに手紙の本文が読めない（「**モッフルから**:」の見出しを確認）`);
+  }
 } catch (e) { console.log('⚠️ diary: 今月のファイルが無い（月初なら正常）'); }
 // app.html 自身: script が構文エラーでないか
 try {
