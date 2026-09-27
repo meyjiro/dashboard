@@ -215,6 +215,7 @@ mark.ex{background:var(--ng-bg);color:var(--ng);font-weight:700;padding:1px 5px;
 .chap .badge.read{background:var(--ok-bg);color:var(--ok);font-weight:700}
 .ta{width:100%;font:inherit;font-size:16px;line-height:1.7;padding:10px 12px;border-radius:12px;border:2px solid var(--line);background:var(--paper);color:var(--ink);min-height:110px;resize:vertical}
 .inp{width:100%;font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:2px solid var(--line);background:var(--paper);color:var(--ink)}
+.deep-src{margin:10px 0 12px}
 .deep-q{font-size:17px;font-weight:700;line-height:1.6;margin:4px 0 6px;font-family:"Zen Maru Gothic","Noto Sans JP",sans-serif}
 .note{font-size:13px;color:var(--ink2);margin:0 0 10px}
 .mine{background:var(--bg);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:15px}
@@ -723,6 +724,15 @@ function stampSrc(score, seed){ const cfg = L.stamps || {}; const list = score==
 function stampList(){ const base = ((L.zk && L.zk.stamps)||[]).map(s => Object.assign({}, s)); const keys = new Set(base.map(s => s.key));
   Object.entries(L.read).sort((a,b) => String(a[1]&&a[1].at).localeCompare(String(b[1]&&b[1].at))).forEach(([k,v]) => { if(!v || !v.done || keys.has(k) || (v.path && keys.has(v.path))) return; base.push({ key:k, date:jst(), score: v.skip ? 3 : null }); keys.add(k); });
   return base; }
+// 説明する1問 → 答えるための課（2026-09-27 メグ「毎回、問題ごとに教科書へのリンクを」）
+//   ①問いのIDが課から来ている（A2-deep → 課A2、V-<動画>-deep → その振り返りの課）②同じカード・同じ枠の課 ③同じカードの課 ④無ければ図鑑のカード
+function lessonFor(it){
+  const Ls = allLessons().filter(x => x.kind!=='html'); const id = String(it.id||'');
+  let m = id.match(/^([ABCK]\d+)-/); if(m){ const x = Ls.find(x => x.key===m[1]); if(x) return { lesson:x }; }
+  m = id.match(/^V-(.+)-(?:deep|q\d+)$/); if(m){ const x = Ls.find(x => x.video && x.video.vid===m[1]); if(x) return { lesson:x }; }
+  if(it.card){ const x = Ls.find(x => x.card===it.card && it.slot && x.slot===+it.slot) || Ls.find(x => x.card===it.card); if(x) return { lesson:x }; if((L.zk && L.zk.cards || {})[it.card]) return { card:it.card }; }
+  return null;
+}
 function deepItem(){ const it = (L.quiz && L.quiz.items) || []; const ans = (L.day && L.day.answers) || {}; return it.find(x => !(ans[x.id] && (ans[x.id].text || ans[x.id].audio))) || it[0] || null; }
 
 /* ── 今日タブに差し込む部分 */
@@ -735,7 +745,10 @@ function homeLearnHtml(){
   const it = deepItem(); let deep = '';
   if(it){
     const qd = (L.quiz && L.quiz.date) || jst(); const a = ((L.day && L.day.answers) || {})[it.id]; const sc = L.scores.find(r => r.id===it.id && r.date===qd && r.score!=null);
-    deep = `<div class="deep-q">${esc(it.text||'')}</div>${it.note ? `<p class="note">${esc(it.note)}</p>` : ''}`;
+    const lf = lessonFor(it);
+    deep = `<div class="deep-q">${esc(it.text||'')}</div>${it.note ? `<p class="note">${esc(it.note)}</p>` : ''}`
+      + (lf && lf.lesson ? `<div class="list deep-src">${row({ attr:`data-lesson="${esc(lf.lesson.key)}"`, ic:'📖', title:lf.lesson.title||lf.lesson.key, meta:'この問いに答えるための課' + (isRead(lf.lesson) ? ' ・ 読んだ' : ''), st:'→' })}</div>`
+        : lf && lf.card ? `<div class="list deep-src">${row({ attr:`data-card="${esc(lf.card)}"`, ic:'🗺', title:lf.card+'のカード', meta:'この問いに答えるための図鑑のカード', st:'→' })}</div>` : '');
     if(sc) deep += `<div class="mine"><small>自分の答え</small>${esc((a&&a.text) || sc.answer || '')}</div><div class="scored">${stampSrc(sc.score, it.id+':'+qd) ? `<img src="${stampSrc(sc.score, it.id+':'+qd)}" alt="">` : ''}<div><span class="num">${sc.score}</span> / 3${sc.miss ? `<div class="muted">抜け: ${esc(sc.miss)}</div>` : ''}</div></div>`;
     else if(a && (a.text || a.audio) && !L.editDeep) deep += `<div class="mine"><small>自分の答え</small>${a.text ? esc(a.text) : '🎤 録音'}</div><p class="muted">夜に採点が付く</p><button class="btn sub" id="deep-edit">書き直す</button>`;
     else deep += `<textarea class="ta" id="deep-ta" placeholder="30秒でちょっちに説明するつもりで。話し言葉でいい">${esc((a&&a.text)||'')}</textarea><div class="row" style="margin-top:10px"><button class="btn" id="deep-save" data-id="${esc(it.id)}">保存</button></div>`;
@@ -889,6 +902,7 @@ function bindLearn(){
   app.querySelectorAll('[data-video]').forEach(b => b.onclick = () => openVideo(b.dataset.video));
   app.querySelectorAll('[data-html]').forEach(b => b.onclick = async () => { const t = await ghText(b.dataset.html); if(!t) return alert('読めなかった'); const w = window.open('', '_blank'); if(w){ w.document.write(t); w.document.close(); } });
   app.querySelectorAll('[data-go]').forEach(b => b.onclick = () => setTab(b.dataset.go));
+  app.querySelectorAll('.deep-src [data-card]').forEach(b => b.onclick = () => { VIEW = { type:'card', name:b.dataset.card }; render(); window.scrollTo(0,0); });
   app.querySelectorAll('[data-back]').forEach(b => b.onclick = () => { VIEW = null; render(); window.scrollTo(0,0); });
   const ds = app.querySelector('#deep-save'); if(ds) ds.onclick = async () => { const text = (app.querySelector('#deep-ta').value||'').trim(); if(!text) return; ds.disabled = true; ds.textContent = '保存中…';
     const qd = (L.quiz && L.quiz.date) || jst(); try{ L.day = await ghPut(`inbox/quiz_answers/${qd}.json`, j => { j.date = j.date || qd; if(!j.quiz && L.quiz) j.quiz = L.quiz; j.answers = j.answers || {}; j.answers[ds.dataset.id] = { text, at:new Date().toISOString() }; }, `説明する1問 ${ds.dataset.id}`); L.editDeep = false; render(); }
