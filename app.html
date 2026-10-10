@@ -1458,7 +1458,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-10-09.1';
+const APP_VERSION = '2026-10-10.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1667,8 +1667,8 @@ const OPS = [
     limit:1.7,
     // 🔴 日記は新しい日が上に並ぶ。「最後の見出し」ではなく「いちばん新しい日付」を取る（2026-09-17 毎朝赤く出ていた原因）
     read:t=>{ const m=[...t.matchAll(/^## (\d{4}-\d{2}-\d{2})/gm)].map(x=>x[1]); return m.length?m.sort().pop():null; } },
-  // 🔴 2026-10-09 メグ「広告効果は定期的に必ず報告して」: 毎週月曜10:25に Mac が真夜中AdMax・本家Amazonを取ってiPhoneへ通知
-  { name:'広告の週報', why:'Macが毎週月曜10:25に真夜中AdMax・本家Amazonを取って通知',
+  // 🔴 2026-10-09 メグ「広告効果は定期的に必ず報告して」: 毎週月曜6:05に Mac が真夜中AdMax・本家Amazonを取ってiPhoneへ通知
+  { name:'広告の週報', why:'Macが毎週月曜6:05に真夜中AdMax・本家Amazonを取って通知（6:45の朝のレポートに載る）',
     repo:'meyjiro/claude-context', path:'inbox/ad_report.jsonl', limit:7.6,
     read:t=>{ const l=t.trim().split('\n').pop(); return l?JSON.parse(l).at:null; },
     verify:t=>{ const j=JSON.parse(t.trim().split('\n').pop()); return (j.admax_error||j.amazon_error) ? ('取れなかった: '+(j.admax_error||j.amazon_error)).slice(0,80) : null; } },
