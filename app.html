@@ -1458,7 +1458,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-10-10.1';
+const APP_VERSION = '2026-10-20.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -3283,6 +3283,30 @@ function sparkLine(el, data, unit) {
   s += `<text x="${W}" y="${H + 13}" text-anchor="end" font-size="9.5" fill="var(--text2)">${esc(data[data.length - 1].label)}</text></svg>`;
   el.innerHTML = s;
 }
+const jpDate = d => `${d.slice(0, 4)}年${+d.slice(5, 7)}月${+d.slice(8, 10)}日`;
+function weightChart(el, data) { // data: [{date:'YYYY-MM-DD', v}] 古い順。点は等間隔（間があいた所は日付で分かる）
+  const vs = data.map(d => d.v), lo = Math.min(...vs), hi = Math.max(...vs), span = Math.max(hi - lo, 1);
+  const W = 320, H = 90, PX = 24, PT = 18, PB = 8;
+  const x = i => (PX + i / (data.length - 1) * (W - PX * 2)).toFixed(1);
+  const y = d => (PT + (1 - (d.v - lo) / span) * (H - PT - PB)).toFixed(1);
+  let s = `<svg viewBox="0 0 ${W} ${H + 28}" style="width:100%;height:auto;font-variant-numeric:tabular-nums">`;
+  s += `<polyline points="${data.map((d, i) => `${x(i)},${y(d)}`).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>`;
+  let prevYear = '';
+  data.forEach((d, i) => {
+    const last = i === data.length - 1, yr = d.date.slice(0, 4);
+    s += `<circle cx="${x(i)}" cy="${y(d)}" r="${last ? 4 : 3}" fill="var(--accent)"/>`;
+    s += `<text x="${x(i)}" y="${+y(d) - 7}" text-anchor="middle" font-size="10" font-weight="${last ? 700 : 400}" fill="var(--text)">${d.v}</text>`;
+    s += `<text x="${x(i)}" y="${H + 12}" text-anchor="middle" font-size="9.5" fill="var(--text2)">${+d.date.slice(5, 7)}/${+d.date.slice(8, 10)}</text>`;
+    if (yr !== prevYear) s += `<text x="${x(i)}" y="${H + 24}" text-anchor="middle" font-size="9" fill="var(--text2)">${yr}年</text>`;
+    prevYear = yr;
+  });
+  s += `</svg>`;
+  const rows = data.slice().reverse().map((d, i, a) => {
+    const prev = a[i + 1], diff = prev ? +(d.v - prev.v).toFixed(2) : null;
+    return `<span>${jpDate(d.date)}</span><b style="text-align:right">${d.v}kg</b><span style="color:var(--text2)">${diff === null ? '' : `前回から ${diff > 0 ? '+' : ''}${diff}kg`}</span>`;
+  }).join('');
+  el.innerHTML = s + `<div class="s" style="margin-top:6px;display:grid;grid-template-columns:auto auto 1fr;gap:3px 12px">${rows}</div>`;
+}
 function sparkLineAvg(el, data, unit) { // data: [{label, v, avg}] 日々の値（薄）＋7日平均（太）
   const vs = data.map(d => d.v).concat(data.map(d => d.avg));
   const lo = Math.min(...vs), hi = Math.max(...vs), span = Math.max(hi - lo, 1);
@@ -3754,10 +3778,10 @@ async function loadHealth() {
       const wl = await repoFile(REPO, WEIGHT_LOG);
       if (wl) parseCsv(wl).forEach(r => { if (r.date && r.weight_kg) wmap[r.date] = +r.weight_kg; });
     } catch (e) {}
-    const ym = d => `${d.slice(2, 4)}/${+d.slice(5, 7)}`;   // 月1回なので年をまたぐ。25/8 のように出す
-    const wt = Object.keys(wmap).sort().slice(-12).map(d => ({ label: ym(d), v: wmap[d] }));
-    if (wt.length > 1) { sparkLine($('health-weight'), wt, 'kg'); $('health-weight').setAttribute('title', `体重の推移（直近${wt.length}回）`); }
-    else if (wt.length === 1) { $('health-weight').innerHTML = `<p class="s">${esc(wt[0].label)} ${wt[0].v}kg（2回たまると線になります）</p>`; }
+    // 10/20 メグ「いつの記録かわからん」: 点ごとに日付と値を出し、横は実際の日付の間隔。下に記録の一覧（新しい順）
+    const wt = Object.keys(wmap).sort().slice(-12).map(d => ({ date: d, v: wmap[d] }));
+    if (wt.length > 1) weightChart($('health-weight'), wt);
+    else if (wt.length === 1) { $('health-weight').innerHTML = `<p class="s">${jpDate(wt[0].date)} ${wt[0].v}kg（2回たまると線になります）</p>`; }
     if (wt.length && H_PROF && H_PROF.height_cm) {
       const w = wt[wt.length - 1].v, bmi = (w / (H_PROF.height_cm / 100) ** 2).toFixed(1);
       $('health-weight').insertAdjacentHTML('beforeend', `<div class="refline">${hRefLine('weight_kg', w, 'kg', 1, 0, H_PROF)}<span>BMI ${bmi}</span></div>`);
