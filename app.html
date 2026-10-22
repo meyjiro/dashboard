@@ -1059,6 +1059,16 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 .qrow .qnote{font-size:10.5px;opacity:.55;margin-top:2px}
 .qcopy{flex-shrink:0;border:none;border-radius:8px;padding:8px 12px;font-size:14px;background:rgba(128,128,128,.12);cursor:pointer}
 .qcopy.done{background:#22a06b;color:#fff}
+
+/* 🔒 金庫（2026-10-22・personal/vault/credentials.md.enc をこの端末の中だけで開く）*/
+.vault-box{background:var(--card,#fff);border-radius:8px;padding:12px;margin-bottom:12px}
+.vault-box .vrow{display:flex;gap:8px;margin-top:8px}
+.vault-box input{flex:1;min-width:0;font-size:16px;padding:9px 10px;border-radius:8px;border:1px solid rgba(128,128,128,.35);background:transparent;color:inherit;font-family:inherit}
+.vault-box button{border:0;border-radius:8px;padding:9px 14px;font-weight:700;font-family:inherit;background:var(--accent);color:#fff;cursor:pointer}
+.vault-box .vlock{background:rgba(128,128,128,.15);color:inherit}
+.vline{padding:7px 12px;border-top:1px solid rgba(128,128,128,.12);font-size:13px;line-height:1.5;word-break:break-all;white-space:pre-wrap}
+.vline code{background:rgba(128,128,128,.13);padding:1px 5px;border-radius:5px;cursor:pointer;font-size:13px}
+.vline code.done{background:#22a06b;color:#fff}
 </style>
 </head>
 <body>
@@ -1343,6 +1353,13 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
       <div id="cb-root"></div>
     </div>
     <div id="tab-quick" class="tab-panel">
+      <div class="vault-box" id="vault-box">
+        <div style="font-weight:700">🔒 金庫（パスワード・カード）</div>
+        <div class="hint" style="margin-top:4px">合言葉を入れると、この端末の中だけで開きます。画面を閉じると鍵がかかります。</div>
+        <div class="vrow" id="vault-form"><input id="vault-pass" type="password" autocomplete="off" placeholder="合言葉"><button id="vault-open">開く</button></div>
+        <div class="vrow" id="vault-tools" style="display:none"><input id="vault-q" type="search" placeholder="さがす（例：バンコク・Wise・GitHub）"><button class="vlock" id="vault-close">閉じる</button></div>
+        <div id="vault-list"></div>
+      </div>
       <div class="hint" style="margin:2px 4px 10px">📋を押すとコピーされます。正本は personal リポ（変わったらClaudeが同期）</div>
       <div id="quick-list"><p class="empty">読み込み中…</p></div>
     </div>
@@ -1458,7 +1475,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-10-20.1';
+const APP_VERSION = '2026-10-22.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4679,6 +4696,57 @@ function renderCountdown() {
   }).filter(Boolean);
   $('countdown').innerHTML = items.length ? `<div class="countdown">${items.map(esc).join('　')}</div>` : '';
 }
+// ── 🔒 金庫（2026-10-22 メグ「お金をかけずに自分たちで守って便利に」）──
+//    personal/vault/credentials.md.enc を PBKDF2-SHA256→AES-256-GCM で開く（Mac の _tools/vault.py と同じ形）。
+//    合言葉と中身はメモリの中だけ（localStorage に入れない）。合言葉はソースにも端末にも保存しない。
+let vaultText = '';
+async function vaultUnlock(pass) {
+  const d = JSON.parse(await repoFile('meyjiro/personal', 'vault/credentials.md.enc'));
+  const b = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const k0 = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+  const k = await crypto.subtle.deriveKey({ name:'PBKDF2', salt:b(d.salt), iterations:d.iter, hash:'SHA-256' }, k0, { name:'AES-GCM', length:256 }, false, ['decrypt']);
+  return new TextDecoder().decode(await crypto.subtle.decrypt({ name:'AES-GCM', iv:b(d.iv) }, k, b(d.ct)));
+}
+function vaultRender() {
+  const q = ($('vault-q').value || '').trim().toLowerCase();
+  const secs = []; let cur = null;
+  vaultText.split('\n').forEach(l => {
+    const h = l.match(/^#{2,3}\s+(.*)/);
+    if (h) { cur = { title: h[1], lines: [] }; secs.push(cur); }
+    else if (cur && l.trim()) cur.lines.push(l);
+  });
+  const hit = s => !q || (s.title + '\n' + s.lines.join('\n')).toLowerCase().includes(q);
+  const show = secs.filter(hit);
+  $('vault-list').innerHTML = show.length ? show.map(s => `
+    <details class="qsec"${q ? ' open' : ''}><summary>${esc(s.title)}</summary>
+      <div class="qbody">${s.lines.map(l => `<div class="vline">${esc(l).replace(/`([^`]+)`/g, (m, v) => `<code data-v="${laAttr(v)}">${v}</code>`)}</div>`).join('')}</div>
+    </details>`).join('') : '<p class="empty">見つかりません</p>';
+  $('vault-list').querySelectorAll('code[data-v]').forEach(c => c.addEventListener('click', async () => {
+    const v = c.dataset.v;
+    try { await navigator.clipboard.writeText(v); } catch (e) { const ta = document.createElement('textarea'); ta.value = v; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+    c.classList.add('done'); setTimeout(() => c.classList.remove('done'), 1000); toast('コピーしました');
+  }));
+}
+function vaultClose() {
+  vaultText = ''; $('vault-list').innerHTML = ''; $('vault-q').value = ''; $('vault-pass').value = '';
+  $('vault-form').style.display = ''; $('vault-tools').style.display = 'none';
+}
+async function vaultOpen() {
+  const pass = $('vault-pass').value; if (!pass) return;
+  $('vault-open').textContent = '…';
+  try {
+    vaultText = await vaultUnlock(pass); $('vault-pass').value = '';
+    $('vault-form').style.display = 'none'; $('vault-tools').style.display = ''; vaultRender();
+  } catch (e) { toast(e && e.name === 'OperationError' ? '合言葉がちがいます' : '開けませんでした'); }
+  $('vault-open').textContent = '開く';
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const o = $('vault-open'); if (!o) return;
+  o.addEventListener('click', vaultOpen);
+  $('vault-pass').addEventListener('keydown', e => { if (e.key === 'Enter') vaultOpen(); });
+  $('vault-q').addEventListener('input', vaultRender);
+  $('vault-close').addEventListener('click', vaultClose);
+});
 let quickLoaded = false;
 async function loadQuick() {
   if (quickLoaded) return;
