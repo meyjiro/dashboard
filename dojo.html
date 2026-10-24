@@ -246,6 +246,27 @@ mark.ex{background:var(--ng-bg);color:var(--ng);font-weight:700;padding:1px 5px;
 .vid ul{padding-left:20px;margin:6px 0} .vid li{margin:4px 0}
 .lesson .fig svg{min-width:0}
 [hidden]{display:none!important}
+
+/* ═══ 2026-10-24 ダッシュボードと同じ見た目・ホームの作り直し ═══ */
+.card,.list{border:none!important;border-radius:20px!important;box-shadow:none!important}
+.btn{border-radius:14px}.btn.sub{border:none!important;background:var(--paper)!important}
+.h2-hero{background:var(--accent);color:#fff;border-radius:22px;padding:20px 20px 18px;margin:10px 0 10px}
+.h2-k{font-size:13px;opacity:.85}
+.h2-t{font-size:19px;font-weight:900;margin:4px 0 16px;line-height:1.5}
+.h2-go{width:100%;height:56px;border-radius:16px;background:#fff;color:var(--accent);font-size:18px;font-weight:900}
+.h2-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:6px}
+.h2-n{background:var(--paper);border-radius:20px;padding:14px 16px;display:flex;flex-direction:column}
+.h2-n b{font-size:30px;font-weight:900;line-height:1.2}
+.h2-n span{font-size:12px;color:var(--ink2)}
+.h2-more{margin-top:12px}
+.h2-more>summary{background:var(--paper);border-radius:14px;padding:13px 16px;font-weight:700;font-size:14px;cursor:pointer;list-style:none}
+.h2-more>summary::-webkit-details-marker{display:none}
+.h2-more>summary::after{content:'▾';float:right;color:var(--ink2)}
+.lv0{background:#E6E5E1!important} .lv1{background:#C9CEDC!important} .lv2{background:#7F8BA8!important} .lv3{background:#2E3A59!important}
+.tabs{left:16px!important;right:16px!important;bottom:calc(12px + env(safe-area-inset-bottom))!important;border:none!important;border-radius:32px!important;background:#1E2230!important;padding:8px!important}
+.tabs button{color:#A4A8B4!important}.tabs button.on{color:#fff!important;background:transparent!important}
+
+.co.tip{background:var(--paper)!important;border:none!important;border-left:4px solid #C9CEDC!important}
 </style>
 </head>
 <body>
@@ -473,7 +494,7 @@ function chapterScore(ch){ const m = mastery(); let ok=0, n=0; const c = DATA.ch
 function setTab(t){ TAB = t; VIEW = null; stopSpeak(); [...tabs.querySelectorAll('button')].forEach(b => b.classList.toggle('on', b.dataset.tab===t)); render(); window.scrollTo(0,0); }
 tabs.addEventListener('click', e => { const b = e.target.closest('button'); if(b) setTab(b.dataset.tab); });
 
-function header(){ return `<div class="top"><a href="./" style="text-decoration:none;color:var(--ink2);font-size:13px;margin-right:6px">‹ ダッシュボード</a><img class="bean" src="dojo/img/bean_smile.png" alt=""><h1>${esc(DATA.title)}${TEST?' <span class="pill" style="vertical-align:middle">テスト用</span>':''}</h1><div class="sub">今日の10問・課・図鑑</div></div>`; }
+function header(){ return `<div class="top"><a href="./" style="text-decoration:none;color:var(--ink2);font-size:13px;margin-right:6px">‹ ダッシュボード</a><img class="bean" src="dojo/img/bean_smile.png" alt=""><h1>${esc(DATA.title)}${TEST?' <span class="pill" style="vertical-align:middle">テスト用</span>':''}</h1></div>`; }
 
 function render(){
   if(VIEW && VIEW.type==='run') return null;
@@ -485,25 +506,37 @@ function render(){
 }
 function todayRuns(){ const t = today(); return S.get('history', []).filter(h => (h.at||'').slice(0,10)===t); }
 function renderHome(){
+  // 🔴 2026-10-24 作り直し（メグ「私が学習しなくなってる理由はこのレイアウト」）。点検で分かった原因:
+  //    ①最初に押す場所が5つ以上で迷う ②止まった日付・「1/29」のような分母・未達が目に入る ③文字ばかり。
+  //    → 1枚目は「始める」1つ。積み上がった数だけ見せる（減らない・分母なし）。次に読む課は1つ。ほかのやり方は畳む
   const hist = S.get('history', []); const m = mastery();
   const t0 = DATA.chapters.find(c => c.id===0); const tr = todayRuns().filter(h => h.mode==='chapter' && h.ch===0);
   const best = tr.reduce((a,h)=>Math.max(a,h.ok),0);
   const wrong = allQ().filter(q => m[q.key] && !m[q.key].last).length;
   const lessons = DATA.chapters.filter(c => c.id>0 && !c.hidden);
+  const solved = hist.reduce((a,h) => a + (+h.n||0), 0);
+  const readN = (L.loaded && typeof stampList === 'function') ? stampList().length : null;
   app.innerHTML = header() + `
-  <div class="hero"><div class="hz"><h2>☀️ 今日の10問</h2><p>${t0 ? esc(t0.lead||'') : 'まだ届いていない（朝7:40に入る）'}</p>
-    ${tr.length ? `<p style="margin-top:8px">今日 <span class="num">${best}</span><span style="font-size:13px"> / ${t0?t0.quiz.length:10}　${tr.length}回</span></p>` : ''}</div>
-    <img class="bean" src="dojo/img/${tr.length ? (best>=8?'bean_happy':'bean_smile') : 'bean_calm'}.png" alt=""></div>
-  <div class="grid">
-    <button class="btn" id="go-today" ${t0?'':'disabled'}>▶ ${tr.length ? 'もう一回' : '始める'}（🎧 読み上げ・番号で答える）</button>
-    <button class="btn gold" data-mode="wrong" ${wrong?'':'disabled'}>🔁 落とした問いだけ（${wrong}問）</button>
-    <button class="btn sub" data-mode="exam">🏆 週テスト（${DATA.exam.questions}問・${DATA.exam.minutes}分）</button>
+  <div class="h2-hero">
+    <div class="h2-k">今日の${t0 ? t0.quiz.length : 10}問 ・ 約5分</div>
+    <div class="h2-t">${tr.length ? `今日は ${best}問 正解。もう一回いける` : '聞いて、番号で答えるだけ'}</div>
+    <button class="h2-go" id="go-today" ${t0?'':'disabled'}>▶ ${tr.length ? 'もう一回' : '始める'}</button>
   </div>
-  <div class="list" style="margin-top:12px"><div class="tog"><div><b>🔊 読み上げ</b><div class="muted">問題と解説を声で読む</div></div><button class="sw ${voiceOn?'on':''}" id="t-voice"><i></i></button></div>
-    <div class="tog"><div><b>🎤 声で答える</b><div class="muted">${SR ? '読み上げの途中でも「1〜4」と言えば答えになる' : 'このブラウザは非対応（iPhoneはSafariで）'}</div></div><button class="sw ${micOn?'on':''}" id="t-mic" ${SR?'':'disabled'}><i></i></button></div></div>
-  ${homeLearnHtml()}<div class="sec">📚 読んだ課ごとに練習 <span class="muted">${lessons.length}課</span></div>
-  <div class="list">${lessons.map(c => { const sc = chapterScore(c.id); return row({ attr:`data-ch="${c.id}"`, ic:c.emoji, title:c.title, meta:'4択10問', st: sc.n ? `${sc.ok}/${c.quiz.length}` : '', stc: sc.ok===c.quiz.length&&sc.n ? 'gold' : 'ok' }); }).join('') || '<p class="muted" style="padding:12px 14px;margin:0">課を読むと翌朝ここに増える</p>'}</div>
-  <p class="muted" style="margin-top:14px">🎧 声: 問題＝ずんだもん。結果はずんだもん／冥鳴ひまり。（VOICEVOX:ずんだもん／VOICEVOX:冥鳴ひまり）</p>`;
+  <div class="h2-row">
+    <div class="h2-n"><b class="num">${solved}</b><span>解いた問題</span></div>
+    <div class="h2-n"><b class="num">${readN == null ? '…' : readN}</b><span>読んだ課</span></div>
+  </div>
+  ${homeLearnHtml()}
+  <details class="h2-more"><summary>ほかのやり方</summary>
+    <div class="grid" style="margin-top:10px">
+      <button class="btn sub" data-mode="wrong" ${wrong?'':'disabled'}>落とした問いだけ（${wrong}問）</button>
+      <button class="btn sub" data-mode="exam">週テスト（${DATA.exam.questions}問・${DATA.exam.minutes}分）</button>
+    </div>
+    <div class="list" style="margin-top:12px"><div class="tog"><div><b>読み上げ</b><div class="muted">問題と解説を声で読む</div></div><button class="sw ${voiceOn?'on':''}" id="t-voice"><i></i></button></div>
+      <div class="tog"><div><b>声で答える</b><div class="muted">${SR ? '「1〜4」と言えば答えになる' : 'このブラウザは非対応（iPhoneはSafariで）'}</div></div><button class="sw ${micOn?'on':''}" id="t-mic" ${SR?'':'disabled'}><i></i></button></div></div>
+    <div class="sub-h" style="margin-top:14px">読んだ課の問題をもう一度</div>
+    <div class="list">${lessons.map(c => row({ attr:`data-ch="${c.id}"`, ic:c.emoji, title:c.title, meta:'4択10問' })).join('')}</div>
+  </details>`;
   const g = app.querySelector('#go-today'); if(g) g.onclick = () => startRun({ mode:'chapter', ch:0 });
   app.querySelector('#t-voice').onclick = () => { voiceOn = !voiceOn; S.set('voice', voiceOn); if(!voiceOn){ micOn = false; S.set('mic', false); } renderHome(); };
   app.querySelector('#t-mic').onclick = () => { micOn = !micOn; S.set('mic', micOn); if(micOn){ voiceOn = true; S.set('voice', true); } renderHome(); };
@@ -638,13 +671,13 @@ function renderStats(){
   const m = mastery();
   app.innerHTML = header() + `
   <div class="card"><h2 style="font-size:20px;font-weight:900">📈 成績</h2>
-  <p class="muted" style="margin:6px 0 10px">直近${last.length}回（緑＝問題、金＝模試）</p>
+  <p class="muted" style="margin:6px 0 10px">直近${last.length}回（紺＝問題、茶＝週テスト）</p>
   ${last.length ? `<div class="hist">${last.map(h=>`<div class="c ${h.mode==='exam'?'exam':''}" style="height:${Math.max(6,h.pct)}%"><span class="num">${h.pct}</span></div>`).join('')}</div>` : '<p class="muted">まだ記録なし。問題を解くとここに出る。</p>'}
-  <div class="hlist">${hist.slice(-8).reverse().map(h=>`<div><span>${h.at.replace('T',' ')} ${h.mode==='exam'?'🏆週テスト':h.mode==='chapter'?(h.ch===0?'☀️今日の10問':((DATA.chapters.find(c=>c.id===h.ch)||{}).title||'').slice(0,12)):h.mode==='wrong'?'🔁落とした問い':'🎲ランダム'}</span><span class="num">${h.ok}/${h.n}　${fmtT(h.sec)}</span></div>`).join('')}</div></div>
+  
   <h3 style="margin:18px 0 8px;font-size:15px">課ごとの定着（最後に解いたときの正解率）</h3>
   <div class="card"><div class="mastery">${DATA.chapters.filter(c=>c.id>0 && !c.hidden).map(c=>{ const s = chapterScore(c.id); const p = s.n? Math.round(s.ok/c.quiz.length*100):0; return `<div class="mrow"><span>${c.emoji}</span><div><div style="font-size:13px">第${c.id}章 ${esc(c.title)}</div><div class="b"><i style="width:${p}%"></i></div></div><span class="num" style="text-align:right">${s.n?p+'%':'—'}</span></div>`; }).join('')}</div></div>
   <p class="muted" id="sync-st" style="margin-top:14px">${syncLabel()}　— 端末を替えても記録は続く</p>
-  <div class="row" style="margin-top:8px"><button class="btn sub" id="reset">記録を消す</button></div>`;
+  <div style="margin-top:28px;text-align:right"><button id="reset" style="font-size:12px;color:var(--ink2);text-decoration:underline">記録を消す</button></div>`;   // 🔴 10/24 大きいボタンでうっかり押せた
   app.querySelector('#reset').onclick = () => { if(confirm('成績と記録を全部消す？（クラウドの分も消える）')){ S._quiet = true; S.set('history', []); S.set('mastery', {}); S.set('read', {}); S._quiet = false; syncPush(); renderStats(); } };
 }
 
@@ -688,7 +721,7 @@ const LANES = [
   { k:'会社', ic:'🏢', d:'自分で選んだ会社だけ深掘り' } ];
 const laneIc = k => (LANES.find(l => l.k===k) || {}).ic || '📘';
 function laneOf(x){ if(x.lane) return x.lane; if(x.track==='V') return '動画'; const k = String(x.key||''); if(k.startsWith('stairs:') || x.track==='B') return '学問'; if(x.track==='K' || /教科書\/K\//.test(k)) return '会社'; return '基礎'; }
-const SLOT = {1:'歴史', 2:'今', 3:'産業', 4:'損得', 5:'ニュース'};
+const SLOT = {1:'歴史', 2:'今', 3:'産業', 4:'損得', 5:'時事'};   // 🔴 10/24「ニュース」が「ニュー／ス」と割れていた
 const LVN = ['まだ', '見た', '思い出せる', '説明できる'];
 
 let L = { loaded:false, loading:null, hidden:new Set(), zk:null, quiz:null, day:null, read:{}, scores:[], stamps:null, videos:[] };
@@ -757,17 +790,18 @@ function homeLearnHtml(){
   } else deep = `<p class="muted">今日の問いはまだ届いていない</p>`;
   const Ls = stampList(); const n = Ls.length; const no = n ? Math.floor((n-1)/20)+1 : 1; const cur = Ls.slice((no-1)*20);
   const cells = Array.from({ length:20 }, (_, i) => { const s = cur[i]; const src = s && stampSrc(s.score, s.key+':'+s.date); return s ? `<div class="s on">${src ? `<img src="${src}" alt="">` : '✓'}</div>` : `<div class="s">${i+1}</div>`; }).join('');
-  return `<div class="sec">📖 今日の1課 <span class="muted">好きなのを1つ・何課でも</span></div><div class="list">${pickH || '<p class="muted" style="padding:12px 14px;margin:0">次の課を用意している</p>'}${row({ attr:'data-go="learn"', ic:'📚', title:'課の棚を全部見る', st:'→' })}</div>
-    <div class="sec">🗣 説明する1問</div><div class="card">${deep}</div>
-    <div class="sec">🎖 スタンプカード <span class="muted">No.${no} ・ 課を1つ読むと1個</span></div><div class="card"><div class="stamps">${cells}</div></div>`;
+  const first = picks[0] ? lessonRow(picks[0]) : (v ? videoRow(v) : '');
+  return `<div class="sec">次に読む</div><div class="list">${first || '<p class="muted" style="padding:12px 14px;margin:0">次の課を用意している</p>'}${row({ attr:'data-go="learn"', ic:'📚', title:'ほかの課を見る', st:'→' })}</div>
+    <details class="h2-more"><summary>説明する1問（書きたい日だけ）</summary><div class="card" style="margin-top:10px">${deep}</div></details>
+    <details class="h2-more"><summary>スタンプカード（${n}個）</summary><div class="card" style="margin-top:10px"><div class="stamps">${cells}</div></div></details>`;
 }
 // 一覧の1行（アイコン・題名2行まで・補足1行・右に状態と ✕）
 function row(o){ return `<button class="li" ${o.attr||''}><span class="ic">${o.ic||''}</span><span class="bd"><span class="tt">${esc(o.title||'')}</span>${o.meta ? `<span class="mt">${esc(o.meta)}</span>` : ''}</span>${o.st ? `<span class="st ${o.stc||''}">${esc(o.st)}</span>` : ''}${o.x||''}</button>`; }
 function lessonRow(x){
   const r = isRead(x); const lane = laneOf(x);
-  return row({ attr:`data-lesson="${esc(x.key)}"`, ic:laneIc(lane), title:x.title||x.key, meta:[x.card, x.minutes ? x.minutes+'分' : ''].filter(Boolean).join(' ・ '), st: r ? '✓ 読んだ' : '', stc:'ok', x: xh('lesson', x.key, x.title) });
+  return row({ attr:`data-lesson="${esc(x.key)}"`, ic:laneIc(lane), title:x.title||x.key, meta:[x.card, x.minutes ? x.minutes+'分' : ''].filter(Boolean).join(' ・ '), st: r ? '✓ 読んだ' : '', stc:'ok' });   // 🔴 10/24 一覧の ✕ は誤タップが怖い（点検）。外すのは課のページで
 }
-function videoRow(v){ return row({ attr:`data-video="${esc(v.path)}"`, ic: v.ch==='ypapa' ? '🎙️' : '🏭', title:vTitle(v), meta:`${v.ch==='ypapa'?'Yパパ':'ものづくり太郎'} ・ ${md2(v.date)}`, x: xh('video', v.path, v.title, v.vid) }); }
+function videoRow(v){ return row({ attr:`data-video="${esc(v.path)}"`, ic: v.ch==='ypapa' ? '🎙️' : '🏭', title:vTitle(v), meta:`${v.ch==='ypapa'?'Yパパ':'ものづくり太郎'} ・ ${md2(v.date)}` }); }
 function vTitle(v){ return v.title || ((v.ch==='ypapa'?'Yパパ':'ものづくり太郎') + ' ' + md2(v.date)); }
 
 /* ── 課タブ（4つの棚を切り替え。全部を縦に並べない） */
@@ -775,12 +809,13 @@ function renderLearn(){
   if(!PAT){ app.innerHTML = header() + homeLearnHtml(); return; }
   if(!L.loaded){ app.innerHTML = header() + '<p class="muted">読み込み中…</p>'; learnLoad().then(() => { if(!VIEW && TAB==='learn') render(); }); return; }
   const ls = allLessons(); const cur = S.get('lane', '動画'); const ln = LANES.find(l => l.k===cur) || LANES[0];
-  const cnt = k => { const xs = ls.filter(x => laneOf(x)===k && x.kind!=='html'); return xs.length ? `${xs.filter(isRead).length}/${xs.length}` : ''; };
+  const cnt = k => { const xs = ls.filter(x => laneOf(x)===k && x.kind!=='html'); const r = xs.filter(isRead).length; return r ? `${r}課` : ''; };   // 🔴 10/24 分母を出さない（未達が目立つ）
   let body = '';
   if(ln.k === '動画'){
     const vs = ls.filter(x => laneOf(x)==='動画');
-    body = (vs.length ? `<div class="sub-h">🔁 振り返りの課 ・ 昔の回を、今どうなったかまで追う</div><div class="list">${vs.map(lessonRow).join('')}</div>` : '')
-      + `<div class="sub-h">🆕 最近の回</div><div class="list">${L.videos.slice(0, 14).map(videoRow).join('') || '<p class="muted" style="padding:12px 14px;margin:0">読み込み中…</p>'}</div>`;
+    body = (vs.length ? `<div class="sub-h">振り返りの課</div><div class="list">${vs.slice(0, 5).map(lessonRow).join('')}</div>${vs.length > 5 ? `<details class="h2-more"><summary>もっと見る（${vs.length - 5}課）</summary><div class="list" style="margin-top:10px">${vs.slice(5).map(lessonRow).join('')}</div></details>` : ''}` : '')
+      + `<div class="sub-h">最近の回</div><div class="list">${L.videos.slice(0, 5).map(videoRow).join('') || '<p class="muted" style="padding:12px 14px;margin:0">読み込み中…</p>'}</div>`
+      + (L.videos.length > 5 ? `<details class="h2-more"><summary>もっと見る（${L.videos.length - 5}本）</summary><div class="list" style="margin-top:10px">${L.videos.slice(5, 14).map(videoRow).join('')}</div></details>` : '');
   } else {
     const xs = ls.filter(x => laneOf(x)===ln.k);
     body = `<div class="list">${xs.map(x => x.kind==='html' ? row({ attr:`data-html="${esc(x.path)}"`, ic:ln.ic, title:x.title||x.key, meta:'宇宙の階段' }) : lessonRow(x)).join('') || '<p class="muted" style="padding:12px 14px;margin:0">まだ無い</p>'}</div>`;
@@ -793,7 +828,7 @@ function renderLearn(){
 }
 
 /* ── 課を読む */
-const inl = t => esc(t).replace(/\*\*(.+?)\*\*/g, '<span class="hl">$1</span>').replace(/\[\[(.+?)\]\]/g, '<span class="nb">$1</span>').replace(/\{\{(.+?)\}\}/g, '<b>$1</b>').replace(/\(\((.+?)\)\)/g, ' <span class="muted">← $1</span>');
+const inl = t => esc(String(t||'').replace(/🔴\s*/g, '')).replace(/\*\*(.+?)\*\*/g, '<span class="hl">$1</span>').replace(/\[\[(.+?)\]\]/g, '<span class="nb">$1</span>').replace(/\{\{(.+?)\}\}/g, '<b>$1</b>').replace(/\(\((.+?)\)\)/g, ' <span class="muted">← $1</span>');
 async function openLesson(key){
   const x = allLessons().find(y => y.key===key) || { key };
   let path = x.path; if(!path){ const m = String(key).match(/^([A-Z])(\d+)$/); if(m) path = `knowledge/学習/教科書/${m[1]}/${String(m[2]).padStart(2,'0')}.json`; }
@@ -869,19 +904,19 @@ function renderZukan(){
   const z = L.zk; if(!z || !z.cards){ app.innerHTML = header() + '<p class="muted">図鑑のデータがまだ無い</p>'; return; }
   const colored = 70 - (+((z.counts||{})['0'])||0);
   const rows = (z.order||Object.keys(z.cards)).map(c => { const C = z.cards[c]; if(!C) return ''; return `<button class="gn" data-card="${esc(c)}">${esc(c)}</button>${[1,2,3,4,5].map(s => `<button class="gc lv${(C.slots[String(s)]||{}).level||0}" data-card="${esc(c)}" aria-label="${esc(c+' '+SLOT[s])}"></button>`).join('')}`; }).join('');
-  app.innerHTML = header() + `<div class="card"><div style="display:flex;align-items:baseline;gap:8px"><h2 style="font-size:20px;font-weight:900">🗺️ 図鑑</h2><span class="muted" style="margin-left:auto">色の付いたマス <span class="num" style="font-size:22px;color:var(--ink)">${colored}</span> / 70</span></div>
+  app.innerHTML = header() + `<div class="card"><div style="display:flex;align-items:baseline;gap:8px"><h2 style="font-size:20px;font-weight:900">🗺️ 図鑑</h2><span class="muted" style="margin-left:auto">色の付いたマス <span class="num" style="font-size:22px;color:var(--ink)">${colored}</span></span></div>
     <div class="legend">${[0,1,2,3].map(l => `<span><b class="lv${l}"></b>${LVN[l]}</span>`).join('')}</div>
     <div class="zk"><div></div>${[1,2,3,4,5].map(s => `<div class="gh">${SLOT[s]}</div>`).join('')}${rows}</div>
-    <p class="muted" style="margin:10px 0 0">見た＝課を読んだ・問いに触れた ／ 思い出せる＝2点以上 ／ 説明できる＝別の日に3点を2回</p></div>
+</div>
     <a class="btn sub" href="world.html" style="margin-top:12px;text-decoration:none">🌍 世界地図で見る</a>`;
   app.querySelectorAll('[data-card]').forEach(b => b.onclick = () => { VIEW = { type:'card', name:b.dataset.card }; render(); window.scrollTo(0,0); });
 }
 function viewCard(){
   const name = VIEW.name; const C = L.zk.cards[name]; const ls = allLessons();
-  const lvc = ['var(--ink2)', '#6fa58c', '#3e8e6c', 'var(--accent)'];
+  const lvc = ['#A9ABB2', '#8C96B0', '#5E6C8E', 'var(--accent)'];   // 🔴 10/24 緑をやめ紺の濃淡に
   const slots = [1,2,3,4,5].map(s => { const S = C.slots[String(s)]||{}; const lv = S.level||0; const body = String(S.body||'').replace(/[🔴🟢🟡🟠]\s*/gu, '').trim();
     const first = (body.split('\n').find(l => l.trim() && !/^（/.test(l.trim()))||'').replace(/^\s*(?:[-・]|\d+\.)\s*/, '').replace(/\*\*/g, '');
-    const mine = (S.answers||[]).map(x => `<div class="mine"><small>${md2(x.date)} ・ ${esc(x.q||'')}</small>${x.a ? esc(String(x.a).slice(0,120)) : ''}${x.score!=null ? ` ・ <b class="num">${x.score}</b>/3` : ''}</div>`).join('');
+    const seenQ = new Set(); const mine = (S.answers||[]).filter(x => x.a && !seenQ.has(x.q) && seenQ.add(x.q)).map(x => `<div class="mine"><small>${md2(x.date)} ・ ${esc(x.q||'')}</small>${x.a ? esc(String(x.a).slice(0,120)) : ''}${x.score!=null ? ` ・ <b class="num">${x.score}</b>/3` : ''}</div>`).join('');
     const les = ls.filter(x => x.card===name && +x.slot===s).map(lessonRow).join('');
     return `<div class="card slot"><div class="sh"><span>${s}. ${SLOT[s]}</span><span class="lvb" style="background:${lvc[lv]}">${LVN[lv]}</span></div>
       ${body && !/^（夜の巡回が/.test(body) ? `<details class="fact"><summary>${esc(first.length>70 ? first.slice(0,70)+'…' : first)}</summary>${mdLite(body)}</details>` : '<p class="muted">事実はまだ無い</p>'}
