@@ -1089,6 +1089,83 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 .vline{padding:7px 12px;border-top:1px solid rgba(128,128,128,.12);font-size:13px;line-height:1.5;word-break:break-all;white-space:pre-wrap}
 .vline code{background:rgba(128,128,128,.13);padding:1px 5px;border-radius:5px;cursor:pointer;font-size:13px}
 .vline code.done{background:#22a06b;color:#fff}
+
+/* ═══ 2026-10-24 見た目の作り直し（メグが3案からB「タイル」、3色から「くすみネイビー」を選んだ）═══
+   見本: https://claude.ai/artifact/CyvSubo7rdTRrMNZy3n93d の「B ① くすみネイビー」
+   🔴 明るい青はチカチカするので使わない（メグ 10/24）。差し色は紺と、くすんだ茶（読み物・新着の点） */
+:root{--bg:#F3F3F1;--bg2:#FFFFFF;--bg3:#EAE9E5;--text:#1B1D22;--text2:#5E6068;--text3:#85878E;
+  --accent:#2E3A59;--accent-light:#E7EAF1;--card:#FFFFFF;--border:#E6E5E1;--border2:#EFEEEA;--line:#ECEBE7;
+  --sand:#C08A5B;--sand-light:#F2EADF;--sand-text:#8A5A33;--nav:#1E2230;--r:20px}
+.top-bar{background:var(--bg);border-bottom:none;padding:18px 20px 6px}
+.top-bar h1{font-size:26px;font-weight:900;letter-spacing:0}
+.top-bar .sub{font-size:13px;margin-left:10px}
+.tab-content{padding:6px 16px calc(100px + var(--safe-bottom))}
+.card{border:none;border-radius:var(--r)}
+/* 下のメニュー: 浮いた紺の帯に5つ（今日・予定・読む・からだ・ほか） */
+.bottom-nav{left:16px;right:16px;bottom:calc(12px + var(--safe-bottom));border-radius:32px;background:var(--nav);
+  border-top:none;padding-bottom:0;box-shadow:0 6px 20px rgba(20,24,36,.18)}
+.nav-btn{color:#A4A8B4;min-height:64px;padding:11px 0 7px}
+.nav-btn.active{color:#FFFFFF}
+.nav-btn.active::before{display:none}
+.nav-btn.fresh::after{background:var(--sand);top:10px}
+.nav-btn.navhide{display:none}
+/* 今日: 日記の大きいタイル＋体の記録3つ */
+.tq-diary{width:100%;height:92px;border:none;border-radius:22px;background:var(--accent);color:#FFFFFF;
+  display:flex;align-items:center;justify-content:space-between;padding:0 22px;cursor:pointer;text-align:left}
+.tq-diary b{display:block;font-size:20px;font-weight:900;line-height:1.3}
+.tq-diary small{display:block;font-size:13px;opacity:.85}
+.tq-diary svg{width:32px;height:32px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round}
+.tq3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+.tqt{height:86px;border:none;border-radius:var(--r);background:var(--card);color:var(--text);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:5px;cursor:pointer;font-size:14px;font-weight:700}
+.tqt svg{width:24px;height:24px;stroke:var(--accent);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.tqchips{display:flex;gap:6px}
+.tqchips button{border:none;border-radius:12px;padding:5px 11px;font-size:12px;font-weight:700;background:var(--accent-light);color:var(--accent);cursor:pointer}
+.tqchips button.g{background:var(--bg);color:var(--text2);font-weight:400}
+.topq .tqmsg{font-size:12px;color:var(--text2);margin:6px 4px 0;min-height:1em}
+/* 件数のタイル（メビウス・ガチレズ） */
+.ctiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 0 10px}
+.ctile{display:block;background:var(--card);border-radius:var(--r);padding:14px 16px;color:var(--text);text-decoration:none;min-height:96px}
+.ctile .k{font-size:13px;color:var(--text2)}
+.ctile .n{font-size:34px;font-weight:900;line-height:1.2;font-variant-numeric:tabular-nums}
+.ctile .n small{font-size:14px;font-weight:700;margin-left:4px}
+.ctile .m{font-size:12px;color:var(--text2)}
+.ctile .m.sand{color:var(--sand-text);font-weight:700}
+/* きょう・あした */
+#tab-today > .blk-h{display:none}
+#brief-due{background:var(--card);border-radius:var(--r);padding:4px 16px;margin-bottom:4px}
+#brief-due .empty{padding:12px 0;text-align:left}
+.due2{border-bottom:1px solid var(--line);padding:12px 0;font-size:15px;font-weight:700}
+.due2:last-child{border-bottom:none}
+.due2 .d{font-size:12px;font-weight:700;color:var(--text2)}
+/* 読み物への入口（くすんだ茶のタイル） */
+.readt{border:none;background:var(--sand-light);border-radius:var(--r);padding:14px 16px;margin:10px 0}
+.readt .rk{color:var(--sand-text);font-weight:700}
+.readt .rh{font-size:15px}
+/* 見張りは小さく */
+#ops-status .opsbar{border-radius:14px;font-size:13px}
+/* 今日の数字（為替・回復）もタイルに */
+#today-nums .sc{border:none;border-radius:var(--r);background:var(--card)}
+/* 見張りの赤は、赤枠をやめて控えめな1行 */
+#ops-status .opsbar.bad{border:none;background:var(--card);color:var(--text2);font-size:12.5px;padding:10px 14px}
+#ops-status .opsbar.bad summary b{color:#A8463A;font-weight:700}
+#ops-status .opsbar.ok{border:none;background:transparent}
+/* 全タブの入れ物を同じ形に（白・枠なし・角丸20）。ボタンと入力欄は角丸12 */
+.card,.hcard,.vcard,#tab-today .mbscard,.sc,.mbsmore,.nsbox,.numcard,.hero,.mrows,.tile,.cal-grid,.dy-today,.dy-write,.dy-letter,.dy-switch,.dy-more,.inbox-form,.paper,.learn-card,.quote-card,.lentry{
+  border:none!important;border-radius:var(--r)!important;background:var(--card)}
+.hfresh{border:none!important;border-radius:14px!important;background:var(--card)!important}
+.mbsold>summary,#tab-today .vprev>summary{border:none!important;border-radius:14px!important;background:var(--card)}
+.penddone,.due-btn,.verbar button,#tab-today .gbtn,.cal-head button,.calm-marks button,.calm-sounds button,#cal-day-list .dbtn,
+.dy-foot .dy-back,.dy-tool,.dy-calhead button,#nsheet .nwhen button,#nsheet .noff,.btn{border-radius:12px!important}
+.sleeprow input,.calmodal input,.calmodal select,.cal-add input[type=text],.modal input,.dy-entry textarea,.due-rep textarea,textarea,input[type=text],input[type=search],input[type=number],input[type=date],input[type=time]{border-radius:12px}
+.quote-card{background:var(--accent-light)!important}
+/* ほか */
+.morelist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:6px}
+.morelist button{height:96px;border:none;border-radius:var(--r);background:var(--card);color:var(--text);display:flex;flex-direction:column;
+  align-items:flex-start;justify-content:flex-end;padding:14px 16px;cursor:pointer;text-align:left}
+.morelist button svg{width:24px;height:24px;stroke:var(--accent);stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;margin-bottom:auto}
+.morelist b{font-size:15px;font-weight:900}
+.morelist small{font-size:12px;color:var(--text2)}
 </style>
 </head>
 <body>
@@ -1108,12 +1185,11 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
            1枚目＝メグが手を動かすものだけ: 日記・体の記録・今日明日の予定・メグの番。読み物は「読む」タブへ。
            棚卸しの根拠: claude-context/projects/B4_自己管理/ダッシュボード棚卸し_2026-10-24.md -->
       <div id="top-quick" class="topq">
-        <button class="tq big" onclick="switchTab('diary')"><span class="tqi">✍️</span><span>日記を書く</span></button>
-        <div class="tqrow">
-          <button class="tq" onclick="topSleep()"><span class="tqi">😴</span><span>睡眠</span></button>
-          <button class="tq" onclick="topPoop(true)"><span class="tqi">💩</span><span>あった</span></button>
-          <button class="tq" onclick="topPoop(false)"><span class="tqi">💩</span><span>なし</span></button>
-          <button class="tq" onclick="topWeight()"><span class="tqi">⚖️</span><span>体重</span></button>
+        <button class="tq-diary" onclick="switchTab('diary')"><span><b>日記を書く</b><small>写真もいっしょに</small></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>
+        <div class="tq3">
+          <button class="tqt" onclick="topSleep()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14A8 8 0 1 1 10 4a6 6 0 0 0 10 10z"/></svg>睡眠</button>
+          <div class="tqt">おつうじ<span class="tqchips"><button onclick="topPoop(true)">あった</button><button class="g" onclick="topPoop(false)">なし</button></span></div>
+          <button class="tqt" onclick="topWeight()"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 10l3 3 3-3"/></svg>体重</button>
         </div>
         <div class="tqmsg" id="tq-msg"></div>
       </div>
@@ -1147,6 +1223,17 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
         <div id="countdown"></div>
         <div class="tiles" id="link-tiles"></div>
       </details>
+    </div>
+
+    <!-- ほか（2026-10-24 下のメニューを5つにした。毎日は使わないものをここに集める） -->
+    <div id="tab-more" class="tab-panel">
+      <div class="morelist">
+        <button onclick="switchTab('diary')"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M9 8h6M9 12h6M9 16h3.5"/></svg><b>日記</b><small>これまでの日記</small></button>
+        <button onclick="switchTab('inbox')"><svg viewBox="0 0 24 24"><path d="M4 14h4l1.5 2.5h5L16 14h4"/><path d="M4 14 6.4 5h11.2L20 14v4.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg><b>投げ込み</b><small>やりとり板もここ</small></button>
+        <button onclick="switchTab('invest')"><svg viewBox="0 0 24 24"><path d="M3.5 17.5 9 12l3.5 3.5L20.5 7"/><path d="M15 7h5.5v5.5"/></svg><b>投資</b><small>資産・裁判</small></button>
+        <button onclick="switchTab('quick')"><svg viewBox="0 0 24 24"><rect x="5" y="4.5" width="14" height="16.5" rx="2.5"/><rect x="9" y="2.5" width="6" height="4" rx="1.4"/></svg><b>コピペ</b><small>金庫</small></button>
+        <button onclick="location.href='dojo.html?v='+Date.now()"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M6 10v5c3 2 9 2 12 0v-5"/></svg><b>道場</b><small>今日の問題</small></button>
+      </div>
     </div>
 
     <!-- 📖 読む（2026-10-24 メグ「暇な時に読むのがすごい楽しい。残して。でも最近見なくなってるから、自然に見に行きたくなる引力を」）
@@ -1408,12 +1495,13 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
   <div class="bottom-nav">
     <button class="nav-btn active" data-tab="today"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M5.1 5.1l1.4 1.4M17.5 17.5l1.4 1.4M2.5 12h2M19.5 12h2M5.1 18.9l1.4-1.4M17.5 6.5l1.4-1.4"/></svg><span>今日</span></button>
     <button class="nav-btn" data-tab="cal"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg><span>予定</span></button>
-    <button class="nav-btn" data-tab="inbox"><svg viewBox="0 0 24 24"><path d="M4 14h4l1.5 2.5h5L16 14h4"/><path d="M4 14 6.4 5h11.2L20 14v4.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg><span>投げ込み</span></button>
+    <button class="nav-btn navhide" data-tab="inbox"><svg viewBox="0 0 24 24"><path d="M4 14h4l1.5 2.5h5L16 14h4"/><path d="M4 14 6.4 5h11.2L20 14v4.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg><span>投げ込み</span></button>
     <button class="nav-btn" data-tab="read"><svg viewBox="0 0 24 24"><path d="M3.5 5.5c3-.9 5.8-.6 8.5 1v13c-2.7-1.6-5.5-1.9-8.5-1z"/><path d="M20.5 5.5c-3-.9-5.8-.6-8.5 1v13c2.7-1.6 5.5-1.9 8.5-1z"/></svg><span>読む</span></button>
-    <button class="nav-btn" data-tab="invest"><svg viewBox="0 0 24 24"><path d="M3.5 17.5 9 12l3.5 3.5L20.5 7"/><path d="M15 7h5.5v5.5"/></svg><span>投資</span></button>
-    <button class="nav-btn" data-tab="health"><svg viewBox="0 0 24 24"><path d="M3 12.5h3.8l2-5.5 3.6 11 2.2-5.5H21"/></svg><span>健康</span></button>
-    <button class="nav-btn" data-tab="diary"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M9 8h6M9 12h6M9 16h3.5"/></svg><span>日記</span></button>
-    <button class="nav-btn" data-tab="quick"><svg viewBox="0 0 24 24"><rect x="5" y="4.5" width="14" height="16.5" rx="2.5"/><rect x="9" y="2.5" width="6" height="4" rx="1.4"/></svg><span>コピペ</span></button>
+    <button class="nav-btn navhide" data-tab="invest"><svg viewBox="0 0 24 24"><path d="M3.5 17.5 9 12l3.5 3.5L20.5 7"/><path d="M15 7h5.5v5.5"/></svg><span>投資</span></button>
+    <button class="nav-btn" data-tab="health"><svg viewBox="0 0 24 24"><path d="M3 12.5h3.8l2-5.5 3.6 11 2.2-5.5H21"/></svg><span>からだ</span></button>
+    <button class="nav-btn navhide" data-tab="diary"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M9 8h6M9 12h6M9 16h3.5"/></svg><span>日記</span></button>
+    <button class="nav-btn" data-tab="more"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>ほか</span></button>
+    <button class="nav-btn navhide" data-tab="quick"><svg viewBox="0 0 24 24"><rect x="5" y="4.5" width="14" height="16.5" rx="2.5"/><rect x="9" y="2.5" width="6" height="4" rx="1.4"/></svg><span>コピペ</span></button>
   </div>
 </div>
 
@@ -1516,7 +1604,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-10-24.2';
+const APP_VERSION = '2026-10-24.3';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2098,6 +2186,14 @@ function renderVerBar(){
 
 function renderTodaySet(){
   const el = $('today-set'); if(!el) return;
+  // 🔴 2026-10-24 見た目の作り直し: 「今日やること あと◯」の一覧をやめ、メビウスとガチレズの件数を大きい数字のタイル2枚にした。
+  //    件数はその時の数（朝に固めた一覧ではなく）。押すとメビウスは一覧、ガチレズはターミナルで見る旨
+  { const P = window.__setParts || {};
+    const tile = (x, k, m, sand, on) => `<a class="ctile" href="#" onclick="${on};return false"><div class="k">${k}</div>
+      <div class="n">${x==null?'…':esc(String(x))}<small>件</small></div><div class="m${sand?' sand':''}">${m}</div></a>`;
+    const mb = P.mbs ? P.mbs.n : null, gl = P.glz ? P.glz.n : null;
+    el.innerHTML = `<div class="ctiles">${tile(mb,'メビウス','送るのはメグ',true,"document.querySelector('.more2').open=true;$('today-mebius').scrollIntoView({block:'start'})")}${tile(gl,'ガチレズの通報','ターミナルで',false,"toast('ターミナルで「通報周り確認して」と言ってね')")}</div>`;
+    return; }
   const st = setState();
   if(!st.items){ el.innerHTML=''; return; }
   const left = st.items.filter(i=>!st.doneIds.includes(i.id));
@@ -5448,10 +5544,12 @@ async function laToggleRec(btn, id){
 
 function switchTab(tab) {
   if (tab === 'learn') { location.href = 'dojo.html?v=' + Date.now(); return; }   // 2026-09-25 道場に一本化
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  // 🔴 2026-10-24: 下のメニューは5つ。投げ込み・投資・日記・コピペは「ほか」から入るので、そのときは「ほか」を光らせる
+  const navTab = ['inbox','invest','diary','quick'].includes(tab) ? 'more' : tab;
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === navTab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   $('tab-' + tab).classList.add('active');
-  $('page-title').innerHTML = { today:`今日<span class="sub" id="today-date"></span>`, cal:'予定', inbox:'投げ込み', invest:'投資', health:'健康', diary:'日記', quick:'コピペ帳', learn:'道場', read:'読む' }[tab];
+  $('page-title').innerHTML = { today:`今日<span class="sub" id="today-date"></span>`, cal:'予定', inbox:'投げ込み', invest:'投資', health:'からだ', diary:'日記', quick:'コピペ帳', learn:'道場', read:'読む', more:'ほか' }[tab];
   if (tab === 'learn') loadLearn();
   if (tab === 'today') setToday();
   if (tab === 'quick') loadQuick();
@@ -5476,10 +5574,10 @@ async function loadBoard() {
   const list = $('board-list'); if (!list) return;
   try {
     const files = (await listDir('inbox/board')).filter(f => f.name.endsWith('.json'));
-    const items = [];
-    for (const f of files) {
-      try { const r = await getFileWithSha('inbox/board/' + f.name); const d = JSON.parse(r.text); d.__path = 'inbox/board/' + f.name; d.__sha = r.sha; items.push(d); } catch (e) {}
-    }
+    // 🔴 2026-10-24: 1枚ずつ順番に読んでいたので、板が増えると15秒以上かかり、ほかの読み込みの完了も待たせていた。まとめて同時に読む
+    const items = (await Promise.all(files.map(async f => {
+      try { const r = await getFileWithSha('inbox/board/' + f.name); const d = JSON.parse(r.text); d.__path = 'inbox/board/' + f.name; d.__sha = r.sha; return d; } catch (e) { return null; }
+    }))).filter(Boolean);
     boardItems = items; renderBoard();
   } catch (e) { list.innerHTML = `<p class="empty">読み込めない: ${esc(e.message)}</p>`; }
 }
@@ -5621,8 +5719,11 @@ let isLoading = false;
 async function loadAll() {
   if (isLoading || !pat) return;
   isLoading = true; $('refresh-btn').classList.add('spinning');
-  await Promise.all([loadOps(), loadMebiusDrafts(), loadGlzCount(), loadNums(), loadNewStuff(), loadBriefing(), loadQueue(), loadBoard(), loadLedger(), loadWatch(), loadIbkr(), loadVerdicts(), loadDocket(), loadScout(), loadMebius(), loadHealth()]);
-  await loadSchedule(); // メビウス予定をカレンダーに重ねるため後で描画
+  await Promise.all([loadOps(), loadMebiusDrafts(), loadGlzCount(), loadNums(), loadNewStuff(), loadBriefing(), loadQueue(), loadBoard(), loadLedger(), loadWatch(), loadIbkr(), loadVerdicts(), loadDocket(), loadScout(), loadMebius(), loadHealth(),
+    // 🔴 2026-10-24: 前は全部を読み終わってから予定を読んでいた。どれか1つが戻ってこないと予定タブが空のままになる
+    //    （実測: 20秒待っても予定0件）。予定も同時に読み、最後にもう一度描き直す（メビウスの予定を重ねるため）
+    loadSchedule()]);
+  try { renderCal(); } catch (e) {}
   isLoading = false; $('refresh-btn').classList.remove('spinning');
 }
 
