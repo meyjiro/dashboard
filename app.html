@@ -1159,6 +1159,35 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 .dy-foot .dy-back,.dy-tool,.dy-calhead button,#nsheet .nwhen button,#nsheet .noff,.btn{border-radius:12px!important}
 .sleeprow input,.calmodal input,.calmodal select,.cal-add input[type=text],.modal input,.dy-entry textarea,.due-rep textarea,textarea,input[type=text],input[type=search],input[type=number],input[type=date],input[type=time]{border-radius:12px}
 .quote-card{background:var(--accent-light)!important}
+/* 投資の判決: 判決文は札の外で折り返す */
+.vruling{font-size:13px;line-height:1.7;margin-top:8px;padding:8px 12px;border-radius:12px;white-space:normal;word-break:break-word}
+.vrin{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vruling.b-reject{background:var(--red-light);color:#8E3A30}
+.vruling.b-conditional{background:var(--warn-light);color:#7A4E12}
+.vruling.b-approve{background:var(--ok-light);color:#22594A}
+.badge{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+/* やりとり板（2026-10-24 点検）: 白い角丸・点線や水色の枠をやめる */
+.bd-item,.bd-item.answered,.bd-item.done,.bd-item.hold{border:none!important;border-radius:var(--r);opacity:1}
+.bd-item.bd-c{padding:12px 16px}
+.bd-item.bd-c>summary{list-style:none;cursor:pointer}.bd-item.bd-c>summary::-webkit-details-marker{display:none}
+.bd-item.answered .bd-badge{background:var(--accent-light);color:var(--accent)}
+.bd-ctx{color:var(--text)!important}
+.bd-reply{display:flex;flex-direction:column;gap:8px}.bd-reply textarea{width:100%}
+.bd-done>summary{background:var(--card);border-radius:14px;padding:12px 16px;margin:8px 0;font-weight:700;font-size:14px;cursor:pointer}
+.today-board{background:var(--card)!important;border:none!important;border-radius:var(--r)!important;padding:14px 16px!important;margin-bottom:10px;font-size:14px}
+/* リンクは紺（明るい青はやめる） */
+#app a{color:var(--accent)}
+/* 投げ込み・覚えたい（2026-10-24 点検）: 点線の枠と古い札をやめる */
+.learn-box{border:none!important;border-radius:var(--r)!important;background:var(--card)!important}
+.learn-box .lbx-chips{display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap!important;scrollbar-width:none}
+.lbx-chips button{border:none!important;border-radius:12px!important;background:var(--sand-light)!important;color:var(--sand-text)!important;white-space:nowrap;padding:6px 12px!important}
+.lbx-chips button.on{background:var(--accent)!important;color:#fff!important}
+.chip{border:none!important;background:var(--card)!important;border-radius:12px!important}
+/* 投資（2026-10-24 点検） */
+.clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.clamp3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.navcard{background:var(--card)!important;border:none!important;border-radius:var(--r)!important}
+.borrow{background:var(--sand-light)!important;color:var(--sand-text)!important;border:none!important;border-radius:12px!important}
 /* ほか */
 .morelist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:6px}
 .morelist button{height:96px;border:none;border-radius:var(--r);background:var(--card);color:var(--text);display:flex;flex-direction:column;
@@ -1272,12 +1301,12 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
         </div>
         <div class="hint" id="photo-hint"></div>
       </div>
-      <div class="hint" style="margin:0 4px 14px">日時は自動で記録されます。🎤は録音（長押し不要・もう一度押すと停止）。音声はMacのローカルWhisperが30分以内に文字起こしして仕分けに乗ります。朝8:30と夜22:30にClaudeが仕分けし、夜は日記にも織り込まれます。</div>
+      <div class="hint" style="margin:0 4px 14px">朝と夜にクロードが仕分ける</div>
       <!-- 🧬 覚えたい（学びの投げ込み・2026-09-19 メグ「学習専用の投げ込み箱を」）。仕分けなしで夜の授業の課になる -->
       <div class="learn-box">
-        <div class="lbx-h">🧬 覚えたい <span>長期記憶に入れたいものはこっち。仕分けなしで、夜の授業の「投げ込みからの1課」になる</span></div>
-        <textarea id="learn-text" placeholder="見た・聞いた・読んだことを、そのまま。URLだけでもいい。&#10;例:「ホルムズが止まると肥料も止まるらしい。尿素の3割」「Yパパ: 利上げ局面のバイオは触るな」"></textarea>
-        <input id="learn-why" placeholder="なぜ気になった？ どこで見た？（1行・任意。ここを書くと3倍残る）">
+        <div class="lbx-h">🧬 覚えたい <span>夜に道場の1課になる</span></div>
+        <textarea id="learn-text" placeholder="見た・聞いた・読んだことを、そのまま。URLだけでもいい"></textarea>
+        <input id="learn-why" placeholder="なぜ気になった？（任意）">
         <div class="lbx-chips" id="learn-chips"><button data-t="仕組み">仕組み</button><button data-t="事実・数字">事実・数字</button><button data-t="人物・会社">人物・会社</button><button data-t="なんで？">なんで？</button><button data-t="言葉">言葉</button></div>
         <div class="inbox-actions">
           <button class="btn btn-ghost" id="learn-photo-btn">📷</button>
@@ -1288,12 +1317,14 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
         <div class="hint" id="learn-hint"></div>
       </div>
       <div class="section-title">💬 やりとり板 <span class="bd-sub" id="board-status"></span></div>
-      <div class="hint" style="margin:-6px 4px 10px">1件＝1スレッド。クロードからの「決めてほしい」も、メグからの「やって・教えて」も、返事を積んでいく。送ると3分以内にクロードが起動して、このスレッドに返事を積む。どちらが「完了」「保留」を押してもいい。</div>
-      <div id="board-list"><p class="empty">読み込み中…</p></div>
+      <div class="hint" style="margin:-6px 4px 10px">送ると3分以内にクロードが返事を書く</div>
       <div class="bd-new">
         <textarea id="board-req" placeholder="クロードに頼む・聞く（板に残る。1行目が見出しになる）"></textarea>
         <button class="btn btn-primary" id="board-send">板に書く</button>
       </div>
+      <div id="board-list"><p class="empty">読み込み中…</p></div>
+      <!-- 🔴 2026-10-24 点検: 保留20枚が広がったまま並び、タブが27,741pxになっていた。保留は畳む -->
+      <details class="bd-done"><summary>保留 <span id="board-hold-n"></span></summary><div id="board-hold"></div></details>
       <details class="bd-done"><summary>済んだもの <span id="board-done-n"></span></summary><div id="board-done"></div></details>
       <div class="section-title" style="margin-top:22px">⏳ 仕分け待ち</div>
       <div id="queue-list"><p class="empty">読み込み中…</p></div>
@@ -1305,26 +1336,22 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
     <div id="tab-invest" class="tab-panel">
       <div id="invest-nav"><p class="empty">読み込み中…</p></div>
 
-      <div class="section-title">💼 保有銘柄<span id="hold-count" class="sec-note"></span></div>
+      <div class="section-title">保有銘柄<span id="hold-count" class="sec-note"></span></div>
       <div id="invest-holdings"><p class="empty">読み込み中…</p></div>
 
-      <div class="section-title">⚖️ 判決（新しい順）<a href="./court.html" class="sec-link" id="court-link">ぜんぶ見る →</a></div>
+      <div class="section-title">判決<a href="./court.html" class="sec-link" id="court-link">投資法廷へ →</a></div>
       <div id="invest-verdicts"><p class="empty">読み込み中…</p></div>
 
-      <div class="section-title">⏳ 開廷待ち</div>
+      <div class="section-title" id="docket-h">開廷待ち</div>
       <div id="invest-docket"><p class="empty">読み込み中…</p></div>
 
-      <div class="section-title">📰 Yパパ・ものづくり太郎の新着</div>
-
-      <div class="section-title">🔭 注目企業（Yパパ基準クリア・毎朝わき出る）</div>
+      <div class="section-title">注目企業<span class="sec-note">毎朝1社</span></div>
       <div id="invest-scout"><p class="empty">読み込み中…</p></div>
-      <div class="hint" style="margin:0 4px 14px">気になった企業は「⚖️ 裁判にかける」を押すと投げ込みに入ります。翌朝の7時に検察意見書、10時に判決が出ます。</div>
+      <div class="hint" style="margin:0 4px 14px">「裁判にかける」で翌朝に判決が出る</div>
 
-      <div class="section-title">👁 ウォッチ銘柄（B7/portfolio.md）</div>
+      <div class="section-title">ウォッチ銘柄</div>
       <div id="invest-watch"><p class="empty">読み込み中…</p></div>
-      <div class="hint" style="margin:8px 4px">銘柄の追加は投げ込み箱に「〇〇ウォッチして」でOK。保有の記帳も「〇〇を100株買った」でOK。</div>
-
-      <div class="hint" style="margin:18px 4px 4px">⚖️ 裁判の与件（生活防衛資金・入金時期・リスク許容度など全22問）は<b>2026-08-20に回答済み</b>で、判決の前提に使われています。変えたくなったら投げ込みで「与件を変えたい」と言えばOK。</div>
+      <div class="hint" style="margin:8px 4px 24px">追加は投げ込みで「〇〇ウォッチして」</div>
     </div>
 
     <!-- 健康 -->
@@ -1604,7 +1631,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-10-24.4';
+const APP_VERSION = '2026-10-24.5';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2758,7 +2785,7 @@ async function loadQueue() {
   const el = $('queue-list');
   try {
     const files = (await listDir('inbox/queue')).filter(f => f.name.endsWith('.md')).sort((a, b) => b.name.localeCompare(a.name));
-    if (!files.length) { el.innerHTML = '<p class="empty">仕分け待ちはありません</p>'; return; }
+    if (!files.length) { el.innerHTML = ''; const h = el.previousElementSibling; if (h && /仕分け待ち/.test(h.textContent)) h.style.display = 'none'; return; }   // 🔴 10/24 0件なら欄ごと隠す
     const items = await Promise.all(files.slice(0, 10).map(async f => {
       let txt = '';
       try { txt = dec((await api(`/repos/${REPO}/contents/inbox/queue/${f.name}?ref=${BRANCH}`)).content); } catch (e) {}
@@ -2799,8 +2826,12 @@ async function loadLedger() {
       const ls = e.split('\n');
       const when = ls[0].replace(/^## /, '');
       const sorted = (ls.find(l => l.startsWith('→仕分け')) || '').replace(/^→仕分け[::]?\s*/, '');
-      const body = ls.slice(1).filter(l => !l.startsWith('→仕分け') && !/^(img|audio):\s/.test(l)).join(' ').trim();
-      return `<div class="card"><div class="s" style="color:var(--text)">${esc(body.slice(0, 110))}</div><div class="s" style="margin-top:4px;font-size:11px">${esc(when)}${sorted?` → ${esc(sorted.slice(0,60))}`:''}</div></div>`;
+      // 🔴 2026-10-24 点検: 「at: … kind: … due_date:」のデータ行がそのまま出ていた。英字の項目行は外し、切るときは「…」を付ける。ファイルの場所も出さない
+      const cut = (t, n) => t.length > n ? t.slice(0, n).replace(/[、。\s]+[^、。\s]*$/, '') + '…' : t;
+      const kind = (ls.find(l => /^kind:\s/.test(l)) || '').replace(/^kind:\s*/, '');
+      const body = ls.slice(1).filter(l => !l.startsWith('→仕分け') && !/^[a-z_]+:\s/i.test(l)).join(' ').replace(/[|｜]\s*\|?.*$/,'').trim();
+      const sorted2 = sorted.replace(/`[^`]*`/g, '').replace(/\S*\/\S*\.(md|csv|json|jsonl)\S*/g, '').replace(/\s+/g, ' ').trim();
+      return `<div class="card"><div class="s" style="margin-bottom:4px;font-size:12px">${esc(when)}${kind ? ' ・ ' + esc(kind) : ''}</div><div class="s" style="color:var(--text)">${esc(cut(body, 90))}</div>${sorted2 ? `<div class="s" style="margin-top:4px;font-size:12px">→ ${esc(cut(sorted2, 60))}</div>` : ''}</div>`;
     }).join('');
     ledgerLoaded = true;
   } catch (e) { ledgerLoaded = false; }
@@ -4508,11 +4539,12 @@ async function loadWatch() {
   try {
     const md = await getFile('projects/B7_投資/portfolio.md');
     if (!md) { el.innerHTML = '<p class="empty">portfolio.md が見つかりません</p>'; return; }
-    const sec = md.split(/## ウォッチ/)[1] || '';
+    // 🔴 2026-10-24 点検: 「## ウォッチ」より後ろを全部読んでいて、別の節の表（Q1〜Q22 など）まで銘柄として出ていた。次の見出しまでに限る
+    const sec = ((md.split(/## ウォッチ/)[1] || '').split(/\n## /)[0]);
     const rows = sec.split('\n').filter(l => /^\|/.test(l)).slice(2)
       .map(l => l.split('|').map(c => c.trim())).filter(c => c.length > 2 && c[1]);
     el.innerHTML = rows.length
-      ? rows.map(c => `<div class="card"><div class="t" style="font-size:14px">${esc(c[1])}</div>${c[3]?`<div class="s">${esc(c[3])}</div>`:''}${c[4]?`<div class="s" style="font-size:11px">裁判: ${esc(c[4])}</div>`:''}</div>`).join('')
+      ? rows.filter(c => !/^[-:\s]+$/.test(c[1]) && !/^#/.test(c[1])).map(c => c.map(x => String(x || '').replace(/\*\*/g, ''))).map(c => `<div class="card"><div class="t" style="font-size:14px">${esc(c[1])}</div>${c[3]?`<div class="s clamp2">${esc(c[3])}</div>`:''}${c[4]?`<div class="s" style="font-size:12px">裁判: ${esc(c[4])}</div>`:''}</div>`).join('')
       : '<p class="empty">ウォッチ銘柄はまだありません</p>';
   } catch (e) { el.innerHTML = '<p class="empty">読み込みに失敗</p>'; }
 }
@@ -4589,26 +4621,22 @@ async function loadFx(ibkrRate, jpyDebt) {
   const verdict = gainPct >= 1 ? '🟢 手数料を全部払っても黒字。戻しどき圏内'
                 : gainPct >= 0 ? '🟡 かろうじて黒字（ほぼトントン）'
                 : gainPct >= -1 ? '🟡 わずかに赤字（ほぼトントン）'
-                : '🔴 今戻すと赤字。待ち';
+                : '今戻すと赤字。待ち';
   const lots = FX_LOTS.map(l =>
     `<tr><td>${l.date}</td><td style="text-align:right">¥${l.jpy.toLocaleString()}</td><td style="text-align:right">$${l.usd.toLocaleString()}</td><td style="text-align:right">${l.rate.toFixed(3)}</td></tr>`).join('');
   el.innerHTML = `
-    <div class="lbl">💱 円転タイミング
+    <div class="lbl">円転タイミング
       <span style="color:var(--text2)">今 ¥${rate.toFixed(2)}/$${live ? '' : '（IBKR時点値）'}</span>
       <span class="fxmeta">${liveAt ? new Date(liveAt).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}) : ''}${liveSrc ? ' ' + liveSrc : ''}${wiseRate ? ` ／ Wise ${wiseRate.toFixed(2)}` : ''}</span>
       <button class="fxbtn" id="fx-reload" title="レートを取り直す">🔄</button></div>
     <div style="font-size:13px;line-height:2">
       <div>${verdict}</div>
-      <div style="font-size:15px;margin:2px 0">今 $${Math.round(FX_BASE.usd).toLocaleString()} を全部戻すと
-        <b>¥${Math.round(backJpy).toLocaleString()}</b> →
-        <b style="font-size:17px;color:${good ? 'var(--ok)' : 'var(--red,#dc2626)'}">${gain >= 0 ? '+' : '−'}¥${Math.abs(Math.round(gain)).toLocaleString()}</b>
-        <span style="color:var(--text2)">(${gainPct >= 0 ? '+' : ''}${gainPct.toFixed(2)}%)</span></div>
-      <div style="color:var(--text2)">払った円 ¥${FX_BASE.jpy.toLocaleString()}（Wise手数料込みの実額）／ 戻しはIBKR内両替（手数料$2）で計算。Wise経由で戻すなら別途約0.6%かかる</div>
-      ${debt ? `<div>円借入 ¥${debt.toLocaleString()} の返済に必要な$: <b>$${needUsdNow.toFixed(0)}</b></div>` : ''}
-      <details style="margin-top:2px"><summary style="cursor:pointer;color:var(--text2);font-size:12px">仕入れの内訳（4回）</summary>
+      <div style="font-size:15px;margin:2px 0">今戻すと <b style="font-size:18px;white-space:nowrap;color:${good ? 'var(--ok)' : 'var(--sand-text)'}">${gain >= 0 ? '+' : '−'}¥${Math.abs(Math.round(gain)).toLocaleString()}</b>
+        <span style="color:var(--text2);white-space:nowrap">(${gainPct >= 0 ? '+' : ''}${gainPct.toFixed(2)}%)</span></div>
+      <details style="margin-top:2px"><summary style="cursor:pointer;color:var(--text2);font-size:12px">内訳</summary>
+      <div style="color:var(--text2);font-size:12px;line-height:1.8">$${Math.round(FX_BASE.usd).toLocaleString()} を全部戻すと ¥${Math.round(backJpy).toLocaleString()}。払った円 ¥${FX_BASE.jpy.toLocaleString()}（Wise手数料込み）。戻しはIBKR内両替（手数料$2）で計算${debt ? `。円の借入 ¥${debt.toLocaleString()} の返済に必要なのは $${needUsdNow.toFixed(0)}` : ''}。借入の金利は月約¥1,330</div>
         <table style="font-size:12px;margin-top:4px;border-collapse:collapse;font-variant-numeric:tabular-nums"><tr style="color:var(--text2)"><th style="text-align:left">日付</th><th style="text-align:right;padding-left:10px">払った円</th><th style="text-align:right;padding-left:10px">得た$</th><th style="text-align:right;padding-left:10px">Wise画面レート</th></tr>${lots}</table>
       </details>
-      <div style="color:var(--text2);font-size:11.5px;margin-top:2px">レートは🔄を押すと取り直せます（Coinbaseのリアルタイム値）。円借入には金利が月約¥1,330かかり続ける</div>
     </div>`;
   const rb = $('fx-reload');
   if (rb) rb.onclick = async () => {
@@ -4649,17 +4677,17 @@ async function loadIbkr() {
       <div class="navline"><span class="main">${mainTxt}</span><span class="sub">${subTxt}</span></div>
       <div style="margin-top:5px"><span class="badge ${pnlUsd >= 0 ? 'b-approve' : 'b-reject'}">含み損益 ${signed(yenFirst ? pnlUsd * rate : pnlUsd, yenFirst ? 'JPY' : 'USD')}</span></div>
       <div class="mixbar">
-        <i style="width:${pct(jpStock)}%;background:#0bb7ae" title="日本株"></i>
-        <i style="width:${pct(usStock)}%;background:#6366f1" title="米国株"></i>
+        <i style="width:${pct(jpStock)}%;background:#2E3A59" title="日本株"></i>
+        <i style="width:${pct(usStock)}%;background:#C08A5B" title="米国株"></i>
         <i style="width:${pct(cashUsd)}%;background:var(--border)" title="現金"></i>
       </div>
       <div class="mixleg">
-        <span><i style="background:#0bb7ae"></i>🇯🇵 日本株 ${pct(jpStock).toFixed(0)}%</span>
-        <span><i style="background:#6366f1"></i>🇺🇸 米国株 ${pct(usStock).toFixed(0)}%</span>
+        <span><i style="background:#2E3A59"></i>日本株 ${pct(jpStock).toFixed(0)}%</span>
+        <span><i style="background:#C08A5B"></i>米国株 ${pct(usStock).toFixed(0)}%</span>
         <span><i style="background:var(--border)"></i>現金 ${pct(cashUsd).toFixed(0)}%</span>
         <span style="margin-left:auto">¥${rate.toFixed(2)}/$</span>
       </div>
-      ${c.JPY < 0 ? `<div class="borrow">⚠️ 円建て借入 ${money(c.JPY, 'JPY')}（第29条: 借入は条件が書き換わる日で管理）</div>` : ''}
+      ${c.JPY < 0 ? `<div class="borrow">円の借入 ${money(Math.abs(c.JPY), 'JPY')}</div>` : ''}
     </div>`;
     navEl.insertAdjacentHTML('beforeend', '<div class="navcard" id="fx-card" style="margin-top:8px"><div class="lbl">💱 円転タイミング 読み込み中…</div></div>');
     loadFx(rate, c.JPY);
@@ -4681,8 +4709,8 @@ async function loadIbkr() {
       const code = String(p.symbol).replace(/\.(T|JP)$/i, '').toUpperCase();
       const v = judged[code];
       const badge = v
-        ? `<span class="badge ${(LV[v.level] || ['b-mini'])[0]}">判決${esc(v.id)} ${esc(v.ruling || '')}</span>`
-        : `<span class="badge b-mini">法廷未通過</span>`;
+        ? `<span class="badge ${(LV[v.level] || ['b-mini'])[0]}">判決${esc(v.id)} ${({reject:'棄却',conditional:'条件付き',approve:'可'})[v.level] || ''}</span>`   // 🔴 10/24 判決文の全文を札に入れない（はみ出す）
+        : '';   // 🔴 10/24 点検: 全部に同じ「法廷未通過」が付いていて意味がなかった
       return `<div class="hcard">
         <div class="r1"><span class="flag">${isJp ? '🇯🇵' : '🇺🇸'}</span><span class="sym">${esc(p.symbol)}</span>
           <span class="nm">${p.qty ? Math.round(p.qty).toLocaleString('ja-JP') + (isJp ? '株' : '') : ''}</span>
@@ -4690,7 +4718,7 @@ async function loadIbkr() {
         <div class="r2"><span class="val">${money(p.value, cur)}</span>
           <span style="opacity:.6">≈ ${alt}</span>${badge}</div>
       </div>`;
-    }).join('') + `<div class="hint" style="margin:2px 4px">評価額の大きい順。<b>「法廷未通過」＝裁判にかけずに買った銘柄</b>です。</div>`;
+    }).join('') + `<div class="hint" style="margin:2px 4px">評価額の大きい順</div>`;
   } catch (e) {
     navEl.innerHTML = ''; hEl.innerHTML = '<p class="empty">読み込みに失敗（personalリポの権限を確認）</p>';
   }
@@ -4704,7 +4732,8 @@ async function loadVerdicts() {
     const raw = await getFile('projects/B7_投資/判例/data/_index.json');
     const v = raw ? (JSON.parse(raw).verdicts || []) : [];
     if (!v.length) { el.innerHTML = '<p class="empty">まだ判決がありません</p>'; return; }
-    const rows = v.slice().sort((a, b) => String(b.id).localeCompare(String(a.id))).slice(0, 5);
+    // 🔴 2026-10-24 点検: 番号を文字で並べていて（37 → 36 → 061）、新しい順になっていなかった。日付、次に番号の数で並べる
+    const rows = v.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')) || (parseInt(b.id, 10) || 0) - (parseInt(a.id, 10) || 0)).slice(0, 5);
     el.innerHTML = rows.map(x => {
       const [bcls, lcls] = LV[x.level] || ['b-mini', ''];
       const meta = [];
@@ -4717,14 +4746,16 @@ async function loadVerdicts() {
         <div class="vhead">
           <span class="vno">${esc(x.id)}</span>
           <span class="vname">${esc(x.name)}${x.code ? `<span class="vno"> ${esc(x.code)}</span>` : ''}</span>
-          <span class="badge ${bcls}">${esc(x.ruling || '—')}</span>
+          <span class="badge ${bcls}">${({reject:'棄却',conditional:'条件付き',approve:'可'})[x.level] || '判決'}</span>
           <span class="vdate">${esc((x.date || '').slice(5))}</span>
         </div>
+        ${/* 🔴 2026-10-24 メグ「赤い枠の赤い文字が伸びてレイアウトがぐちゃぐちゃ」: 判決文を札（1行・折り返しなし）に入れていて、画面の外へ数千px伸びていた。札は短い言葉だけにし、判決文は下に折り返して出す */''}
+        ${x.ruling ? `<div class="vruling ${bcls}"><div class="vrin">${esc(String(x.ruling).replace(/🔴\s*/g,''))}</div></div>` : ''}
         ${x.oneliner ? `<div class="vone">${esc(x.oneliner)}</div>` : ''}
         <div class="vmeta">${meta.map(m => `<span class="badge b-mini">${esc(m)}</span>`).join('')}</div>
       </a>`;
     }).join('') + (v.length > rows.length
-      ? `<div class="hint" style="margin:2px 4px">ほか${v.length - rows.length}件 — 「ぜんぶ見る」から検索・絞り込みできます</div>` : '');
+      ? `<div class="hint" style="margin:2px 4px">ほか${v.length - rows.length}件は投資法廷で見られる</div>` : '');
   } catch (e) { el.innerHTML = '<p class="empty">読み込みに失敗</p>'; }
 }
 
@@ -4735,9 +4766,10 @@ async function loadDocket() {
     const raw = await getFile('inbox/watchlist.json');
     const list = raw ? (JSON.parse(raw).entries || []) : [];
     const waiting = list.filter(e => (e.status || '').includes('裁判送り') && !(e.status || '').includes('裁判済み'));
-    if (!waiting.length) {
-      el.innerHTML = '<p class="empty">開廷待ちはありません ⚖️</p>'; return;
+    if (!waiting.length) {   // 🔴 10/24 点検: 空のときは見出しごと隠す
+      el.innerHTML = ''; if ($('docket-h')) $('docket-h').style.display = 'none'; return;
     }
+    if ($('docket-h')) $('docket-h').style.display = '';
     el.innerHTML = waiting.map(e => `<div class="card" style="padding:11px 15px">
         <div class="t" style="font-size:14px">${esc(e.name)}${e.code ? `（${esc(e.code)}）` : ''}</div>
         <div class="s" style="font-size:12px;margin-top:2px">${esc((e.status || '').replace(/^裁判送り[（(]?/, '').replace(/[）)]$/, ''))}</div>
@@ -4779,16 +4811,22 @@ async function loadScout() {
     const list = await scoutEntries();
     if (!list.length) { el.innerHTML = '<p class="empty">明日の朝から毎日1社わき出ます 🔭</p>'; return; }
     const sent = JSON.parse(localStorage.getItem('scout-sent') || '[]');
-    el.innerHTML = list.slice().reverse().map((e, i) => {
-      const key = `${e.date}_${e.code || e.name}`;
-      const st = e.status || '';
-      const judged = st.includes('裁判済み');
-      const done = judged || st.includes('裁判送り') || sent.includes(key);
-      return `<div class="card"><div class="t" style="font-size:14px">${esc(e.name)}${e.code ? `（${esc(e.code)}）` : ''}<span class="s" style="float:right">${esc(e.date)}</span></div>
-        <div class="s">${esc(e.reason)}</div>
-        ${e.articles && e.articles.length ? `<div class="s" style="font-size:11px;margin-top:4px">Yパパ基準: ${e.articles.map(esc).join('・')}</div>` : ''}
-        <div style="margin-top:8px"><button class="btn ${done ? '' : 'btn-primary'}" data-scout="${esc(key)}" data-name="${esc(e.name)}" data-code="${esc(e.code || '')}" ${done ? 'disabled' : ''}>${judged ? '⚖️ 判決ずみ' : done ? '⚖️ 裁判送り済み' : '⚖️ 裁判にかける'}</button></div></div>`;
-    }).join('');
+    // 🔴 2026-10-24 点検: 約70社を全文で並べて25,000px（タブの8割）になっていた。判決ずみ・同じ会社の重複が大半。
+    //    裁判前の新しい5社だけを大きく出し、残りは会社名と日付だけの1行を畳んだ中に入れる
+    const clean = t => String(t || '').split(/(?<=。)/).filter(x => !/裁判官へ|処理係|\.md|\.json|https?:\/\//.test(x)).join('').replace(/導出\/\S+/g, '').trim();
+    const seen = new Set(), rowsAll = [];
+    list.slice().reverse().forEach(e => { const k = e.code || e.name; if (seen.has(k)) return; seen.add(k); rowsAll.push(e); });
+    const stateOf = e => { const key = `${e.date}_${e.code || e.name}`; const st = e.status || ''; const judged = st.includes('裁判済み'); return { key, judged, done: judged || st.includes('裁判送り') || sent.includes(key) }; };
+    const fresh = rowsAll.filter(e => !stateOf(e).done).slice(0, 5);
+    const rest = rowsAll.filter(e => !fresh.includes(e));
+    const big = e => { const { key, judged, done } = stateOf(e);
+      return `<div class="card"><div class="t" style="font-size:15px">${esc(e.name)}${e.code ? ` <span class="s" style="font-weight:400">${esc(e.code)}</span>` : ''}</div>
+        <div class="s" style="font-size:12px;margin:2px 0 6px">${esc(e.date)}</div>
+        <div class="s clamp3" style="color:var(--text)">${esc(clean(e.reason))}</div>
+        <div style="margin-top:10px"><button class="btn ${done ? '' : 'btn-primary'}" data-scout="${esc(key)}" data-name="${esc(e.name)}" data-code="${esc(e.code || '')}" ${done ? 'disabled' : ''}>${judged ? '判決ずみ' : done ? '裁判に送った' : '裁判にかける'}</button></div></div>`; };
+    el.innerHTML = (fresh.length ? fresh.map(big).join('') : '<p class="empty">いま裁判にかけていない候補はありません</p>')
+      + (rest.length ? `<details class="bd-done"><summary>これまでの候補 (${rest.length})</summary>${rest.map(e => { const { judged, done } = stateOf(e);
+          return `<div class="card" style="padding:12px 16px;display:flex;justify-content:space-between;gap:10px"><span style="font-size:14px;font-weight:700;min-width:0">${esc(e.name)}</span><span class="s" style="margin:0;white-space:nowrap">${esc(String(e.date||'').slice(5))} ・ ${judged ? '判決ずみ' : done ? '裁判に送った' : '未'}</span></div>`; }).join('')}</details>` : '');
     bindScoutButtons(el);
   } catch (e) { el.innerHTML = '<p class="empty">読み込みに失敗</p>'; }
 }
@@ -5569,7 +5607,7 @@ function setToday() {
 // どちらが「完了」「保留」を押してもよい。Claudeが書くのは thread 追記と status だけ。
 let boardItems = [];
 function bdStamp(){ const d=new Date(); const z=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}-${z(d.getHours())}${z(d.getMinutes())}`; }
-function bdLink(t){ return esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>'); }
+function bdLink(t){ return esc(t).replace(/(https?:\/\/[^\s<）)]+)/g, u => { let h=''; try{ h=new URL(u.replace(/&amp;/g,'&')).hostname.replace(/^www\./,''); }catch(e){} return `<a href="${u}" target="_blank" rel="noopener">${h ? 'リンク（'+h+'）' : 'リンク'}</a>`; }); }   // 🔴 10/24 長いURLが折れて崩れていた
 function bdWhen(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return esc(String(iso).slice(0,16)); return d.toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
 async function loadBoard() {
   const list = $('board-list'); if (!list) return;
@@ -5583,23 +5621,31 @@ async function loadBoard() {
   } catch (e) { list.innerHTML = `<p class="empty">読み込めない: ${esc(e.message)}</p>`; }
 }
 function bdThread(d){
-  const th = d.thread && d.thread.length ? d.thread : [];
+  // 🔴 2026-10-24: 本文（ctx）と同じ中身の最初の吹き出しは出さない（本文が2回並んでいた）
+  const head = bdCtx(d.ctx).slice(0, 24);
+  const th = (d.thread && d.thread.length ? d.thread : []).filter((m, i) => !(i === 0 && head && String(m.text || '').includes(head)));
   if (!th.length && d.ctx && d.from === 'megu') return `<div class="bd-msg megu"><div class="bd-who">🧑 メグ · ${bdWhen(d.created)}</div>${bdLink(d.ctx)}</div>`;
   return th.map(m => `<div class="bd-msg ${m.who==='claude'?'claude':'megu'}"><div class="bd-who">${m.who==='claude'?'🤖 クロード':'🧑 メグ'} · ${bdWhen(m.at)}</div>${bdLink(m.text||'')}</div>`).join('');
 }
-function bdCard(d) {
+// 🔴 2026-10-24 点検: 本文に「処理係へ…」などAI向けの指示が入っていて、20回くり返し出ていた。メグに見せる所では外す
+function bdCtx(t){ return String(t || '').split('\n').filter(l => !/処理係|thread に|threadに|gachirezuには触らない/.test(l)).join('\n').trim(); }
+function bdCard(d, compact) {
   const st = d.status || 'open';
   const badge = { open: 'メグの番', answered: 'クロードの番', hold: '保留', done: '完了' }[st] || st;
   const isClaudeQ = d.from === 'claude' && d.kind === 'question';
   const opts = (isClaudeQ && (d.options || []).length) ? `<div class="bd-opts">${d.options.map(o => `<label><input type="radio" name="bd-${esc(d.id)}" value="${esc(o)}" ${d.choice === o ? 'checked' : ''} ${st==='done'?'disabled':''}><span>${esc(o)}</span></label>`).join('')}</div>` : '';
-  const ctx = isClaudeQ && d.ctx ? `<div class="bd-ctx">${bdLink(d.ctx)}</div>${d.rec ? `<div class="bd-rec">推奨：${esc(d.rec)}</div>` : ''}` : '';
+  const ctx = isClaudeQ && d.ctx ? `<div class="bd-ctx">${bdLink(bdCtx(d.ctx))}</div>${d.rec ? `<div class="bd-rec">おすすめ：${esc(d.rec)}</div>` : ''}` : '';
   const wait = st === 'answered' ? `<div class="bd-wait">⏳ クロードの番（3分以内に起動・返事はこのスレッドに積まれます）</div>` : '';
   const actions = st === 'done' ? `<button class="btn btn-ghost bd-act" data-act="reopen">再開</button>`
     : st === 'hold' ? `<button class="btn btn-ghost bd-act" data-act="reopen">再開</button><button class="btn btn-ghost bd-act" data-act="done">完了</button>`
     : `<button class="btn btn-ghost bd-act" data-act="hold">保留</button><button class="btn btn-ghost bd-act" data-act="done">完了</button>`;
   const reply = st === 'done' ? '' : `<div class="bd-reply"><textarea class="bd-input" placeholder="クロードへ返事・追加の依頼"></textarea><button class="btn btn-primary bd-act" data-act="send">送る</button></div>`;
+  const headHtml = `<div class="bd-h"><div><div class="bd-t">${esc(d.title || '')}</div><div class="bd-from">${d.from === 'claude' ? 'クロード' : 'メグ'} · ${bdWhen(d.created)}</div></div><span class="bd-badge">${badge}</span></div>`;
+  // 🔴 2026-10-24: 保留・済んだものは見出しだけの1行にして、押すと開く
+  if (compact) return `<details class="bd-item ${st} bd-c" data-id="${esc(d.id)}"><summary>${headHtml}</summary>
+    ${ctx}${opts}<div class="bd-thread">${bdThread(d)}</div>${wait}${reply}<div class="bd-actions">${actions}</div></details>`;
   return `<div class="bd-item ${st}" data-id="${esc(d.id)}">
-    <div class="bd-h"><div><div class="bd-t">${esc(d.title || '')}</div><div class="bd-from">${d.from === 'claude' ? '🤖 クロード起票' : '🧑 メグ起票'} · ${bdWhen(d.created)}</div></div><span class="bd-badge">${badge}</span></div>
+    ${headHtml}
     ${ctx}${opts}
     <div class="bd-thread">${bdThread(d)}</div>
     ${wait}${reply}
@@ -5611,8 +5657,10 @@ function renderBoard() {
   const order = { open: 0, answered: 1, hold: 2 };
   const live = boardItems.filter(d => d.status !== 'done').sort((a, b) => (order[a.status] ?? 3) - (order[b.status] ?? 3) || (b.updated || '').localeCompare(a.updated || ''));
   const done = boardItems.filter(d => d.status === 'done').sort((a, b) => (b.updated || '').localeCompare(a.updated || ''));
-  list.innerHTML = live.length ? live.map(bdCard).join('') : '<p class="empty">いま板は空。下から頼めます</p>';
-  if (doneEl) { doneEl.innerHTML = done.map(bdCard).join(''); $('board-done-n').textContent = done.length ? `(${done.length})` : ''; }
+  const act = live.filter(d => d.status !== 'hold'), held = live.filter(d => d.status === 'hold');
+  list.innerHTML = act.length ? act.map(d => bdCard(d)).join('') : '<p class="empty">いまメグの番はありません</p>';
+  if ($('board-hold')) { $('board-hold').innerHTML = held.map(d => bdCard(d, true)).join(''); $('board-hold-n').textContent = held.length ? `(${held.length})` : '(0)'; }
+  if (doneEl) { doneEl.innerHTML = done.map(d => bdCard(d, true)).join(''); $('board-done-n').textContent = done.length ? `(${done.length})` : ''; }
   const megu = live.filter(d => d.status === 'open').length, cl = live.filter(d => d.status === 'answered').length, hold = live.filter(d => d.status === 'hold').length;
   if ($('board-status')) $('board-status').textContent = `メグの番 ${megu} · クロードの番 ${cl}${hold ? ` · 保留 ${hold}` : ''}`;
   const tb = $('brief-board');
