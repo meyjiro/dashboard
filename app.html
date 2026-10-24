@@ -1604,7 +1604,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-10-24.3';
+const APP_VERSION = '2026-10-24.4';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4410,7 +4410,8 @@ async function dyLoadIndex() {
         if (!es.length && !day.mood && !day.body && !(day.tags || []).length) return null;
         const allImgs = es.flatMap(pics);
         return { date: d, text: es.map(e => e.text).filter(Boolean).join('\n'),
-                 img: allImgs[0] || null, nimg: allImgs.length,
+                 // 🔴 2026-10-24 メグ（10/15の板）「この写真を一覧のサムネに」: その日の thumb があればそれを一覧の写真にする
+                 img: (day.thumb && allImgs.includes(day.thumb)) ? day.thumb : (allImgs[0] || null), nimg: allImgs.length,
                  mood: day.mood, body: day.body, tags: day.tags || [] };
       } catch (e) { return null; }
     }));
