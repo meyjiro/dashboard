@@ -1475,7 +1475,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-10-22.1';
+const APP_VERSION = '2026-10-24.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2326,7 +2326,8 @@ function renderBriefing() {
   // 🔴 解説（note）を言葉の下に出す（2026-09-08 メグ「解説があると地肉になる」）
   $('brief-quote').innerHTML = b.quote ? `<div class="quote-card"><div class="q">${esc(b.quote.text)}</div><div class="a">— ${esc(b.quote.author || '')}</div>${b.quote.note ? `<div class="n">${esc(b.quote.note)}</div>` : ''}</div>` : '';
   // 🔴 近日（3日以内）だけ出して、それ以降は畳む（2026-08-30 メグ指示）
-  const allDues = (b.today || []);
+  // 🤖（AIがやる行）と ✅（済み・取りやめ）は朝の巡回が入れても出さない（2026-10-24 メグ「わたしがやるのはおかしい」）
+  const allDues = (b.today || []).filter(d => !/^([^:：]*[:：]\s*)?(🤖|✅)/.test(String(d.label||d.title||'')));
   const dayLeft = d => { const m=String(d.date||d.due||'').match(/(\d{4})-(\d\d)-(\d\d)/);
     if(!m) return 0; return Math.ceil((new Date(m[0]+'T12:00:00+09:00')-Date.now())/86400000); };
   const dues = allDues.filter(d=>dayLeft(d)<=3);
@@ -2645,6 +2646,8 @@ async function loadSchedule() {
       if (!m) continue;
       // 🔴 4列目=繰り返し / 5列目=済んだ日と通知（2026-09-01 追加。3列の旧い行も動く）
       const cells = line.replace(/^\s*\|~?/, '').split('|').map(c => c.trim());
+      // 🤖＝AI（モッフル）が自分でやる確認作業。メグの予定には出さない（2026-10-24 メグ）
+      if ((cells[2] || '').startsWith('🤖')) continue;
       const rep  = cells[3] || '';
       const meta = cells[4] || '';
       const nt = (meta.match(/通知:([^/\s|]+)/) || [])[1] || '';
