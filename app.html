@@ -1217,6 +1217,22 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 .dy-calhead button{border:none!important;background:var(--card)!important;border-radius:12px!important}
 .dy-row{border:none!important;border-radius:var(--r)!important;background:var(--card)}
 #vault-pass,#vault-q{border:none!important;background:var(--bg)!important;border-radius:12px!important}
+/* 2026-10-24 再点検のあと */
+:root{--ok:#2E3A59;--ok-light:#E7EAF1}
+:is(#tab-today,#tab-read) .wwhy{background:var(--sand-light)!important;color:var(--sand-text)!important;border:none!important;border-radius:12px!important}
+.quote-card,:is(#tab-today,#tab-read) .quote-card{background:var(--card)!important;border:none!important;border-radius:var(--r)!important}
+.quote-card .n,:is(#tab-today,#tab-read) .quote-card .n{border-top:none!important}
+:is(#tab-today,#tab-read) .quote-card .a{white-space:normal}
+:is(#tab-today,#tab-read) .nsbox{background:var(--card)!important;border:none!important;border-radius:var(--r)!important}
+.cmore>summary{font-size:12px!important;color:var(--accent)!important}
+.pp-src{border:none!important;background:transparent!important;color:var(--sand-text)!important;padding:0!important;font-size:11px!important}
+.learn-box .lbx-chips{flex-wrap:wrap!important}
+#app textarea,#app input[type=text],#app input[type=search],#app input[type=number],#app input:not([type]){border:none!important;background:var(--bg)!important}
+.bd-opts label{border:none!important;background:var(--bg)!important;border-radius:12px!important}
+.dy-tool,.dy-foot button,.dy-tagrow button,.dy-scale button,.dy-entry{border:none!important}
+.dy-scale button,.dy-tagrow button{background:var(--bg)!important}
+.dy-row .tx{padding-right:4px}
+:is(#tab-today,#tab-read) .quote-card *{border:none!important}
 /* ほか */
 .morelist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:6px}
 .morelist button{height:96px;border:none;border-radius:var(--r);background:var(--card);color:var(--text);display:flex;flex-direction:column;
@@ -1224,6 +1240,10 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 .morelist button svg{width:24px;height:24px;stroke:var(--accent);stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;margin-bottom:auto}
 .morelist b{font-size:15px;font-weight:900}
 .morelist small{font-size:12px;color:var(--text2)}
+
+.vruling.b-reject{background:var(--bg3)!important;color:var(--text)!important}
+.vruling.b-conditional{background:#F6EFE3!important;color:var(--text)!important}
+#fx-reload{display:none}
 </style>
 </head>
 <body>
@@ -1543,7 +1563,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
         <div class="vrow" id="vault-tools" style="display:none"><input id="vault-q" type="search" placeholder="さがす（例：バンコク・Wise・GitHub）"><button class="vlock" id="vault-close">閉じる</button></div>
         <div id="vault-list"></div>
       </div>
-      <div class="hint" style="margin:2px 4px 10px">📋でコピー</div>
+
       <div id="quick-list"><p class="empty">読み込み中…</p></div>
     </div>
   </div>
@@ -1660,7 +1680,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-10-24.6';
+const APP_VERSION = '2026-10-24.7';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1964,7 +1984,7 @@ async function loadOps(){
     return;
   }
   // 🔴 2026-10-24 メグ「朝からいっぱい文章を見たくない」→ 赤くても1行にたたむ。直すのはモッフル（ターミナルの起動時に出る）
-  el.innerHTML = `<details class="opsbar bad"><summary><b>🔴 止まっているもの ${bad.length}件</b>（モッフルが直します）▾</summary>
+  el.innerHTML = `<details class="opsbar bad"><summary><b>止まっているもの ${bad.length}件</b>（モッフルが直します）▾</summary>
     ${bad.map(r=>`<div class="opsrow"><b>${r.name}</b>　${r.err ? r.err : '最終 '+fmt(r.at)+'（'+ago(r.days)+'）'}
       <div class="opsmini">${r.why}</div></div>`).join('')}
     <div class="opsmini" style="margin-top:8px">ほか${rows.length-bad.length}件は正常。Claude Codeで「自動処理の見張りが赤い」と言えば調べます</div>${hist}
@@ -2564,9 +2584,9 @@ function renderBriefing() {
   // 🔴 今日の学び（learn）: 投資の学習routineが書く500字。名言の次に出す（2026-09-08）
   const lb = $('brief-learn'); if (lb) {
     const L = b.learn;
-    lb.innerHTML = L && L.body ? `<div class="learn-card"><div class="lh">📚 今日の学び${L.check==='ng'?'<span class="lchk ng">検品で差し戻し</span>':(L.check==='ok'?'<span class="lchk ok">検品済</span>':'')}</div><div class="lt">${esc(L.title||'')}</div>${(() => { /* 🔴 2026-10-24 点検: ②③は台帳・法典への記録で内輪の言葉ばかり。①だけ見せて、残りは畳む */
+    lb.innerHTML = L && L.body ? `<div class="learn-card"><div class="lh">📚 今日の学び</div><div class="lt">${esc(L.title||'')}</div>${(() => { /* 🔴 2026-10-24 点検: ②③は台帳・法典への記録で内輪の言葉ばかり。①だけ見せて、残りは畳む */
       const b = String(L.body).replace(/\*\*/g, ''); const k = b.search(/\s*②/); const main = k > 0 ? b.slice(0, k) : b, rest = k > 0 ? b.slice(k) : '';
-      return `<div class="lb">${esc(main.replace(/^\s*①\s*/, ''))}</div>${rest ? `<details class="drest" style="margin-top:8px"><summary>記録を見る</summary><div class="lb" style="font-size:12.5px;color:var(--text2)">${esc(rest)}</div></details>` : ''}`; })()}${L.url?`<a class="lu" href="${esc(L.url)}" target="_blank" rel="noopener">🎬 動画を見る</a>`:''}</div>` : '';
+      return `<div class="lb">${esc(main.replace(/^\s*①\s*/, '').replace(/対象外[:：][^。]*。?/g, '').replace(/^何が言われたか（[^）]*）\s*/, ''))}</div>${rest ? `<details class="drest" style="margin-top:8px"><summary>記録を見る</summary><div class="lb" style="font-size:12.5px;color:var(--text2)">${esc(rest)}</div></details>` : ''}`; })()}${L.url?`<a class="lu" href="${esc(L.url)}" target="_blank" rel="noopener">🎬 動画を見る</a>`:''}</div>` : '';
   }
   // 🔴 解説（note）を言葉の下に出す（2026-09-08 メグ「解説があると地肉になる」）
   $('brief-quote').innerHTML = b.quote ? `<div class="quote-card"><div class="q">${esc(b.quote.text)}</div><div class="a">— ${esc(b.quote.author || '')}</div>${b.quote.note ? `<div class="n">${esc(b.quote.note)}</div>` : ''}</div>` : '';
@@ -2862,7 +2882,10 @@ async function loadLedger() {
       const kind = (ls.find(l => /^kind:\s/.test(l)) || '').replace(/^kind:\s*/, '');
       const body = ls.slice(1).filter(l => !l.startsWith('→仕分け') && !/^[a-z_]+:\s/i.test(l)).join(' ').replace(/[|｜]\s*\|?.*$/,'').trim();
       const sorted2 = sorted.replace(/`[^`]*`/g, '').replace(/\S*\/\S*\.(md|csv|json|jsonl)\S*/g, '').replace(/\s+/g, ' ').trim();
-      return `<div class="card"><div class="s" style="margin-bottom:4px;font-size:12px">${esc(when)}${kind ? ' ・ ' + esc(kind) : ''}</div><div class="s" style="color:var(--text)">${esc(cut(body, 90))}</div>${sorted2 ? `<div class="s" style="margin-top:4px;font-size:12px">→ ${esc(cut(sorted2, 60))}</div>` : ''}</div>`;
+      // 🔴 10/24 再点検: 「→ 該当行を にして」のように中身の抜けた内部の記録が出ていた。人が書いた本文と日時だけにする
+      const when2 = when.replace(/（[^）]*）|\([^)]*\)/g, '').trim();
+      if (!body.replace(/（メモなし[^）]*）/g, '').trim()) return '';
+      return `<div class="card"><div class="s" style="margin-bottom:4px;font-size:12px">${esc(when2)}${kind ? ' ・ ' + esc(kind) : ''}</div><div class="s" style="color:var(--text)">${esc(cut(body.replace(/（メモなし[^）]*）/g, ''), 90)) || '（本文なし）'}</div></div>`;
     }).join('');
     ledgerLoaded = true;
   } catch (e) { ledgerLoaded = false; }
@@ -3952,12 +3975,12 @@ async function loadMoodChart() {
       + (last.b ? `からだ <b>${esc(DY_BODY[last.b - 1])}</b>` : '')
       + `<u>${esc(md(last.d))}</u></span>`
     + `<span class="mb-key"><span><i style="background:var(--accent)"></i>こころ</span>`
-    + `<span><i style="background:var(--ok)"></i>からだ</span></span></div>`
+    + `<span><i style="background:var(--sand)"></i>からだ</span></span></div>`
     + `<svg viewBox="0 0 ${W} ${H + 14}" style="width:100%;height:auto;margin-top:6px;font-variant-numeric:tabular-nums">`
     + grid
     + `<text x="2" y="${(Y(5) + 3.5).toFixed(1)}" font-size="8.5" fill="var(--text3,#9ca3af)">5</text>`
     + `<text x="2" y="${(Y(1) + 3.5).toFixed(1)}" font-size="8.5" fill="var(--text3,#9ca3af)">1</text>`
-    + line('b', 'var(--ok)') + line('m', 'var(--accent)')
+    + line('b', 'var(--sand)') + line('m', 'var(--accent)')
     + `<text x="0" y="${H + 11}" font-size="9.5" fill="var(--text2)">${esc(md(span[0]))}</text>`
     + `<text x="${W}" y="${H + 11}" text-anchor="end" font-size="9.5" fill="var(--text2)">${esc(md(span[span.length - 1]))}</text>`
     + `</svg>`;
@@ -4670,7 +4693,7 @@ async function loadFx(ibkrRate, jpyDebt) {
   const verdict = gainPct >= 1 ? '🟢 手数料を全部払っても黒字。戻しどき圏内'
                 : gainPct >= 0 ? '🟡 かろうじて黒字（ほぼトントン）'
                 : gainPct >= -1 ? '🟡 わずかに赤字（ほぼトントン）'
-                : '今戻すと赤字。待ち';
+                : '待ち';
   const lots = FX_LOTS.map(l =>
     `<tr><td>${l.date}</td><td style="text-align:right">¥${l.jpy.toLocaleString()}</td><td style="text-align:right">$${l.usd.toLocaleString()}</td><td style="text-align:right">${l.rate.toFixed(3)}</td></tr>`).join('');
   el.innerHTML = `
@@ -4799,7 +4822,7 @@ async function loadVerdicts() {
           <span class="vdate">${esc((x.date || '').slice(5))}</span>
         </div>
         ${/* 🔴 2026-10-24 メグ「赤い枠の赤い文字が伸びてレイアウトがぐちゃぐちゃ」: 判決文を札（1行・折り返しなし）に入れていて、画面の外へ数千px伸びていた。札は短い言葉だけにし、判決文は下に折り返して出す */''}
-        ${x.ruling ? `<div class="vruling ${bcls}"><div class="vrin">${esc(String(x.ruling).replace(/🔴\s*/g,''))}</div></div>` : ''}
+        ${x.ruling ? `<div class="vruling ${bcls}"><div class="vrin">${esc(String(x.ruling).replace(/🔴\s*/g,'').replace(/——/g,'、'))}</div></div>` : ''}
         ${x.oneliner ? `<div class="vone">${esc(x.oneliner)}</div>` : ''}
         <div class="vmeta">${meta.map(m => `<span class="badge b-mini">${esc(m)}</span>`).join('')}</div>
       </a>`;
@@ -5683,7 +5706,7 @@ function bdCard(d, compact) {
   const badge = { open: 'メグの番', answered: 'クロードの番', hold: '保留', done: '完了' }[st] || st;
   const isClaudeQ = d.from === 'claude' && d.kind === 'question';
   const opts = (isClaudeQ && (d.options || []).length) ? `<div class="bd-opts">${d.options.map(o => `<label><input type="radio" name="bd-${esc(d.id)}" value="${esc(o)}" ${d.choice === o ? 'checked' : ''} ${st==='done'?'disabled':''}><span>${esc(o)}</span></label>`).join('')}</div>` : '';
-  const ctx = isClaudeQ && d.ctx ? `<div class="bd-ctx">${bdLink(bdCtx(d.ctx))}</div>${d.rec ? `<div class="bd-rec">おすすめ：${esc(d.rec)}</div>` : ''}` : '';
+  const ctx = isClaudeQ && d.ctx ? `<div class="bd-ctx">${bdLink(bdCtx(d.ctx))}</div>` : '';
   const wait = st === 'answered' ? `<div class="bd-wait">⏳ クロードの番（3分以内に起動・返事はこのスレッドに積まれます）</div>` : '';
   const actions = st === 'done' ? `<button class="btn btn-ghost bd-act" data-act="reopen">再開</button>`
     : st === 'hold' ? `<button class="btn btn-ghost bd-act" data-act="reopen">再開</button><button class="btn btn-ghost bd-act" data-act="done">完了</button>`

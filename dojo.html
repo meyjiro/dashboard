@@ -267,6 +267,12 @@ mark.ex{background:var(--ng-bg);color:var(--ng);font-weight:700;padding:1px 5px;
 .tabs button{color:#A4A8B4!important}.tabs button.on{color:#fff!important;background:transparent!important}
 
 .co.tip{background:var(--paper)!important;border:none!important;border-left:4px solid #C9CEDC!important}
+
+/* 10/24 再点検 */
+.num{font-family:inherit!important}
+.nb{font-family:inherit!important;background:none!important;color:inherit!important;padding:0!important;font-weight:700!important}
+.zk .gn{white-space:nowrap;font-size:12px}
+#hide-it{background:none!important;border:none!important;color:var(--ink2)!important;font-size:12px!important;text-decoration:underline;min-height:0!important;width:auto!important;padding:4px!important}
 </style>
 </head>
 <body>
@@ -674,10 +680,15 @@ function renderStats(){
   <p class="muted" style="margin:6px 0 10px">直近${last.length}回（紺＝問題、茶＝週テスト）</p>
   ${last.length ? `<div class="hist">${last.map(h=>`<div class="c ${h.mode==='exam'?'exam':''}" style="height:${Math.max(6,h.pct)}%"><span class="num">${h.pct}</span></div>`).join('')}</div>` : '<p class="muted">まだ記録なし。問題を解くとここに出る。</p>'}
   
-  <h3 style="margin:18px 0 8px;font-size:15px">課ごとの定着（最後に解いたときの正解率）</h3>
-  <div class="card"><div class="mastery">${DATA.chapters.filter(c=>c.id>0 && !c.hidden).map(c=>{ const s = chapterScore(c.id); const p = s.n? Math.round(s.ok/c.quiz.length*100):0; return `<div class="mrow"><span>${c.emoji}</span><div><div style="font-size:13px">第${c.id}章 ${esc(c.title)}</div><div class="b"><i style="width:${p}%"></i></div></div><span class="num" style="text-align:right">${s.n?p+'%':'—'}</span></div>`; }).join('')}</div></div>
+  ${(() => { /* 🔴 10/24 再点検: 40%・20%・「—」の短い棒が並んで未達が目立っていた。定着した課だけ並べ、あとは「もう一度」の1行に */
+    const cs = DATA.chapters.filter(c=>c.id>0 && !c.hidden).map(c => ({ c, s: chapterScore(c.id) }));
+    const done = cs.filter(x => x.s.n && x.s.ok === x.c.quiz.length), again = cs.filter(x => x.s.n && x.s.ok < x.c.quiz.length);
+    return `<h3 style="margin:18px 0 8px;font-size:15px">定着した課（${done.length}）</h3>
+    <div class="card"><div class="mastery">${done.map(({c}) => `<div class="mrow"><span>${c.emoji}</span><div><div style="font-size:13px">第${c.id}章 ${esc(c.title)}</div></div><span style="text-align:right;color:var(--accent);font-weight:700">✓</span></div>`).join('') || '<p class="muted" style="margin:0">課の問題を全部正解すると、ここに並ぶ</p>'}</div></div>`
+      + (again.length ? `<details class="h2-more"><summary>もう一度やると定着する課（${again.length}）</summary><div class="list" style="margin-top:10px">${again.map(({c}) => row({ attr:`data-ch="${c.id}"`, ic:c.emoji, title:c.title, meta:'4択10問' })).join('')}</div></details>` : ''); })()}
   <p class="muted" id="sync-st" style="margin-top:14px">${syncLabel()}　— 端末を替えても記録は続く</p>
   <div style="margin-top:28px;text-align:right"><button id="reset" style="font-size:12px;color:var(--ink2);text-decoration:underline">記録を消す</button></div>`;   // 🔴 10/24 大きいボタンでうっかり押せた
+  app.querySelectorAll('[data-ch]').forEach(b => b.onclick = () => startDialog({ mode:'chapter', ch:+b.dataset.ch }, DATA.chapters.find(c=>c.id===+b.dataset.ch)));
   app.querySelector('#reset').onclick = () => { if(confirm('成績と記録を全部消す？（クラウドの分も消える）')){ S._quiet = true; S.set('history', []); S.set('mastery', {}); S.set('read', {}); S._quiet = false; syncPush(); renderStats(); } };
 }
 
@@ -903,9 +914,10 @@ function renderZukan(){
   if(!L.loaded){ app.innerHTML = header() + '<p class="muted">読み込み中…</p>'; learnLoad().then(() => { if(!VIEW && TAB==='zukan') render(); }); return; }
   const z = L.zk; if(!z || !z.cards){ app.innerHTML = header() + '<p class="muted">図鑑のデータがまだ無い</p>'; return; }
   const colored = 70 - (+((z.counts||{})['0'])||0);
-  const rows = (z.order||Object.keys(z.cards)).map(c => { const C = z.cards[c]; if(!C) return ''; return `<button class="gn" data-card="${esc(c)}">${esc(c)}</button>${[1,2,3,4,5].map(s => `<button class="gc lv${(C.slots[String(s)]||{}).level||0}" data-card="${esc(c)}" aria-label="${esc(c+' '+SLOT[s])}"></button>`).join('')}`; }).join('');
+  const SHORT = {'ロシア・ウクライナ・欧州':'ロシア・欧州','東南アジア・タイ':'東南アジア','中南米・アフリカ':'中南米ほか','量子・物理・宇宙':'量子・宇宙'};   // 🔴 10/24 言葉の途中で改行していた
+  const rows = (z.order||Object.keys(z.cards)).map(c => { const C = z.cards[c]; if(!C) return ''; return `<button class="gn" data-card="${esc(c)}">${esc(SHORT[c]||c)}</button>${[1,2,3,4,5].map(s => `<button class="gc lv${(C.slots[String(s)]||{}).level||0}" data-card="${esc(c)}" aria-label="${esc(c+' '+SLOT[s])}"></button>`).join('')}`; }).join('');
   app.innerHTML = header() + `<div class="card"><div style="display:flex;align-items:baseline;gap:8px"><h2 style="font-size:20px;font-weight:900">🗺️ 図鑑</h2><span class="muted" style="margin-left:auto">色の付いたマス <span class="num" style="font-size:22px;color:var(--ink)">${colored}</span></span></div>
-    <div class="legend">${[0,1,2,3].map(l => `<span><b class="lv${l}"></b>${LVN[l]}</span>`).join('')}</div>
+    <div class="legend">${[1,2,3].map(l => `<span><b class="lv${l}"></b>${LVN[l]}</span>`).join('')}</div>
     <div class="zk"><div></div>${[1,2,3,4,5].map(s => `<div class="gh">${SLOT[s]}</div>`).join('')}${rows}</div>
 </div>
     <a class="btn sub" href="world.html" style="margin-top:12px;text-decoration:none">🌍 世界地図で見る</a>`;
@@ -916,10 +928,10 @@ function viewCard(){
   const lvc = ['#A9ABB2', '#8C96B0', '#5E6C8E', 'var(--accent)'];   // 🔴 10/24 緑をやめ紺の濃淡に
   const slots = [1,2,3,4,5].map(s => { const S = C.slots[String(s)]||{}; const lv = S.level||0; const body = String(S.body||'').replace(/[🔴🟢🟡🟠]\s*/gu, '').trim();
     const first = (body.split('\n').find(l => l.trim() && !/^（/.test(l.trim()))||'').replace(/^\s*(?:[-・]|\d+\.)\s*/, '').replace(/\*\*/g, '');
-    const seenQ = new Set(); const mine = (S.answers||[]).filter(x => x.a && !seenQ.has(x.q) && seenQ.add(x.q)).map(x => `<div class="mine"><small>${md2(x.date)} ・ ${esc(x.q||'')}</small>${x.a ? esc(String(x.a).slice(0,120)) : ''}${x.score!=null ? ` ・ <b class="num">${x.score}</b>/3` : ''}</div>`).join('');
+    const seenQ = new Set(); const mine = (S.answers||[]).filter(x => x.a && !seenQ.has(x.q) && seenQ.add(x.q)).map(x => `<div class="mine"><small>${md2(x.date)} ・ ${esc(x.q||'')}</small>${x.a ? esc(String(x.a).length > 80 ? String(x.a).slice(0,80) + '…' : x.a) : ''}${x.score!=null ? `<div class="muted" style="font-size:12px;margin-top:2px">${x.score} / 3</div>` : ''}</div>`).join('');
     const les = ls.filter(x => x.card===name && +x.slot===s).map(lessonRow).join('');
-    return `<div class="card slot"><div class="sh"><span>${s}. ${SLOT[s]}</span><span class="lvb" style="background:${lvc[lv]}">${LVN[lv]}</span></div>
-      ${body && !/^（夜の巡回が/.test(body) ? `<details class="fact"><summary>${esc(first.length>70 ? first.slice(0,70)+'…' : first)}</summary>${mdLite(body)}</details>` : '<p class="muted">事実はまだ無い</p>'}
+    return `<div class="card slot"><div class="sh"><span>${s}. ${SLOT[s]}</span>${lv ? `<span class="lvb" style="background:${lvc[lv]}">${LVN[lv]}</span>` : ''}</div>
+      ${body && !/^（夜の巡回が/.test(body) ? `<details class="fact"><summary>${esc(first.length>70 ? first.slice(0,70)+'…' : first)}</summary>${mdLite(body)}</details>` : ''}
       ${mine}${les ? `<div class="grid" style="margin-top:8px">${les}</div>` : ''}</div>`; }).join('');
   app.innerHTML = header() + `<button class="back" data-back>‹ 図鑑</button><h2 style="font-size:22px;font-weight:900;margin:4px 0 10px">${esc(name)}</h2>${slots}`;
   bindLearn();
