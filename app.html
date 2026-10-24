@@ -83,6 +83,26 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 .nav-btn{flex:1;padding:12px 0 8px;text-align:center;color:var(--text2);background:none;border:none;cursor:pointer;min-height:54px}
 .nav-btn{position:relative;transition:color .15s}
 .nav-btn.active{color:var(--accent);font-weight:700}
+/* 📖 読むタブに新しい読み物があるときの小さな点（2026-10-24・目立たせすぎない） */
+.nav-btn.fresh::after{content:"";position:absolute;top:9px;left:calc(50% + 9px);width:7px;height:7px;border-radius:50%;background:var(--accent)}
+/* トップの1枚目（2026-10-24）: 日記と体の記録を1タップで */
+.topq{margin:4px 0 14px}
+.topq .tq{display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--card);color:var(--text);
+  border-radius:14px;padding:12px 6px;font-size:14px;cursor:pointer;flex:1;min-width:0}
+.topq .tq.big{width:100%;padding:16px;font-size:16px;font-weight:700;margin-bottom:8px}
+.topq .tqi{font-size:18px}
+.topq .tqrow{display:flex;gap:6px}
+.topq .tqmsg{font-size:12px;color:var(--text2);margin:6px 2px 0;min-height:1em}
+.due2{display:flex;gap:10px;align-items:baseline;padding:9px 12px;border-bottom:1px solid var(--line);font-size:14px}
+.due2 .d{flex:0 0 auto;font-size:12px;color:var(--text2);width:3.2em}
+.linkbtn{background:none;border:none;color:var(--accent);font-size:13px;padding:8px 2px;cursor:pointer}
+.readt{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:12px 14px;margin:14px 0;cursor:pointer;color:var(--text)}
+.readt .rk{font-size:12px;color:var(--text2)}
+.readt .rh{font-size:15px;font-weight:700;margin:4px 0 2px;line-height:1.45}
+.readt .rw{font-size:13px;color:var(--text2);line-height:1.5}
+.readhead{font-size:13px;color:var(--text2);margin:2px 2px 10px}
+/* 使われなくなった録音ボタンは隠す（2026-10-24 棚卸し: 最後に使ったのは9/23。iPhoneの音声入力で足りている） */
+#rec-btn,#learn-rec-btn,#dy-rec{display:none!important}
 .nav-btn.active::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
   width:26px;height:2px;border-radius:0 0 2px 2px;background:var(--accent)}
 /* 下のタブは絵文字をやめて線画にした（2026-09-06 メグ指定）。小さめに置く */
@@ -1084,27 +1104,37 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
   <div class="tab-content">
     <!-- 今日 -->
     <div id="tab-today" class="tab-panel active">
-      <div id="learn-entry"></div>
-      <div id="ops-status"></div>
+      <!-- 🔴 2026-10-24 作り直し（メグ「人間が使う前提で。朝から長い文章を見たくない」）。
+           1枚目＝メグが手を動かすものだけ: 日記・体の記録・今日明日の予定・メグの番。読み物は「読む」タブへ。
+           棚卸しの根拠: claude-context/projects/B4_自己管理/ダッシュボード棚卸し_2026-10-24.md -->
+      <div id="top-quick" class="topq">
+        <button class="tq big" onclick="switchTab('diary')"><span class="tqi">✍️</span><span>日記を書く</span></button>
+        <div class="tqrow">
+          <button class="tq" onclick="topSleep()"><span class="tqi">😴</span><span>睡眠</span></button>
+          <button class="tq" onclick="topPoop(true)"><span class="tqi">💩</span><span>あった</span></button>
+          <button class="tq" onclick="topPoop(false)"><span class="tqi">💩</span><span>なし</span></button>
+          <button class="tq" onclick="topWeight()"><span class="tqi">⚖️</span><span>体重</span></button>
+        </div>
+        <div class="tqmsg" id="tq-msg"></div>
+      </div>
       <div id="brief-stale"></div>
-      <div id="brief-quote"></div>
-      <div id="brief-learn"></div>
       <div id="brief-board"></div>
       <div id="today-set"></div>
-      <div id="today-nums"></div>
 
-      <div class="blk-h">きょう やること</div>
+      <div class="blk-h">きょう・あした</div>
       <div id="brief-due"></div>
       <div id="brief-due-later"></div>
-      <div id="today-mebius"></div>
       <div id="brief-pending-wrap" style="display:none">
         <div class="blk-sub">🤔 メグの返事待ち</div>
         <div id="brief-pending"></div>
       </div>
 
-      <div id="today-new"></div>
+      <div id="read-teaser"></div>
+      <div id="today-nums"></div>
+      <div id="ops-status"></div>
 
       <details class="more2"><summary>そのほか</summary>
+        <div id="today-mebius"></div>
         <div id="brief-attention-wrap" style="display:none">
           <div class="blk-sub">👀 注目</div>
           <div id="brief-attention"></div>
@@ -1117,6 +1147,16 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
         <div id="countdown"></div>
         <div class="tiles" id="link-tiles"></div>
       </details>
+    </div>
+
+    <!-- 📖 読む（2026-10-24 メグ「暇な時に読むのがすごい楽しい。残して。でも最近見なくなってるから、自然に見に行きたくなる引力を」）
+         トップから外した名言・今日の学び・世界の1本・動画・新聞・投資候補をここに集める。学びの入口（道場）もここ -->
+    <div id="tab-read" class="tab-panel">
+      <div id="read-head"></div>
+      <div id="learn-entry"></div>
+      <div id="brief-quote"></div>
+      <div id="today-new"></div>
+      <div id="brief-learn"></div>
     </div>
 
     <!-- カレンダー -->
@@ -1369,6 +1409,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
     <button class="nav-btn active" data-tab="today"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M5.1 5.1l1.4 1.4M17.5 17.5l1.4 1.4M2.5 12h2M19.5 12h2M5.1 18.9l1.4-1.4M17.5 6.5l1.4-1.4"/></svg><span>今日</span></button>
     <button class="nav-btn" data-tab="cal"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg><span>予定</span></button>
     <button class="nav-btn" data-tab="inbox"><svg viewBox="0 0 24 24"><path d="M4 14h4l1.5 2.5h5L16 14h4"/><path d="M4 14 6.4 5h11.2L20 14v4.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg><span>投げ込み</span></button>
+    <button class="nav-btn" data-tab="read"><svg viewBox="0 0 24 24"><path d="M3.5 5.5c3-.9 5.8-.6 8.5 1v13c-2.7-1.6-5.5-1.9-8.5-1z"/><path d="M20.5 5.5c-3-.9-5.8-.6-8.5 1v13c2.7-1.6 5.5-1.9 8.5-1z"/></svg><span>読む</span></button>
     <button class="nav-btn" data-tab="invest"><svg viewBox="0 0 24 24"><path d="M3.5 17.5 9 12l3.5 3.5L20.5 7"/><path d="M15 7h5.5v5.5"/></svg><span>投資</span></button>
     <button class="nav-btn" data-tab="health"><svg viewBox="0 0 24 24"><path d="M3 12.5h3.8l2-5.5 3.6 11 2.2-5.5H21"/></svg><span>健康</span></button>
     <button class="nav-btn" data-tab="diary"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M9 8h6M9 12h6M9 16h3.5"/></svg><span>日記</span></button>
@@ -1475,7 +1516,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-10-24.1';
+const APP_VERSION = '2026-10-24.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1757,7 +1798,8 @@ async function loadOps(){
   const ago = n=> n<1 ? Math.round(n*24)+'時間前' : Math.floor(n)+'日前';
   window.__opsBad = bad.length;
   const nav = document.querySelector('.nav-btn[data-tab="today"]');
-  if(nav) nav.classList.toggle('alert', bad.length>0);
+  // 🔴 2026-10-24: 見張りの赤はモッフルの仕事なので、メニューの「今日」に赤い点は付けない
+  if(nav) nav.classList.remove('alert');
   // 📈 直近14日の見張りの記録（Macが毎朝09:40に inbox/ops_history.jsonl へ積む・2026-09-17）。
   //    「直したものが効いているか」「良くなっているか」をここで見る。■=全部🟢 ▲=赤あり
   let hist = '';
@@ -1777,11 +1819,12 @@ async function loadOps(){
       <div class="opsmini" style="margin-top:4px">${rows.map(r=>r.name+' '+(r.note||ago(r.days))).join(' ／ ')}</div>${hist}</details>`;
     return;
   }
-  el.innerHTML = `<div class="opsbar bad"><b>🔴 止まっているものがあります（${bad.length}件）</b>
+  // 🔴 2026-10-24 メグ「朝からいっぱい文章を見たくない」→ 赤くても1行にたたむ。直すのはモッフル（ターミナルの起動時に出る）
+  el.innerHTML = `<details class="opsbar bad"><summary><b>🔴 止まっているもの ${bad.length}件</b>（モッフルが直します）▾</summary>
     ${bad.map(r=>`<div class="opsrow"><b>${r.name}</b>　${r.err ? r.err : '最終 '+fmt(r.at)+'（'+ago(r.days)+'）'}
       <div class="opsmini">${r.why}</div></div>`).join('')}
     <div class="opsmini" style="margin-top:8px">ほか${rows.length-bad.length}件は正常。Claude Codeで「自動処理の見張りが赤い」と言えば調べます</div>${hist}
-  </div>`;
+  </details>`;
 }
 
 // ══ 📊 今日の数字（朝のメニュー【4】・2026-08-30）══
@@ -2137,7 +2180,51 @@ function tryBuildSet(){
   if(!('mbs' in p) || !('glz' in p)) return;    // 両方そろうまで待つ
   const dow = new Date().getDay();
   const week = WEEKLY.filter(w=>w.dow===dow).map(w=>({...w, n:1, manual:true}));
-  buildSet([p.due, p.mbs, p.glz, ...week].filter(Boolean));
+  // 🔴 2026-10-24: 予定はすぐ下の「きょう・あした」に出すので、ここには入れない（二重になる）
+  buildSet([p.mbs, p.glz, ...week].filter(Boolean));
+}
+// ── トップの1タップ記録（2026-10-24）。中身は健康タブの記録と同じ関数を使う ──
+function topPoop(had){
+  const t = new Date().toLocaleDateString('sv-SE');
+  if ($('pp-date')) $('pp-date').value = t;
+  savePoop(had);
+  $('tq-msg').textContent = had ? 'きょうのおつうじ「あった」を記録した' : 'きょうのおつうじ「なかった」を記録した';
+}
+function topSleep(){
+  switchTab('health');
+  setTimeout(()=>{ const e=$('sl-bed'); if(e){ e.scrollIntoView({block:'center'}); e.focus(); } }, 150);
+}
+function topWeight(){
+  switchTab('health');
+  setTimeout(()=>{ const e=$('wt-kg'); if(e){ const d=e.closest('details'); if(d) d.open=true; e.scrollIntoView({block:'center'}); e.focus(); } }, 150);
+}
+// ── 📖 読むタブの引力（2026-10-24 メグ「自然に見に行きたくなるように。変に目立たせるのは違う」）──
+//    トップには「今日いちばん話したくなる1本」の見出しを1枚だけ置く（全部は並べない）。
+//    新しい読み物が届いて、まだ読むタブを開いていない日は、下のメニューの「読む」に小さな点。開けば消える
+function readTeaser(m){
+  const el = $('read-teaser'); if(!el || !m) return;
+  const w = m.world || {};
+  const secs = (m.paper && m.paper.sections) || [];
+  const lead = (secs[0] && (secs[0].items||[])[0]) || null;
+  const pick = w.title ? {k:'🌍 今日の1本', h:w.title, w:w.why||w.note||''}
+             : lead ? {k:'📰 チェンマイ日報', h:lead.title, w:lead.note||''}
+             : (m.videos||[])[0] ? {k:'📺 動画', h:m.videos[0].title, w:(m.videos[0].summary||[])[0]||''} : null;
+  if(!pick){ el.innerHTML=''; return; }
+  const nArt = secs.reduce((a,x)=>a+(x.items||[]).length,0) + (m.videos||[]).length + (w.title?1:0);
+  const mins = Math.max(3, Math.round(nArt*0.7));
+  const first = String(pick.w).split(/(?<=。)/)[0];
+  el.innerHTML = `<button class="readt" onclick="switchTab('read')"><div class="rk">${pick.k}　・　ほか${Math.max(0,nArt-1)}本・ぜんぶで${mins}分くらい</div>
+    <div class="rh">${esc(pick.h)}</div>${first?`<div class="rw">${esc(first.length>70?first.slice(0,70)+'…':first)}</div>`:''}</button>`;
+  const seen = localStorage.getItem('readSeenAt') || '';
+  const nav = document.querySelector('.nav-btn[data-tab="read"]');
+  if(nav) nav.classList.toggle('fresh', !!m.generated_at && m.generated_at > seen);
+  const rh = $('read-head');
+  if(rh) rh.innerHTML = `<div class="readhead">${esc(String(m.generated_at||'').slice(5,10).replace('-','/'))} の読み物 ・ ${nArt}本・${mins}分くらい</div>`;
+  window.__readAt = m.generated_at || '';
+}
+function readSeen(){
+  try{ if(window.__readAt) localStorage.setItem('readSeenAt', window.__readAt); }catch(e){}
+  const nav = document.querySelector('.nav-btn[data-tab="read"]'); if(nav) nav.classList.remove('fresh');
 }
 function markSetDone(id){
   const st = setState(); if(!st.items) return;
@@ -2280,8 +2367,12 @@ async function loadNewStuff(){
     }
   }
 
+  readTeaser(m);
+  // 🔴 2026-10-24: 読むタブでは「今日の1本」を先頭に、投資候補を最後に回す（投資候補は投資タブにもある）
+  { const ci = parts.findIndex(x=>x.includes('nsbox cand')); if(ci>=0){ parts.push(parts.splice(ci,1)[0]); }
+    const wi = parts.findIndex(x=>x.includes('🌍 今日の1本')); if(wi>0){ parts.unshift(parts.splice(wi,1)[0]); } }
   if(!parts.length){ el.innerHTML=''; return; }
-  el.innerHTML = `<div class="blk-h">🆕 新しく入ってきたもの
+  el.innerHTML = `<div class="blk-h">📖 今日の読み物
     ${age>30?`<span class="sec-note">🔴 ${Math.floor(age/24)}日前の内容です</span>`:''}</div>${parts.join('')}`;
   bindScoutButtons(el);   // 🔴 トップからも裁判に送れるようにする（2026-09-12）
 }
@@ -2328,35 +2419,28 @@ function renderBriefing() {
   // 🔴 近日（3日以内）だけ出して、それ以降は畳む（2026-08-30 メグ指示）
   // 🤖（AIがやる行）と ✅（済み・取りやめ）は朝の巡回が入れても出さない（2026-10-24 メグ「わたしがやるのはおかしい」）
   const allDues = (b.today || []).filter(d => !/^([^:：]*[:：]\s*)?(🤖|✅)/.test(String(d.label||d.title||'')));
-  const dayLeft = d => { const m=String(d.date||d.due||'').match(/(\d{4})-(\d\d)-(\d\d)/);
-    if(!m) return 0; return Math.ceil((new Date(m[0]+'T12:00:00+09:00')-Date.now())/86400000); };
-  const dues = allDues.filter(d=>dayLeft(d)<=3);
+  // 🔴 2026-10-24: 朝の巡回は日付を「10/06」の形で書く。年つきでなくても読む（読めずに全部「きょう」になっていた）
+  const dayLeft = d => { const s=String(d.date||d.due||''); let m=s.match(/(\d{4})-(\d\d)-(\d\d)/), iso;
+    if(m) iso=m[0]; else { const k=s.match(/^(\d{1,2})\/(\d{1,2})/); if(!k) return 99;
+      const now=new Date(); let y=now.getFullYear(); const mo=+k[1];
+      if(mo<now.getMonth()+1-6) y++; else if(mo>now.getMonth()+1+6) y--;
+      iso=`${y}-${String(mo).padStart(2,'0')}-${String(+k[2]).padStart(2,'0')}`; }
+    const today=new Date(new Date().toLocaleDateString('sv-SE')+'T12:00:00+09:00');
+    return Math.round((new Date(iso+'T12:00:00+09:00')-today)/86400000); };
+  // 🔴 2026-10-24 作り直し（メグ「完了を押す意味を感じない。予定表で十分。日付が決まっているものは通知の方がいい。
+  //    やってない状態をずっと見続けるのが邪魔」）。トップは今日・明日の題名だけ。完了ボタンは無し（日付が過ぎたら消える）。
+  //    過ぎたもの・先のものは予定タブと携帯の通知に任せる。過ぎたものはモッフルの起動時の一覧にも出る
+  const dues = allDues.filter(d=>{ const n=dayLeft(d); return n>=0 && n<=1; });
   window.__setParts = Object.assign(window.__setParts||{}, {due:
-    {id:'due', n:dues.length, label:`期日が近い ${dues.length}件`, mins:'', anchor:'brief-due'}});
+    {id:'due', n:dues.length, label:`きょう・あしたの予定 ${dues.length}件`, mins:'', anchor:'brief-due'}});
   if(!dues.length) markSetDone('due');
-  const laterDues = allDues.filter(d=>dayLeft(d)>3);
-  const doneKeys = getDoneDues();
+  const shortTitle = s => { s = String(s||'').replace(/\*\*/g,'').replace(/^[^:：]{1,8}[:：]\s*/,'');
+    const k = s.search(/[（(｜|]/); if(k>6) s = s.slice(0,k); return s.length>38 ? s.slice(0,38)+'…' : s; };
   $('brief-due').innerHTML = dues.length
-    ? dues.map((d, i) => {
-        const key = d.date + '|' + d.label;
+    ? dues.map(d => `<div class="due2"><span class="d">${dayLeft(d)===0?'きょう':'あした'}</span><span class="l">${esc(shortTitle(d.label||d.title))}</span></div>`).join('')
+    : '<p class="empty">きょう・あしたの予定はありません</p>';
   const ld = $('brief-due-later');
-  if (ld) ld.innerHTML = laterDues.length
-    ? `<details class="laterd"><summary>これから ${laterDues.length}件</summary>${laterDues.map(d=>
-        `<div class="ldrow"><b>${esc(String(d.date||d.due||'').slice(5).replace('-','/'))}</b>
-         <span>${escLink(d.title||d.what||d.summary||'')}</span></div>`).join('')}</details>` : '';
-        const done = doneKeys.some(x => x.key === key);
-        return `<div class="due ${esc(d.urgency||'normal')} ${done?'done':''}" data-key="${esc(key)}">
-          <span class="d">${esc(d.date)}</span><span class="l">${escLink(d.label)}</span>
-          <button class="due-btn ${done?'on':''}" data-i="${i}" ${done?'disabled':''}>${done?'✓ 報告済み':'✓ 完了'}</button>
-          <div class="due-rep" id="rep-${i}">
-            <textarea placeholder="どうやって終わった？ 気づいたこと・次にやること・結果など（空でもOK）"></textarea>
-            <div class="hint2">メモは投げ込みと同じように自動で仕分けされ、必要なら別の記録にも残ります。</div>
-            <div class="row2"><button class="btn btn-primary" data-send="${i}">報告する</button>
-            <button class="btn btn-ghost" data-cancel="${i}">やめる</button></div>
-          </div></div>`;
-      }).join('')
-    : '<p class="empty">14日以内の期日はありません 🎉</p>';
-  bindDueButtons(dues);
+  if (ld) ld.innerHTML = `<button class="linkbtn" onclick="switchTab('cal')">予定を全部見る →</button>`;
   const att = (b.attention || []);
   $('brief-attention-wrap').style.display = att.length ? '' : 'none';
   $('brief-attention').innerHTML = att.map(a => `<div class="card"><div class="s" style="color:var(--text)">${esc(a)}</div></div>`).join('');
@@ -5367,12 +5451,13 @@ function switchTab(tab) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   $('tab-' + tab).classList.add('active');
-  $('page-title').innerHTML = { today:`今日<span class="sub" id="today-date"></span>`, cal:'予定', inbox:'投げ込み', invest:'投資', health:'健康', diary:'日記', quick:'コピペ帳', learn:'道場' }[tab];
+  $('page-title').innerHTML = { today:`今日<span class="sub" id="today-date"></span>`, cal:'予定', inbox:'投げ込み', invest:'投資', health:'健康', diary:'日記', quick:'コピペ帳', learn:'道場', read:'読む' }[tab];
   if (tab === 'learn') loadLearn();
   if (tab === 'today') setToday();
   if (tab === 'quick') loadQuick();
   if (tab === 'inbox') { loadBoard(); learnInit(); }
   if (tab === 'diary') loadDiary();
+  if (tab === 'read') readSeen();
   if (tab === 'cal' && !calSel) { calSel = new Date().toLocaleDateString('sv-SE'); renderCal(); }
 }
 function setToday() {
