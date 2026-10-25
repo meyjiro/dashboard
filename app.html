@@ -1365,6 +1365,16 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
         </div>
         <div class="hint" id="learn-hint"></div>
       </div>
+      <!-- 🎬 MVのアイデア（2026-10-25夜 メグ「ふと思い浮かんだアイデアを書ける場所。確定ではなく、他のAIのアイデアと同じ仮説として」）。
+           朝夜の仕分けは見ない。汐明MV/アイデア箱/ に1件ずつ入り、次にMVの窓を開いた時にクロードが「目的に効くか・作れるかの証拠」を1行ずつ返す -->
+      <div class="learn-box mvidea-box">
+        <div class="lbx-h">🎬 MVのアイデア <span>仮説として置く。次にMVの窓を開いた時にクロードが確かめて返す。勝手にタスクにはしない</span></div>
+        <textarea id="mvidea-text" placeholder="ふと思いついたMVのアイデアを、そのまま"></textarea>
+        <div class="inbox-actions">
+          <button class="btn btn-primary" id="mvidea-send">🎬 アイデアに置く</button>
+        </div>
+        <div class="hint" id="mvidea-hint"></div>
+      </div>
       <div class="section-title">💬 やりとり板 <span class="bd-sub" id="board-status"></span></div>
       <div class="hint" style="margin:-6px 4px 10px">送ると3分以内にクロードが返事を書く</div>
       <div class="bd-new">
@@ -1680,7 +1690,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-10-24.7';
+const APP_VERSION = '2026-10-25.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2722,6 +2732,7 @@ function learnInit(){
   $('learn-photo-input').addEventListener('change', async e=>{ const f=e.target.files[0]; if(!f) return; try{ const b64 = await (typeof shrinkImage==='function' ? shrinkImage(f) : new Promise((ok,ng)=>{ const r=new FileReader(); r.onload=()=>ok(r.result.split(',')[1]); r.onerror=ng; r.readAsDataURL(f); })); learnPhoto={b64}; $('learn-hint').textContent='📷 写真を1枚つけた'; }catch(err){ toast('写真を読めなかった'); } e.target.value=''; });
   $('learn-rec-btn').addEventListener('click', learnToggleRec);
   $('learn-send').addEventListener('click', learnSend);
+  $('mvidea-send').addEventListener('click', mvIdeaSend);
 }
 async function learnToggleRec(){
   const btn = $('learn-rec-btn');
@@ -2748,6 +2759,19 @@ async function learnSend(){
     await putFile(`inbox/queue/${stamp}_learn.md`, body, `覚えたい ${stamp}`);
     $('learn-text').value=''; $('learn-why').value=''; learnPhoto=null; learnType=''; $('learn-chips').querySelectorAll('button').forEach(x=>x.classList.remove('on')); $('learn-hint').textContent='投げた。次の巡回で5分の課になって、夜の授業に出る';
     toast('🧬 覚えたいに投げた'); if(typeof loadQueue==='function') loadQueue();
+  }catch(e){ toast('送れなかった: '+e.message); }
+  btn.disabled=false;
+}
+
+async function mvIdeaSend(){
+  const text = $('mvidea-text').value.trim();
+  if(!text){ toast('ひとこと書いてね'); return; }
+  const btn=$('mvidea-send'); btn.disabled=true;
+  try{ const stamp=ts();
+    const body=`at: ${atNow()}\nkind: MVのアイデア（仮説）\n\n${text}`;
+    await putFile(`projects/B6_個人案件/汐明MV/アイデア箱/${stamp}.md`, body, `MVのアイデア ${stamp}`);
+    $('mvidea-text').value=''; $('mvidea-hint').textContent='置いた。次にMVの窓を開いた時に、クロードが確かめて返す';
+    toast('🎬 MVのアイデアに置いた');
   }catch(e){ toast('送れなかった: '+e.message); }
   btn.disabled=false;
 }
