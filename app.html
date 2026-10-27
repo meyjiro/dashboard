@@ -1690,7 +1690,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-10-25.1';
+const APP_VERSION = '2026-10-27.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2661,6 +2661,8 @@ async function loadMebius() {
     if (!res.ok) throw new Error(res.status);
     const data = await res.json();
     window.__mebiusEvents = (data.events || data || []).filter(e => e.end && !e.completed);
+    // 🔴 2026-10-27: loadAll の最後の描き直しは全部の読み込み待ち。1つでも戻らないと完了日が載らないので、ここでも描く
+    try { renderCal(); } catch (e) {}
     const evs = window.__mebiusEvents
       .sort((a, b) => (a.end || '').localeCompare(b.end || '')).slice(0, 6);
     el.innerHTML = evs.length
