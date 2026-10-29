@@ -1135,6 +1135,10 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 .q2-card.paycard .q2-head{background:linear-gradient(135deg,#2b3350,#46507a);color:#fff}
 .q2-card.paycard .q2-ic{background:rgba(255,255,255,.18)}
 .q2-open{flex:none;border:0;background:transparent;color:inherit;font-size:15px;padding:6px 8px;border-radius:8px;cursor:pointer;opacity:.55}
+.q2-more>summary{cursor:pointer;list-style:none;padding:9px 12px;font-size:12.5px;font-weight:700;opacity:.65;border-top:1px solid var(--line,rgba(128,128,128,.14))}
+.q2-more>summary::-webkit-details-marker{display:none}
+.q2-more>summary::after{content:' ▾';opacity:.7}
+.q2-more[open]>summary::after{content:' ▴'}
 .q2-sub{font-size:11px;opacity:.55;font-weight:400;margin-top:1px}
 
 /* 🔒 金庫（2026-10-22・personal/vault/credentials.md.enc をこの端末の中だけで開く）*/
@@ -1753,7 +1757,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-10-29.6';
+const APP_VERSION = '2026-10-29.7';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -5096,8 +5100,8 @@ const V_PLAIN_KEY = /ID|URL|ユーザー|アカウント|メール|mail|名義|�
 const vStrip = t => t.replace(/\*\*/g, '').replace(/`/g, '').trim();
 const vSecret = (k, v) => (V_SECRET_KEY.test(k) && !(V_PLAIN_KEY.test(k) && !/パスワード|pass|secret|token|トークン|暗証|コード|cvv/i.test(k))) || /^[A-Za-z0-9_\-+=\/.:]{28,}$/.test(v);
 function vaultParse(text) {
-  const cats = []; let cat = null, card = null, fence = null, pend = null;
-  const field = (k, v) => { v = vStrip(v); if (card && v) card.fields.push({ k: vStrip(k), v, secret: vSecret(k, v), url: /^https?:\/\/\S+$/.test(v) }); };
+  const cats = []; let cat = null, card = null, fence = null, pend = null, grp = '';
+  const field = (k, v) => { v = vStrip(v); if (card && v) card.fields.push({ k: vStrip(k), v, g: grp, secret: vSecret(k, v), url: /^https?:\/\/\S+$/.test(v) }); };
   const kv = part => part.match(/^([^:：\/]{1,28}?)\s*[:：](?!\/\/)\s*([\s\S]*)$/);
   text.split('\n').forEach(raw => {
     const l = raw.replace(/\s+$/, '');
@@ -5108,8 +5112,8 @@ function vaultParse(text) {
     if (h) {
       const lv = h[1].length, t = h[2].trim(); pend = null;
       if (lv === 1) { card = null; cat = /^ログイン情報$/.test(t) ? null : { title: t, cards: [] }; if (cat) cats.push(cat); }
-      else if (lv === 2) { if (t === '目次') { card = null; return; } if (!cat) { cat = { title: '🏛 その他', cards: [] }; cats.push(cat); } card = { title: t, fields: [], memos: [] }; cat.cards.push(card); }
-      else if (card) card.fields.push({ group: t.replace(/（20\d\d-\d\d-\d\d[^）]*）/, '').trim() });
+      else if (lv === 2) { if (t === '目次') { card = null; return; } if (!cat) { cat = { title: '🏛 その他', cards: [] }; cats.push(cat); } card = { title: t, fields: [], memos: [] }; cat.cards.push(card); grp = ''; }
+      else if (card) grp = t.replace(/（20\d\d-\d\d-\d\d[^）]*）/, '').trim();
       return;
     }
     if (!card) return;
@@ -5133,6 +5137,12 @@ function vaultParse(text) {
     else if (m && !m[2].trim()) pend = { k: vStrip(m[1]) };
     else card.memos.push(vStrip(c));
   });
+  // 普段使う欄＝ログインに要るもの・カード番号など。それ以外（登録先・用途・長い説明・メモ）は畳む
+  const MAIN = /^(URL|ID|ログイン|メール|e?-?mail|パスワード|PASS|pwd|番号|有効期限|セキュリティコード|名義|口座番号|ユーザー|アカウント|トークン|client_(id|secret)|API|キー|合言葉|暗証|電話)/i;
+  cats.forEach(c => c.cards.forEach(cd => {
+    cd.fields.forEach(f => { f.main = MAIN.test(f.k); });
+    if (!cd.fields.some(f => f.main)) cd.fields.slice(0, 2).forEach(f => { f.main = true; });   // 何も当たらなければ頭の2つは出す
+  }));
   return cats;
 }
 let vaultCache = { text: null, cats: [] };
@@ -5147,16 +5157,22 @@ function vaultRender() {
   const hit = c => !q || (c.title + '\n' + c.fields.map(f => (f.k || '') + ' ' + (f.v || '')).join('\n') + '\n' + c.memos.join('\n')).toLowerCase().includes(q);
   const rowHtml = (ci, fi) => {
     const c = vaultFlat[ci], f = c.fields[fi];
-    if (f.group != null) return `<div class="v2-grp">${esc(f.group)}</div>`;
     const sk = c.title + '|' + fi, masked = f.secret && !vst.shown[sk];
-    return `<div class="q2-f" data-vf="${ci}-${fi}"><div class="q2-ft"><div class="q2-k">${esc(f.k)}</div><div class="q2-v${masked ? ' mask' : ''}">${masked ? '••••••••' : esc(f.v)}</div></div>
+    const key = (!f.main && f.g ? f.g + ' ・ ' : '') + f.k;   // 畳んだ中では、どの口座・どの人の欄かが分かるように見出しを頭に付ける
+    return `<div class="q2-f" data-vf="${ci}-${fi}"><div class="q2-ft"><div class="q2-k">${esc(key)}</div><div class="q2-v${masked ? ' mask' : ''}">${masked ? '••••••••' : esc(f.v)}</div></div>
       ${f.secret ? `<button class="q2-eye" data-veye="${ci}-${fi}" aria-label="表示／伏せる">${masked ? '👁' : '🙈'}</button>` : ''}${f.url ? `<button class="q2-open" data-vurl="${ci}-${fi}" aria-label="開く">↗</button>` : ''}<span class="q2-cp">📋</span></div>`;
   };
   const cardHtml = (c, cat) => {
     const ci = vaultFlat.push(c) - 1; const pay = /^💳/.test(c.title);
     const dm = c.title.match(/（(20\d\d-\d\d-\d\d)[^）]*）/); const title = c.title.replace(/（20\d\d-\d\d-\d\d[^）]*）/, '').trim();
-    return `<div class="q2-card${pay ? ' paycard' : ''}"><div class="q2-head"><div class="q2-ic">${pay ? '💳' : '🔑'}</div><div class="q2-ttl">${esc(name(title) || title)}${dm ? `<div class="q2-sub">${esc(dm[1])}</div>` : ''}</div></div>
-      ${c.fields.map((_, fi) => rowHtml(ci, fi)).join('')}${c.memos.length ? `<div class="q2-note">${c.memos.map(esc).join('<br>')}</div>` : ''}</div>`;
+    let lastG = '', mainHtml = '', detHtml = '', nDet = 0;
+    c.fields.forEach((f, fi) => {
+      if (f.main) { if (f.g && f.g !== lastG) mainHtml += `<div class="v2-grp">${esc(f.g)}</div>`; lastG = f.g || lastG; mainHtml += rowHtml(ci, fi); }
+      else { detHtml += rowHtml(ci, fi); nDet++; }
+    });
+    const nMemo = c.memos.length, more = nDet + (nMemo ? 1 : 0);
+    const det = more ? `<details class="q2-more"${q ? ' open' : ''}><summary>くわしく見る（${nDet ? nDet + '欄' : ''}${nDet && nMemo ? '・' : ''}${nMemo ? 'メモ' : ''}）</summary>${detHtml}${nMemo ? `<div class="q2-note">${c.memos.map(esc).join('<br>')}</div>` : ''}</details>` : '';
+    return `<div class="q2-card${pay ? ' paycard' : ''}"><div class="q2-head"><div class="q2-ic">${pay ? '💳' : '🔑'}</div><div class="q2-ttl">${esc(name(title) || title)}${dm ? `<div class="q2-sub">${esc(dm[1])}</div>` : ''}</div></div>${mainHtml}${det}</div>`;
   };
   let html = '';
   if (vst.cat === 'home' && !q) {
