@@ -1741,7 +1741,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-10-29.4';
+const APP_VERSION = '2026-10-29.5';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -5174,7 +5174,9 @@ async function vaultOpen() {
   $('vault-open').textContent = '開く'; $('vault-open').disabled = false;
 }
 const np_len = t => t.trim().length;
-document.addEventListener('DOMContentLoaded', () => {
+// 🔴 2026-10-29: スマホのブックマークは index.html が app.html を後から読み込む。そのときは DOMContentLoaded がもう終わっていて、
+//    イベント登録が一度も走らず、金庫のボタン（開く・👁・顔認証）が全部効かなかった。読み込み済みなら今すぐ登録する
+const vaultInit = () => {
   const o = $('vault-open'); if (!o) return;
   o.addEventListener('click', vaultOpen);
   $('vault-pass').addEventListener('keydown', e => { if (e.key === 'Enter') vaultOpen(); });
@@ -5184,7 +5186,8 @@ document.addEventListener('DOMContentLoaded', () => {
   $('vault-bio-open').addEventListener('click', vbUnlock);
   $('vault-bio-btn').addEventListener('click', () => { if (vbGet()) { try { localStorage.removeItem(VB_KEY); } catch (e) {} toast('顔認証をやめました'); vbRefresh(); } else vbEnroll(); });
   vbRefresh();
-});
+};
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', vaultInit); else vaultInit();
 let quickLoaded = false;
 const Q_ICON = { bank:'🏦', broker:'📈', address:'🏠', phone:'📞', mail:'✉️', id:'🪪', passport:'🛂', link:'🔗', text:'📝', contract:'📄', person:'👤', company:'🏢' };
 function qLs(k, def) { try { return JSON.parse(localStorage.getItem(k)) || def; } catch (e) { return def; } }
