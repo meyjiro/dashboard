@@ -1080,6 +1080,40 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 .qcopy{flex-shrink:0;border:none;border-radius:8px;padding:8px 12px;font-size:14px;background:rgba(128,128,128,.12);cursor:pointer}
 .qcopy.done{background:#22a06b;color:#fff}
 
+/* コピペ帳 v2（2026-10-29 メグ指示: 1Passwordのように種類分け・欄ごとコピー・見やすく） */
+#quick-list{min-width:0;max-width:100%;overflow-x:hidden}
+.q2-bar,.q2-chips,.q2-recent,.q2-card{max-width:100%;box-sizing:border-box}
+.q2-bar{position:sticky;top:0;z-index:5;background:var(--bg,#f5f5f7);padding:2px 0 8px}
+.q2-search{width:100%;box-sizing:border-box;font-size:16px;padding:11px 14px;border-radius:12px;border:1px solid var(--line,rgba(128,128,128,.3));background:var(--card,#fff);color:inherit;font-family:inherit}
+.q2-chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;scrollbar-width:none}
+.q2-chips::-webkit-scrollbar{display:none}
+.q2-chip{flex:none;border:1px solid var(--line,rgba(128,128,128,.3));background:var(--card,#fff);color:inherit;border-radius:999px;padding:6px 12px;font-size:13px;font-family:inherit;cursor:pointer;white-space:nowrap}
+.q2-chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.q2-recent{display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none;align-items:center}
+.q2-recent::-webkit-scrollbar{display:none}
+.q2-recent .q2-rl{flex:none;font-size:11px;opacity:.55}
+.q2-rc{flex:none;max-width:200px;border:0;border-radius:10px;padding:6px 10px;background:rgba(128,128,128,.14);color:inherit;font-family:inherit;font-size:12px;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.q2-rc small{opacity:.6;margin-right:5px}
+.q2-sec{font-size:12px;font-weight:700;opacity:.55;margin:14px 4px 6px}
+.q2-card{background:var(--card,#fff);border-radius:14px;margin-bottom:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.q2-head{display:flex;align-items:center;gap:8px;padding:11px 12px 9px}
+.q2-ic{flex:none;width:30px;height:30px;border-radius:9px;background:rgba(128,128,128,.13);display:flex;align-items:center;justify-content:center;font-size:16px}
+.q2-ttl{flex:1;min-width:0;font-weight:700;font-size:14.5px;line-height:1.35}
+.q2-star,.q2-all{flex:none;border:0;background:transparent;color:inherit;font-family:inherit;cursor:pointer}
+.q2-star{font-size:19px;padding:4px 6px;opacity:.35}
+.q2-star.on{opacity:1;color:#e8a317}
+.q2-all{font-size:12px;font-weight:700;padding:6px 10px;border-radius:8px;background:rgba(128,128,128,.14)}
+.q2-f{display:flex;align-items:center;gap:8px;padding:7px 12px;min-height:44px;border-top:1px solid var(--line,rgba(128,128,128,.14));cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s}
+.q2-f:active{background:rgba(128,128,128,.1)}
+.q2-f.done{background:rgba(34,160,107,.16)}
+.q2-ft{flex:1;min-width:0}
+.q2-k{font-size:11px;opacity:.6;margin-bottom:1px}
+.q2-v{font-size:15.5px;line-height:1.4;word-break:break-all;white-space:pre-wrap;font-variant-numeric:tabular-nums}
+.q2-v.mask{letter-spacing:.12em;opacity:.7}
+.q2-eye,.q2-cp{flex:none;border:0;background:transparent;color:inherit;font-size:16px;padding:6px 8px;border-radius:8px;cursor:pointer;opacity:.55}
+.q2-f.done .q2-cp{opacity:1;color:#22a06b}
+.q2-note{font-size:11.5px;opacity:.6;line-height:1.5;padding:7px 12px 10px;border-top:1px solid var(--line,rgba(128,128,128,.14))}
+
 /* 🔒 金庫（2026-10-22・personal/vault/credentials.md.enc をこの端末の中だけで開く）*/
 .vault-box{background:var(--card,#fff);border-radius:8px;padding:12px;margin-bottom:12px}
 .vault-box .vrow{display:flex;gap:8px;margin-top:8px}
@@ -1566,6 +1600,8 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
       <div id="cb-root"></div>
     </div>
     <div id="tab-quick" class="tab-panel">
+      <div id="quick-list"><p class="empty">読み込み中…</p></div>
+
       <div class="vault-box" id="vault-box">
         <div style="font-weight:700">🔒 金庫（パスワード・カード）</div>
         <div class="hint" style="margin-top:4px">合言葉を入れると、この端末の中だけで開きます。画面を閉じると鍵がかかります。</div>
@@ -1573,9 +1609,8 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
         <div class="vrow" id="vault-tools" style="display:none"><input id="vault-q" type="search" placeholder="さがす（例：バンコク・Wise・GitHub）"><button class="vlock" id="vault-close">閉じる</button></div>
         <div id="vault-list"></div>
       </div>
-
-      <div id="quick-list"><p class="empty">読み込み中…</p></div>
     </div>
+  </div>
   </div>
 
   <div class="bottom-nav">
@@ -1690,7 +1725,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-10-27.1';
+const APP_VERSION = '2026-10-29.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -5068,37 +5103,91 @@ document.addEventListener('DOMContentLoaded', () => {
   $('vault-close').addEventListener('click', vaultClose);
 });
 let quickLoaded = false;
+const Q_ICON = { bank:'🏦', broker:'📈', address:'🏠', phone:'📞', mail:'✉️', id:'🪪', passport:'🛂', link:'🔗', text:'📝', contract:'📄', person:'👤', company:'🏢' };
+function qLs(k, def) { try { return JSON.parse(localStorage.getItem(k)) || def; } catch (e) { return def; } }
+function qLsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+async function qCopy(val) {
+  try { await navigator.clipboard.writeText(val); }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = val; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+}
 async function loadQuick() {
   if (quickLoaded) return;
   const el = $('quick-list');
   try {
-    const raw = await repoFile('meyjiro/personal', 'quick.json');
-    const d = JSON.parse(raw);
-    el.innerHTML = d.sections.map((sec, si) => `
-      <details class="qsec"${si === 0 ? ' open' : ''}>
-        <summary>${esc(sec.title)}<span style="font-size:11px;opacity:.5">${sec.items.length}件</span></summary>
-        <div class="qbody">${sec.items.map((it, ii) => `
-          <div class="qrow">
-            <div class="qtxt">
-              <div class="qlabel">${escLink(it.label)}</div>
-              <div class="qval">${esc(it.value)}</div>
-              ${it.note ? `<div class="qnote">${esc(it.note)}</div>` : ''}
-            </div>
-            <button class="qcopy" data-copy="${si}-${ii}">📋</button>
-          </div>`).join('')}</div>
-      </details>`).join('');
-    el.querySelectorAll('.qcopy').forEach(btn => btn.addEventListener('click', async () => {
-      const [si, ii] = btn.dataset.copy.split('-').map(Number);
-      const val = d.sections[si].items[ii].value;
-      try { await navigator.clipboard.writeText(val); }
-      catch (e) {
-        const ta = document.createElement('textarea');
-        ta.value = val; document.body.appendChild(ta); ta.select();
-        document.execCommand('copy'); ta.remove();
-      }
-      btn.textContent = '✓'; btn.classList.add('done');
-      setTimeout(() => { btn.textContent = '📋'; btn.classList.remove('done'); }, 1200);
+    const d = JSON.parse(await repoFile('meyjiro/personal', 'quick.json'));
+    // 新しい形(fields)でも古い形(valueだけ)でも読める
+    const secs = d.sections.map((sec, si) => ({
+      id: sec.id || ('s' + si), title: sec.title,
+      items: sec.items.map(it => ({
+        label: it.label, kind: it.kind || 'text', note: it.note || '', copyAll: it.copyAll || '',
+        fields: it.fields && it.fields.length ? it.fields : [{ k: '', v: it.value || '' }]
+      }))
     }));
+    const st = { q: '', cat: 'all', fav: qLs('quickFav', []), recent: qLs('quickRecent', []), shown: {} };
+    const find = (label, k) => { for (const s of secs) for (const it of s.items) if (it.label === label) { const f = it.fields.find(x => x.k === k); if (f) return { it, f }; } return null; };
+    const hit = it => {
+      const q = st.q.trim().toLowerCase(); if (!q) return true;
+      return (it.label + '\n' + it.note + '\n' + it.fields.map(f => f.k + ' ' + f.v).join('\n')).toLowerCase().includes(q);
+    };
+    const fieldHtml = (it, ii, fi) => {
+      const f = it.fields[fi]; const sk = it.label + '|' + f.k; const masked = f.secret && !st.shown[sk];
+      return `<div class="q2-f" data-copy="${ii}-${fi}">
+        <div class="q2-ft">${f.k ? `<div class="q2-k">${esc(f.k)}</div>` : ''}<div class="q2-v${masked ? ' mask' : ''}">${masked ? '••••••••' : esc(f.v)}</div></div>
+        ${f.secret ? `<button class="q2-eye" data-eye="${ii}-${fi}" aria-label="表示／伏せる">${masked ? '👁' : '🙈'}</button>` : ''}
+        <span class="q2-cp">${'📋'}</span></div>`;
+    };
+    const flat = [];   // 画面に出した項目（クリックの番号がここを指す）
+    const cardHtml = it => {
+      const ii = flat.push(it) - 1; const on = st.fav.includes(it.label);
+      return `<div class="q2-card"><div class="q2-head"><div class="q2-ic">${Q_ICON[it.kind] || '📝'}</div><div class="q2-ttl">${escLink(it.label)}</div>
+        ${it.copyAll ? `<button class="q2-all" data-all="${ii}">まとめて</button>` : ''}
+        <button class="q2-star${on ? ' on' : ''}" data-fav="${ii}" aria-label="お気に入り">${on ? '★' : '☆'}</button></div>
+        ${it.fields.map((_, fi) => fieldHtml(it, ii, fi)).join('')}
+        ${it.note ? `<div class="q2-note">${esc(it.note)}</div>` : ''}</div>`;
+    };
+    const chips = () => [['all', 'すべて']].concat(st.fav.length ? [['fav', '★ お気に入り']] : []).concat(secs.map(s => [s.id, s.title]))
+      .map(([id, t]) => `<button class="q2-chip${st.cat === id ? ' on' : ''}" data-cat="${id}">${esc(t)}</button>`).join('');
+    const recentHtml = () => {
+      const r = st.recent.map(x => find(x.l, x.k) && { ...x }).filter(Boolean).slice(0, 6); if (!r.length) return '';
+      return `<div class="q2-recent"><span class="q2-rl">最近</span>${r.map(x => `<button class="q2-rc" data-rl="${laAttr(x.l)}" data-rk="${laAttr(x.k)}"><small>${esc(x.k || x.l)}</small>${esc(find(x.l, x.k).f.v.split('\n')[0])}</button>`).join('')}</div>`;
+    };
+    const renderBody = () => {
+      flat.length = 0;
+      let body = '';
+      const pick = st.cat === 'fav' ? secs.map(s => ({ ...s, items: s.items.filter(i => st.fav.includes(i.label)) })) : secs.filter(s => st.cat === 'all' || s.id === st.cat);
+      pick.forEach(s => {
+        const its = s.items.filter(hit); if (!its.length) return;
+        body += (st.cat === 'all' || st.cat === 'fav' ? `<div class="q2-sec">${esc(s.title)}</div>` : '') + its.map(cardHtml).join('');
+      });
+      $('q2-chips').innerHTML = chips();
+      $('q2-body').innerHTML = (st.q ? '' : recentHtml()) + (body || '<p class="empty">見つかりません</p>');
+    };
+    // 検索窓は作り直さない（日本語の変換が切れるため）。中身だけ差し替える
+    const render = () => {
+      el.innerHTML = `<div class="q2-bar"><input class="q2-search" id="q2-search" type="search" placeholder="🔍 さがす（例：カシコン・パスポート・住所）" autocomplete="off"><div class="q2-chips" id="q2-chips"></div></div><div id="q2-body"></div>`;
+      $('q2-search').addEventListener('input', e => { st.q = e.target.value; renderBody(); });
+      renderBody();
+    };
+    const doCopy = async (row, it, f) => {
+      await qCopy(f.v); row.classList.add('done'); setTimeout(() => row.classList.remove('done'), 900);
+      toast((f.k || it.label) + 'をコピーしました');
+      if (!f.secret) { st.recent = [{ l: it.label, k: f.k }].concat(st.recent.filter(x => !(x.l === it.label && x.k === f.k))).slice(0, 8); qLsSet('quickRecent', st.recent); }
+    };
+    el.addEventListener('click', async e => {
+      const t = e.target;
+      const cat = t.closest('[data-cat]'); if (cat) { st.cat = cat.dataset.cat; renderBody(); return; }
+      const rc = t.closest('.q2-rc');
+      if (rc) { const r = find(rc.dataset.rl, rc.dataset.rk); if (r) { await qCopy(r.f.v); toast((r.f.k || r.it.label) + 'をコピーしました'); } return; }
+      const fav = t.closest('[data-fav]');
+      if (fav) { const it = flat[+fav.dataset.fav]; st.fav = st.fav.includes(it.label) ? st.fav.filter(x => x !== it.label) : st.fav.concat(it.label); qLsSet('quickFav', st.fav); if (st.cat === 'fav' && !st.fav.length) st.cat = 'all'; renderBody(); return; }
+      const all = t.closest('[data-all]');
+      if (all) { await qCopy(flat[+all.dataset.all].copyAll); toast('まとめてコピーしました'); return; }
+      const eye = t.closest('[data-eye]');
+      if (eye) { const [ii, fi] = eye.dataset.eye.split('-').map(Number); const it = flat[ii]; const sk = it.label + '|' + it.fields[fi].k; st.shown[sk] = !st.shown[sk]; const row = eye.closest('.q2-f'); row.outerHTML = fieldHtml(it, ii, fi); return; }
+      const row = t.closest('.q2-f');
+      if (row) { const [ii, fi] = row.dataset.copy.split('-').map(Number); doCopy(row, flat[ii], flat[ii].fields[fi]); }
+    });
+    render();
     quickLoaded = true;
   } catch (e) { el.innerHTML = `<p class="empty">読み込み失敗: ${esc(String(e.message || e))}</p>`; }
 }
