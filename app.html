@@ -1618,7 +1618,9 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
         <div style="font-weight:700">🔒 金庫（パスワード・カード）</div>
         <div class="hint" style="margin-top:4px">合言葉を入れると、この端末の中だけで開きます。画面を閉じると鍵がかかります。</div>
         <div class="vrow" id="vault-form"><input id="vault-pass" type="text" inputmode="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="合言葉" style="-webkit-text-security:disc"><button class="vlock" id="vault-eye" type="button" aria-label="表示">👁</button><button id="vault-open">開く</button></div>
+        <div class="vrow" id="vault-bio-row" style="display:none"><button id="vault-bio-open" type="button" style="flex:1">🔓 顔認証・指紋で開く</button></div>
         <div class="vrow" id="vault-tools" style="display:none"><input id="vault-q" type="search" placeholder="さがす（例：バンコク・Wise・GitHub）"><button class="vlock" id="vault-close">閉じる</button></div>
+        <div class="vrow" id="vault-bio-set" style="display:none"><button class="vlock" id="vault-bio-btn" type="button" style="flex:1"></button></div>
         <div id="vault-list"></div>
       </div>
     </div>
@@ -1737,7 +1739,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-10-29.2';
+const APP_VERSION = '2026-10-29.3';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -5094,16 +5096,72 @@ function vaultRender() {
     c.classList.add('done'); setTimeout(() => c.classList.remove('done'), 1000); toast('コピーしました');
   }));
 }
+// 🔐 顔認証・指紋（パスキーのPRF拡張・2026-10-29 メグ指示「パスワードなくしたい」）
+//   登録: 合言葉で開いたあと1回だけ。パスキーから取れる鍵で合言葉を暗号にし、この端末の localStorage に置く（鍵はこの端末の外へ出ない）
+//   開く: 顔認証→鍵が取れる→合言葉が戻る→金庫が開く。使えない端末では出さず、合言葉に戻る。
+const VB_KEY = 'vaultBio', VB_SALT = new TextEncoder().encode('personal-vault-bio-salt-v1');
+let vaultPassMem = '';
+const vbOk = () => !!(window.PublicKeyCredential && navigator.credentials && crypto.subtle);
+const vbGet = () => { try { return JSON.parse(localStorage.getItem(VB_KEY)); } catch (e) { return null; } };
+const vb64 = u => btoa(String.fromCharCode(...new Uint8Array(u)));
+const vbU8 = t => Uint8Array.from(atob(t), c => c.charCodeAt(0));
+async function vbKey(out) {
+  const k0 = await crypto.subtle.importKey('raw', out, 'HKDF', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(), info: new TextEncoder().encode('vault-bio-v1') }, k0, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function vbPrf(credId) {
+  const r = await navigator.credentials.get({ publicKey: { challenge: crypto.getRandomValues(new Uint8Array(32)), rpId: location.hostname, allowCredentials: [{ type: 'public-key', id: credId }], userVerification: 'required', timeout: 60000, extensions: { prf: { eval: { first: VB_SALT } } } } });
+  const x = r.getClientExtensionResults().prf;
+  if (!x || !x.results || !x.results.first) throw new Error('noprf');
+  return new Uint8Array(x.results.first);
+}
+function vbRefresh() {
+  const on = vbOk() && !!vbGet(), locked = $('vault-form').style.display !== 'none';
+  $('vault-bio-row').style.display = on && locked ? '' : 'none';
+  const unlocked = $('vault-tools').style.display !== 'none';
+  $('vault-bio-set').style.display = vbOk() && unlocked ? '' : 'none';
+  $('vault-bio-btn').textContent = vbGet() ? '🔐 顔認証をやめる（合言葉だけに戻す）' : '🔐 顔認証・指紋でも開けるようにする';
+}
+async function vbEnroll() {
+  if (!vaultPassMem) { toast('いちど合言葉で開いてから設定します'); return; }
+  try {
+    const cred = await navigator.credentials.create({ publicKey: {
+      rp: { id: location.hostname, name: 'ダッシュボード金庫' }, user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'megu', displayName: 'メグ' },
+      challenge: crypto.getRandomValues(new Uint8Array(32)), pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+      authenticatorSelection: { authenticatorAttachment: 'platform', residentKey: 'preferred', userVerification: 'required' }, attestation: 'none', timeout: 60000,
+      extensions: { prf: {} } } });
+    const ext = cred.getClientExtensionResults().prf;
+    if (!ext || ext.enabled === false) { toast('この端末・ブラウザでは使えませんでした（合言葉は今までどおり）'); return; }
+    const id = new Uint8Array(cred.rawId);
+    const key = await vbKey(await vbPrf(id));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(vaultPassMem));
+    localStorage.setItem(VB_KEY, JSON.stringify({ id: vb64(id), iv: vb64(iv), ct: vb64(ct) }));
+    toast('顔認証で開けるようになりました');
+  } catch (e) { toast(e && e.name === 'NotAllowedError' ? 'キャンセルされました' : 'この端末・ブラウザでは使えませんでした（合言葉は今までどおり）'); }
+  vbRefresh();
+}
+async function vbUnlock() {
+  const e = vbGet(); if (!e || !vbOk()) return false;
+  try {
+    const key = await vbKey(await vbPrf(vbU8(e.id)));
+    const pass = new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: vbU8(e.iv) }, key, vbU8(e.ct)));
+    vaultText = await vaultUnlock(pass); vaultPassMem = pass;
+    $('vault-form').style.display = 'none'; $('vault-tools').style.display = ''; vaultRender(); vbRefresh();
+    return true;
+  } catch (err) { toast('顔認証で開けませんでした。合言葉を入れてください'); vbRefresh(); return false; }
+}
 function vaultClose() {
-  vaultText = ''; $('vault-list').innerHTML = ''; $('vault-q').value = ''; $('vault-pass').value = '';
-  $('vault-form').style.display = ''; $('vault-tools').style.display = 'none';
+  vaultText = ''; vaultPassMem = ''; $('vault-list').innerHTML = ''; $('vault-q').value = ''; $('vault-pass').value = '';
+  $('vault-form').style.display = ''; $('vault-tools').style.display = 'none'; vbRefresh();
 }
 async function vaultOpen() {
   const pass = $('vault-pass').value; if (!pass) return;
   $('vault-open').textContent = '…';
   try {
-    vaultText = await vaultUnlock(pass.normalize('NFKC')); $('vault-pass').value = '';   // 全角で打っても半角に直す（合言葉は半角英数）
-    $('vault-form').style.display = 'none'; $('vault-tools').style.display = ''; vaultRender();
+    const np = pass.normalize('NFKC');   // 全角で打っても半角に直す（合言葉は半角英数）
+    vaultText = await vaultUnlock(np); vaultPassMem = np; $('vault-pass').value = '';
+    $('vault-form').style.display = 'none'; $('vault-tools').style.display = ''; vaultRender(); vbRefresh();
   } catch (e) { toast(e && e.name === 'OperationError' ? '合言葉がちがいます' : '開けませんでした'); }
   $('vault-open').textContent = '開く';
 }
@@ -5114,6 +5172,9 @@ document.addEventListener('DOMContentLoaded', () => {
   $('vault-q').addEventListener('input', vaultRender);
   $('vault-close').addEventListener('click', vaultClose);
   $('vault-eye').addEventListener('click', () => { const i = $('vault-pass'); i.style.webkitTextSecurity = i.style.webkitTextSecurity === 'none' ? 'disc' : 'none'; });
+  $('vault-bio-open').addEventListener('click', vbUnlock);
+  $('vault-bio-btn').addEventListener('click', () => { if (vbGet()) { try { localStorage.removeItem(VB_KEY); } catch (e) {} toast('顔認証をやめました'); vbRefresh(); } else vbEnroll(); });
+  vbRefresh();
 });
 let quickLoaded = false;
 const Q_ICON = { bank:'🏦', broker:'📈', address:'🏠', phone:'📞', mail:'✉️', id:'🪪', passport:'🛂', link:'🔗', text:'📝', contract:'📄', person:'👤', company:'🏢' };
@@ -5200,7 +5261,8 @@ async function loadQuick() {
     const openVault = preset => {
       el.style.display = 'none'; vb.style.display = '';
       $('vault-q').value = preset || ''; if ($('vault-tools').style.display !== 'none') vaultRender();
-      window.scrollTo(0, 0); if ($('vault-form').style.display !== 'none') $('vault-pass').focus();
+      window.scrollTo(0, 0); vbRefresh();
+      if ($('vault-form').style.display !== 'none') { if (vbOk() && vbGet()) vbUnlock(); else $('vault-pass').focus(); }
     };
     $('vault-back').onclick = () => { vb.style.display = 'none'; el.style.display = ''; window.scrollTo(0, 0); };
     window.__vaultPreset = '';
