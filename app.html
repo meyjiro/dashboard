@@ -1757,7 +1757,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-10-29.7';
+const APP_VERSION = '2026-11-05.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -6100,7 +6100,9 @@ document.addEventListener('click', e => {
   btn.disabled = true; bdAct(card.dataset.id, act, text).finally(() => { btn.disabled = false; });
 });
 async function bdSend() {
-  const ta = $('board-req'), btn = $('board-send'); const text = (ta.value || '').trim(); if (!text) return;
+  const ta = $('board-req'), btn = $('board-send'); const text = (ta.value || '').trim();
+  // 🔴 2026-11-05 メグ「板に書くを押しても何もならない」: 欄が空だと黙って戻っていた。空なら理由を出して欄へ戻す
+  if (!text) { toast('板の欄（このすぐ上）が空。上の投げ込み欄とは別'); ta.focus(); return; }
   btn.disabled = true; btn.textContent = '書き込み中…';
   const stamp = bdStamp(); const id = `${stamp}-m-${Math.random().toString(36).slice(2, 6)}`; const now = new Date().toISOString();
   const title = text.split('\n')[0].slice(0, 48);
