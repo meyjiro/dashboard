@@ -93,6 +93,12 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 .topq .tqi{font-size:18px}
 .topq .tqrow{display:flex;gap:6px}
 .topq .tqmsg{font-size:12px;color:var(--text2);margin:6px 2px 0;min-height:1em}
+/* 🎵 曲の再生（2026-11-06 メグ「ダメの曲を再生できるボタンとリピートのボタン」） */
+.song{display:flex;gap:8px;align-items:center;margin-top:8px}
+.song button{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:12px;padding:10px 12px;font-size:14px;cursor:pointer;font-family:inherit}
+.song .sp{flex:1;text-align:left}
+.song .sr.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.song .st{font-size:12px;color:var(--text2);white-space:nowrap}
 .due2{display:flex;gap:10px;align-items:baseline;padding:9px 12px;border-bottom:1px solid var(--line);font-size:14px}
 .due2 .d{flex:0 0 auto;font-size:12px;color:var(--text2);width:3.2em}
 .linkbtn{background:none;border:none;color:var(--accent);font-size:13px;padding:8px 2px;cursor:pointer}
@@ -1332,6 +1338,11 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
           <button class="tqt" onclick="topWeight()"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 10l3 3 3-3"/></svg>体重</button>
         </div>
         <div class="tqmsg" id="tq-msg"></div>
+        <div class="song">
+          <button class="sp" id="song-play" onclick="songPlay()">▶ ダメ</button>
+          <span class="st" id="song-time"></span>
+          <button class="sr" id="song-rep" onclick="songRepeat()" aria-pressed="false">🔁 リピート</button>
+        </div>
       </div>
       <div id="brief-stale"></div>
       <div id="brief-board"></div>
@@ -1757,7 +1768,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-11-05.2';
+const APP_VERSION = '2026-11-06.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1862,6 +1873,51 @@ async function getFile(path, repo) {
   if (!r || r.__404) return null;
   return dec(r.content);
 }
+// 🎵 曲の再生（2026-11-06）。曲は公開リポ（dashboard）に置かず、非公開の claude-context/media/ から合言葉で読む。
+//   押したときに初めて読み込む（勝手に鳴らさない）。リピートの選択は端末に覚えておく。
+const SONG_PATH = 'media/ダメ.m4a';
+let __song = null, __songLoading = false;
+function songRepOn() { try { return localStorage.getItem('song_repeat') === '1'; } catch (e) { return false; } }
+function songUi() {
+  const b = $('song-play'), r = $('song-rep'), t = $('song-time'); if (!b) return;
+  const playing = __song && !__song.paused;
+  b.textContent = __songLoading ? '… 読み込み中' : (playing ? '⏸ ダメ' : '▶ ダメ');
+  const on = songRepOn(); r.classList.toggle('on', on); r.setAttribute('aria-pressed', on ? 'true' : 'false');
+  if (__song && isFinite(__song.duration)) {
+    const f = x => `${Math.floor(x / 60)}:${String(Math.floor(x % 60)).padStart(2, '0')}`;
+    t.textContent = `${f(__song.currentTime)} / ${f(__song.duration)}`;
+  }
+}
+async function songPlay() {
+  if (__songLoading) return;
+  if (!__song) {
+    __songLoading = true; songUi();
+    try {
+      const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${encodeURIComponent(SONG_PATH).replace(/%2F/g, '/')}?ref=${BRANCH}`,
+        { cache: 'no-store', headers: { 'Authorization': 'token ' + pat, 'Accept': 'application/vnd.github.raw' } });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const blob = new Blob([await res.arrayBuffer()], { type: 'audio/mp4' });
+      __song = new Audio(URL.createObjectURL(blob));
+      __song.loop = songRepOn();
+      ['play', 'pause', 'ended', 'timeupdate', 'loadedmetadata'].forEach(ev => __song.addEventListener(ev, songUi));
+    } catch (e) {
+      __songLoading = false; songUi();
+      const m = $('tq-msg'); if (m) m.textContent = '曲を読み込めませんでした（' + e.message + '）';
+      return;
+    }
+    __songLoading = false;
+  }
+  if (__song.paused) { try { await __song.play(); } catch (e) { const m = $('tq-msg'); if (m) m.textContent = '再生できませんでした（' + e.message + '）'; } }
+  else __song.pause();
+  songUi();
+}
+function songRepeat() {
+  const on = !songRepOn();
+  try { localStorage.setItem('song_repeat', on ? '1' : '0'); } catch (e) {}
+  if (__song) __song.loop = on;
+  songUi();
+}
+document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', songUi) : songUi();
 async function putFile(path, content, message, isBase64 = false) {
   return api(`/repos/${REPO}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}`, 'PUT',
     { message, content: isBase64 ? content : enc(content), branch: BRANCH });
