@@ -99,6 +99,9 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 .song .sp{flex:1;text-align:left}
 .song .sr.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .song .st{font-size:12px;color:var(--text2);white-space:nowrap}
+.songbar{display:flex;align-items:center;gap:8px;margin-top:6px}
+.songbar input{flex:1;accent-color:var(--accent);height:28px;margin:0}
+.songbar input:disabled{opacity:.4}
 .due2{display:flex;gap:10px;align-items:baseline;padding:9px 12px;border-bottom:1px solid var(--line);font-size:14px}
 .due2 .d{flex:0 0 auto;font-size:12px;color:var(--text2);width:3.2em}
 .linkbtn{background:none;border:none;color:var(--accent);font-size:13px;padding:8px 2px;cursor:pointer}
@@ -1343,6 +1346,8 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
           <span class="st" id="song-time"></span>
           <button class="sr" id="song-rep" onclick="songRepeat()" aria-pressed="false">🔁 リピート</button>
         </div>
+        <div class="songbar"><input type="range" id="song-bar" min="0" max="159" step="0.1" value="0" disabled
+          aria-label="再生の位置" oninput="songSeek(this.value)"></div>
       </div>
       <div id="brief-stale"></div>
       <div id="brief-board"></div>
@@ -1768,7 +1773,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-11-06.1';
+const APP_VERSION = '2026-11-06.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1876,7 +1881,7 @@ async function getFile(path, repo) {
 // 🎵 曲の再生（2026-11-06）。曲は公開リポ（dashboard）に置かず、非公開の claude-context/media/ から合言葉で読む。
 //   押したときに初めて読み込む（勝手に鳴らさない）。リピートの選択は端末に覚えておく。
 const SONG_PATH = 'media/ダメ.m4a';
-let __song = null, __songLoading = false;
+let __song = null, __songLoading = false, __songDrag = false;
 function songRepOn() { try { return localStorage.getItem('song_repeat') === '1'; } catch (e) { return false; } }
 function songUi() {
   const b = $('song-play'), r = $('song-rep'), t = $('song-time'); if (!b) return;
@@ -1886,6 +1891,8 @@ function songUi() {
   if (__song && isFinite(__song.duration)) {
     const f = x => `${Math.floor(x / 60)}:${String(Math.floor(x % 60)).padStart(2, '0')}`;
     t.textContent = `${f(__song.currentTime)} / ${f(__song.duration)}`;
+    const bar = $('song-bar');
+    if (bar) { bar.disabled = false; bar.max = __song.duration; if (!__songDrag) bar.value = __song.currentTime; }
   }
 }
 async function songPlay() {
@@ -1915,6 +1922,13 @@ function songRepeat() {
   const on = !songRepOn();
   try { localStorage.setItem('song_repeat', on ? '1' : '0'); } catch (e) {}
   if (__song) __song.loop = on;
+  songUi();
+}
+// 再生バー：指で動かした位置へ飛ぶ（動かしている間は再生位置で上書きしない）
+function songSeek(v) {
+  if (!__song) return;
+  __songDrag = true; __song.currentTime = Number(v);
+  clearTimeout(songSeek._t); songSeek._t = setTimeout(() => { __songDrag = false; }, 300);
   songUi();
 }
 document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', songUi) : songUi();
