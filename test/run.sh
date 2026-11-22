@@ -12,5 +12,12 @@ const fs=require('fs');const s=fs.readFileSync(process.env.HOME+'/repos/dashboar
 const css=s.slice(s.indexOf('<style>'),s.indexOf('</style>'));
 const bad=css.split('\\n').filter(l=>/^[#.][\\w-]+(\\s+[.#>\\[\\w-]+)*\\s*\\/\\*/.test(l));
 if(bad.length){console.log('🔴 css-selector-comment:',bad.map(x=>x.slice(0,60)));process.exit(1)}else console.log('🟢 CSS セレクタの巻き込みなし');"; d=$?
-# 🔴 2026-11-22: 以前は最後の CSS 検査の結果だけが終了コードになり、データの形や見張りが赤でも push が通っていた
-[ $a -eq 0 ] && [ $b -eq 0 ] && [ $c -eq 0 ] && [ $d -eq 0 ]
+# app.html の script が構文として正しいか（data-shape にもあるが、こちらは push を止める側）
+node -e "
+const fs=require('fs');const s=fs.readFileSync(process.env.HOME+'/repos/dashboard/app.html','utf8');
+try{for(const m of s.matchAll(/<script[^>]*>([\\s\\S]*?)<\\/script>/g)) new Function(m[1]); console.log('🟢 app.html の構文')}catch(e){console.log('🔴 app.html の構文エラー',e.message);process.exit(1)}"; e=$?
+# 🔴 2026-11-22: push を止めるのは「コードの壊れ」だけ（板の書き込み・CSS・構文）。
+#    データの形（a）と見張り（b）は外のデータの新しさで赤くなるので、表示だけにして止めない。
+#    止めると、道場の自動 push（_tools/run-dojo.sh）まで止まり、道場の見張りがさらに赤くなる（自分で自分を閉じ込める）
+[ $a -eq 0 ] && [ $b -eq 0 ] || echo "⚠️ データの形か見張りに赤がある（push は止めない。中身を見て直す）"
+[ $c -eq 0 ] && [ $d -eq 0 ] && [ $e -eq 0 ]
