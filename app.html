@@ -1775,7 +1775,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-11-22.4';
+const APP_VERSION = '2026-11-22.5';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4343,8 +4343,15 @@ async function dyPut(d, mutate, message) {
   }
 }
 
+// 🔴 2026-11-22: 日記の書きかけを日付ごとに端末へ残す（版の自動更新・電池切れ・別の日を開いたで消えないように）。送れたら消す
+function dyDraft(d, v) {
+  const k = 'dy_draft_' + d;
+  try { if (v === undefined) return localStorage.getItem(k) || ''; if (v) localStorage.setItem(k, v); else localStorage.removeItem(k); } catch (e) {}
+  return '';
+}
 async function dyLoadDay(d) {
   dySel = d;
+  if ($('dy-text')) $('dy-text').value = dyDraft(d);
   const dt = new Date(d + 'T00:00:00');
   $('dy-date').textContent = `${dt.getMonth() + 1}月${dt.getDate()}日`;
   $('dy-dow').textContent = ['日', '月', '火', '水', '木', '金', '土'][dt.getDay()] + '曜日';
@@ -4591,7 +4598,7 @@ async function dySave() {
     }
     $('dy-hint').textContent = '保存中…';
     await dyPut(dySel, day => { day.entries.push(entry); }, `日記 ${dySel}`);
-    $('dy-text').value = ''; dyPhotos = [];
+    $('dy-text').value = ''; dyPhotos = []; dyDraft(dySel, '');
     $('dy-hint').textContent = '書きました';
     dyDays.add(dySel); dyRenderCal();
     await dyLoadDay(dySel);
@@ -6250,10 +6257,29 @@ async function checkVersion() {
       showStaleBar(m[1]);
       return;
     }
-    localStorage.setItem('reloaded_for', m[1]);
-    toast('新しいバージョンに更新します…');
-    setTimeout(() => location.replace(location.pathname + '?v=' + m[1] + '.' + Date.now()), 800);
+    verReloadWhenIdle(m[1]);
   } catch (e) {}
+}
+// 🔴 2026-11-22: 以前は新しい版があると、入力の途中でも0.8秒後に読み直していた（日記の書きかけが消えうる）。
+//    文字を打っている間・まだ送っていない書きかけがある間は待ち、手が離れてから読み直す。
+//    日記の書く欄は端末に下書きが残るので、打っている最中（フォーカス中）だけ待つ。
+function hasUnsavedInput() {
+  const a = document.activeElement;
+  if (a && (a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && /^(text|search|number|url|email|tel|)$/.test(a.type || '')))) return true;
+  return [...document.querySelectorAll('textarea')].some(t => t.id !== 'dy-text' && t.value.trim() && t.offsetParent !== null);
+}
+let __verWait = null;
+function verReloadWhenIdle(v) {
+  if (hasUnsavedInput()) {
+    if (!__verWait) toast('新しい版があります。書き終わったら更新します');
+    clearInterval(__verWait); __verWait = setInterval(() => verReloadWhenIdle(v), 5000);
+    return;
+  }
+  clearInterval(__verWait); __verWait = null;
+  localStorage.setItem('reloaded_for', v);   // 本当に読み直すときだけ印を付ける（待っている間は付けない）
+  toast('新しいバージョンに更新します…');
+  setTimeout(() => { if (hasUnsavedInput()) { localStorage.removeItem('reloaded_for'); return verReloadWhenIdle(v); }
+    location.replace(location.pathname + '?v=' + v + '.' + Date.now()); }, 800);
 }
 
 // リロードしても古いままのときだけ出る帯。押せばキャッシュごと捨てて取り直す
@@ -6314,6 +6340,7 @@ function setupEvents() {
   if ($('pp-yes')) $('pp-yes').addEventListener('click', () => savePoop(true));
   if ($('pp-no')) $('pp-no').addEventListener('click', () => savePoop(false));
   if ($('dy-save')) $('dy-save').addEventListener('click', dySave);
+  if ($('dy-text')) $('dy-text').addEventListener('input', e => { if (dySel) dyDraft(dySel, e.target.value.trim() ? e.target.value : ''); });
   if ($('dy-back')) $('dy-back').addEventListener('click', dyBackToList);
   if ($('dy-back2')) $('dy-back2').addEventListener('click', dyBackToList);
   if ($('dy-totop')) $('dy-totop').addEventListener('click', () => toTop(true));
