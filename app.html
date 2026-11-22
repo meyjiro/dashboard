@@ -198,17 +198,6 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 .due{flex-wrap:wrap}
 .due.done{opacity:.5}
 .due.done .l{text-decoration:line-through}
-.due-btn{flex:0 0 auto;border:1px solid var(--border);background:var(--bg3);color:var(--text2);
-  border-radius:7px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
-.due-btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-.due-rep{flex-basis:100%;margin-top:8px;display:none}
-.due-rep.open{display:block}
-.due-rep textarea{width:100%;border:1px solid var(--border);border-radius:8px;padding:9px 11px;
-  font-size:14px;font-family:inherit;line-height:1.6;min-height:64px;resize:none;
-  background:var(--bg2);color:var(--text);outline:none}
-.due-rep textarea:focus{border-color:var(--accent)}
-.due-rep .row2{display:flex;gap:8px;margin-top:7px}
-.due-rep .hint2{font-size:11px;color:var(--text2);margin-top:5px;line-height:1.5}
 .stale{background:var(--warn-light);color:var(--warn);border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:12px}
 .loglist{font-size:13px;color:var(--text2);line-height:1.9;padding:2px 6px}
 details.fold{margin-bottom:10px}
@@ -1776,7 +1765,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-11-22.12';
+const APP_VERSION = '2026-11-22.13';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2842,54 +2831,6 @@ function atNow() {
   const d = new Date(), p = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
-// ── 期日の完了報告 ──
-function getDoneDues() {
-  let a = [];
-  try { a = JSON.parse(localStorage.getItem('done-dues') || '[]'); } catch (e) {}
-  // 30日より古い記録は捨てる（ブリーフィングから消えた分の掃除）
-  const lim = Date.now() - 30 * 86400000;
-  const keep = a.filter(x => (x.at || 0) > lim);
-  if (keep.length !== a.length) localStorage.setItem('done-dues', JSON.stringify(keep));
-  return keep;
-}
-function markDueDone(key) {
-  const a = getDoneDues();
-  a.push({ key, at: Date.now() });
-  localStorage.setItem('done-dues', JSON.stringify(a));
-}
-function bindDueButtons(dues) {
-  document.querySelectorAll('#brief-due .due-btn[data-i]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const rep = $('rep-' + btn.dataset.i);
-      const opening = !rep.classList.contains('open');
-      document.querySelectorAll('#brief-due .due-rep').forEach(r => r.classList.remove('open'));
-      if (opening) { rep.classList.add('open'); rep.querySelector('textarea').focus(); }
-    });
-  });
-  document.querySelectorAll('#brief-due [data-cancel]').forEach(b =>
-    b.addEventListener('click', () => $('rep-' + b.dataset.cancel).classList.remove('open')));
-  document.querySelectorAll('#brief-due [data-send]').forEach(b =>
-    b.addEventListener('click', () => sendDueDone(+b.dataset.send, dues[+b.dataset.send], b)));
-}
-async function sendDueDone(i, due, btn) {
-  const rep = $('rep-' + i);
-  const memo = rep.querySelector('textarea').value.trim();
-  btn.disabled = true; btn.textContent = '送信中…';
-  try {
-    const body = `at: ${atNow()}\nkind: 完了報告\ndue_date: ${due.date}\ndue_label: ${due.label}\n\n`
-      + (memo || '（メモなし・完了だけ報告）');
-    await putFile(`inbox/queue/${ts()}_done.md`, body, `完了報告 ${due.date}`);
-    markDueDone(due.date + '|' + due.label);
-    const row = rep.closest('.due');
-    row.classList.add('done');
-    rep.classList.remove('open');
-    const mainBtn = row.querySelector('.due-btn[data-i]');
-    mainBtn.textContent = '✓ 報告済み'; mainBtn.classList.add('on'); mainBtn.disabled = true;
-    toast(memo ? '報告した！ メモは仕分けに乗ります 📝' : '完了を報告した！ ✓');
-    loadQueue();
-  } catch (e) { toast('送信に失敗: ' + e.message); btn.disabled = false; btn.textContent = '報告する'; }
-}
-
 
 // ══ 🧬 覚えたい（学びの投げ込み）── inbox/queue/<ts>_learn.md（kind: 学び）。巡回は仕分けせず、夜の授業の課にする（生活OS §2「学びの投げ込みの扱い」）══
 let learnPhoto = null, learnType = '';
