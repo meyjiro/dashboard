@@ -110,8 +110,6 @@ input,textarea,button,select{font-size:16px;font-family:inherit}
 .readt .rh{font-size:15px;font-weight:700;margin:4px 0 2px;line-height:1.45}
 .readt .rw{font-size:13px;color:var(--text2);line-height:1.5}
 .readhead{font-size:13px;color:var(--text2);margin:2px 2px 10px}
-/* 使われなくなった録音ボタンは隠す（2026-10-24 棚卸し: 最後に使ったのは9/23。iPhoneの音声入力で足りている） */
-#rec-btn,#learn-rec-btn,#dy-rec{display:none!important}
 .nav-btn.active::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
   width:26px;height:2px;border-radius:0 0 2px 2px;background:var(--accent)}
 /* 下のタブは絵文字をやめて線画にした（2026-09-06 メグ指定）。小さめに置く */
@@ -1266,6 +1264,8 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 #app a{color:var(--accent)}
 /* 投げ込み・覚えたい（2026-10-24 点検）: 点線の枠と古い札をやめる */
 .learn-box{border:none!important;border-radius:var(--r)!important;background:var(--card)!important}
+/* 覚えたいは畳む（2026-11-22） */
+.learn-fold{margin:14px 0 14px}.learn-fold>summary{list-style:none;cursor:pointer;font-size:13px;font-weight:700;color:var(--text2);padding:10px 4px}.learn-fold>summary::-webkit-details-marker{display:none}.learn-fold>summary span{font-size:11.5px;font-weight:400;margin-left:6px}.learn-fold>summary::after{content:" ▾"}.learn-fold[open]>summary::after{content:" ▴"}
 .learn-box .lbx-chips{display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap!important;scrollbar-width:none}
 .lbx-chips button{border:none!important;border-radius:12px!important;background:var(--sand-light)!important;color:var(--sand-text)!important;white-space:nowrap;padding:6px 12px!important}
 .lbx-chips button.on{background:var(--accent)!important;color:#fff!important}
@@ -1438,38 +1438,12 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
         <textarea id="inbox-text" placeholder="なんでもここに投げる。タスク・メモ・愚痴・体重・買った物・アイデア… 分類は考えなくていい"></textarea>
         <div class="inbox-actions">
           <button class="btn btn-ghost" id="photo-btn">📷</button>
-          <button class="btn btn-ghost" id="rec-btn">🎤</button>
           <input type="file" id="photo-input" accept="image/*" style="display:none">
-          <input type="file" id="audio-input" accept="audio/*" style="display:none">
           <button class="btn btn-primary" id="inbox-send">投げ込む</button>
         </div>
         <div class="hint" id="photo-hint"></div>
       </div>
       <div class="hint" style="margin:0 4px 14px">朝と夜にクロードが仕分ける</div>
-      <!-- 🧬 覚えたい（学びの投げ込み・2026-09-19 メグ「学習専用の投げ込み箱を」）。仕分けなしで夜の授業の課になる -->
-      <div class="learn-box">
-        <div class="lbx-h">🧬 覚えたい <span>夜に道場の1課になる</span></div>
-        <textarea id="learn-text" placeholder="見た・聞いた・読んだことを、そのまま。URLだけでもいい"></textarea>
-        <input id="learn-why" placeholder="なぜ気になった？（任意）">
-        <div class="lbx-chips" id="learn-chips"><button data-t="仕組み">仕組み</button><button data-t="事実・数字">事実・数字</button><button data-t="人物・会社">人物・会社</button><button data-t="なんで？">なんで？</button><button data-t="言葉">言葉</button></div>
-        <div class="inbox-actions">
-          <button class="btn btn-ghost" id="learn-photo-btn">📷</button>
-          <button class="btn btn-ghost" id="learn-rec-btn">🎤</button>
-          <input type="file" id="learn-photo-input" accept="image/*" style="display:none">
-          <button class="btn btn-primary" id="learn-send">🧬 覚えたいに投げる</button>
-        </div>
-        <div class="hint" id="learn-hint"></div>
-      </div>
-      <!-- 🎬 MVのアイデア（2026-10-25夜 メグ「ふと思い浮かんだアイデアを書ける場所。確定ではなく、他のAIのアイデアと同じ仮説として」）。
-           朝夜の仕分けは見ない。汐明MV/アイデア箱/ に1件ずつ入り、次にMVの窓を開いた時にクロードが「目的に効くか・作れるかの証拠」を1行ずつ返す -->
-      <div class="learn-box mvidea-box">
-        <div class="lbx-h">🎬 MVのアイデア <span>仮説として置く。次にMVの窓を開いた時にクロードが確かめて返す。勝手にタスクにはしない</span></div>
-        <textarea id="mvidea-text" placeholder="ふと思いついたMVのアイデアを、そのまま"></textarea>
-        <div class="inbox-actions">
-          <button class="btn btn-primary" id="mvidea-send">🎬 アイデアに置く</button>
-        </div>
-        <div class="hint" id="mvidea-hint"></div>
-      </div>
       <div class="section-title">💬 やりとり板 <span class="bd-sub" id="board-status"></span></div>
       <div class="hint" style="margin:-6px 4px 10px">送ると3分以内にクロードが返事を書く</div>
       <div class="bd-new">
@@ -1480,6 +1454,21 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
       <!-- 🔴 2026-10-24 点検: 保留20枚が広がったまま並び、タブが27,741pxになっていた。保留は畳む -->
       <details class="bd-done"><summary>保留 <span id="board-hold-n"></span></summary><div id="board-hold"></div></details>
       <details class="bd-done"><summary>済んだもの <span id="board-done-n"></span></summary><div id="board-done"></div></details>
+      <!-- 🧬 覚えたい（学びの投げ込み・2026-09-19 メグ「学習専用の投げ込み箱を」）。仕分けなしで夜の授業の課になる -->
+      <!-- 🔴 2026-11-22: 10/15から書き込み0件。学習の入口なので消さずにたたみ、毎日使う板を上へ -->
+      <details class="learn-fold"><summary>🧬 覚えたい <span>夜に道場の1課になる</span></summary>
+      <div class="learn-box">
+        <textarea id="learn-text" placeholder="見た・聞いた・読んだことを、そのまま。URLだけでもいい"></textarea>
+        <input id="learn-why" placeholder="なぜ気になった？（任意）">
+        <div class="lbx-chips" id="learn-chips"><button data-t="仕組み">仕組み</button><button data-t="事実・数字">事実・数字</button><button data-t="人物・会社">人物・会社</button><button data-t="なんで？">なんで？</button><button data-t="言葉">言葉</button></div>
+        <div class="inbox-actions">
+          <button class="btn btn-ghost" id="learn-photo-btn">📷</button>
+          <input type="file" id="learn-photo-input" accept="image/*" style="display:none">
+          <button class="btn btn-primary" id="learn-send">🧬 覚えたいに投げる</button>
+        </div>
+        <div class="hint" id="learn-hint"></div>
+      </div>
+      </details>
       <div class="section-title" style="margin-top:22px">⏳ 仕分け待ち</div>
       <div id="queue-list"><p class="empty">読み込み中…</p></div>
       <div class="section-title">✅ 最近の仕分け結果</div>
@@ -1639,7 +1628,6 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
         <div class="dy-write" id="dy-writebox">
           <textarea id="dy-text" placeholder="思ったことを、そのまま。ひとことでいい。"></textarea>
           <div class="dy-tools">
-            <button class="dy-tool" id="dy-rec"><svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V22h2v-3.1A7 7 0 0 0 19 12h-2z"/></svg>録音</button>
             <button class="dy-tool" id="dy-photo"><svg viewBox="0 0 24 24"><path d="M9 3l-1.8 2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9zm3 5a6 6 0 1 1 0 12 6 6 0 0 1 0-12zm0 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>写真</button>
             <input type="file" id="dy-photo-input" accept="image/*" multiple style="display:none">
             <button class="dy-save" id="dy-save">書く</button>
@@ -1790,7 +1778,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-11-22.7';
+const APP_VERSION = '2026-11-22.8';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1848,8 +1836,6 @@ let mbsReadKey = localStorage.getItem('mbs_read_key') || '';
 let barkKey = localStorage.getItem('bark_key') || '';
 let briefing = null;
 let pendingPhoto = null; // {b64}
-let pendingAudio = null; // {b64, ext}
-let recorder = null, recChunks = [];
 
 // ── Utils ──
 const $ = id => document.getElementById(id);
@@ -2900,29 +2886,13 @@ async function sendDueDone(i, due, btn) {
 
 
 // ══ 🧬 覚えたい（学びの投げ込み）── inbox/queue/<ts>_learn.md（kind: 学び）。巡回は仕分けせず、夜の授業の課にする（生活OS §2「学びの投げ込みの扱い」）══
-let learnPhoto = null, learnType = '', learnRecorder = null, learnChunks = [];
+let learnPhoto = null, learnType = '';
 function learnInit(){
   const chips = $('learn-chips'); if(!chips || chips.dataset.bound) return; chips.dataset.bound='1';
   chips.addEventListener('click', e=>{ const b=e.target.closest('[data-t]'); if(!b) return; const on=b.classList.contains('on'); chips.querySelectorAll('button').forEach(x=>x.classList.remove('on')); if(!on){ b.classList.add('on'); learnType=b.dataset.t; } else learnType=''; });
   $('learn-photo-btn').addEventListener('click', ()=>$('learn-photo-input').click());
   $('learn-photo-input').addEventListener('change', async e=>{ const f=e.target.files[0]; if(!f) return; try{ const b64 = await (typeof shrinkImage==='function' ? shrinkImage(f) : new Promise((ok,ng)=>{ const r=new FileReader(); r.onload=()=>ok(r.result.split(',')[1]); r.onerror=ng; r.readAsDataURL(f); })); learnPhoto={b64}; $('learn-hint').textContent='📷 写真を1枚つけた'; }catch(err){ toast('写真を読めなかった'); } e.target.value=''; });
-  $('learn-rec-btn').addEventListener('click', learnToggleRec);
   $('learn-send').addEventListener('click', learnSend);
-  $('mvidea-send').addEventListener('click', mvIdeaSend);
-}
-async function learnToggleRec(){
-  const btn = $('learn-rec-btn');
-  if(learnRecorder && learnRecorder.state==='recording'){ learnRecorder.stop(); return; }
-  try{ const stream = await navigator.mediaDevices.getUserMedia({audio:true}); const mime = MediaRecorder.isTypeSupported('audio/mp4')?'audio/mp4':'audio/webm';
-    learnRecorder = new MediaRecorder(stream,{mimeType:mime}); learnChunks=[]; learnRecorder.ondataavailable=e=>{ if(e.data.size) learnChunks.push(e.data); };
-    learnRecorder.onstop = async ()=>{ stream.getTracks().forEach(t=>t.stop()); btn.textContent='🎤'; const blob=new Blob(learnChunks,{type:learnRecorder.mimeType}); const ext=learnRecorder.mimeType.includes('mp4')?'m4a':'webm';
-      try{ const buf=await blob.arrayBuffer(); let bin=''; const bytes=new Uint8Array(buf); for(let i=0;i<bytes.length;i+=0x8000) bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));
-           const stamp=ts(); await putFile(`inbox/audio/${stamp}_learn.${ext}`, btoa(bin), `覚えたい 録音 ${stamp}`, true);
-           if(learnType||$('learn-why').value.trim()) await putFile(`inbox/queue/${stamp}_learn_note.md`, `at: ${atNow()}\nkind: 学び\ntype: ${learnType}\naudio: inbox/audio/${stamp}_learn.${ext}\n\n（🎤の補足）${$('learn-why').value.trim()}`, `覚えたい 補足 ${stamp}`);
-           $('learn-hint').textContent='🎤 録音を投げた。文字にして夜の授業の課になる'; toast('🧬 覚えたいに録音を投げた'); }
-      catch(e){ toast('送れなかった: '+e.message); } };
-    learnRecorder.start(); btn.textContent='⏹'; $('learn-hint').textContent='聞いています。もう一度押すと止まる';
-  }catch(e){ toast('マイクが使えなかった'); }
 }
 async function learnSend(){
   const text = $('learn-text').value.trim(), why = $('learn-why').value.trim();
@@ -2939,22 +2909,9 @@ async function learnSend(){
   btn.disabled=false;
 }
 
-async function mvIdeaSend(){
-  const text = $('mvidea-text').value.trim();
-  if(!text){ toast('ひとこと書いてね'); return; }
-  const btn=$('mvidea-send'); btn.disabled=true;
-  try{ const stamp=ts();
-    const body=`at: ${atNow()}\nkind: MVのアイデア（仮説）\n\n${text}`;
-    await putFile(`projects/B6_個人案件/汐明MV/アイデア箱/${stamp}.md`, body, `MVのアイデア ${stamp}`);
-    $('mvidea-text').value=''; $('mvidea-hint').textContent='置いた。次にMVの窓を開いた時に、クロードが確かめて返す';
-    toast('🎬 MVのアイデアに置いた');
-  }catch(e){ toast('送れなかった: '+e.message); }
-  btn.disabled=false;
-}
-
 async function sendInbox() {
   const text = $('inbox-text').value.trim();
-  if (!text && !pendingPhoto && !pendingAudio) { toast('なにか書くか、写真・録音をつけてね'); return; }
+  if (!text && !pendingPhoto) { toast('なにか書くか、写真をつけてね'); return; }
   const btn = $('inbox-send'); btn.disabled = true; btn.textContent = '送信中…';
   try {
     const stamp = ts();
@@ -2965,59 +2922,12 @@ async function sendInbox() {
       await putFile(imgPath, pendingPhoto.b64, `投げ込み写真 ${stamp}`, true);
       meta += `\nimg: ${imgPath}`;
     }
-    if (pendingAudio) {
-      const audPath = `inbox/audio/${stamp}.${pendingAudio.ext}`;
-      await putFile(audPath, pendingAudio.b64, `投げ込み録音 ${stamp}`, true);
-      // 音声はMac側のWhisperが文字起こしして別の投げ込みmdを作るので、ここではmdを作らない
-      // （テキストも一緒に書いていた場合だけ、テキスト分のmdを作る）
-      if (!text) {
-        $('inbox-text').value = ''; pendingAudio = null; pendingPhoto = null; $('photo-hint').textContent = '';
-        toast('録音を投げ込んだ！ 文字起こしは30分以内 🎤');
-        btn.disabled = false; btn.textContent = '投げ込む';
-        return;
-      }
-      meta += `\naudio: ${audPath}`;
-    }
     await putFile(`inbox/queue/${stamp}.md`, `${meta}\n\n${text}`, `投げ込み ${stamp}`);
-    $('inbox-text').value = ''; pendingPhoto = null; pendingAudio = null; $('photo-hint').textContent = '';
+    $('inbox-text').value = ''; pendingPhoto = null; $('photo-hint').textContent = '';
     toast('投げ込んだ！ 🧺');
     loadQueue();
   } catch (e) { toast('送信に失敗: ' + e.message); }
   btn.disabled = false; btn.textContent = '投げ込む';
-}
-async function pickAudio(file) {
-  if (!file) return;
-  if (file.size > 25 * 1024 * 1024) { toast('録音が大きすぎます（25MBまで・約20分）'); return; }
-  const ext = (file.name && file.name.includes('.')) ? file.name.split('.').pop().toLowerCase() : 'm4a';
-  const buf = await file.arrayBuffer();
-  let bin = ''; const bytes = new Uint8Array(buf);
-  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-  pendingAudio = { b64: btoa(bin), ext };
-  $('photo-hint').textContent = `🎤 録音を添付済み（${Math.round(file.size/1024)}KB）。送信で投げ込みます`;
-}
-async function toggleRec() {
-  const btn = $('rec-btn');
-  if (recorder && recorder.state === 'recording') { recorder.stop(); return; }
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mime = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : 'audio/webm';
-    recorder = new MediaRecorder(stream, { mimeType: mime });
-    recChunks = [];
-    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
-    recorder.onstop = async () => {
-      stream.getTracks().forEach(t => t.stop());
-      btn.textContent = '🎤'; btn.style.background = '';
-      const blob = new Blob(recChunks, { type: recorder.mimeType });
-      const ext = recorder.mimeType.includes('mp4') ? 'm4a' : 'webm';
-      await pickAudio(new File([blob], `rec.${ext}`, { type: recorder.mimeType }));
-    };
-    recorder.start();
-    btn.textContent = '⏹'; btn.style.background = '#fdeaea';
-    toast('録音中… もう一度押すと停止');
-  } catch (e) {
-    // マイク不可（権限なし等）→ ボイスメモ等のファイル選択にフォールバック
-    $('audio-input').click();
-  }
 }
 async function pickPhoto(file) {
   if (!file) return;
@@ -4337,7 +4247,7 @@ const DIARY_DIR = 'inbox/diary';
 const DY_MOOD = ['最悪', '悪い', 'ふつう', '良い', '最高'];        // こころ
 const DY_BODY = ['つらい', 'だるい', 'ふつう', '軽い', '絶好調'];  // からだ
 const DY_TAGS = ['仕事', '家族', 'ペット', 'からだ', 'お金', 'ひとり時間'];  // その日を動かしたもの（複数可）
-let dySel = null, dyCalY = 0, dyCalM = 0, dyDays = new Set(), dyPhotos = [], dyRecorder = null, dyChunks = [];
+let dySel = null, dyCalY = 0, dyCalM = 0, dyDays = new Set(), dyPhotos = [];
 // 返信マーク（2026-09-11 メグ指定）。メグが用意した素材を4つに切り出して img/diary/ に置いてある。
 //   その日ごとに1つ選ぶ。日付から決めるので、同じ日は何度開いても同じ子が出る（毎回変わるとうるさい）
 const DY_ICONS = ['img/diary/dy1.png', 'img/diary/dy2.png', 'img/diary/dy3.png', 'img/diary/dy4.png'];
@@ -4677,37 +4587,6 @@ async function dyPickPhoto(files) {
   $('dy-hint').textContent = dyPhotos.length
     ? `写真を${dyPhotos.length}枚つけました${ng ? `（${ng}枚は読めませんでした）` : ''}。「書く」で一緒に残ります`
     : '写真を読み込めませんでした';
-}
-
-// 録音は既存の音声投げ込みと同じ道（Macのローカル文字起こし → 夜のroutineが日記へ）
-async function dyToggleRec() {
-  const btn = $('dy-rec');
-  if (dyRecorder && dyRecorder.state === 'recording') { dyRecorder.stop(); return; }
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mime = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : 'audio/webm';
-    dyRecorder = new MediaRecorder(stream, { mimeType: mime });
-    dyChunks = [];
-    dyRecorder.ondataavailable = e => { if (e.data.size) dyChunks.push(e.data); };
-    dyRecorder.onstop = async () => {
-      stream.getTracks().forEach(t => t.stop());
-      btn.classList.remove('rec'); btn.lastChild.textContent = '録音';
-      const blob = new Blob(dyChunks, { type: dyRecorder.mimeType });
-      const ext = dyRecorder.mimeType.includes('mp4') ? 'm4a' : 'webm';
-      $('dy-hint').textContent = '送っています…';
-      try {
-        const buf = await blob.arrayBuffer();
-        let bin = ''; const bytes = new Uint8Array(buf);
-        for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-        await putFile(`inbox/audio/${ts()}_diary.${ext}`, btoa(bin), `日記の録音 ${dySel}`, true);
-        $('dy-hint').textContent = '📼 録音を預かりました。文字にしてから、この日の日記に入ります（30分以内）';
-        dyRenderAudioState(true);
-      } catch (e) { $('dy-hint').textContent = '送れませんでした: ' + e.message; }
-    };
-    dyRecorder.start();
-    btn.classList.add('rec'); btn.lastChild.textContent = '停止';
-    $('dy-hint').textContent = '聞いています。もう一度押すと止まります';
-  } catch (e) { $('dy-hint').textContent = 'マイクが使えませんでした'; }
 }
 
 function dyRenderCal() {
@@ -6362,8 +6241,6 @@ function setupEvents() {
   if ($('yoken-open')) $('yoken-open').addEventListener('click', () => { $('yoken-form').style.display = ''; renderYoken(); $('yoken-form').scrollIntoView({behavior:'smooth'}); });
   $('photo-btn').addEventListener('click', () => $('photo-input').click());
   $('photo-input').addEventListener('change', e => pickPhoto(e.target.files[0]));
-  $('rec-btn').addEventListener('click', toggleRec);
-  $('audio-input').addEventListener('change', e => pickAudio(e.target.files[0]));
   $('cal-prev').addEventListener('click', () => { calM--; if (calM < 0) { calM = 11; calY--; } renderCal(); });
   $('cal-next').addEventListener('click', () => { calM++; if (calM > 11) { calM = 0; calY++; } renderCal(); });
   $('cal-new').addEventListener('click', openCalModal);
@@ -6378,7 +6255,6 @@ function setupEvents() {
   if ($('dy-back2')) $('dy-back2').addEventListener('click', dyBackToList);
   if ($('dy-totop')) $('dy-totop').addEventListener('click', () => toTop(true));
   if ($('dy-today-btn')) $('dy-today-btn').addEventListener('click', () => dyOpenDay(dyToday()));
-  if ($('dy-rec')) $('dy-rec').addEventListener('click', dyToggleRec);
   if ($('dy-photo')) $('dy-photo').addEventListener('click', () => $('dy-photo-input').click());
   if ($('dy-photo-input')) $('dy-photo-input').addEventListener('change', e => { dyPickPhoto(e.target.files); e.target.value = ''; });
   if ($('dy-prev')) $('dy-prev').addEventListener('click', () => { dyCalM--; if (dyCalM < 0) { dyCalM = 11; dyCalY--; } dyRenderCal(); });
