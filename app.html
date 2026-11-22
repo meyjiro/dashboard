@@ -1773,7 +1773,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-11-22.1';
+const APP_VERSION = '2026-11-22.2';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1841,6 +1841,8 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('show'), 2200);
 }
 function esc(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+// 🔴 2026-11-22: 画面を動かしているのはページ全体ではなく中の枠（.tab-content）。window.scrollTo では上に戻らない
+function toTop(smooth) { const tc = document.querySelector('.tab-content'); if (!tc) return; if (smooth) tc.scrollTo({ top: 0, behavior: 'smooth' }); else tc.scrollTop = 0; }
 // 🔴 予定・投げ込みの本文に入っているURLは、その場で押せるリンクにする（2026-09-03 メグ指示）。
 //    エスケープしてからURLだけ <a> に戻す。行のタップ（完了・通知）と衝突しないよう stopPropagation
 function escLink(s) {
@@ -4765,14 +4767,14 @@ function dySetView(v) {
 function dyOpenDay(d) {
   $('dy-view-list').hidden = true;
   $('dy-view-day').hidden = false;
-  window.scrollTo(0, 0);
+  toTop();
   return dyLoadDay(d);
 }
 function dyBackToList() {
   $('dy-view-day').hidden = true;
   $('dy-view-list').hidden = false;
   dyRenderTodayCard();
-  window.scrollTo(0, 0);
+  toTop();
 }
 /** 一覧の先頭に置く「今日のページ」への入口 */
 function dyRenderTodayCard() {
@@ -5287,7 +5289,7 @@ function vaultRender() {
 document.addEventListener('click', async e => {
   const box = $('vault-list'); if (!box || !box.contains(e.target)) return;
   const t = e.target;
-  const cat = t.closest('[data-vcat]'); if (cat) { vst.cat = cat.dataset.vcat === 'home' ? 'home' : +cat.dataset.vcat; vaultRender(); window.scrollTo(0, 0); return; }
+  const cat = t.closest('[data-vcat]'); if (cat) { vst.cat = cat.dataset.vcat === 'home' ? 'home' : +cat.dataset.vcat; vaultRender(); toTop(); return; }
   const eye = t.closest('[data-veye]');
   if (eye) { const [ci, fi] = eye.dataset.veye.split('-').map(Number); const sk = vaultFlat[ci].title + '|' + fi; vst.shown[sk] = !vst.shown[sk]; eye.closest('.q2-f').outerHTML = box.__rowHtml(ci, fi); return; }
   const url = t.closest('[data-vurl]');
@@ -5471,10 +5473,10 @@ async function loadQuick() {
       el.style.display = 'none'; vb.style.display = '';
       $('vault-q').value = ''; vst.cat = 'home'; window.__vaultCatPreset = (preset || '').startsWith('cat:') ? preset.slice(4) : '';   // 開いた直後（合言葉のあと）に vaultRender が種類へ飛ぶ
       if ($('vault-tools').style.display !== 'none') vaultRender();
-      window.scrollTo(0, 0); vbRefresh();
+      toTop(); vbRefresh();
       if ($('vault-form').style.display !== 'none') { if (vbOk() && vbGet()) vbUnlock(); else $('vault-pass').focus(); }
     };
-    $('vault-back').onclick = () => { vb.style.display = 'none'; el.style.display = ''; window.scrollTo(0, 0); };
+    $('vault-back').onclick = () => { vb.style.display = 'none'; el.style.display = ''; toTop(); };
     window.__vaultPreset = '';
     const doCopy = async (row, it, f) => {
       await qCopy(f.v); row.classList.add('done'); setTimeout(() => row.classList.remove('done'), 900);
@@ -5483,7 +5485,7 @@ async function loadQuick() {
     };
     el.addEventListener('click', async e => {
       const t = e.target;
-      const cat = t.closest('[data-cat]'); if (cat) { st.cat = cat.dataset.cat; renderBody(); window.scrollTo(0, 0); return; }
+      const cat = t.closest('[data-cat]'); if (cat) { st.cat = cat.dataset.cat; renderBody(); toTop(); return; }
       const vt = t.closest('[data-vault]'); if (vt) { window.__vaultPreset = vt.dataset.vault; openVault(vt.dataset.vault); return; }
       const rc = t.closest('.q2-rc');
       if (rc) { const r = find(rc.dataset.rl, rc.dataset.rk); if (r) { await qCopy(r.f.v); toast((r.f.k || r.it.label) + 'をコピーしました'); } return; }
@@ -6296,7 +6298,7 @@ function setupEvents() {
   if ($('dy-save')) $('dy-save').addEventListener('click', dySave);
   if ($('dy-back')) $('dy-back').addEventListener('click', dyBackToList);
   if ($('dy-back2')) $('dy-back2').addEventListener('click', dyBackToList);
-  if ($('dy-totop')) $('dy-totop').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  if ($('dy-totop')) $('dy-totop').addEventListener('click', () => toTop(true));
   if ($('dy-today-btn')) $('dy-today-btn').addEventListener('click', () => dyOpenDay(dyToday()));
   if ($('dy-rec')) $('dy-rec').addEventListener('click', dyToggleRec);
   if ($('dy-photo')) $('dy-photo').addEventListener('click', () => $('dy-photo-input').click());
