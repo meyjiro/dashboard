@@ -1526,7 +1526,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
       </div>
       <div class="card" id="health-sleep"><p class="empty">まだ記録がありません</p></div>
 
-      <div class="section-title">⚖️ 体重<span class="sec-note">月1回・毎月1日に測る</span></div>
+      <div class="section-title">⚖️ 体重<span class="sec-note">測った日ごと・横は日付の間隔どおり</span></div>
       <details class="fold">
         <summary>体重を記録する</summary>
         <div class="card" style="margin-top:8px">
@@ -1776,7 +1776,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-11-22.10';
+const APP_VERSION = '2026-11-22.11';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -3725,21 +3725,27 @@ function sparkLine(el, data, unit) {
   el.innerHTML = s;
 }
 const jpDate = d => `${d.slice(0, 4)}年${+d.slice(5, 7)}月${+d.slice(8, 10)}日`;
-function weightChart(el, data) { // data: [{date:'YYYY-MM-DD', v}] 古い順。点は等間隔（間があいた所は日付で分かる）
+function weightChart(el, data) { // data: [{date:'YYYY-MM-DD', v}] 古い順
+  // 🔴 2026-11-22: 横は日付の間隔どおりに置く（等間隔だと、1年前と先週が同じ幅で並んでいた）。
+  //    近すぎて文字が重なる点は、新しい点を優先して数字と日付を省く（下の一覧には全部出る）
   const vs = data.map(d => d.v), lo = Math.min(...vs), hi = Math.max(...vs), span = Math.max(hi - lo, 1);
   const W = 320, H = 90, PX = 24, PT = 18, PB = 8;
-  const x = i => (PX + i / (data.length - 1) * (W - PX * 2)).toFixed(1);
+  const t = d => new Date(d.date + 'T12:00:00').getTime(), t0 = t(data[0]), t1 = Math.max(t(data[data.length - 1]), t0 + 1);
+  const x = i => (PX + (t(data[i]) - t0) / (t1 - t0) * (W - PX * 2)).toFixed(1);
   const y = d => (PT + (1 - (d.v - lo) / span) * (H - PT - PB)).toFixed(1);
   let s = `<svg viewBox="0 0 ${W} ${H + 28}" style="width:100%;height:auto;font-variant-numeric:tabular-nums">`;
   s += `<polyline points="${data.map((d, i) => `${x(i)},${y(d)}`).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>`;
+  const show = new Set(); let lastX = Infinity;
+  for (let i = data.length - 1; i >= 0; i--) { if (lastX - +x(i) >= 26) { show.add(i); lastX = +x(i); } }
   let prevYear = '';
   data.forEach((d, i) => {
     const last = i === data.length - 1, yr = d.date.slice(0, 4);
     s += `<circle cx="${x(i)}" cy="${y(d)}" r="${last ? 4 : 3}" fill="var(--accent)"/>`;
-    s += `<text x="${x(i)}" y="${+y(d) - 7}" text-anchor="middle" font-size="10" font-weight="${last ? 700 : 400}" fill="var(--text)">${d.v}</text>`;
-    s += `<text x="${x(i)}" y="${H + 12}" text-anchor="middle" font-size="9.5" fill="var(--text2)">${+d.date.slice(5, 7)}/${+d.date.slice(8, 10)}</text>`;
-    if (yr !== prevYear) s += `<text x="${x(i)}" y="${H + 24}" text-anchor="middle" font-size="9" fill="var(--text2)">${yr}年</text>`;
-    prevYear = yr;
+    if (show.has(i)) {
+      s += `<text x="${x(i)}" y="${+y(d) - 7}" text-anchor="middle" font-size="10" font-weight="${last ? 700 : 400}" fill="var(--text)">${d.v}</text>`;
+      s += `<text x="${x(i)}" y="${H + 12}" text-anchor="middle" font-size="9.5" fill="var(--text2)">${+d.date.slice(5, 7)}/${+d.date.slice(8, 10)}</text>`;
+      if (yr !== prevYear) { s += `<text x="${x(i)}" y="${H + 24}" text-anchor="middle" font-size="9" fill="var(--text2)">${yr}年</text>`; prevYear = yr; }
+    }
   });
   s += `</svg>`;
   const rows = data.slice().reverse().map((d, i, a) => {
@@ -4213,7 +4219,7 @@ async function loadHealth() {
     else if (sl.length === 1) { $('health-sleep').innerHTML = `<p class="s">${esc(sl[0].label)} ${fmtHM(sl[0].v)}（2日分たまるとグラフになります）</p>`; }
     if (sl.length) $('health-sleep').insertAdjacentHTML('beforeend', `<div class="refline">${hRefLine('sleep_min', sl[sl.length - 1].v, '', 0, 0, H_PROF)}</div>`);
 
-    // ⚖️ 体重（月1回）: daily.csv の weight_kg と手入力の中継CSVをまとめる。同じ日は手入力が勝つ
+    // ⚖️ 体重（測った日ごと）: daily.csv の weight_kg と手入力の中継CSVをまとめる。同じ日は手入力が勝つ
     initHealthForms();
     const wmap = {};
     rows.forEach(r => { if (r.weight_kg) wmap[r.date] = +r.weight_kg; });
