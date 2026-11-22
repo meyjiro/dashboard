@@ -1490,7 +1490,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
       <div id="invest-scout"><p class="empty">読み込み中…</p></div>
       <div class="hint" style="margin:0 4px 14px">「裁判にかける」で翌朝に判決が出る</div>
 
-      <div class="section-title">ウォッチ銘柄</div>
+      <div class="section-title">ウォッチ銘柄<span class="sec-note" id="watch-at"></span></div>
       <div id="invest-watch"><p class="empty">読み込み中…</p></div>
       <div class="hint" style="margin:8px 4px 24px">追加は投げ込みで「〇〇ウォッチして」</div>
     </div>
@@ -1776,7 +1776,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-11-22.11';
+const APP_VERSION = '2026-11-22.12';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -4734,6 +4734,34 @@ async function loadDiary() {
 }
 
 // ── 投資タブ（ウォッチ表を portfolio.md から）──
+// 🔴 2026-11-22: ウォッチの表は8月から書き換わっていないのに、今の表に見えていた。表（この節）が最後に変わった日を見出しに出す。
+//    portfolio.md 自体は別の節が毎日書き換わるので、ファイルの更新日では分からない。
+//    新しい commit から順に、その時点のこの節が今と同じかを見て、同じだった一番古い commit の日を「最終更新」とする（最大8件まで）
+async function watchUpdatedAt(sec) {
+  const out = $('watch-at'); if (!out) return;
+  const P = 'projects/B7_投資/portfolio.md', norm = t => String(t || '').replace(/\s+/g, '');
+  try {
+    const cs = await api(`/repos/${REPO}/commits?path=${encodeURIComponent(P)}&sha=${BRANCH}&per_page=8`);
+    if (!Array.isArray(cs) || !cs.length) return;
+    const ck = 'watch_at_v1', cached = (() => { try { return JSON.parse(localStorage.getItem(ck) || 'null'); } catch (e) { return null; } })();
+    let at = cached && cached.head === cs[0].sha ? cached.at : null, older = cached && cached.head === cs[0].sha ? cached.older : false;
+    if (!at) {
+      at = cs[0].commit.committer.date; older = true;
+      for (let i = 1; i < cs.length; i++) {
+        const r = await api(`/repos/${REPO}/contents/${encodeURIComponent(P).replace(/%2F/g, '/')}?ref=${cs[i].sha}`);
+        const t = r && !r.__404 ? dec(r.content) : '';
+        const s2 = ((t.split(/## ウォッチ/)[1] || '').split(/\n## /)[0]);
+        if (norm(s2) !== norm(sec)) { older = false; break; }
+        at = cs[i].commit.committer.date;
+      }
+      if (cs.length < 8) older = false;
+      try { localStorage.setItem(ck, JSON.stringify({ head: cs[0].sha, at, older })); } catch (e) {}
+    }
+    const d = new Date(at), days = Math.floor((Date.now() - d) / 86400000);
+    out.textContent = `表の最終更新 ${d.getMonth() + 1}/${d.getDate()}${older ? 'より前' : ''}（${days}日前）`;
+    if (days > 30) out.style.color = 'var(--red)';
+  } catch (e) {}
+}
 async function loadWatch() {
   const el = $('invest-watch');
   try {
@@ -4741,6 +4769,7 @@ async function loadWatch() {
     if (!md) { el.innerHTML = '<p class="empty">portfolio.md が見つかりません</p>'; return; }
     // 🔴 2026-10-24 点検: 「## ウォッチ」より後ろを全部読んでいて、別の節の表（Q1〜Q22 など）まで銘柄として出ていた。次の見出しまでに限る
     const sec = ((md.split(/## ウォッチ/)[1] || '').split(/\n## /)[0]);
+    watchUpdatedAt(sec);
     const rows = sec.split('\n').filter(l => /^\|/.test(l)).slice(2)
       .map(l => l.split('|').map(c => c.trim())).filter(c => c.length > 2 && c[1]);
     el.innerHTML = rows.length
@@ -5014,19 +5043,23 @@ async function loadScout() {
     // 🔴 2026-10-24 点検: 約70社を全文で並べて25,000px（タブの8割）になっていた。判決ずみ・同じ会社の重複が大半。
     //    裁判前の新しい5社だけを大きく出し、残りは会社名と日付だけの1行を畳んだ中に入れる
     const clean = t => String(t || '').split(/(?<=。)/).filter(x => !/裁判官へ|処理係|\.md|\.json|https?:\/\//.test(x)).join('').replace(/導出\/\S+/g, '').trim();
-    const seen = new Set(), rowsAll = [];
-    list.slice().reverse().forEach(e => { const k = e.code || e.name; if (seen.has(k)) return; seen.add(k); rowsAll.push(e); });
+    // 🔴 2026-11-22: 同じ会社が何度も選ばれていた（Hiscox 3回など）。1つにまとめ、選ばれた回数を「◯回」で出す（消さない）
+    const seen = new Set(), rowsAll = [], times = {};
+    const keyOf = e => { const c = String(e.code || '').trim().toUpperCase().match(/^[A-Z0-9.]+/); return c ? c[0].replace(/\.(T|JP)$/, '') : String(e.name || '').trim(); };   // 「HSX」と「HSX（LSE）」を同じ会社に
+    list.forEach(e => { const k = keyOf(e); times[k] = (times[k] || 0) + 1; });
+    list.slice().reverse().forEach(e => { const k = keyOf(e); if (seen.has(k)) return; seen.add(k); rowsAll.push(e); });
+    const nTimes = e => times[keyOf(e)] > 1 ? `<span class="s" style="margin:0 0 0 6px;font-weight:400;white-space:nowrap">${times[keyOf(e)]}回</span>` : '';
     const stateOf = e => { const key = `${e.date}_${e.code || e.name}`; const st = e.status || ''; const judged = st.includes('裁判済み'); return { key, judged, done: judged || st.includes('裁判送り') || sent.includes(key) }; };
     const fresh = rowsAll.filter(e => !stateOf(e).done).slice(0, 5);
     const rest = rowsAll.filter(e => !fresh.includes(e));
     const big = e => { const { key, judged, done } = stateOf(e);
-      return `<div class="card"><div class="t" style="font-size:15px">${esc(e.name)}${e.code ? ` <span class="s" style="font-weight:400">${esc(e.code)}</span>` : ''}</div>
+      return `<div class="card"><div class="t" style="font-size:15px">${esc(e.name)}${e.code ? ` <span class="s" style="font-weight:400">${esc(e.code)}</span>` : ''}${nTimes(e)}</div>
         <div class="s" style="font-size:12px;margin:2px 0 6px">${esc(e.date)}</div>
         <div class="s clamp3" style="color:var(--text)">${esc(clean(e.reason))}</div>
         <div style="margin-top:10px"><button class="btn ${done ? '' : 'btn-primary'}" data-scout="${esc(key)}" data-name="${esc(e.name)}" data-code="${esc(e.code || '')}" ${done ? 'disabled' : ''}>${judged ? '判決ずみ' : done ? '裁判に送った' : '裁判にかける'}</button></div></div>`; };
     el.innerHTML = (fresh.length ? fresh.map(big).join('') : '<p class="empty">いま裁判にかけていない候補はありません</p>')
       + (rest.length ? `<details class="bd-done"><summary>これまでの候補 (${rest.length})</summary>${rest.map(e => { const { judged, done } = stateOf(e);
-          return `<div class="card" style="padding:12px 16px;display:flex;justify-content:space-between;gap:10px"><span style="font-size:14px;font-weight:700;min-width:0">${esc(e.name)}</span><span class="s" style="margin:0;white-space:nowrap">${esc(String(e.date||'').slice(5))} ・ ${judged ? '判決ずみ' : done ? '裁判に送った' : '未'}</span></div>`; }).join('')}</details>` : '');
+          return `<div class="card" style="padding:12px 16px;display:flex;justify-content:space-between;gap:10px"><span style="font-size:14px;font-weight:700;min-width:0">${esc(e.name)}${nTimes(e)}</span><span class="s" style="margin:0;white-space:nowrap">${esc(String(e.date||'').slice(5))} ・ ${judged ? '判決ずみ' : done ? '裁判に送った' : '未'}</span></div>`; }).join('')}</details>` : '');
     bindScoutButtons(el);
   } catch (e) { el.innerHTML = '<p class="empty">読み込みに失敗</p>'; }
 }
