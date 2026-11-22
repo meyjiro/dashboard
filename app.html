@@ -1390,8 +1390,6 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
         </div>
         <div class="blk-sub">🔮 メビウス完了予定</div>
         <div id="mebius-list"><p class="empty">読み込み中…</p></div>
-        <div class="blk-sub">🧹 最近の仕分け</div>
-        <div class="loglist" id="brief-log"></div>
         <div class="blk-sub">🔗 リンク</div>
         <div id="countdown"></div>
         <div class="tiles" id="link-tiles"></div>
@@ -1778,7 +1776,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-11-22.8';
+const APP_VERSION = '2026-11-22.9';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2800,7 +2798,7 @@ function renderBriefing() {
     </div></div>`).join('');
   const log = (b.sorted_log || []).slice(0, 8);
   briefLogFallback = log.length ? log.map(l => `・${esc(l.at||'')} ${esc(l.summary)}`).join('<br>') : '（まだなし）';
-  $('brief-log').innerHTML = briefLogFallback;
+  // 🔴 2026-11-22: 今日タブの「🧹 最近の仕分け」は10/22〜11/22の9回すべて0件で外した。投げ込みタブの「最近の仕分け結果」には残す
   if (!ledgerLoaded) $('inbox-log').innerHTML = briefLogFallback;
   if (b.health && b.health.note) $('health-note').innerHTML = `<div class="card"><div class="s" style="color:var(--text)">${esc(b.health.note)}</div></div>`;
   // 🔴 2026-09-12: invest-digest の枠は撤去した。廃止したダイジェスト用の名前のまま、
