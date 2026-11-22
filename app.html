@@ -1451,7 +1451,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
       <div id="board-list"><p class="empty">読み込み中…</p></div>
       <!-- 🔴 2026-10-24 点検: 保留20枚が広がったまま並び、タブが27,741pxになっていた。保留は畳む -->
       <details class="bd-done"><summary>保留 <span id="board-hold-n"></span></summary><div id="board-hold"></div></details>
-      <details class="bd-done"><summary>済んだもの <span id="board-done-n"></span></summary><div id="board-done"></div></details>
+      <details class="bd-done" ontoggle="if(this.open) bdLoadDone()"><summary>済んだもの <span id="board-done-n"></span></summary><div id="board-done"></div></details>
       <!-- 🧬 覚えたい（学びの投げ込み・2026-09-19 メグ「学習専用の投げ込み箱を」）。仕分けなしで夜の授業の課になる -->
       <!-- 🔴 2026-11-22: 10/15から書き込み0件。学習の入口なので消さずにたたみ、毎日使う板を上へ -->
       <details class="learn-fold"><summary>🧬 覚えたい <span>夜に道場の1課になる</span></summary>
@@ -1776,7 +1776,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-11-22.9';
+const APP_VERSION = '2026-11-22.10';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1871,7 +1871,15 @@ async function api(path, method = 'GET', body = null) {
   if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
   return res.json();
 }
+// 同じファイルを1回の更新で何度も取りに行かないよう、短い間だけ使い回す（watchlist.json は4か所が読む・2026-11-22）
+const __memo = {};
+function memoText(key, fn) {
+  const m = __memo[key]; if (m && Date.now() - m.t < 20000) return m.p;
+  const p = fn().catch(e => { delete __memo[key]; throw e; }); __memo[key] = { t: Date.now(), p }; return p;
+}
+const MEMO_PATHS = ['inbox/watchlist.json'];
 async function getFile(path, repo) {
+  if ((!repo || repo === REPO) && MEMO_PATHS.includes(path)) return memoText(path, () => repoFileRaw(REPO, path));
   // 🔴 ref=main を付けてよいのは自分のリポジトリ（claude-context）だけ。
   //    personal は既定ブランチが master で、main は 2026-08-20 で止まった古いブランチ。
   //    ref=main で読むと8月のデータが返る（2026-09-08発覚: IBKRの総資産が8/20から動かなかった）。
@@ -3670,6 +3678,10 @@ function poopStrip(el, map) {
 
 // ── 健康タブ（personal/health/data/ のCSVから）──
 async function repoFile(repo, path) {
+  if (repo === REPO && MEMO_PATHS.includes(path)) return memoText(path, () => repoFileRaw(repo, path));
+  return repoFileRaw(repo, path);
+}
+async function repoFileRaw(repo, path) {
   const r = await api(`/repos/${repo}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}`);
   if (!r || r.__404) return null;
   return dec(r.content);
@@ -6026,16 +6038,51 @@ let boardItems = [];
 function bdStamp(){ const d=new Date(); const z=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}-${z(d.getHours())}${z(d.getMinutes())}`; }
 function bdLink(t){ return esc(t).replace(/(https?:\/\/[^\s<）)]+)/g, u => { let h=''; try{ h=new URL(u.replace(/&amp;/g,'&')).hostname.replace(/^www\./,''); }catch(e){} return `<a href="${u}" target="_blank" rel="noopener">${h ? 'リンク（'+h+'）' : 'リンク'}</a>`; }); }   // 🔴 10/24 長いURLが折れて崩れていた
 function bdWhen(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return esc(String(iso).slice(0,16)); return d.toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
-async function loadBoard() {
+// 🔴 2026-11-22: 表示のたびに全件（60件超・済み30件超）を1件ずつ取っていた。済み（done）は中身が変わらないので、
+//    端末に「ファイルの版（sha）→ 状態」を覚えておき、済みのままの板は「済んだもの」を開いたときだけ取る。
+const BD_CACHE = 'bd_status_v1';
+function bdCacheGet() { try { return JSON.parse(localStorage.getItem(BD_CACHE) || '{}') || {}; } catch (e) { return {}; } }
+function bdCacheSet(c) { try { localStorage.setItem(BD_CACHE, JSON.stringify(c)); } catch (e) {} }
+let bdDoneLoaded = false;
+async function bdFetch(path) {
+  try { const r = await getFileWithSha(path); const d = JSON.parse(r.text); d.__path = path; d.__sha = r.sha; return d; } catch (e) { return null; }
+}
+let __bdLoading = null;
+function loadBoard() {   // 同時に2回呼ばれても（全体の読み込み＋タブを開いた）取りに行くのは1回
+  if (!__bdLoading) __bdLoading = loadBoard1().finally(() => { __bdLoading = null; });
+  return __bdLoading;
+}
+async function loadBoard1() {
   const list = $('board-list'); if (!list) return;
   try {
     const files = (await listDir('inbox/board')).filter(f => f.name.endsWith('.json'));
-    // 🔴 2026-10-24: 1枚ずつ順番に読んでいたので、板が増えると15秒以上かかり、ほかの読み込みの完了も待たせていた。まとめて同時に読む
+    const cache = bdCacheGet(), next = {};
+    const prev = new Map(boardItems.filter(d => d.__path).map(d => [d.__path, d]));
+    // 🔴 2026-10-24: 1枚ずつ順番に読んでいたので、板が増えると15秒以上かかった。まとめて同時に読む
     const items = (await Promise.all(files.map(async f => {
-      try { const r = await getFileWithSha('inbox/board/' + f.name); const d = JSON.parse(r.text); d.__path = 'inbox/board/' + f.name; d.__sha = r.sha; return d; } catch (e) { return null; }
+      const path = 'inbox/board/' + f.name;
+      const old = prev.get(path);
+      if (old && old.__sha === f.sha && !old.__stub) { next[f.name] = { sha: f.sha, st: old.status || 'open' }; return old; }
+      if (cache[f.name] && cache[f.name].sha === f.sha && cache[f.name].st === 'done') {
+        next[f.name] = cache[f.name];
+        return { id: f.name.replace(/\.json$/, ''), status: 'done', __path: path, __sha: f.sha, __stub: true };
+      }
+      const d = await bdFetch(path); if (d) next[f.name] = { sha: f.sha, st: d.status || 'open' };
+      return d;
     }))).filter(Boolean);
+    bdCacheSet(next);
     boardItems = items; renderBoard();
+    if (bdDoneLoaded) bdLoadDone();
   } catch (e) { list.innerHTML = `<p class="empty">読み込めない: ${esc(e.message)}</p>`; }
+}
+// 「済んだもの」を開いたときだけ、済みの板の中身を取る
+async function bdLoadDone() {
+  bdDoneLoaded = true;
+  const stubs = boardItems.filter(d => d.__stub); if (!stubs.length) return;
+  const el = $('board-done'); if (el && !el.innerHTML.trim()) el.innerHTML = '<p class="empty">読み込み中…</p>';
+  const got = await Promise.all(stubs.map(d => bdFetch(d.__path)));
+  got.forEach((d, k) => { if (!d) return; const i = boardItems.indexOf(stubs[k]); if (i >= 0) boardItems[i] = d; });
+  renderBoard();
 }
 function bdThread(d){
   // 🔴 2026-10-24: 本文（ctx）と同じ中身の最初の吹き出しは出さない（本文が2回並んでいた）
@@ -6046,6 +6093,8 @@ function bdThread(d){
 }
 // 🔴 2026-10-24 点検: 本文に「処理係へ…」などAI向けの指示が入っていて、20回くり返し出ていた。メグに見せる所では外す
 function bdCtx(t){ return String(t || '').split('\n').filter(l => !/処理係|thread に|threadに|gachirezuには触らない/.test(l)).join('\n').trim(); }
+// メグの質問・依頼に、クロードの答えが付いて「メグの番」になっている板。読んだら1タップで済みへ（2026-11-22）
+function bdAnswered(d) { const th = d.thread || []; return d.from === 'megu' && (d.status || 'open') === 'open' && th.length > 0 && th[th.length - 1].who === 'claude'; }
 function bdCard(d, compact) {
   const st = d.status || 'open';
   const badge = { open: 'メグの番', answered: 'クロードの番', hold: '保留', done: '完了' }[st] || st;
@@ -6055,7 +6104,7 @@ function bdCard(d, compact) {
   const wait = st === 'answered' ? `<div class="bd-wait">⏳ クロードの番（3分以内に起動・返事はこのスレッドに積まれます）</div>` : '';
   const actions = st === 'done' ? `<button class="btn btn-ghost bd-act" data-act="reopen">再開</button>`
     : st === 'hold' ? `<button class="btn btn-ghost bd-act" data-act="reopen">再開</button><button class="btn btn-ghost bd-act" data-act="done">完了</button>`
-    : `<button class="btn btn-ghost bd-act" data-act="hold">保留</button><button class="btn btn-ghost bd-act" data-act="done">完了</button>`;
+    : `${bdAnswered(d) ? '<button class="btn btn-primary bd-act" data-act="read">👀 読んだ</button>' : ''}<button class="btn btn-ghost bd-act" data-act="hold">保留</button><button class="btn btn-ghost bd-act" data-act="done">完了</button>`;
   const reply = st === 'done' ? '' : `<div class="bd-reply"><textarea class="bd-input" placeholder="クロードへ返事・追加の依頼"></textarea><button class="btn btn-primary bd-act" data-act="send">送る</button></div>`;
   const headHtml = `<div class="bd-h"><div><div class="bd-t">${esc(d.title || '')}</div><div class="bd-from">${d.from === 'claude' ? 'クロード' : 'メグ'} · ${bdWhen(d.created)}</div></div><span class="bd-badge">${badge}</span></div>`;
   // 🔴 2026-10-24: 保留・済んだものは見出しだけの1行にして、押すと開く
@@ -6073,11 +6122,11 @@ function renderBoard() {
   const list = $('board-list'), doneEl = $('board-done'); if (!list) return;
   const order = { open: 0, answered: 1, hold: 2 };
   const live = boardItems.filter(d => d.status !== 'done').sort((a, b) => (order[a.status] ?? 3) - (order[b.status] ?? 3) || (b.updated || '').localeCompare(a.updated || ''));
-  const done = boardItems.filter(d => d.status === 'done').sort((a, b) => (b.updated || '').localeCompare(a.updated || ''));
+  const done = boardItems.filter(d => d.status === 'done').sort((a, b) => (b.updated || '').localeCompare(a.updated || '') || (b.id || '').localeCompare(a.id || ''));
   const act = live.filter(d => d.status !== 'hold'), held = live.filter(d => d.status === 'hold');
   list.innerHTML = act.length ? act.map(d => bdCard(d)).join('') : '<p class="empty">いまメグの番はありません</p>';
   if ($('board-hold')) { $('board-hold').innerHTML = held.map(d => bdCard(d, true)).join(''); $('board-hold-n').textContent = held.length ? `(${held.length})` : '(0)'; }
-  if (doneEl) { doneEl.innerHTML = done.map(d => bdCard(d, true)).join(''); $('board-done-n').textContent = done.length ? `(${done.length})` : ''; }
+  if (doneEl) { const full = done.filter(d => !d.__stub); doneEl.innerHTML = full.length || !done.length ? full.map(d => bdCard(d, true)).join('') : (bdDoneLoaded ? '<p class="empty">読み込み中…</p>' : ''); $('board-done-n').textContent = done.length ? `(${done.length})` : ''; }
   const megu = live.filter(d => d.status === 'open').length, cl = live.filter(d => d.status === 'answered').length, hold = live.filter(d => d.status === 'hold').length;
   if ($('board-status')) $('board-status').textContent = `メグの番 ${megu} · クロードの番 ${cl}${hold ? ` · 保留 ${hold}` : ''}`;
   const tb = $('brief-board');
