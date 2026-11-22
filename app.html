@@ -300,6 +300,18 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 :is(#tab-today,#tab-read) .mbsrow2 a b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* ── 通報カード: 読ませるのではなく押させる（2026-08-30 メグ指示） ── */
 :is(#tab-today,#tab-read) .vprev{margin:0 0 9px}
+/* 読むタブ：記事は見出しだけの1行にたたむ（2026-11-22） */
+.rfold{background:var(--card);border-radius:14px;margin:0 0 8px}
+.rfold>summary{list-style:none;cursor:pointer;padding:11px 14px;display:flex;flex-direction:column;gap:2px}
+.rfold>summary::-webkit-details-marker{display:none}
+.rfold .rfk{font-size:11px;color:var(--text2)} .rfold .rft{font-size:14px;font-weight:700;line-height:1.45;color:var(--text)}
+.rfold>summary .rft::after{content:" ▾";color:var(--text2);font-weight:400} .rfold[open]>summary .rft::after{content:" ▴"}
+.rfold[open]>summary{border-bottom:1px solid var(--border)}
+.rfold .rfb>.nsbox,.rfold .rfb>.learn-card{margin:0;background:transparent}
+.pp-fold>summary{list-style:none;cursor:pointer} .pp-fold>summary::-webkit-details-marker{display:none}
+.pp-fold>summary{flex-wrap:wrap;white-space:nowrap}
+.pp-fold .pp-n{flex-basis:100%;order:3;letter-spacing:0;font-size:11.5px;font-weight:400;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pp-fold>summary::after{content:" ▾";color:var(--text2);font-weight:400} .pp-fold[open]>summary::after{content:" ▴"}
 :is(#tab-today,#tab-read) .vprev>summary{padding:11px 14px;font-size:12.5px;color:var(--text2);cursor:pointer;
   list-style:none;border:1px solid var(--border);border-radius:8px;background:var(--card)}
 :is(#tab-today,#tab-read) .vprev>summary::-webkit-details-marker{display:none}
@@ -1778,7 +1790,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-11-22.6';
+const APP_VERSION = '2026-11-22.7';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -2561,6 +2573,11 @@ function markSetDone(id){
 // ══ 🆕 新しく入ってきたもの（朝のメニュー【3】・2026-08-30）══
 // クラウドroutine「☕ 朝のメニュー: 新しいもの」が毎朝6:30に inbox/morning.json を作る（quiz だけは Mac の morning-quiz.py が6:50に書く）。
 // ここは表示するだけ。中身の作り方は workflows/朝のメニュー.md が正本。
+// 🔴 2026-11-22: 読むタブは記事が全部ひらいたまま並び、縦12,000pxを超えて1画面で見渡せなかった。
+//    記事は見出しだけの1行にたたみ、押したら開く（中身はたたむ前と同じ）
+function readFold(kind, title, inner, extra) {
+  return `<details class="rfold"><summary><span class="rfk">${kind}${extra || ''}</span><span class="rft">${esc(title || '')}</span></summary><div class="rfb">${inner}</div></details>`;
+}
 async function loadNewStuff(){
   const el = $('today-new'); if(!el) return;
   let m;
@@ -2590,7 +2607,7 @@ async function loadNewStuff(){
     const st = c.status || '';
     const judged = st.includes('裁判済み');
     const done = judged || st.includes('裁判送り') || sent.includes(key);
-    parts.push(`<div class="nsbox cand">
+    parts.push(readFold('🆕 今日の投資候補', c.name + (c.code ? ' ' + c.code : ''), `<div class="nsbox cand">
       <div class="nsh">🆕 今日の投資候補<span class="nstag">${esc(c.date||'')}</span></div>
       <div class="nsname">${esc(c.name)}${c.code?` <span class="nscode">${esc(c.code)}</span>`:''}</div>
       ${P ? `<div class="plainbox">${['what','strong','money','why_today','watch']
@@ -2605,7 +2622,7 @@ async function loadNewStuff(){
         ${(c.articles||[]).length?`<div class="nsl"><span>Yパパ基準</span>${c.articles.map(esc).join('・')}</div>`:''}
         ${c.note?`<div class="nsl"><span>メモ</span>${esc(c.note)}</div>`:''}
       </details>`:''}
-    </div>`);
+    </div>`));
   }
 
   // 動画（保有と無関係に全部・URL付き）
@@ -2626,7 +2643,8 @@ async function loadNewStuff(){
   //    少し前に公開された回を今朝拾っただけなら、正常なので印は出さない
   const vNewest = (m.videos||[]).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];
   const vStale = !!(vNewest && daysOld(vNewest.date) > 1);
-  (m.videos||[]).forEach(v=>{ parts.push(vidCard(v)); });
+  const vidFold = (v, card) => readFold(`${v.who==='太郎'?'🔧':'📺'} ${esc(v.who||'')} ${esc(String(v.date||'').slice(5).replace('-','/'))}`, v.title, card);
+  (m.videos||[]).forEach(v=>{ parts.push(vidFold(v, vidCard(v))); });
 
   // 昨日の分。今日の下に畳んで置く。開いたままにしたいときは覚えておく
   const vp = m.videos_prev||[];
@@ -2634,7 +2652,7 @@ async function loadNewStuff(){
     const open = localStorage.getItem('vprevOpen')==='1' ? ' open' : '';
     parts.push(`<details class="vprev"${open} ontoggle="localStorage.setItem('vprevOpen', this.open?'1':'0')">
       <summary>昨日の動画 ${vp.length}本（見逃していたら）</summary>
-      ${vp.map(v=>vidCard(v).replace(/<span class="stale">[^<]*<\/span>/,'')).join('')}</details>`);
+      ${vp.map(v=>vidFold(v, vidCard(v).replace(/<span class="stale">[^<]*<\/span>/,''))).join('')}</details>`);
   }
 
   // ガチレズ3サイト — 2026-09-01にダッシュボードから外した
@@ -2647,12 +2665,12 @@ async function loadNewStuff(){
   // 分野は問わない。「読んだあとに誰かに話したくなるか」だけで選んだものが1日1本入る。
   const w = m.world;
   if(w && w.title){
-    parts.push(`<div class="nsbox">
+    parts.push(readFold('🌍 今日の1本', w.title, `<div class="nsbox">
       <div class="nsh">🌍 今日の1本</div>
       <a class="wtitle" href="${esc(w.url||'#')}" target="_blank" rel="noopener">${esc(w.title)}</a>
       ${w.note?`<div class="wnote">${esc(w.note)}</div>`:''}
       ${w.why?`<div class="wwhy">${esc(w.why)}</div>`:''}
-    </div>`);
+    </div>`));
   }
 
   // 📰 地域の新聞（2026-09-11 メグ指示で作り直し）
@@ -2668,14 +2686,13 @@ async function loadNewStuff(){
   }
   if(pp && (pp.sections||[]).length){
     const secs = pp.sections.filter(x => (x.items||[]).length).map(sec => `
-      <div class="pp-sec">
-        <div class="pp-sh"><span class="pp-em">${esc(sec.emoji||'')}</span>${esc(sec.label||'')}</div>
+      <details class="pp-sec pp-fold"><summary class="pp-sh"><span class="pp-em">${esc(sec.emoji||'')}</span>${esc(sec.label||'')}<span class="pp-n">${sec.items.length}本 ・ ${esc(String((sec.items[0]||{}).title||'').slice(0,28))}…</span></summary>
         ${sec.items.map((t,i)=>`<div class="pp-art${i===0&&sec.key==='top'?' lead':''}">
             <b>${t.url?`<a href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.title||'')}</a>`:esc(t.title||'')}</b>
             ${t.note?`<span class="pp-body">${esc(t.note)}</span>`:''}
             ${t.src?`<span class="pp-src">${esc(t.src)}</span>`:''}
           </div>`).join('')}
-      </div>`).join('');
+      </details>`).join('');
     parts.push(`<div class="paper">
       <div class="pp-head"><b>チェンマイ日報</b>${staleTag(pp.date)}<span>${esc(pp.date||'')}${m.pm25?` ・ PM2.5 ${m.pm25.value} ${esc(m.pm25.level||'')}`:''}</span></div>
       ${secs}
@@ -2738,9 +2755,9 @@ function renderBriefing() {
   // 🔴 今日の学び（learn）: 投資の学習routineが書く500字。名言の次に出す（2026-09-08）
   const lb = $('brief-learn'); if (lb) {
     const L = b.learn;
-    lb.innerHTML = L && L.body ? `<div class="learn-card"><div class="lh">📚 今日の学び</div><div class="lt">${esc(L.title||'')}</div>${(() => { /* 🔴 2026-10-24 点検: ②③は台帳・法典への記録で内輪の言葉ばかり。①だけ見せて、残りは畳む */
+    lb.innerHTML = L && L.body ? readFold('📚 今日の学び', L.title || '', `<div class="learn-card"><div class="lh">📚 今日の学び</div><div class="lt">${esc(L.title||'')}</div>${(() => { /* 🔴 2026-10-24 点検: ②③は台帳・法典への記録で内輪の言葉ばかり。①だけ見せて、残りは畳む */
       const b = String(L.body).replace(/\*\*/g, ''); const k = b.search(/\s*②/); const main = k > 0 ? b.slice(0, k) : b, rest = k > 0 ? b.slice(k) : '';
-      return `<div class="lb">${esc(main.replace(/^\s*①\s*/, '').replace(/対象外[:：][^。]*。?/g, '').replace(/^何が言われたか（[^）]*）\s*/, ''))}</div>${rest ? `<details class="drest" style="margin-top:8px"><summary>記録を見る</summary><div class="lb" style="font-size:12.5px;color:var(--text2)">${esc(rest)}</div></details>` : ''}`; })()}${L.url?`<a class="lu" href="${esc(L.url)}" target="_blank" rel="noopener">🎬 動画を見る</a>`:''}</div>` : '';
+      return `<div class="lb">${esc(main.replace(/^\s*①\s*/, '').replace(/対象外[:：][^。]*。?/g, '').replace(/^何が言われたか（[^）]*）\s*/, ''))}</div>${rest ? `<details class="drest" style="margin-top:8px"><summary>記録を見る</summary><div class="lb" style="font-size:12.5px;color:var(--text2)">${esc(rest)}</div></details>` : ''}`; })()}${L.url?`<a class="lu" href="${esc(L.url)}" target="_blank" rel="noopener">🎬 動画を見る</a>`:''}</div>`) : '';
   }
   // 🔴 解説（note）を言葉の下に出す（2026-09-08 メグ「解説があると地肉になる」）
   $('brief-quote').innerHTML = b.quote ? `<div class="quote-card"><div class="q">${esc(b.quote.text)}</div><div class="a">— ${esc(b.quote.author || '')}</div>${b.quote.note ? `<div class="n">${esc(b.quote.note)}</div>` : ''}</div>` : '';
