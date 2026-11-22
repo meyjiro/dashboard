@@ -7,14 +7,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Dashboard">
-<meta name="theme-color" content="#f6f4f0" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#191817" media="(prefers-color-scheme: dark)">
+<!-- 🔴 黒い画面（ダークモード）は使わない（2026-09-06 メグ指定）。iPhoneが黒い設定でも、開いた瞬間から生成りの色にする -->
+<meta name="theme-color" content="#f6f4f0">
 <link rel="apple-touch-icon" href="./icon-180.png">
 <title>ダッシュボード</title>
 <style>
   html,body{margin:0;height:100%;background:#f6f4f0;color:#6a6560;
     font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif}
-  @media (prefers-color-scheme:dark){html,body{background:#191817;color:#a9a29a}}
   #boot{display:flex;align-items:center;justify-content:center;height:100%;
     font-size:13px;text-align:center;line-height:2;padding:20px}
   #boot button{margin-top:14px;display:block;background:transparent;border:1px solid currentColor;
