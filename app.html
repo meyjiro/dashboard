@@ -1516,15 +1516,15 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-11-22.15';
+const APP_VERSION = '2026-11-22.16';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
-// ── 旅行・リンク（trip.html の TRIPS と同じ内容を貼る）──
+// ── 旅行・リンク（次の旅行が決まったら、trip.html の TRIPS と同じ形で1行足す）──
+//    例: { start:'2027-01-10', end:'2027-01-20', title:'2027年1月 日本', url:'trip_202701.html' },
+//    🔴 2026-11-22: 過ぎた7月の旅行だけが残っていたので空にした（旅行のタイルは trip.html の一覧へ飛ぶ）
 const TRIP_BASE = 'https://mebiusmagic.com/mebius_admin/';
-const TRIPS = [
-  { start:'2026-07-12', end:'2026-07-26', title:'2026年7月 日本', url:'trip_202507.html' },
-];
+const TRIPS = [];
 function tripTile() {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
