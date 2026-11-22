@@ -1515,7 +1515,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（app.html を commit すると .git/hooks/pre-commit が自動で上げる。画面の版表示と自動更新の判定に使う）──
-const APP_VERSION = '2026-11-22.21';
+const APP_VERSION = '2026-11-22.22';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -5317,7 +5317,7 @@ function bdApply(d, act, text, now) {
 async function bdWrite(d, act, text, now, message) {
   const strip = x => Object.fromEntries(Object.entries(x).filter(([k]) => !k.startsWith('__')));
   const put = (body, sha) => api(`/repos/${REPO}/contents/${d.__path}`, 'PUT', { message, content: enc(JSON.stringify(body, null, 1)), branch: BRANCH, sha });
-  let cur = bdApply(strip(d), act, text, now), sha = d.__sha;
+  let cur = bdApply(JSON.parse(JSON.stringify(strip(d))), act, text, now), sha = d.__sha;   // 手元の板は書けるまで変えない（失敗→やり直しで行が2回付かないように）
   for (let a = 0; a < 3; a++) {
     try { const r = await put(cur, sha); return Object.assign(cur, { __path: d.__path, __sha: r.content.sha }); }
     catch (e) {

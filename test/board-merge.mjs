@@ -59,6 +59,16 @@ const base = { id: 'b1', from: 'megu', title: 't', status: 'open', thread: [{ wh
   await bdWrite(local, 'read', '', '2026-11-22T00:02:00Z', 'test');
   must(gh.doc.status === 'done', '3) 読んだで done にならない');
 }
+// 4) 保存に失敗したら、手元の板は変わらない（やり直しで「完了」が2行付かない）
+{
+  const local = Object.assign(JSON.parse(JSON.stringify(base)), { __path: 'inbox/board/b1.json', __sha: 'v1' });
+  const down = async () => ({ status: 500, ok: false, json: async () => ({}), text: async () => '' });
+  const { bdWrite } = await run(down);
+  const saved = await bdWrite(local, 'done', '', '2026-11-22T00:02:00Z', 'test');
+  { const ti = errs.findIndex(e => e.startsWith('toast:')); if (ti >= 0) errs.splice(ti, 1); else errs.push('4) 失敗の知らせが出ない'); }
+  must(saved === null, '4) 失敗なのに書けた扱い');
+  must(local.thread.length === 1 && local.status === 'open', '4) 失敗したのに手元の板が変わった');
+}
 for (const e of errs) console.log('🔴 板:', e);
 if (!errs.length) console.log('🟢 板の書き込み（ぶつかっても返事が残る・読んだ）');
 process.exit(errs.length ? 1 : 0);
