@@ -1516,7 +1516,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（app.html を commit すると .git/hooks/pre-commit が自動で上げる。画面の版表示と自動更新の判定に使う）──
-const APP_VERSION = '2026-11-22.17';
+const APP_VERSION = '2026-11-22.18';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -1734,12 +1734,11 @@ const OPS = [
   { name:'Wise残高',     why:'毎朝6:30にMacが記録',
     repo:'meyjiro/personal', path:'money/wise_balances.csv', limit:1.5,
     read:t=>{ const r=t.trim().split('\n'); return r[r.length-1].split(',')[0]; } },
-  // 🎓 2026-09-18 学習OS: 朝のメニューが quiz を毎朝書く（9/21開始）。開始前は正常扱い
   // 🔴 2026-09-23: 更新日（quiz.date を昼12時とみなして1.2日）だと前日の問いでも朝は🟢のままだった。中身＝「quiz.date が今日（JST）か」「浅い問いに答えがあるか」で見る
   { name:'今日の2問',   why:'Macの morning-quiz.py（6:50 JST・タイ4:50）が時間割と問い.jsonl から深い問い＋浅い10問を組んで morning.json の quiz に書く。浅い問いは道場で答え、深い問いは答案用紙。採点は夜の巡回',
     repo:'meyjiro/claude-context', path:'inbox/morning.json', limit:1.2,
-    read:t=>{ const j=JSON.parse(t); const pre = Date.now()<new Date('2026-09-21T00:00:00+09:00').getTime(); if(pre) return new Date().toISOString(); return (j.quiz&&j.quiz.date) ? j.quiz.date : null; },   // 開講前（〜9/20）は常に正常（9/18に手で置いた quiz が古くなって赤くなった・9/19）
-    verify:t=>{ const j=JSON.parse(t); if(!j.quiz) return Date.now()<new Date('2026-09-21T00:00:00+09:00').getTime() ? null : 'quiz が無い';
+    read:t=>{ const j=JSON.parse(t); return (j.quiz&&j.quiz.date) ? j.quiz.date : null; },
+    verify:t=>{ const j=JSON.parse(t); if(!j.quiz) return 'quiz が無い';
       const q=j.quiz; if(!(Array.isArray(q.items)&&q.items.length&&q.items.every(x=>x.text))) return 'quiz の深い問いが空';
       if(!(Array.isArray(q.quick)&&q.quick.length&&q.quick.every(x=>x.id&&x.text&&x.answer_key))) return 'quiz の浅い問いが空か、答えが無い';
       const jst=new Date(Date.now()+9*3600e3); const today=jst.toISOString().slice(0,10);
