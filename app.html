@@ -1773,7 +1773,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-11-06.2';
+const APP_VERSION = '2026-11-22.1';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -3108,8 +3108,9 @@ function calEvents() {
   schedRows.forEach(r => {
     // 🔴 Googleカレンダー方式（2026-09-05）: 繰り返しは「終了日」と「除外日」を持てる。
     //    終了日は繰り返し欄に `毎月〜2026-12-08`、除外日は通知欄に `除外:2026-10-09,2026-11-09`
-    const endD = repEnd(r.repeat), skip = repSkips(r.meta);
-    if (!skip.includes(r.date)) add(r.date, r);
+    const endD = repEnd(r.repeat), skip = repSkips(r.meta), paid = repPaid(r.meta);
+    // 🔴 2026-11-22: 「払った」を押した回（通知欄の 払済:日付）は済んだものに回す（メグ「ボタンもないのにずっと聞かれてる」）
+    if (!skip.includes(r.date)) add(r.date, paid.includes(r.date) ? Object.assign({}, r, { done: true, base: r, occ: r.date }) : r);
     if (!r.repeat) return;
     let d = new Date(r.date + 'T12:00:00');
     const day0 = d.getDate();
@@ -3123,7 +3124,7 @@ function calEvents() {
       const ds2 = d.toLocaleDateString('sv-SE');
       if (endD && ds2 > endD) break;
       if (skip.includes(ds2)) continue;
-      add(ds2, Object.assign({}, r, { repeated: true, done: false, base: r, occ: ds2 }));
+      add(ds2, Object.assign({}, r, { repeated: true, done: paid.includes(ds2), base: r, occ: ds2 }));
     }
   });
   (window.__mebiusEvents || []).forEach(e => { if (e.end) add(e.end, { label: `🔮 ${e.name} 様 完了`, src: 'mb' }); });
@@ -3194,13 +3195,15 @@ function renderDayList(ev) {
               ? (it.notify
                   ? `<button class="npill on" onclick="editNotify(${idx})">🔔 ${esc(NOTIFY_LABEL[it.notify] || it.notify)}に通知</button>`
                   : `<button class="npill" onclick="editNotify(${idx})">🔕 通知なし</button>`)
-              : ''}</div>
+              : ''}
+            ${(it.src === 'sched' && !it.done && idx >= 0 && it.repeat && isPayment(it))
+              ? `<button class="npill paybtn" onclick="markPaid(${idx},'${it.occ || it.date}',true)">✓ 払った</button>` : ''}</div>
           ${(it.src === 'sched' && idx >= 0)
             ? `<button class="dbtn del" title="この予定を直す" onclick="editSched(${idx},'${calSel}')">✏️</button><button class="dbtn del" title="この予定を消す" onclick="deleteSched(${idx},'${calSel}')">🗑</button>` : ''}
         </div>`;
       }).join('')
     : '<p class="empty">この日は予定なし</p>')
-    + (doneItems.length ? `<details class="bd-done"><summary>済んだもの (${doneItems.length})</summary>${doneItems.map(it => `<div class="card" style="padding:10px 14px;font-size:13px;color:var(--text2)">${esc(String(it.label || '').replace(/\*\*/g, '').replace(/^✅\S*\s*/, '').slice(0, 50))}</div>`).join('')}</details>` : '');
+    + (doneItems.length ? `<details class="bd-done"><summary>済んだもの (${doneItems.length})</summary>${doneItems.map(it => { const bi = schedRows.indexOf(it.base || it); const undo = (it.repeat && bi >= 0 && repPaid(it.meta).includes(it.occ || it.date)) ? ` <button class="npill" onclick="markPaid(${bi},'${it.occ || it.date}',false)">取り消す</button>` : ''; return `<div class="card" style="padding:10px 14px;font-size:13px;color:var(--text2)">${esc(String(it.label || '').replace(/\*\*/g, '').replace(/^✅\S*\s*/, '').slice(0, 50))}${undo}</div>`; }).join('')}</details>` : '');
 }
 
 // 🔴 記号は内容から決める。色分けより分かりやすいというメグの判断（2026-09-01）。
@@ -3340,6 +3343,29 @@ async function barkTest(){ await barkTry(window.__calSound || '', '今の設定'
 function repEnd(rep){ const m = (rep||'').match(/[〜~](\d{4}-\d{2}-\d{2})/); return m ? m[1] : ''; }
 function repBase(rep){ return (rep||'').replace(/[〜~]\d{4}-\d{2}-\d{2}/, '').trim(); }
 function repSkips(meta){ const m = (meta||'').match(/除外:([\d\-,]+)/); return m ? m[1].split(',').filter(Boolean) : []; }
+function repPaid(meta){ const m = (meta||'').match(/払済:([\d\-,]+)/); return m ? m[1].split(',').filter(Boolean) : []; }
+// 🔴 2026-11-22: 支払いの繰り返し予定だけ「払った」ボタンを出す（💰の記号か、題名に支払・家賃・料金）
+function isPayment(it){ return /^💰/.test(it.label||'') || /支払|家賃|料金|振込/.test(it.label||''); }
+// 「払った」＝その回の日付を通知欄の 払済: に足す（直近12回だけ持つ）。取り消しは外す。
+//   この回は予定タブで済んだものに回り、携帯の通知（schedule-notify.py）とおいらの起動時の一覧（schedule.sh）からも消える
+async function markPaid(idx, occ, on){
+  const r = schedRows[idx]; if(!r) return;
+  try{
+    await editSchedFile(`${on ? '払った' : '払ったを取り消し'}: ${occ} ${r.label.replace(/\*\*/g,'').slice(0,20)}（ダッシュボード）`, lines => {
+      const i = findRowIdx(lines, r); if (i < 0) return false;
+      const cells = lines[i].replace(/^\s*\|~?/, '').split('|').map(x => x.trim());
+      const meta0 = cells[4] || '';
+      let paid = repPaid(meta0).filter(d => d !== occ);
+      if (on) paid.push(occ);
+      paid = paid.sort().slice(-12);
+      const meta = [metaWithout(meta0, '払済'), paid.length ? '払済:' + paid.join(',') : ''].filter(Boolean).join(' ');
+      lines[i] = buildRow({ date: r.date, field: cells[1] || r.field, text: cells[2] || r.label, rep: cells[3] || r.repeat, meta,
+        done: /^\s*\|~/.test(lines[i]) });
+    });
+    toast(on ? '✓ 払ったを記録しました' : '取り消しました');
+    await loadSchedule();
+  }catch(e){ alert('記録できませんでした: '+e.message); }
+}
 function metaWithout(meta, key){ return (meta||'').replace(new RegExp(key + ':[^\\s|]+\\s*'), '').trim(); }
 function prevDay(ds){ const d = new Date(ds + 'T12:00:00'); d.setDate(d.getDate() - 1); return d.toLocaleDateString('sv-SE'); }
 function buildRow(o){
