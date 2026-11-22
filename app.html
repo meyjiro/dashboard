@@ -1775,7 +1775,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-11-22.3';
+const APP_VERSION = '2026-11-22.4';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
@@ -6166,26 +6166,42 @@ function renderBoard() {
   const tb = $('brief-board');
   if (tb) tb.innerHTML = (megu || cl) ? `<div class="today-board" onclick="switchTab('inbox')">💬 やりとり板：${megu ? `<b>メグの番 ${megu}件</b>` : ''}${megu && cl ? ' ／ ' : ''}${cl ? `クロードの番 ${cl}件` : ''} →</div>` : '';
 }
-async function bdWrite(d, message) {
-  const body = Object.fromEntries(Object.entries(d).filter(([k]) => !k.startsWith('__')));
-  const write = async () => api(`/repos/${REPO}/contents/${d.__path}`, 'PUT', { message, content: enc(JSON.stringify(body, null, 1)), branch: BRANCH, sha: d.__sha });
-  try { const r = await write(); d.__sha = r.content.sha; return true; }
-  catch (e) {
-    if (/409|422/.test(e.message)) { try { const r0 = await getFileWithSha(d.__path); d.__sha = r0.sha; const r = await write(); d.__sha = r.content.sha; return true; } catch (e2) { toast('保存に失敗: ' + e2.message); } }
-    else toast('保存に失敗: ' + e.message);
-    return false;
-  }
-}
-async function bdAct(id, act, text) {
-  const d = boardItems.find(x => x.id === id); if (!d) return;
-  d.thread = d.thread || []; const now = new Date().toISOString();
-  if (act === 'send') { if (!text) return; d.thread.push({ who: 'megu', at: now, text }); d.status = 'answered'; }
+// 板の1件に、メグの操作（送る・選ぶ・完了・保留・再開）をかける。中身だけを変える純粋な関数（テストで直接呼ぶ）
+function bdApply(d, act, text, now) {
+  d.thread = Array.isArray(d.thread) ? d.thread : [];
+  if (act === 'send') { d.thread.push({ who: 'megu', at: now, text }); d.status = 'answered'; }
   if (act === 'choice') { d.choice = text; d.thread.push({ who: 'megu', at: now, text: '選択: ' + text }); d.status = 'answered'; }
   if (act === 'done') { d.thread.push({ who: 'megu', at: now, text: '✅ 完了にした' }); d.status = 'done'; }
+  if (act === 'read') { d.thread.push({ who: 'megu', at: now, text: '👀 読んだ' }); d.status = 'done'; }
   if (act === 'hold') { d.thread.push({ who: 'megu', at: now, text: '⏸ 保留にした' }); d.status = 'hold'; }
   if (act === 'reopen') { d.thread.push({ who: 'megu', at: now, text: '▶️ 再開' }); d.status = 'answered'; }
   d.updated = now;
-  if (await bdWrite(d, `やりとり板: ${id} ${act}`)) toast({ send: 'クロードへ送った', choice: '選んだ', done: '完了にした', hold: '保留にした', reopen: '再開した' }[act]);
+  return d;
+}
+// 🔴 2026-11-22: ぶつかった（409/422）とき、以前は最新の番号だけ取り直して手元の古い中身で上書きしていた。
+//    メグの「完了」とクロードの返事が重なると、クロードの返事が消えうる。日記の dyPut と同じく、
+//    最新を読み直して、そこへメグの操作だけをかけ直してから書く。書けた中身を返す（失敗は null）
+async function bdWrite(d, act, text, now, message) {
+  const strip = x => Object.fromEntries(Object.entries(x).filter(([k]) => !k.startsWith('__')));
+  const put = (body, sha) => api(`/repos/${REPO}/contents/${d.__path}`, 'PUT', { message, content: enc(JSON.stringify(body, null, 1)), branch: BRANCH, sha });
+  let cur = bdApply(strip(d), act, text, now), sha = d.__sha;
+  for (let a = 0; a < 3; a++) {
+    try { const r = await put(cur, sha); return Object.assign(cur, { __path: d.__path, __sha: r.content.sha }); }
+    catch (e) {
+      if (a === 2 || !/409|422/.test(e.message)) { toast('保存に失敗: ' + e.message); return null; }
+      try {
+        const f = await getFileWithSha(d.__path); if (!f) { toast('保存に失敗: 板が見つからない'); return null; }
+        cur = bdApply(JSON.parse(f.text), act, text, now); sha = f.sha;
+      } catch (e2) { toast('保存に失敗: ' + e2.message); return null; }
+    }
+  }
+  return null;
+}
+async function bdAct(id, act, text) {
+  const i = boardItems.findIndex(x => x.id === id); if (i < 0) return;
+  const now = new Date().toISOString();
+  const saved = await bdWrite(boardItems[i], act, text, now, `やりとり板: ${id} ${act}`);
+  if (saved) { boardItems[i] = saved; toast({ send: 'クロードへ送った', choice: '選んだ', done: '完了にした', read: '読んだ（済みへ）', hold: '保留にした', reopen: '再開した' }[act]); }
   renderBoard();
 }
 document.addEventListener('change', e => {
