@@ -587,6 +587,8 @@ details.fold summary{font-size:13px;font-weight:700;color:var(--text2);padding:8
 /* 見張りは常設・最上部（2026-09-13 棚卸し: 折りたたみの中では止まっても目に入らない） */
 .opsbar{display:flex;align-items:center;gap:8px;font-size:11.5px;padding:6px 10px;border-radius:8px;margin-bottom:10px;border:1px solid var(--border);background:var(--card);color:var(--text2)}
 .opsbar.ok{border-color:var(--ok);background:var(--ok-light)} .opsbar.bad{display:block;border-color:var(--red);background:var(--red-light);color:var(--text);font-size:13px;padding:10px 12px}
+/* 🔴 2026-11-22: details に flex がかかると、開いたとき中身が横に詰められ字が1文字ずつ縦に並んだ。開いたら block */
+details.opsbar[open]{display:block}
 .opsbar summary{cursor:pointer;list-style:none} .opsbar summary::-webkit-details-marker{display:none}
 .opsbar .opsrow{margin-top:6px;line-height:1.55} .opsbar .opsrow b{color:var(--red)} .opsbar .opsmini{font-size:11px;color:var(--text2)}
 details.ops.ok{background:none;border:0;padding:0;margin:0 0 8px}
@@ -1773,7 +1775,7 @@ a.inl{color:var(--accent);text-decoration:underline;word-break:break-all}
 
 <script>
 // ── アプリのバージョン（index.htmlを改修したら必ず上げる。自動リロードの判定に使う）──
-const APP_VERSION = '2026-11-22.2';
+const APP_VERSION = '2026-11-22.3';
 const REPO = 'meyjiro/claude-context';
 const BRANCH = 'main';
 
